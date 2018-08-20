@@ -1,3 +1,9 @@
+"""Class Ncbi function: The instance of this class allows the user to download a genome (or genomes) from the NCBI database
+ based on common biological search terms e.g. Saccharomyces cerevisiae or E. coli K-12 MG1655.
+ The functionality should allow for the class to return both well-annotated complete genomes and less annotated genome
+ assemblies if so desired by the user as specified by an input parameter.
+ The output should be to write a .fasta file to a desired directory."""
+
 from Bio import Entrez
 import time
 
