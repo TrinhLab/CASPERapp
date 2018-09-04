@@ -1,9 +1,11 @@
 import sys
 import os
+import io
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from APIs import Kegg, SeqFromFasta
 from bioservices import KEGG
 from Results import Results
+
 
 # =========================================================================================
 # CLASS NAME: CMainWindow
@@ -19,6 +21,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         uic.loadUi('CASPER_main.ui', self)
         self.dbpath = ""
         self.data = {}
+        self.shortHand ={}
         self.orgcodes = {}  # Stores the Kegg organism code by the format {full name : organism code}
         # --- Button Modifications --- #
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
@@ -46,7 +49,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         #show functionalities on window
         self.view_my_results = Results()
 
-        self.show()
+        #self.show()
 
     ####---FUNCTIONS TO RUN EACH BUTTON---####
     def gather_settings(self):
@@ -66,14 +69,15 @@ class CMainWindow(QtWidgets.QMainWindow):
     # ---- IS ONLY CALLED FROM gather_settings!!!! ---- #
     def run_results(self, inputtype, inputstring):
         kegginfo = Kegg()
-        org = self.orgcodes[str(self.orgChoice.currentText())]
+        org = str(self.orgChoice.currentText())
         endo = str(self.endoChoice.currentText())
         ginfo = {}  # each entry ginfo[gene] = (chromosome number, t/f strand, start pos, end pos)
         progvalue = 15
         self.progressBar.setValue(progvalue)
         if inputtype == "gene":
             for gene in inputstring:
-                g = org + ":" + gene
+                g = self.shortHand[org] + ":" + gene
+
                 ginfo[gene] = kegginfo.gene_locator(g)
                 progvalue += 50/len(inputstring)
                 self.progressBar.setValue(progvalue)
@@ -82,9 +86,9 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.progressBar.setValue(45)
         if inputtype == "sequence":
             self.progressBar.setValue(45)
-        s = SeqFromFasta()
-        filename = "/Users/brianmendoza/Desktop/GenBank_files/FASTAs/" + org + ".fna"
-        s.setfilename(filename)
+        """s = SeqFromFasta()
+        filename = self.dbpath + org + ".fna"
+        s.setfilename(filename)"""
         progvalue = 75
         self.progressBar.setValue(progvalue)
         for gene in inputstring:
@@ -92,7 +96,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             progvalue += 25/len(inputstring)
             self.progressBar.setValue(progvalue)
             self.view_my_results.loadGenesandTargets(s.getgenesequence(), ginfo[gene][2]+100, ginfo[gene][3]-100,
-                                                     s.gettargets(), gene)
+            #                                         s.gettargets(), gene)
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
 
@@ -125,20 +129,31 @@ class CMainWindow(QtWidgets.QMainWindow):
         onlyfiles = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
         print(onlyfiles)
         orgsandendos = {}
+        shortName = {}
         for file in onlyfiles[1:]:
-            if file.find('.txt'):
+            if file.find('.cspr')!=-1:
                 newname = file[0:-4]
-                s = newname.split('-')
-                species = str(s[0])
+                s = newname.split('_')
+                hold = open(file)
+                buf = (hold.readline())
+                species = buf[8:buf.find('\n')]
                 endo = str(s[1])
+                if species not in shortName:
+                    shortName[species] = s[0]
                 if species in orgsandendos:
                     orgsandendos[species].append(endo)
                 else:
-                    orgsandendos[species] = [endo]
+                    orgsandendos[species] =[endo]
+                    self.orgChoice.addItem(species)
+
+
         self.data = orgsandendos
-        os.chdir('/Users/brianmendoza/PycharmProjects/CASPERapp/')
-        f = open('CASPERinfo')
-        accesstrue = False
+        self.shortHand= shortName
+        self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
+        self.orgChoice.currentIndexChanged.connect(self.changeEndos)
+
+        #os.chdir('/Users/brianmendoza/PycharmProjects/CASPERapp/')
+        """f = open('CASPERinfo')
         while True:
             line = f.readline()
             if line.startswith('ORGA'):
@@ -156,10 +171,11 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.orgChoice.addItem(item)
         self.endoChoice.addItems(self.data[self.orgcodes[str(self.orgChoice.currentText())]])
         self.orgChoice.currentIndexChanged.connect(self.changeEndos)
-
+"""
     def changeEndos(self):
+
         self.endoChoice.clear()
-        self.endoChoice.addItems(self.data[self.orgcodes[str(self.orgChoice.currentText())]])
+        self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
 
     def change_directory(self):
         filed = QtWidgets.QFileDialog()
@@ -198,7 +214,7 @@ class StartupWindow(QtWidgets.QDialog):
         self.pushButton_2.setDefault(True)
 
         self.gdirectory = os.path.expanduser("~")
-        self.gdirectory = "/Users/brianmendoza/Desktop/CrisprDB/"  # Temporary. Throw away at deployment
+        self.gdirectory = "Please select a Directory that contains .capr files"  # Temporary. Throw away at deployment
         self.lineEdit.setText(self.gdirectory)
 
         self.pushButton_3.clicked.connect(self.changeDir)
@@ -218,6 +234,9 @@ class StartupWindow(QtWidgets.QDialog):
         self.lineEdit.setText(mydir)
         cdir = self.lineEdit.text()
         os.chdir(mydir)
+        self.gdirectory = mydir
+        print(mydir)
+        print(cdir)
 
     def errormsgmulti(self):
         QtWidgets.QMessageBox.question(self, "Under Construction...", "Sorry this functionality is still"
@@ -226,10 +245,14 @@ class StartupWindow(QtWidgets.QDialog):
 
     @QtCore.pyqtSlot()
     def show_window(self):
-        os.chdir(self.gdirectory)
-        print(os.getcwd())
-        self.show_main_window.getData()
-        self.close()
+        if(self.gdirectory=="Please select a Directory that contains .capr files"):
+            QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory",
+                                                                                      QtWidgets.QMessageBox.Ok)
+        else:
+            os.chdir(self.gdirectory)
+            self.show_main_window.show()
+            self.show_main_window.getData()
+            self.close()
 
 
 if __name__ == '__main__':
