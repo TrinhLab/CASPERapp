@@ -86,9 +86,9 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.progressBar.setValue(45)
         if inputtype == "sequence":
             self.progressBar.setValue(45)
-        s = SeqFromFasta()
+        """s = SeqFromFasta()
         filename = self.dbpath + org + ".fna"
-        s.setfilename(filename)
+        s.setfilename(filename)"""
         progvalue = 75
         self.progressBar.setValue(progvalue)
         for gene in inputstring:
