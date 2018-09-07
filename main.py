@@ -78,7 +78,14 @@ class CMainWindow(QtWidgets.QMainWindow):
             for gene in inputstring:
                 g = self.shortHand[org] + ":" + gene
 
-                ginfo[gene] = kegginfo.gene_locator(g)
+                hold = kegginfo.gene_locator(g)
+                if hold == -1:
+                    QtWidgets.QMessageBox.question(self, "Gene Database Error", "The Gene you entered could not be found in the Kegg database. Please make sure you entered everything correctly and try again.",
+                                                   QtWidgets.QMessageBox.Ok)
+                    progvalue = 0
+                    self.progressBar.setValue(progvalue)
+                    return
+                ginfo[gene]=hold
                 progvalue += 50/len(inputstring)
                 self.progressBar.setValue(progvalue)
         if inputtype == "position":
@@ -96,7 +103,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             progvalue += 25/len(inputstring)
             self.progressBar.setValue(progvalue)
             self.view_my_results.loadGenesandTargets(s.getgenesequence(), ginfo[gene][2]+100, ginfo[gene][3]-100,
-            #                                         s.gettargets(), gene)
+                                                     s.gettargets(), gene)
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
 
