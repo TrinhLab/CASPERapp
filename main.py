@@ -5,6 +5,8 @@ from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from APIs import Kegg, SeqFromFasta
 from bioservices import KEGG
 from Results import Results
+import requests
+from bs4 import BeautifulSoup
 
 
 # =========================================================================================
@@ -14,6 +16,63 @@ from Results import Results
 # Outputs: The results of the target search process by generating a new Results window
 # =========================================================================================
 
+class annotations_Window(QtWidgets.QMainWindow):
+    def __init__(self):
+        super(annotations_Window, self).__init__()
+        uic.loadUi('Annotation Details.ui', self)
+        self.setWindowIcon(QtGui.QIcon("cas9image.png"))
+        self.Submit_button.clicked.connect(self.submit)
+        self.mainWindow=""
+
+    def submit(self):
+        self.hide()
+        self.mainWindow.show()
+
+    def fill_Table(self,mainWindow):
+        self.mainWindow = mainWindow
+        index = 0
+        self.tableWidget.setColumnCount(0)
+        self.tableWidget.setColumnCount(3)
+        mainWindow.checkBoxes = []
+        for sValues in mainWindow.searches:
+            for definition in mainWindow.searches[sValues]:
+                index = index+1
+                for gene in mainWindow.searches[sValues][definition]:
+                    index = index+1
+        self.tableWidget.setRowCount(index)
+        if index == 0:
+            return -1
+        index= 0
+        for sValues in mainWindow.searches:
+            for definition in mainWindow.searches[sValues]:
+                defin_obj = QtWidgets.QTableWidgetItem(definition)
+                self.tableWidget.setItem(index,0,defin_obj)
+                index+=1
+                for gene in mainWindow.searches[sValues][definition]:
+                    ckbox = QtWidgets.QCheckBox()
+                    mainWindow.checkBoxes.append([definition + " " + gene])
+                    mainWindow.checkBoxes[len(mainWindow.checkBoxes)-1].append(ckbox)
+                    gene_obj = QtWidgets.QTableWidgetItem(gene)
+                    self.tableWidget.setItem(index,1 , gene_obj)
+                    self.tableWidget.setCellWidget(index, 2,ckbox)
+                    index = index+1
+        self.tableWidget.resizeColumnsToContents()
+        if mainWindow.Show_All_Results.isChecked():
+            mainWindow.hide()
+            self.show()
+        else:
+            for obj in mainWindow.checkBoxes:
+                obj[1].setChecked(True)
+        return 0
+
+
+
+
+
+
+
+
+
 
 class CMainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -21,19 +80,34 @@ class CMainWindow(QtWidgets.QMainWindow):
         uic.loadUi('CASPER_main.ui', self)
         self.dbpath = ""
         self.data = {}
+        self.TNumbers = {}
         self.shortHand ={}
         self.orgcodes = {}  # Stores the Kegg organism code by the format {full name : organism code}
+        self.gene_list = {}
+        self.searches = {}
+        self.checkBoxes = []
         # --- Button Modifications --- #
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
         self.pushButton_FindTargets.clicked.connect(self.gather_settings)
         self.pushButton_ViewTargets.clicked.connect(self.view_results)
         self.pushButton_ViewTargets.setEnabled(False)
+        self.radioButton_Gene.clicked.connect(self.toggle_annotation)
+        self.radioButton_Position.clicked.connect(self.toggle_annotation)
+        self.radioButton_Sequence.clicked.connect(self.toggle_annotation)
+        self.Kegg_Search_Button.clicked.connect(self.search_kegg)
+        self.Annotation_Kegg.clicked.connect(self.change_annotation)
+        self.Annotation_Ownfile.clicked.connect(self.change_annotation)
+        self.NCBI_Select.clicked.connect(self.change_annotation)
 
-        self.pushButton_search.clicked.connect(self.search_kegg)
+        self.change_annotation()
+        #self.test_button.clicked.connect(self.Ann_Window)
 
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
         self.progressBar.reset()
+        self.Annotation_Window = annotations_Window()
+
+
 
         # --- Menubar commands --- #
         self.actionChange_Directory.triggered.connect(self.change_directory)
@@ -45,13 +119,18 @@ class CMainWindow(QtWidgets.QMainWindow):
                                                "Sequence: *Pure sequence. CASPER will search for targets and report off"
                                                "targets based on the genome selected if any*")
 
-
+        #self.Kegg_Search_Imput.setPlainText("test")
         #show functionalities on window
         self.view_my_results = Results()
 
         #self.show()
+    #def Ann_Window(self):
+
+
+
 
     ####---FUNCTIONS TO RUN EACH BUTTON---####
+
     def gather_settings(self):
         inputstring = str(self.geneEntryField.toPlainText())
         self.progressBar.setValue(10)
@@ -68,34 +147,61 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     # ---- IS ONLY CALLED FROM gather_settings!!!! ---- #
     def run_results(self, inputtype, inputstring):
-        kegginfo = Kegg()
+        """kegginfo = Kegg()
         org = str(self.orgChoice.currentText())
         endo = str(self.endoChoice.currentText())
-        ginfo = {}  # each entry ginfo[gene] = (chromosome number, t/f strand, start pos, end pos)
+        ginfo = {}  # each entry ginfo[gene] = (chromosome number, t/f strand, start pos, end pos)"""
         progvalue = 15
+        self.searches = {}
+        self.gene_list = {}
         self.progressBar.setValue(progvalue)
         if inputtype == "gene":
-            for gene in inputstring:
-                g = self.shortHand[org] + ":" + gene
-
-                hold = kegginfo.gene_locator(g)
-                if hold == -1:
-                    QtWidgets.QMessageBox.question(self, "Gene Database Error", "The Gene you entered could not be found in the Kegg database. Please make sure you entered everything correctly and try again.",
-                                                   QtWidgets.QMessageBox.Ok)
-                    progvalue = 0
-                    self.progressBar.setValue(progvalue)
+            if self.Annotations_Organism.currentText() == "":
+                error = QtWidgets.QMessageBox.question(self, "No Annotation", "You have not searched for an annotation "
+                                                                            "yet, if you continue your organism will be"
+                                                                            " searched in kegg and the first match"
+                                                                            " will be used.\n\n"
+                                                                            "Do you wish to continue?"
+                                                                            , QtWidgets.QMessageBox.Yes |
+                                                                            QtWidgets.QMessageBox.No,
+                                                                            QtWidgets.QMessageBox.No)
+                if error == QtWidgets.QMessageBox.No:
+                    self.progressBar.setValue(0)
                     return
-                ginfo[gene]=hold
-                progvalue += 50/len(inputstring)
-                self.progressBar.setValue(progvalue)
+                else:
+                    self.search_kegg()
+            self.make_dictonary()
+            for sValue in inputstring:
+                sValue = self.removeWhiteSpace(sValue)
+                if len(sValue) == 0:
+                    continue
+                self.searches[sValue] = {}
+                for defin in self.gene_list:
+                    if sValue in defin or (sValue in self.gene_list[defin]):
+                        if defin in self.searches[sValue]:
+                            if self.gene_list[defin] not in self.searches[sValue][defin]:
+                                self.searches[sValue][defin].append(self.gene_list[defin])
+                        else:
+                            self.searches[sValue][defin] = self.gene_list[defin]
+                        print(self.searches[sValue][defin][0])
+            did_work = self.Annotation_Window.fill_Table(self)
+            if did_work == -1:
+                QtWidgets.QMessageBox.question(self, "Gene Database Error",
+                                               "The Gene you entered could not be found in the Kegg database. "
+                                               "Please make sure you entered everything correctly and try again.",
+                                               QtWidgets.QMessageBox.Ok)
+                self.progressBar.setValue(0)
         if inputtype == "position":
             ginfo = inputstring[1:-1].split(",")
             self.progressBar.setValue(45)
         if inputtype == "sequence":
             self.progressBar.setValue(45)
+
+
+
         """s = SeqFromFasta()
         filename = self.dbpath + org + ".fna"
-        s.setfilename(filename)"""
+        s.setfilename(filename)
         progvalue = 75
         self.progressBar.setValue(progvalue)
         for gene in inputstring:
@@ -105,15 +211,141 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.view_my_results.loadGenesandTargets(s.getgenesequence(), ginfo[gene][2]+100, ginfo[gene][3]-100,
                                                      s.gettargets(), gene)
         self.progressBar.setValue(100)
-        self.pushButton_ViewTargets.setEnabled(True)
+
+
+
+        self.pushButton_ViewTargets.setEnabled(True)"""
+    def removeWhiteSpace(self, strng):
+        while True:
+            if len(strng)==0 or (strng[0] != " " and strng[0]!="\n"):
+                break
+            strng = strng[1:]
+        while True:
+            if len(strng)==0 or (strng[len(strng)-1]!=" " and strng[0]!="\n"):
+                return strng
+            strng = strng[:len(strng)-1]
+
+    # Function to enable and disable the Annotation function if searching by position or sequence
+    def toggle_annotation(self):
+        if self.radioButton_Gene.isChecked():
+            s = True
+        else:
+            s = False
+        current = self.selected_annotation()
+        if current == "Own":
+            self.Own_File_Button.setEnabled(s)
+            self.Own_File_Imput.setEnabled(s)
+            self.Own_File_Lable.setEnabled(s)
+        elif current == "Kegg":
+            self.Kegg_Search_Imput.setEnabled(s)
+            self.Kegg_Search_Label.setEnabled(s)
+            self.Kegg_Search_Button.setEnabled(s)
+        else:
+            self.NCBI_Imput.setEnabled(s)
+            self.NCBI_Label.setEnabled(s)
+            self.NCBI_Button.setEnabled(s)
+        self.Annotations_Organism.setEnabled(s)
+        self.Annotation_Ownfile.setEnabled(s)
+        self.Annotation_Kegg.setEnabled(s)
+        self.NCBI_Select.setEnabled(s)
+
+    def selected_annotation(self):
+        if self.Annotation_Ownfile.isChecked():
+            return "Own"
+        elif self.Annotation_Kegg.isChecked():
+            return "Kegg"
+        else:
+            return "NCBI"
+
+
+    def change_annotation(self):
+        if self.Annotation_Ownfile.isChecked():
+            self.Own_File_Button.show()
+            self.Own_File_Imput.show()
+            self.Own_File_Lable.show()
+        else:
+            self.Own_File_Button.hide()
+            self.Own_File_Imput.hide()
+            self.Own_File_Lable.hide()
+        if self.Annotation_Kegg.isChecked():
+            self.Kegg_Search_Imput.show()
+            self.Kegg_Search_Label.show()
+            self.Kegg_Search_Button.show()
+        else:
+            self.Kegg_Search_Imput.hide()
+            self.Kegg_Search_Label.hide()
+            self.Kegg_Search_Button.hide()
+        if self.NCBI_Select.isChecked():
+            self.NCBI_Imput.show()
+            self.NCBI_Label.show()
+            self.NCBI_Button.show()
+        else:
+            self.NCBI_Imput.hide()
+            self.NCBI_Label.hide()
+            self.NCBI_Button.hide()
+
+
 
     # This function works as a way to look up a search term in the Kegg database to potentially get the code
     # for the gene
+
+
     def search_kegg(self):
         k = KEGG()
-        current_org = self.orgcodes[self.orgChoice.currentText()]
-        info = k.find(current_org, self.lineEdit_search.text())
-        print(info)
+        #current_org = self.shortHand[self.orgChoice.currentText()]
+        #info = k.find("genes", str(self.Kegg_Search_Imput.text()))
+        #x = self.shortHand[self.Kegg_Search_Imput.text()]
+
+        All_org = k.lookfor_organism(self.Kegg_Search_Imput.text())
+        """ self.lineEdit_search.text()"""
+        for item in All_org:
+            hold = self.organism_finder(item)
+            self.Annotations_Organism.addItem(hold)
+            self.TNumbers[hold] = item[:6]
+
+    def make_dictonary(self):
+        url = "https://www.genome.jp/dbget-bin/get_linkdb?-t+genes+gn:"+self.TNumbers[self.Annotations_Organism.currentText()]
+        source_code = requests.get(url)
+        plain_text = source_code.text
+        buf = io.StringIO(plain_text)
+
+        while True:
+            line = buf.readline()
+            if line[0] == "-":
+                break
+        while True:
+            line = buf.readline()
+            if line[1] != "a":
+                return
+            line = line[line.find(">")+1:]
+            seq = line[line.find(":")+1:line.find("<")]
+            line = line[line.find(">")+1:]
+
+            i =0
+            while True:
+                if line[i] == " ":
+                    i = i+1
+                else:
+                    break
+            key = line[i:line.find("\n") - 1]
+            if key in self.gene_list:
+                if seq not in self.gene_list[key]:
+                    self.gene_list[key].append(seq)
+            else:
+                self.gene_list[key] = [seq]
+            z=5
+
+    def organism_finder(self, long_str):
+        semi = long_str.find(";")
+        index =1
+        while True:
+            if long_str[semi-index] == " ":
+                break
+            index = index+1
+        return long_str[:semi-index]
+
+    def search_own_file(self):
+        print("searching for own file")
 
     # This method is for testing the execution of a button call to make sure the button is linked properly
     def testexe(self):
@@ -158,7 +390,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.shortHand= shortName
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
         self.orgChoice.currentIndexChanged.connect(self.changeEndos)
-
+        self.Kegg_Search_Imput.setText(self.orgChoice.currentText())
         #os.chdir('/Users/brianmendoza/PycharmProjects/CASPERapp/')
         """f = open('CASPERinfo')
         while True:
@@ -183,6 +415,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         self.endoChoice.clear()
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
+        self.Kegg_Search_Imput.setText(self.orgChoice.currentText())
 
     def change_directory(self):
         filed = QtWidgets.QFileDialog()
@@ -198,13 +431,14 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.pushButton_ViewTargets.setEnabled(False)
 
 
-# ----------------------------------------------------------------------------------------------------- #
 
+# ----------------------------------------------------------------------------------------------------- #
 # =========================================================================================
 # CLASS NAME: StartupWindow
 # Inputs: Takes information from the main application window and displays the gRNA results
 # Outputs: The display of the gRNA results search
 # =========================================================================================
+
 
 
 class StartupWindow(QtWidgets.QDialog):
@@ -213,7 +447,7 @@ class StartupWindow(QtWidgets.QDialog):
         uic.loadUi('startupCASPER.ui', self)
         self.setWindowTitle('WELCOME TO CASPER!')
         self.setWindowModality(2)  # sets the modality of the window to Application Modal
-
+        #self.make_window = annotations_Window()
         #---Button Modifications---#
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
         pixmap = QtGui.QPixmap('mainart.jpg')
@@ -221,7 +455,7 @@ class StartupWindow(QtWidgets.QDialog):
         self.pushButton_2.setDefault(True)
 
         self.gdirectory = os.path.expanduser("~")
-        self.gdirectory = "Please select a Directory that contains .capr files"  # Temporary. Throw away at deployment
+        self.gdirectory = "Please select a directory that contains .capr files"
         self.lineEdit.setText(self.gdirectory)
 
         self.pushButton_3.clicked.connect(self.changeDir)
@@ -252,7 +486,7 @@ class StartupWindow(QtWidgets.QDialog):
 
     @QtCore.pyqtSlot()
     def show_window(self):
-        if(self.gdirectory=="Please select a Directory that contains .capr files"):
+        if "Please select a directory that contains .capr files" in self.gdirectory:
             QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory",
                                                                                       QtWidgets.QMessageBox.Ok)
         else:
@@ -260,6 +494,9 @@ class StartupWindow(QtWidgets.QDialog):
             self.show_main_window.show()
             self.show_main_window.getData()
             self.close()
+
+
+
 
 
 if __name__ == '__main__':

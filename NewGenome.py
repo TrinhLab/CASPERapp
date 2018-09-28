@@ -2,7 +2,7 @@ import sys, os
 import subprocess as sub
 from threading import Thread
 from queue import Queue, Empty
-from PyQt5 import Qt, QtWidgets, uic
+from PyQt5 import QtWidgets, uic, QtGui, QtCore, Qt
 from bioservices import KEGG
 
 
@@ -128,3 +128,6 @@ class DisplaySubprocessOutput:
 
     def quit(self):
         self.process.kill()  # exit subprocess if GUI is closed (zombie!)
+
+
+window = NewGenome()
