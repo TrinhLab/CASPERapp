@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>872</width>
+    <height>642</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>CASPER</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="title">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>0</y>
+      <width>141</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Damascus</family>
+      <pointsize>36</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>CASPER</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="casperDetail">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>10</y>
+      <width>541</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>CRISPR Associated Software for Pathway Engineering and Research</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="versionNum">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>20</y>
+      <width>56</width>
+      <height>13</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>V 1.1</string>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="tableWidget">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>90</y>
+      <width>821</width>
+      <height>451</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Submit_button">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>560</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Submit</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>872</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionNew"/>
+    <addaction name="actionOpen"/>
+    <addaction name="actionOpen_Recent"/>
+    <addaction name="actionSave"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionUndo"/>
+    <addaction name="actionCut"/>
+    <addaction name="actionCopy"/>
+    <addaction name="actionPaste"/>
+    <addaction name="separator"/>
+    <addaction name="actionCut_Rev_Com"/>
+    <addaction name="actionCopy_Rev_Com"/>
+    <addaction name="actionPaste_Rev_Com"/>
+   </widget>
+   <widget class="QMenu" name="menuGenome">
+    <property name="title">
+     <string>Genome</string>
+    </property>
+    <addaction name="actionUpload_New_Genome"/>
+    <addaction name="actionUpload_New_Endonuclease"/>
+    <addaction name="actionChange_Directory"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <widget class="QMenu" name="menuExport_to">
+     <property name="title">
+      <string>Export to...</string>
+     </property>
+     <addaction name="actionExcel_csv"/>
+     <addaction name="actionIDT_Order"/>
+    </widget>
+    <addaction name="actionMultitargeting"/>
+    <addaction name="actionPopulation_Analysis"/>
+    <addaction name="actionComplete_Target_Analysis"/>
+    <addaction name="separator"/>
+    <addaction name="menuExport_to"/>
+    <addaction name="actionNCBI_BLAST"/>
+   </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionNew_CASPER_Window"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuGenome"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuWindow"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionNew">
+   <property name="text">
+    <string>New</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+  </action>
+  <action name="actionOpen_Recent">
+   <property name="text">
+    <string>Open Recent...</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="text">
+    <string>Undo</string>
+   </property>
+  </action>
+  <action name="actionCut">
+   <property name="text">
+    <string>Cut</string>
+   </property>
+  </action>
+  <action name="actionCopy">
+   <property name="text">
+    <string>Copy</string>
+   </property>
+  </action>
+  <action name="actionPaste">
+   <property name="text">
+    <string>Paste</string>
+   </property>
+  </action>
+  <action name="actionCut_Rev_Com">
+   <property name="text">
+    <string>Cut Rev-Com</string>
+   </property>
+  </action>
+  <action name="actionCopy_Rev_Com">
+   <property name="text">
+    <string>Copy Rev-Com</string>
+   </property>
+  </action>
+  <action name="actionPaste_Rev_Com">
+   <property name="text">
+    <string>Paste Rev-Com</string>
+   </property>
+  </action>
+  <action name="actionUpload_New_Genome">
+   <property name="text">
+    <string>Seq_Finder Analysis...</string>
+   </property>
+  </action>
+  <action name="actionUpload_New_Endonuclease">
+   <property name="text">
+    <string>Upload New Endonuclease...</string>
+   </property>
+  </action>
+  <action name="actionChange_Directory">
+   <property name="text">
+    <string>Change Directory</string>
+   </property>
+  </action>
+  <action name="actionNCBI_BLAST">
+   <property name="text">
+    <string>NCBI BLAST</string>
+   </property>
+  </action>
+  <action name="actionExcel_csv">
+   <property name="text">
+    <string>Excel (.csv)</string>
+   </property>
+  </action>
+  <action name="actionIDT_Order">
+   <property name="text">
+    <string>IDT Order</string>
+   </property>
+  </action>
+  <action name="actionMultitargeting">
+   <property name="text">
+    <string>Multitargeting</string>
+   </property>
+  </action>
+  <action name="actionPopulation_Analysis">
+   <property name="text">
+    <string>Population Analysis</string>
+   </property>
+  </action>
+  <action name="actionComplete_Target_Analysis">
+   <property name="text">
+    <string>Complete Target Analysis</string>
+   </property>
+  </action>
+  <action name="actionNew_CASPER_Window">
+   <property name="text">
+    <string>New CASPER Window</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

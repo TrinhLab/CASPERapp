@@ -5,16 +5,12 @@ from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from APIs import Kegg, SeqFromFasta
 from bioservices import KEGG
 from Results import Results
+from NewGenome import NewGenome
 import requests
+
 from bs4 import BeautifulSoup
 
 
-# =========================================================================================
-# CLASS NAME: CMainWindow
-# Inputs: Takes in the path information from the startup window and also all input parameters
-# that define the search for targets e.g. endonuclease, organism genome, gene target etc.
-# Outputs: The results of the target search process by generating a new Results window
-# =========================================================================================
 
 class annotations_Window(QtWidgets.QMainWindow):
     def __init__(self):
@@ -72,6 +68,12 @@ class annotations_Window(QtWidgets.QMainWindow):
 
 
 
+# =========================================================================================
+# CLASS NAME: CMainWindow
+# Inputs: Takes in the path information from the startup window and also all input parameters
+# that define the search for targets e.g. endonuclease, organism genome, gene target etc.
+# Outputs: The results of the target search process by generating a new Results window
+# =========================================================================================
 
 
 class CMainWindow(QtWidgets.QMainWindow):
@@ -98,7 +100,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Annotation_Kegg.clicked.connect(self.change_annotation)
         self.Annotation_Ownfile.clicked.connect(self.change_annotation)
         self.NCBI_Select.clicked.connect(self.change_annotation)
-
+        self.actionUpload_New_Genome.triggered.connect(self.launch_newGenome)
         self.change_annotation()
         #self.test_button.clicked.connect(self.Ann_Window)
 
@@ -122,6 +124,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         #self.Kegg_Search_Imput.setPlainText("test")
         #show functionalities on window
         self.view_my_results = Results()
+        self.newGenome = NewGenome()
 
         #self.show()
     #def Ann_Window(self):
@@ -171,7 +174,8 @@ class CMainWindow(QtWidgets.QMainWindow):
                 else:
                     self.search_kegg()
             self.make_dictonary()
-            for sValue in inputstring:
+            list_sVal = self.seperate_Line(inputstring[0])
+            for sValue in list_sVal:
                 sValue = self.removeWhiteSpace(sValue)
                 if len(sValue) == 0:
                     continue
@@ -215,6 +219,22 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
         self.pushButton_ViewTargets.setEnabled(True)"""
+
+    def launch_newGenome(self):
+       self.newGenome.show()
+    def seperate_Line(self,input_string):
+        export_array = []
+        while True:
+            index = input_string.find('\n')
+            if index==-1:
+                if len(input_string)==0:
+                    return export_array
+                else:
+                    export_array.append(input_string)
+                    return export_array
+            export_array.append(input_string[:index])
+            input_string= input_string[index+1:]
+
     def removeWhiteSpace(self, strng):
         while True:
             if len(strng)==0 or (strng[0] != " " and strng[0]!="\n"):

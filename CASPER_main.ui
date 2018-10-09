@@ -354,7 +354,7 @@
       <x>450</x>
       <y>280</y>
       <width>311</width>
-      <height>81</height>
+      <height>101</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -700,7 +700,7 @@
   </action>
   <action name="actionUpload_New_Genome">
    <property name="text">
-    <string>Seq_Finder Analysis...</string>
+    <string>Analyze New Genome</string>
    </property>
   </action>
   <action name="actionUpload_New_Endonuclease">
