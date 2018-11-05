@@ -1,4 +1,5 @@
 import sys
+
 from PyQt5 import Qt, QtWidgets, uic
 from Scoring import OnTargetScore
 
@@ -31,39 +32,37 @@ class Results(QtWidgets.QMainWindow):
 
 
         # Target Table settings #
-        self.targetTable.setColumnCount(6)  # hardcoded because there will always be five columns
+        self.targetTable.setColumnCount(7)  # hardcoded because there will always be seven columns
         self.targetTable.setShowGrid(False)
-        self.targetTable.setHorizontalHeaderLabels("Sequence;PAM;Strand;Score;Off Targets;search".split(";"))
+        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Highlight".split(";"))
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
 
         self.fill_table_TEST()
-        #self.show()
+        self.show()
 
-    def loadGenesandTargets(self, genesequence, start, end, targets, genename):
-        self.startpos = start
-        self.endpos = end
-        self.allTargets[genename] = targets
-        self.allGeneSeqs[genename] = genesequence
-        self.comboBoxGene.addItem(genename)
-        self.displayGeneData()
-        self.comboBoxGene.currentIndexChanged.connect(self.displayGeneData)
 
 
     def getTargets(self, fileName):
         file = ""
         targets = []
         if self.directory.find("/") != -1:
-            file  = open(self.directory+"/"+fileName+".cspr")
+            file = open(self.directory+"/"+fileName+".cspr")
         else:
-            file = open(self.directory + "/" + fileName + ".cspr")
+            file = open(self.directory + "\\" + fileName + ".cspr")
+        hold = file.readline()
+        hold  = hold[8:hold.find('\n')]
         file.readline()
-        file.readline()
-        for string in file.readline():
-            item  = self.splitCsprFile(string)
+        while True:
+            string = file.readline()
+            if "REPEATS" in string:
+                break
+            item = self.splitCsprFile(string)
             targets.append(item)
-        return targets
+        self.allTargets[hold] = targets
+        self.displayGeneData()
+
 
 
     def splitCsprFile(self, holder):
@@ -86,16 +85,27 @@ class Results(QtWidgets.QMainWindow):
 
 
     def displayGeneData(self):
-        curgene = str(self.comboBoxGene.currentText())
-        cg = self.allGeneSeqs[curgene]
-        self.geneViewer.setPlainText(cg)
+        #curgene = str(self.comboBoxGene.currentText())
+        curgene = 'Thermoanaerobacterium saccharolyticum'
+        #cg = self.allGeneSeqs[curgene]
+        #self.geneViewer.setPlainText(cg)
         #  --- Shifting numbers over based on start and end ---  #
 
         self.targetTable.setRowCount(len(self.allTargets[curgene]))
         print(self.allTargets[curgene])
         index = 0
         for item in self.allTargets[curgene]:
-            st = item[0]-self.startpos
+            loc = QtWidgets.QTableWidgetItem(item[0])
+            seq = QtWidgets.QTableWidgetItem(item[1])
+            strand = QtWidgets.QTableWidgetItem(item[2])
+            PAM = QtWidgets.QTableWidgetItem(item[3])
+            score = QtWidgets.QTableWidgetItem(item[4])
+            self.targetTable.setItem(index, 0, loc)
+            self.targetTable.setItem(index, 1, seq)
+            self.targetTable.setItem(index, 2, strand)
+            self.targetTable.setItem(index, 3, PAM)
+            self.targetTable.setItem(index, 4, score)
+            """st = item[0]-self.startpos
             print(st)
             seq = QtWidgets.QTableWidgetItem(cg[st-20:st])
             self.targetTable.setItem(index, 0, seq)
@@ -106,25 +116,28 @@ class Results(QtWidgets.QMainWindow):
             scr = self.onscore.returnScore(cg[st-6:st+30])
             print(scr)
             score = QtWidgets.QTableWidgetItem(str(scr))
-            self.targetTable.setItem(index, 3, score)
+            self.targetTable.setItem(index, 6, score)"""
             self.btn_sell = QtWidgets.QPushButton('Find Off Targets')
             self.btn_sell.clicked.connect(self.handleButtonClicked)
-            self.targetTable.setCellWidget(index, 4, self.btn_sell)
-            index += 1
+            self.targetTable.setCellWidget(index, 5, self.btn_sell)
             ckbox = QtWidgets.QCheckBox()
             ckbox.clicked.connect(self.search_gene)
-            self.targetTable.setCellWidget(index,5,ckbox)
-
+            self.targetTable.setCellWidget(index,6,ckbox)
+            """x = self.targetTable.cellWidget(index,6)
+            y = x.text()
+            x.setTextAlignment(Qt.AlignHCenter())"""
+            index += 1
         self.targetTable.resizeColumnsToContents()
 
     def search_gene(self):
         search_trms = []
-        for item in self.targetTable:
-            if item[5].isChecked():
-                search_trms.append(item[0])
-        self.geneViewer.setPlainText(self.geneViewer.text())
-        for item in search_trms:
-            x=0
+        checkBox = self.sender()
+        index = self.targetTable.indexAt(checkBox.pos())
+        print(index.column(), index.row(), checkBox.isChecked())
+        #self.geneViewer.setPlainText(self.geneViewer.text())
+        seq = self.targetTable.item(index.row(),1).text()
+        print(seq)
+        x=1
 
 
 
@@ -139,7 +152,9 @@ class Results(QtWidgets.QMainWindow):
 
     #-----Testing Methods -----#
     def fill_table_TEST(self):
-        #self.getTargets("")
+        y=2
+        x = self.getTargets("tsh_spCas9-VRER")
+
         #self.loadGenesandTargets("testing_seq1",1,3,["target1","target2","target3"],"testo")
         #self.splitCsprFile("BY,Xc9d+CV,q")
         """self.targetTable.setRowCount(3)
@@ -158,8 +173,8 @@ class Results(QtWidgets.QMainWindow):
 
 
 # ----------------------------------------------------------------------------------------------------- #
-"""app = Qt.QApplication(sys.argv)
+app = Qt.QApplication(sys.argv)
 app.setOrganizationName("TrinhLab-UTK")
 app.setApplicationName("CASPER")
 window = Results()
-sys.exit(app.exec_())"""
+sys.exit(app.exec_())

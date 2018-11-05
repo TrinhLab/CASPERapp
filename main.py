@@ -4,8 +4,11 @@ import io
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from APIs import Kegg, SeqFromFasta
 from bioservices import KEGG
-from Results import Results
+from CoTargeting import CoTargeting
+
+##########from Results import Results
 from NewGenome import NewGenome
+from multitargeting import Multitargeting
 import requests
 
 from bs4 import BeautifulSoup
@@ -18,17 +21,29 @@ class annotations_Window(QtWidgets.QMainWindow):
         uic.loadUi('Annotation Details.ui', self)
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
         self.Submit_button.clicked.connect(self.submit)
+        self.Go_Back_Button.clicked.connect(self.go_Back)
         self.mainWindow=""
 
     def submit(self):
         self.hide()
         self.mainWindow.show()
 
+    def go_Back(self):
+        self.tableWidget.clear()
+        self.mainWindow.checkBoxes.clear()
+        self.mainWindow.searches.clear()
+        self.tableWidget.setColumnCount(0)
+        self.mainWindow.show()
+        self.hide()
+
     def fill_Table(self,mainWindow):
+
         self.mainWindow = mainWindow
         index = 0
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setColumnCount(3)
+        self.tableWidget.setHorizontalHeaderLabels("Description;Gene ID;Select".split(";"))
+
         mainWindow.checkBoxes = []
         for sValues in mainWindow.searches:
             for definition in mainWindow.searches[sValues]:
@@ -88,6 +103,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.gene_list = {}
         self.searches = {}
         self.checkBoxes = []
+        self.add_orgo = []
         # --- Button Modifications --- #
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
         self.pushButton_FindTargets.clicked.connect(self.gather_settings)
@@ -101,6 +117,11 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Annotation_Ownfile.clicked.connect(self.change_annotation)
         self.NCBI_Select.clicked.connect(self.change_annotation)
         self.actionUpload_New_Genome.triggered.connect(self.launch_newGenome)
+        self.actionCo_Targeting.triggered.connect(self.launch_CoTargeting)
+        self.Add_Orgo_Button.clicked.connect(self.add_Orgo)
+        self.Remove_Organism_Button.clicked.connect(self.remove_Orgo)
+        self.endoChoice.currentIndexChanged.connect(self.endo_Changed)
+
         self.change_annotation()
         #self.test_button.clicked.connect(self.Ann_Window)
 
@@ -109,11 +130,12 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.progressBar.reset()
         self.Annotation_Window = annotations_Window()
 
-
-
+        #Hide Added orgo boxes
+        self.Added_Org_Combo.hide()
+        self.Remove_Organism_Button.hide()
+        self.Added_Org_Label.hide()
         # --- Menubar commands --- #
         self.actionChange_Directory.triggered.connect(self.change_directory)
-
         # --- Setup for Gene Entry Field --- #
         self.geneEntryField.setPlainText("Example Inputs: \n"
                                                "Gene (LocusID): YOL086C  *for Saccharomyces Cerevisiae ADH1 gene* \n"
@@ -123,16 +145,50 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         #self.Kegg_Search_Imput.setPlainText("test")
         #show functionalities on window
-        self.view_my_results = Results()
+        ############################self.view_my_results = Results()
         self.newGenome = NewGenome()
+        self.CoTargeting = CoTargeting()
 
         #self.show()
     #def Ann_Window(self):
 
 
 
+    def endo_Changed(self):
+        i=3
+        self.add_orgo.clear()
+        self.Add_Orgo_Combo.clear()
+        self.Added_Org_Combo.clear()
+        self.addOrgoCombo()
+        self.Added_Org_Combo.hide()
+        self.Added_Org_Label.hide()
+        self.Remove_Organism_Button.hide()
 
     ####---FUNCTIONS TO RUN EACH BUTTON---####
+    def remove_Orgo(self):
+        self.add_orgo.remove(self.Added_Org_Combo.currentText())
+        self.Add_Orgo_Combo.addItem(self.Added_Org_Combo.currentText())
+        self.Added_Org_Combo.removeItem(self.Added_Org_Combo.currentIndex())
+        if len(self.add_orgo)==0:
+            self.Added_Org_Combo.hide()
+            self.Added_Org_Label.hide()
+            self.Remove_Organism_Button.hide()
+
+    def add_Orgo(self):
+        if self.Add_Orgo_Combo.currentText() == "Select Organism":
+            QtWidgets.QMessageBox.question(self, "Must Select Organism",
+                                           "You must select an Organism to add",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+        self.add_orgo.append(self.Add_Orgo_Combo.currentText())
+        self.Added_Org_Combo.addItem(self.Add_Orgo_Combo.currentText())
+        self.Add_Orgo_Combo.removeItem(self.Add_Orgo_Combo.currentIndex())
+        self.Added_Org_Combo.show()
+        self.Added_Org_Label.show()
+        self.Remove_Organism_Button.show()
+
+
 
     def gather_settings(self):
         inputstring = str(self.geneEntryField.toPlainText())
@@ -222,6 +278,10 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def launch_newGenome(self):
        self.newGenome.show()
+
+    def launch_CoTargeting(self):
+        self.CoTargeting.launch(self.data,self.dbpath,self.shortHand)
+        self.hide()
     def seperate_Line(self,input_string):
         export_array = []
         while True:
@@ -380,6 +440,11 @@ class CMainWindow(QtWidgets.QMainWindow):
     # This method checks if a check button or radio button works appropriately by printing the current organism
     def testcheckandradio(self):
          print(str(self.orgChoice.currentText()))
+    def addOrgoCombo(self):
+        self.Add_Orgo_Combo.addItem("Select Organism")
+        for item in self.data:
+            if (self.endoChoice.currentText() in self.data[item]) and (item != str(self.orgChoice.currentText())):
+                self.Add_Orgo_Combo.addItem(item)
 
     # ----- CALLED IN STARTUP WINDOW ------ #
     def getData(self):
@@ -389,14 +454,14 @@ class CMainWindow(QtWidgets.QMainWindow):
         print(onlyfiles)
         orgsandendos = {}
         shortName = {}
-        for file in onlyfiles[1:]:
+        for file in onlyfiles:
             if file.find('.cspr')!=-1:
                 newname = file[0:-4]
                 s = newname.split('_')
                 hold = open(file)
                 buf = (hold.readline())
                 species = buf[8:buf.find('\n')]
-                endo = str(s[1])
+                endo = str(s[1][:len(s[1])-1])
                 if species not in shortName:
                     shortName[species] = s[0]
                 if species in orgsandendos:
@@ -411,6 +476,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
         self.orgChoice.currentIndexChanged.connect(self.changeEndos)
         self.Kegg_Search_Imput.setText(self.orgChoice.currentText())
+        self.addOrgoCombo()
         #os.chdir('/Users/brianmendoza/PycharmProjects/CASPERapp/')
         """f = open('CASPERinfo')
         while True:
@@ -481,9 +547,8 @@ class StartupWindow(QtWidgets.QDialog):
         self.pushButton_3.clicked.connect(self.changeDir)
         self.pushButton_2.clicked.connect(self.show_window)
         self.pushButton.clicked.connect(self.errormsgmulti)
-
+        self.multi_targeting_window = Multitargeting("hold")
         self.show_main_window = CMainWindow()
-
         #show functionalities on window
         self.show()
 
@@ -496,13 +561,21 @@ class StartupWindow(QtWidgets.QDialog):
         cdir = self.lineEdit.text()
         os.chdir(mydir)
         self.gdirectory = mydir
+
         print(mydir)
         print(cdir)
 
     def errormsgmulti(self):
-        QtWidgets.QMessageBox.question(self, "Under Construction...", "Sorry this functionality is still"
-                                            " under construction and will be available shortly!",
-                                            QtWidgets.QMessageBox.Ok)
+        if "Please select a directory that contains .capr files" in self.gdirectory:
+            QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory",
+                                                                                      QtWidgets.QMessageBox.Ok)
+        else:
+            self.multi_targeting_window.launch(self.gdirectory)
+            self.close()
+
+        #QtWidgets.QMessageBox.question(self, "Under Construction...", "Sorry this functionality is still"
+        #                                   " under construction and will be available shortly!",
+        #                                   QtWidgets.QMessageBox.Ok)
 
     @QtCore.pyqtSlot()
     def show_window(self):

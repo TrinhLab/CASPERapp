@@ -87,14 +87,27 @@
    <widget class="QPushButton" name="Submit_button">
     <property name="geometry">
      <rect>
-      <x>380</x>
-      <y>560</y>
+      <x>510</x>
+      <y>570</y>
       <width>75</width>
       <height>23</height>
      </rect>
     </property>
     <property name="text">
      <string>Submit</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Go_Back_Button">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>570</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Return</string>
     </property>
    </widget>
   </widget>
