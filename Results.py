@@ -43,7 +43,6 @@ class Results(QtWidgets.QMainWindow):
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
 
-        self.fill_table_TEST()
         self.show()
 
     # Function that is called in main in order to pass along the information the user inputted and the information
@@ -54,6 +53,7 @@ class Results(QtWidgets.QMainWindow):
         self.directory = path
         self.fasta_ref = fasta
         for gene in geneposdict:
+            self.comboBoxGene.addItem(gene)
             self.get_targets(gene, geneposdict[gene])
 
     # Function grabs the information from the .cspr file and adds them to the AllData dictionary
@@ -73,12 +73,16 @@ class Results(QtWidgets.QMainWindow):
                     myline = file.readline()
                     if self.S.decompress64(myline.split(",")[0]) >= pos_tuple[1]:
                         while self.S.decompress64(myline.split(",")[0]) < pos_tuple[2]:
-                            self.S.decompress_csf_tuple(myline)
+                            targets.append(self.S.decompress_csf_tuple(myline))
                             myline = file.readline()
                     else:
                         continue
+                    break
+                break
+            else:
+                header = file.readline()
 
-        self.allTargets[hold] = targets
+        self.AllData[genename] = targets
         self.displayGeneData()
 
     def displayGeneData(self):
@@ -87,10 +91,10 @@ class Results(QtWidgets.QMainWindow):
         #self.geneViewer.setPlainText(cg)
         #  --- Shifting numbers over based on start and end ---  #
 
-        self.targetTable.setRowCount(len(self.allTargets[curgene]))
-        print(self.allTargets[curgene])
+        self.targetTable.setRowCount(len(self.AllData[curgene]))
+        print(self.AllData[curgene])
         index = 0
-        for item in self.allTargets[curgene]:
+        for item in self.AllData[curgene]:
             loc = QtWidgets.QTableWidgetItem(item[0])
             seq = QtWidgets.QTableWidgetItem(item[1])
             strand = QtWidgets.QTableWidgetItem(item[2])
@@ -144,24 +148,6 @@ class Results(QtWidgets.QMainWindow):
         if index.isValid():
             print(index.row(), index.column())
 
-    #-----Testing Methods -----#
-    def fill_table_TEST(self):
-        y=2
-        x = self.get_targets("ylispCas9VRER")
-
-        #self.loadGenesandTargets("testing_seq1",1,3,["target1","target2","target3"],"testo")
-        #self.splitCsprFile("BY,Xc9d+CV,q")
-        """self.targetTable.setRowCount(3)
-        seq = QtWidgets.QTableWidgetItem("testing")
-        self.targetTable.setItem(0, 0,seq )
-        seq = QtWidgets.QTableWidgetItem("other")
-        self.targetTable.setItem(1, 0, seq)
-        seq = QtWidgets.QTableWidgetItem("third")
-        self.targetTable.setItem(2, 0, seq)
-        self.geneViewer.setPlainText("this is testing the third other thing")
-        self.geneViewer.setFontItalic(True)
-        self.geneViewer.find("testing")"""
-
 
 # Window opening and GUI launching code #
 # ----------------------------------------------------------------------------------------------------- #
@@ -169,5 +155,5 @@ app = Qt.QApplication(sys.argv)
 app.setOrganizationName("TrinhLab-UTK")
 app.setApplicationName("CASPER")
 window = Results()
-window.transfer_data("yli", "spCas9", "/Users/brianmendoza/CrisprDB/", {"myfakegene":(1,1293,3496)}, "/Volumes/Seagate_Drive/FASTAs/yli.fna")
+window.transfer_data("yli", "spCas9", "/Users/brianmendoza/Desktop/CrisprDB", {"myfakegene":(1,1293,3496)}, "/Volumes/Seagate_Drive/FASTAs/yli.fna")
 sys.exit(app.exec_())
