@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>484</width>
     <height>300</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>400</width>
+     <width>491</width>
      <height>300</height>
     </rect>
    </property>
@@ -26,7 +26,7 @@
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
-     <x>210</x>
+     <x>280</x>
      <y>190</y>
      <width>110</width>
      <height>101</height>
@@ -42,7 +42,7 @@
   <widget class="QPushButton" name="pushButton_2">
    <property name="geometry">
     <rect>
-     <x>80</x>
+     <x>100</x>
      <y>190</y>
      <width>110</width>
      <height>101</height>
@@ -56,9 +56,9 @@
   <widget class="QWidget" name="horizontalLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>0</x>
+     <x>10</x>
      <y>140</y>
-     <width>401</width>
+     <width>461</width>
      <height>51</height>
     </rect>
    </property>
@@ -85,8 +85,8 @@
   <widget class="QLabel" name="labelforart">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>10</y>
+     <x>140</x>
+     <y>20</y>
      <width>341</width>
      <height>111</height>
     </rect>

@@ -11,7 +11,7 @@ class Kegg:
     k = KEGG()
     location = "http://www.genome.jp/dbget-bin/www_bget?"
 
-    def gene_locator(self, gene_id):
+    def gene_locator(self, gene_id):                        #gene locator - recives the gene id and returns the location of the gene
         res = self.k.get(gene_id)
         d = self.k.parse(res)
         newstr = d['POSITION']
@@ -22,7 +22,7 @@ class Kegg:
             chrom = newstr[0:cstop]
             chromosome = self.translate_chromosome(chrom)
         sense = True
-        if newstr.find('complement') != -1:  # it is on the opposite strand of DNA
+        if newstr.find('complement') != -1:                # it is on the opposite strand of DNA
             sense = False
             cstop = newstr.find('(')
         if newstr.find('join') != -1:
@@ -48,38 +48,38 @@ class Kegg:
         totloc = (chromosome, sense, int(startloc), int(endloc))
         return totloc
 
-    def translate_chromosome(self, chr):
-        numbers = ('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16')
+    def translate_chromosome(self, chr):                                                        #Translate Chromosome - recives chromosome as letter or roman numeral and returns it as a number
+        numbers = ('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16')      #Create a multi dementional list of all the ways to specify chromosome 
         letters = ('A','B','C','D','E','F','G','H')
         roman = ('I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII', 'XIV',
                  'XV', 'XVI')
         types =[numbers,letters,roman]
-        for list in types:
+        for list in types:                                                                      #check each list to see which the given chromosome is part of
             if chr in list:
-                ind = list.index(chr)
+                ind = list.index(chr)                                                           #find index of chromosome in list and send back the number in that index/
                 return numbers[ind]
         return 1
 
-    def revcom(self, sequence):
+    def revcom(self, sequence):                                       #Revcom - recives a sequance and returns the inverse of the sequance            
         revseq = ""
-        change = {'A':'T',
+        change = {'A':'T',                                            #create Dictionary to allow change between nucleotide pair
                   'T':'A',
                   'G':'C',
                   'C':'G'}
-        for nt in sequence:
+        for nt in sequence:                                           #for each nucleotide in sequence find its partner and concatenate it to revseq
             rnt = change[nt]
             revseq = rnt + revseq
-        return revseq
+        return revseq                                                 #return the reversed sequence
 
-    def added_nts(self, seqstart, seqend, vector, orgcode, chromosome):
+    def added_nts(self, seqstart, seqend, vector, orgcode, chromosome):               #Added nts -  recives the sequence start, the sequence end, the vector, the orgocode and the chromosome
         url = self.location + "FROM=" + seqstart + "&TO=" + seqend + "&VECTOR="\
               + vector + "&ORG=" + orgcode + "&CHR=" + chromosome
         source_code = requests.get(url)
         plain_text = source_code.text
         soup = BeautifulSoup(plain_text, "html.parser")
         exons = []
-        x = soup.find('pre')
-        for region in soup.findAll('font'):
+        x = soup.find('pre')                                                           #get the information from the website
+        for region in soup.findAll('font'):                                             #search through HTML to find exons
             seq = str(region)
             st = seq.find('>') + 1
             z = seq.find('/font') - 2
@@ -100,13 +100,13 @@ class Kegg:
             elif ingene:
                 trueseq += nt
             i += 1
-        exon_position_tuples = []
+        exon_position_tuples = []                                                   #create tuple of the exons position
         for exon in exons:
             spos = trueseq.find(exon)
             epos = spos + len(exon)
             pos = (spos, epos)
             exon_position_tuples.append(pos)
-        return exon_position_tuples
+        return exon_position_tuples                                                 #return the tuple of the exon's positions
 
 
 class SeqFromCSPR:
