@@ -12,7 +12,7 @@ import os
 
 import io
 import pyqtgraph as pg
-from PyQt5.QtChart import (QBarCategoryAxis,QBarSet, QChartView, QBarSeries,QChart,QLineSeries)
+from PyQt5.QtChart import (QBarCategoryAxis, QBarSet, QChartView, QBarSeries,QChart,QLineSeries)
 
 from Algorithms import SeqTranslate
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic

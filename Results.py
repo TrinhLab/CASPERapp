@@ -33,8 +33,6 @@ class Results(QtWidgets.QMainWindow):
         self.endpos = 0
         self.directory = ""
 
-
-
         # Target Table settings #
         self.targetTable.setColumnCount(7)  # hardcoded because there will always be seven columns
         self.targetTable.setShowGrid(False)
@@ -95,11 +93,11 @@ class Results(QtWidgets.QMainWindow):
         print(self.AllData[curgene])
         index = 0
         for item in self.AllData[curgene]:
-            loc = QtWidgets.QTableWidgetItem(item[0])
+            loc = QtWidgets.QTableWidgetItem(str(item[0]))
             seq = QtWidgets.QTableWidgetItem(item[1])
-            strand = QtWidgets.QTableWidgetItem(item[2])
-            PAM = QtWidgets.QTableWidgetItem(item[3])
-            score = QtWidgets.QTableWidgetItem(item[4])
+            strand = QtWidgets.QTableWidgetItem(str(item[4]))
+            PAM = QtWidgets.QTableWidgetItem(item[2])
+            score = QtWidgets.QTableWidgetItem(str(item[3]))
             self.targetTable.setItem(index, 0, loc)
             self.targetTable.setItem(index, 1, seq)
             self.targetTable.setItem(index, 2, strand)
@@ -155,5 +153,5 @@ app = Qt.QApplication(sys.argv)
 app.setOrganizationName("TrinhLab-UTK")
 app.setApplicationName("CASPER")
 window = Results()
-window.transfer_data("yli", "spCas9", "/Users/brianmendoza/Desktop/CrisprDB", {"myfakegene":(1,1293,3496)}, "/Volumes/Seagate_Drive/FASTAs/yli.fna")
+window.transfer_data("yli", "spCas9", "/Users/brianmendoza/Dropbox/CrisprDB", {"myfakegene":(1,1293,3496)}, "/Volumes/Seagate_Drive/FASTAs/yli.fna")
 sys.exit(app.exec_())
