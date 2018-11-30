@@ -26,6 +26,19 @@
     <number>24</number>
    </property>
   </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>100</y>
+     <width>351</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Running Off Target Analysis for Sequence 1 of 2...</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

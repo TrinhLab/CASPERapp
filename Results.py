@@ -1,6 +1,6 @@
 import sys
 
-from PyQt5 import Qt, QtWidgets, uic
+from PyQt5 import Qt, QtWidgets, uic, QtCore
 from Scoring import OnTargetScore
 from Algorithms import SeqTranslate
 
@@ -33,13 +33,20 @@ class Results(QtWidgets.QMainWindow):
         self.endpos = 0
         self.directory = ""
 
+        self.switcher = [1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
+
         # Target Table settings #
         self.targetTable.setColumnCount(7)  # hardcoded because there will always be seven columns
         self.targetTable.setShowGrid(False)
         self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Highlight".split(";"))
+        self.targetTable.horizontalHeader().setSectionsClickable(True)
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+
+        self.targetTable.horizontalHeader().sectionClicked.connect(self.table_sorting)
+
+        self.targetTable.itemSelectionChanged.connect(self.item_select)
 
         self.show()
 
@@ -85,7 +92,6 @@ class Results(QtWidgets.QMainWindow):
 
     def displayGeneData(self):
         curgene = str(self.comboBoxGene.currentText())
-        #cg = self.allGeneSeqs[curgene]
         #self.geneViewer.setPlainText(cg)
         #  --- Shifting numbers over based on start and end ---  #
 
@@ -103,29 +109,15 @@ class Results(QtWidgets.QMainWindow):
             self.targetTable.setItem(index, 2, strand)
             self.targetTable.setItem(index, 3, PAM)
             self.targetTable.setItem(index, 4, score)
-            """st = item[0]-self.startpos
-            print(st)
-            seq = QtWidgets.QTableWidgetItem(cg[st-20:st])
-            self.targetTable.setItem(index, 0, seq)
-            pam = QtWidgets.QTableWidgetItem(cg[st:st+3])  # this is only for a 3nt PAM need to import pam info
-            self.targetTable.setItem(index, 1, pam)
-            strand = QtWidgets.QTableWidgetItem(item[1])
-            self.targetTable.setItem(index, 2, strand)
-            scr = self.onscore.returnScore(cg[st-6:st+30])
-            print(scr)
-            score = QtWidgets.QTableWidgetItem(str(scr))
-            self.targetTable.setItem(index, 6, score)"""
             self.btn_sell = QtWidgets.QPushButton('Find Off Targets')
-            self.btn_sell.clicked.connect(self.handleButtonClicked)
+            self.btn_sell.clicked.connect(self.offtargetButtonClicked)
             self.targetTable.setCellWidget(index, 5, self.btn_sell)
             ckbox = QtWidgets.QCheckBox()
             ckbox.clicked.connect(self.search_gene)
             self.targetTable.setCellWidget(index,6,ckbox)
-            """x = self.targetTable.cellWidget(index,6)
-            y = x.text()
-            x.setTextAlignment(Qt.AlignHCenter())"""
             index += 1
         self.targetTable.resizeColumnsToContents()
+
 
     def search_gene(self):
         search_trms = []
@@ -137,12 +129,21 @@ class Results(QtWidgets.QMainWindow):
         print(seq)
         x=1
 
+    def item_select(self):
+        print(self.targetTable.selectedItems())
 
+    def table_sorting(self, logicalIndex):
+        self.switcher[logicalIndex] *= -1
+        if self.switcher[logicalIndex] == -1:
+            self.targetTable.sortItems(logicalIndex, QtCore.Qt.DescendingOrder)
+        else:
+            self.targetTable.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
 
-    def handleButtonClicked(self):
+    def offtargetButtonClicked(self):
         # button = QtGui.qApp.focusWidget()
         button = self.sender()
         index = self.targetTable.indexAt(button.pos())
+        # Get the sequence information
         if index.isValid():
             print(index.row(), index.column())
 
