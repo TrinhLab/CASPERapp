@@ -109,9 +109,7 @@ class Results(QtWidgets.QMainWindow):
             self.targetTable.setItem(index, 2, strand)
             self.targetTable.setItem(index, 3, PAM)
             self.targetTable.setItem(index, 4, score)
-            self.btn_sell = QtWidgets.QPushButton('Find Off Targets')
-            self.btn_sell.clicked.connect(self.offtargetButtonClicked)
-            self.targetTable.setCellWidget(index, 5, self.btn_sell)
+            self.targetTable.setItem(index, 5, "--.--")
             ckbox = QtWidgets.QCheckBox()
             ckbox.clicked.connect(self.search_gene)
             self.targetTable.setCellWidget(index,6,ckbox)
@@ -140,12 +138,33 @@ class Results(QtWidgets.QMainWindow):
             self.targetTable.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
 
     def offtargetButtonClicked(self):
-        # button = QtGui.qApp.focusWidget()
-        button = self.sender()
-        index = self.targetTable.indexAt(button.pos())
-        # Get the sequence information
-        if index.isValid():
-            print(index.row(), index.column())
+        for target in self.targetTable.selectedItems():
+            # pass the appropriate info into the OffTarget subprocess
+
+    def displayGene(self,fastafile=None, Kegg=False, NCBI=False):
+        organism_genome = list()  # list of chromosomes/scaffolds
+        if fastafile:
+            f = open(fastafile)
+            chr_string = str()
+            for line in f:
+                if not line.startswith(">"):
+                    chr_string += line[:-1]
+                else:
+                    organism_genome.append(chr_string)
+                    chr_string = ""
+            return organism_genome
+        elif Kegg:
+            # Get the gene from the Kegg database
+        elif NCBI:
+            # Get the gene from NCBI database (RefSeq)
+
+        else:
+            return "Error: Cannot find reference sequence.  Search Kegg, NCBI, or download a FASTA file to create a genome reference."
+
+
+
+
+
 
 
 # Window opening and GUI launching code #

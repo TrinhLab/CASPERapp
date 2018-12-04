@@ -27,8 +27,8 @@
    <widget class="QLabel" name="geneviewerLabel">
     <property name="geometry">
      <rect>
-      <x>730</x>
-      <y>240</y>
+      <x>710</x>
+      <y>220</y>
       <width>81</width>
       <height>16</height>
      </rect>
@@ -120,62 +120,6 @@
      </item>
      <item>
       <widget class="QComboBox" name="comboBoxGene"/>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="horizontalLayoutWidget_3">
-    <property name="geometry">
-     <rect>
-      <x>250</x>
-      <y>10</y>
-      <width>411</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <item>
-      <widget class="QLabel" name="sortbyLabel">
-       <property name="maximumSize">
-        <size>
-         <width>70</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Sort By:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="comboBoxSortby"/>
-     </item>
-     <item>
-      <widget class="QLabel" name="sortbyLabel_2">
-       <property name="maximumSize">
-        <size>
-         <width>45</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <weight>50</weight>
-         <bold>false</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Then:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="comboBox"/>
      </item>
     </layout>
    </widget>
@@ -319,6 +263,45 @@
       <string>Reverse Strand</string>
      </property>
     </widget>
+   </widget>
+   <widget class="QCheckBox" name="displayGeneViewer">
+    <property name="geometry">
+     <rect>
+      <x>710</x>
+      <y>240</y>
+      <width>87</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Display On</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="offTargetSearch">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>20</y>
+      <width>201</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Search for Off Targets...</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="offTargetSettings">
+    <property name="geometry">
+     <rect>
+      <x>490</x>
+      <y>20</y>
+      <width>161</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Off Target Settings...</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
