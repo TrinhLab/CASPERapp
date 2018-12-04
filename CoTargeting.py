@@ -10,12 +10,13 @@ from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 
 class CoTargeting(QtWidgets.QMainWindow):
 
-    def __init__(self, parent = None):
+    def __init__(self, info_path):
 
         super(CoTargeting, self).__init__()
         uic.loadUi('CoTargeting.ui', self)
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
         self.path= ""
+        self.info_path  = info_path
         self.organisms =""
         self.shortHand = {}
         self.OrganismDrop.currentIndexChanged.connect(self.endo_Changed)
@@ -31,7 +32,9 @@ class CoTargeting(QtWidgets.QMainWindow):
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
         self.progressBar.reset()
+        self.AnalyzeButton.setEnabled(False)
 
+#########UI Function Code####################
 
     def launch(self, organisms,path,shorthand):
         self.organisms = organisms
@@ -83,7 +86,7 @@ class CoTargeting(QtWidgets.QMainWindow):
         else:
             self.RemoveEndoButton.setEnabled(True)
 
-    def endo_Changed(self):######################
+    def endo_Changed(self):
         self.Endos_All.clear()
         self.Endos_Added.clear()
 
@@ -103,6 +106,8 @@ class CoTargeting(QtWidgets.QMainWindow):
         self.Endos_Added.remove(self.Endos_Added[index])
         self.fill_Tables()
 
+##############Data Processing code####################
+
     def import_data(self,endo):
         file_name = self.shortHand[self.OrganismDrop.currentText()]+"_"+endo
         if self.path.find("/") != -1:
@@ -121,41 +126,85 @@ class CoTargeting(QtWidgets.QMainWindow):
                 break
             if "CHROMOSOME" in line:
                 chromo = line[12:]
-                sorted_info[chromo] = []
+                sorted_info[chromo] = {}
                 continue
-            sorted_info[str(chromo)].append(line)
+            sorted_info[str(chromo)][line.split(',')[0]] = line
         self.progress += round(10/len(self.Endos_Added))
         self.progressBar.setValue(self.progress)
         return sorted_info
 
     def compare_Endos(self):
         if len(self.Endos_Added)<2:
+            QtWidgets.QMessageBox.question(self, "Insufficient endonucleases selected",
+                                           "Please select at least two endonucleases to compare.",
+                                           QtWidgets.QMessageBox.Ok)
             return
+
         self.comp_endo_1 = self.import_data(self.Endos_Added[0])
 
         index= 1
-        while index<len(self.Endos_Added)+1:
+        while index<len(self.Endos_Added):
             self.comp_endo_2= self.import_data(self.Endos_Added[index])
-            self.comp_endo_1 = self.compare()
+            self.comp_endo_1 = self.compare_two()
             index+=1
+        self.completed_Compair()
 
-
-
-    def compare(self):
+    def compare_two(self):
         shared = {}
         for chromo in self.comp_endo_1:
             if not(chromo in self.comp_endo_2):
                 continue
             for line_1 in self.comp_endo_1[chromo]:
-                for line_2 in self.comp_endo_2[chromo]:
-                    if line_1.split(",")[0]==line_2.split(","):
-                        if chromo in shared:
-                            shared[chromo].append(line_1)
-                        else:
-                            shared[chromo] = [line_1]
-                self.progress+= 90/(len(self.Endos_Added)*len(self.comp_endo_1)*len(self.comp_endo_1[chromo]))
+                if line_1 in self.comp_endo_2[chromo]:
+                    if chromo in shared:
+                        shared[chromo][line_1] = self.comp_endo_1[chromo][line_1]
+                    else:
+                        shared[chromo] = {}
+                        shared[chromo][line_1] = self.comp_endo_1[chromo][line_1]
+                self.progress+= 60/((len(self.Endos_Added)-1)*len(self.comp_endo_1)*len(self.comp_endo_1[chromo]))
                 self.progressBar.setValue(self.progress)
         return shared
+
+    def completed_Compair(self):
+
+        if len(self.comp_endo_1)==0:
+            QtWidgets.QMessageBox.question(self, "No Matches",
+                                           "No shared sequences were found in"
+                                           " \nthe endonucleases you selected",
+                                           QtWidgets.QMessageBox.Ok)
+            self.progress = 0
+            self.progressBar.setValue(self.progress)
+            return
+        file_name = self.shortHand[self.OrganismDrop.currentText()]+"_"
+        begin = True
+        for endo in self.Endos_Added:
+            if begin:
+                file_name = file_name+endo
+                begin=False
+            else:
+                file_name = file_name+"&"+endo
+        file = open(self.path + "\\" + file_name + ".cspr","w+")
+        file.write("GENOME: "+self.OrganismDrop.currentText()+"\n")
+        for chromo in self.comp_endo_1:
+            file.write("CHROMOSOME #"+chromo+"\n")
+            for found in self.comp_endo_1[chromo]:
+                file.write(self.comp_endo_1[chromo][found]+"\n")
+                self.progress = self.progress+30/(len(self.comp_endo_1)*len(self.comp_endo_1[chromo]))
+                self.progressBar.setValue(self.progress)
+        file.write("REPEATS\n")
+        file.write("END_OF_FILE")
+        file.close()
+        self.progress = 100
+        self.progressBar.setValue(self.progress)
+        x=3
+        QtWidgets.QMessageBox.question(self, "File Created",
+                                       "A casper file named "+file_name+" has been"
+                                        " \ncreated in your directory with all found matches",
+                                       QtWidgets.QMessageBox.Ok)
+        self.progress = 0
+        self.progressBar.setValue(self.progress)
+
+
 
 
 

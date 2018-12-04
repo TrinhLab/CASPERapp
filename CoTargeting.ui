@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>752</width>
-    <height>475</height>
+    <height>438</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <property name="geometry">
      <rect>
       <x>340</x>
-      <y>210</y>
+      <y>190</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -31,7 +31,7 @@
     <property name="geometry">
      <rect>
       <x>340</x>
-      <y>260</y>
+      <y>240</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -75,7 +75,7 @@
     <property name="geometry">
      <rect>
       <x>340</x>
-      <y>360</y>
+      <y>320</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -88,7 +88,7 @@
     <property name="geometry">
      <rect>
       <x>220</x>
-      <y>400</y>
+      <y>350</y>
       <width>341</width>
       <height>23</height>
      </rect>
@@ -173,7 +173,7 @@
       <x>20</x>
       <y>150</y>
       <width>256</width>
-      <height>192</height>
+      <height>161</height>
      </rect>
     </property>
     <attribute name="horizontalHeaderVisible">
@@ -189,7 +189,7 @@
       <x>470</x>
       <y>150</y>
       <width>256</width>
-      <height>192</height>
+      <height>161</height>
      </rect>
     </property>
     <attribute name="horizontalHeaderVisible">
@@ -198,6 +198,19 @@
     <attribute name="verticalHeaderVisible">
      <bool>false</bool>
     </attribute>
+   </widget>
+   <widget class="QPushButton" name="AnalyzeButton">
+    <property name="geometry">
+     <rect>
+      <x>600</x>
+      <y>350</y>
+      <width>91</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Analyze Results</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

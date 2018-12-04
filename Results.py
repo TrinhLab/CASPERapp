@@ -38,12 +38,15 @@ class Results(QtWidgets.QMainWindow):
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.targetTable.itemSelectionChanged.connect(self.selected)
 
         self.fill_table_TEST()
         self.show()
 
 
-
+    def selected(self):
+        for item in self.targetTable.selectedItems():
+            print(item.text())
     def getTargets(self, fileName):
         file = ""
         targets = []

@@ -25,12 +25,12 @@ class job:
 
 
 class NewGenome(QtWidgets.QMainWindow):
-    def __init__(self,parent=None):
-        super(NewGenome, self).__init__(parent)
+    def __init__(self, info_path):
+        super(NewGenome, self).__init__()
         uic.loadUi('NewGenome.ui', self)
         self.setWindowTitle('New Genome')
         self.k = KEGG()
-
+        self.info_path = info_path
         #---Button Modifications---#
 
         self.setWindowIcon(Qt.QIcon("cas9image.png"))
@@ -120,7 +120,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.JobsQueBox.setPlainText(self.JobsQueBox.toPlainText()+nxtLine+Job.Organism_Name)
 
     def fillEndo(self):
-        f = open('CASPERinfo')
+        f = open(self.info_path+"\\CASPERinfo")
         while True:
             line = f.readline()
             if line.startswith('ENDONUCLEASES'):

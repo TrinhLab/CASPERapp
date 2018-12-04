@@ -67,6 +67,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.average_rep = 0
 
 
+
         self.ready_chromo_min_max = True
         self.ready_chromo_make_graph = True
         self.directory = 'C:/Users/GregCantrall/Documents/Cspr files'
@@ -134,11 +135,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             seed = self.seqTrans.decompress64(split_info[index])
             repeat = split_info[index+1].split("\t")
             self.repeats[seed] =0
-
-
             self.seeds[seed] = []
             for item in repeat:
-
                 if item !="":
                     self.repeats[seed] +=1
                     sequence = item.split(",")
@@ -158,7 +156,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.scr_lbl.setText(str(self.average_rep/self.average_unique))
 
 
-
     def get_chromo_length(self):
         file_info = self.get_file_info()
         lines = file_info.split("\n")
@@ -169,7 +166,11 @@ class Multitargeting(QtWidgets.QMainWindow):
             if "CHROMOSOME #1" == line or "GENOME:" in line:
                 continue
             if "CHROMOSOME" in line:
+                if prev_line=="CHROMO":
+                    self.chromo_length.append(-2)
+                    continue
                 self.chromo_length.append(self.seqTrans.decompress64(prev_line.split(",")[0]))
+                prev_line = "CHROMO"
                 continue
             if "REPEAT" in line:
                 self.chromo_length.append(self.seqTrans.decompress64(prev_line.split(",")[0]))
@@ -185,7 +186,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.nbr_unq.setText(str(holder))
 
     def get_file_info(self):
-
         file_name = self.shortHand[self.organism_drop.currentText()]+"_"+self.endo_drop.currentText()
         if self.directory.find("/") != -1:
             file = open(self.directory+"/"+file_name+"cspr")
@@ -196,7 +196,6 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     def parse_repeates(self, uncomp):
         split_info = uncomp.split("\n")
-
         index = 0
         while index+1<len(split_info):
             seed = split_info[index]
@@ -223,16 +222,22 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.chro_bar_create(dic_info)
         self.get_chromo_length()
         self.fill_Chromo_Text(dic_info)
-        x=43
+    def chromo_length_helper(self,chromo,info):
+        max = 0;
+        for position in info[self.sq.decompress64(self.chromo_seed.currentText())][chromo]:
+            if int(position)>max:
+                max = int(position);
+        self.chromo_length[chromo] = max;
 
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
-
         for chromo in info[self.sq.decompress64(self.chromo_seed.currentText())]:
             pos = []
 
             if chromo == "-1":
                 continue
+            if self.chromo_length[int(chromo)]=="-2":
+                chromo = self.chromo_length_helper(chromo,info)
             for position in info[self.sq.decompress64(self.chromo_seed.currentText())][chromo]:
 
                 pos_space = int(round(((position/self.chromo_length[int(chromo)])*100)/1.3157))
@@ -316,7 +321,6 @@ class Multitargeting(QtWidgets.QMainWindow):
     def seeds_vs_repeats_bar(self):
         data = {}
         self.average = 0
-
         for seed in self.repeats:
             self.average  += int(self.repeats[seed])
             number = self.repeats[seed]
@@ -326,9 +330,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 data[number] =1
         data = self.order_high_low_rep(data)
         self.average = round(self.average/(len(self.repeats)))
-
         x_Vals = QBarSeries()
-
         Axes = []
         holder = QBarSet("test")
         max = 0
@@ -349,8 +351,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         chart.setAxisX(Full_Axes,x_Vals)
         chartView = QChartView()
         chartView.setChart(chart)
-
-
         self.layout_repeat_bar.addWidget(chartView,0,1)
         self.chart_view_repeat_bar = chartView
 
