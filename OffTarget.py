@@ -2,193 +2,65 @@
     to run with this program.
     WARNING: Running this protocol on a large number of sequences is unwise and may take significant computing power/time."""
 
+"""Called:
+O = OffTargetAlgorithm()"""
 
-# -------------------------------------- USER CAN IGNORE CODE BELOW THIS LINE ---------------------------------------- #
 
 import os, sys, math, datetime
-from Bio import Seq
-from Bio.Seq import Seq
+import subprocess as sub
 from Algorithms import SeqTranslate
-from Bio.Alphabet import IUPAC
 
 
 class OffTargetAlgorithm:
 
-    def __init__(self, threshold, endo, base_org, csf_file, other_orgs, casperofflist, output_path):
-        self.ST = SeqTranslate()
-        self.rSequences = []
-        self.get_rseqs(casperofflist)
-        self.mypath = csf_file[:csf_file.find(base_org)]
-        self.ref_genomes = [base_org]
-        self.ref_genomes += other_orgs
-        self.endo = endo
-        self.threshold = threshold
-        self.dSequence = str()  # global to class so that all scoring functions can use it
+    def __init__(self, off_list, cspr_file, max_misses=4, threshold=0.05, compressed=False, output_path=None, detailed=False, average=True):
 
-        # This is for autofilling the HsuMatrix
-        self.matrixKeys = ["GT", "AC", "GG", "TG", "TT", "CA", "CT", "GA", "AA", "AG", "TC", "CC"]
-        self.matrix = {}
-        self.fill_matrix()
+        self.output_file_path = "temp_off_results_file.txt"
+        self.detailed = False
+        self.average = False
 
-        # This is where the data is stored before it is written
-        self.output_data = dict()
-        for myseq in self.rSequences:
-            self.output_data[myseq[0]] = list()
+        # Fill the list of variables that get passed to the subprocess:
+        self.args_array = list()  # This is the list that gets passed into the file
+        self.args_array.append("C:\\Users\\Greg...")
+        self.args_array.append(off_list)
+        if compressed:
+            self.args_array.append("True")
+        else:
+            self.args_array.append("False")
+        self.args_array.append(cspr_file)
+        if output_path:
+            self.args_array.append(output_path)
+            self.output_file_path = output_path
+        self.args_array.append("C:\\Users\\Greg...")
+        self.args_array.append(str(max_misses))
+        self.args_array.append(str(threshold))
+        if detailed:
+            self.args_array.append("True")
+            self.detailed = True
+        else:
+            self.args_array.append("False")
+        if average:
+            self.args_array.append("True")
+            self.average = True
+        else:
+            self.args_array.append("False")
 
-        # BEGIN RUNNING THROUGH SEQUENCES
-        for sequence in self.rSequences:
-            print(sequence)
-            for genome in self.ref_genomes:
-                f = open(self.mypath + genome + self.endo + ".cspr", 'r')
-                while True:
-                    line = f.readline()
-                    if line.find("CHROMOSOME") != -1:
-                        curchrom = line[line.find("#") + 1:-1]
-                        print("Finished checking " + curchrom)
-                    else:
-                        if line[0:-1] == "REPEATS":
-                            break
-                        # Checks for a signifcant number of mismatches:
-                        #locseq = line[:-1].split(",")
-                        if self.critical_similarity(sequence[0], self.ST.decompress_csf_tuple(line)[1]):
-                            # This is where the real fun begins: off target analysis
-                            print('found a similarity')
-                            seqscore = self.get_scores(sequence[1],self.ST.decompress_csf_tuple(line)[1])
-                            if seqscore > self.threshold:
-                                self.output_data[sequence[0]].append((str(curchrom),
-                                                                      self.ST.decompress_csf_tuple(line[:-1]),
-                                                                      int(seqscore*100), genome))
+    def run_off_target(self):
+        sub.run(self.args_array)
 
-        # END SEQUENCES RUN
-        # Output the data acquired:
-        out = open(output_path + "off_results" + str(datetime.datetime.now().time()) + '.txt', 'w')
-        out.write("Off-target sequences identified.  Scores are between O and 1.  A higher value indicates greater"
-                  "probability of off-target activity at that location.\n")
-        for sequence in self.output_data:
-            out.write(sequence + "\n")
-            for off_target in self.output_data[sequence]:
-                outloc = off_target[0] + "," + str(off_target[1][0]) + "," + off_target[1][1]
-                out.write(off_target[3] + "," + outloc + "\t" + str(off_target[2]/100) + '\n')
-        out.close()
-
-    def get_rseqs(self, offlist):
-        targets = list()
-        cofile = open(offlist, 'r')
-        cofile.readline()
-        while True:
-            t = cofile.readline()[:-1]
-            if t == 'EN':
-                break
-            targets.append(t)
-        for tar in targets:
-            compseed = self.ST.compress(tar[:16], 64)
-            comptail = self.ST.compress(tar[16:], 64)
-            compressed = compseed + "." + comptail
-            rseq = ""
-            for nt in tar[0:-1]:
-                rseq = nt + rseq
-            self.rSequences.append([tar, rseq])
-
-    def get_scores(self,rseq, dseq):
-        self.dSequence = Seq(dseq, IUPAC.unambiguous_dna).reverse_complement()
-        hsu = self.get_hsu_score(rseq)
-        qual = self.get_qualt_score(rseq)
-        step = self.qualt_step_score(rseq)
-        output = ((math.sqrt(hsu) + step) + pow(qual, 6))
-        return output
-
-    def fill_matrix(self):
-        f = open('CASPERinfo', 'r')
-        l = " "
-        while True:
-            l = f.readline()
-            if l[0] == "H":
-                break
-        i = 0
-        l = f.readline()
-        while l[0] != '-':
-            values = l.split("\t")
-            self.matrix[self.matrixKeys[i]] = values
-            i += 1
-            l = f.readline()
-        for element in self.matrix:
-            self.matrix[element][18] = self.matrix[element][18][0:-1]
-
-    def get_hsu_score(self, rSequence):
-        score = 1.0
-        for i in range(0,19):
-            rnt = rSequence[i]
-            dnt = self.dSequence[i]
-            lookup = str(rnt) + str(dnt)
-            if lookup in self.matrixKeys:
-                hsu = self.matrix[lookup][18-i]
-                score *= float(hsu)
-        return score
-
-    def get_qualt_score(self, rSequence):
-        score = 3.5477
-        for i in range(0, 19):
-            lookup = rSequence[i] + self.dSequence[i]
-            if lookup in self.matrixKeys:
-                score -= 1.0/(i+1)
-        return score/3.5477
-
-    def qualt_step_score(self, rSequence):
-        score = 1.0
-        for i in range(0, 19):
-            lookup = rSequence[i] + self.dSequence[i]
-            if lookup in self.matrixKeys:
-                if i < 6:
-                    score -= 0.1
-                elif i < 12:
-                    score -= 0.05
-                elif i < 20:
-                    score -= 0.0125
-        return score
-
-    def separation_score(self, rSequence):
-        misses = []
-        delta = 0
-        for i in range(0, 19):
-            lookup = rSequence[i] + self.dSequence[i]
-            if lookup in self.matrixKeys:
-                misses.append(i)
-        if len(misses) == 2:
-            delta = (misses[1] - misses[0])/2.0
-        if len(misses) == 3:
-            delta = ((misses[1] - misses[0]) + (misses[2] - misses[1]))/3.0
-        if len(misses) == 4:
-            delta = ((misses[1] - misses[0]) + (misses[2] - misses[1]))/3.0
-        retval = 1.0 - (delta/19.0)
-        return retval
-
-    # If there is more than four mismatches it returns false, else it will return true
-    def critical_similarity(self, cseq1, cseq2):
-        mismatches = 0
-        lim = min([len(cseq1), len(cseq2)])
-        check = True
-        for i in range(lim):  # Doesn't matter whether you use cseq1 or cseq2 they are the same length
-            if cseq1[i] != cseq2[i]:
-                mismatches += 1
-                if mismatches == 5:
-                    check = False
-                    break
-        return check
-
-    def int_to_char(self, i):
-        switcher = {
-            0: 'A',
-            1: 'T',
-            2: 'C',
-            3: 'G'
-        }
-        return switcher[i]
-
-    def char_to_int(self, c):
-        switcher = {
-            'A': 0,
-            'T': 1,
-            'C': 2,
-            'G': 3
-        }
-        return switcher[c]
+    def return_results(self):
+        results_dict = dict()
+        off_list = list()
+        f = open(self.output_file_path)
+        if self.average:
+            sequence = f.readline().split(":")[0]
+            score = f.readline()[:-1].split(":")[1]
+        else:
+            sequence = f.readline()[:-2]
+            score = "--.--"
+        if self.detailed:
+            off_target = f.readline()
+            while off_target != "\n":
+                off_list.append(off_target[:-1].split(","))
+        f.close()
+        return results_dict
