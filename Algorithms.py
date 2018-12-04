@@ -85,20 +85,20 @@ class SeqTranslate:
             return base10seq
 
     def decompress_csf_tuple(self, locseq, pamlength=3, seqlength=20):
-        mytuple = locseq.split(",")
+        mytuple = locseq[:-1].split(",")
         loc = self.decompress64(mytuple[0])
         seq = mytuple[1]
         scr = self.decompress64(mytuple[2])
-        split = seq.find("+")
-        if split != -1:
-            dira = True
-            sequence = seq[:split]
-            pam = seq[split+1:]
+        strand = seq.find("+")
+        if strand != -1:
+            dira = "+"
+            sequence = seq[:strand]
+            pam = seq[strand+1:]
         else:
             seq = seq.split("-")
             sequence = seq[0]
             pam = seq[1]
-            dira = False
+            dira = "-"
         sequence = self.decompress64(sequence, True)
         pam = self.decompress64(pam, True)
         # The for loops fixes the problem of A's not being added to the end because they are removed on compression
@@ -110,11 +110,6 @@ class SeqTranslate:
         #print("Location: " + str(myloc))
         #print("Sequence: " + myseq)
 
-    def fill_As(self, seq, length):
-        newseq = seq
-        for i in range(len(seq),length):
-            newseq += 'A'
-        return newseq
 
 
 #S = SeqTranslate()

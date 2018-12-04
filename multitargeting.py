@@ -67,7 +67,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.average_rep = 0
 
 
-
         self.ready_chromo_min_max = True
         self.ready_chromo_make_graph = True
         self.directory = 'C:/Users/GregCantrall/Documents/Cspr files'

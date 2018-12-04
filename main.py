@@ -6,7 +6,7 @@ from APIs import Kegg, SeqFromFasta
 from bioservices import KEGG
 from CoTargeting import CoTargeting
 
-##########from Results import Results
+from Results import Results
 from NewGenome import NewGenome
 from multitargeting import Multitargeting
 import requests
@@ -14,10 +14,15 @@ import requests
 from bs4 import BeautifulSoup
 
 
+# =========================================================================================
+# CLASS NAME: AnnotationsWindow
+# Inputs: Greg: fill in this information
+# Outputs: Greg: fill in this information
+# =========================================================================================
 
-class annotations_Window(QtWidgets.QMainWindow):
+class AnnotationsWindow(QtWidgets.QMainWindow):
     def __init__(self):
-        super(annotations_Window, self).__init__()
+        super(AnnotationsWindow, self).__init__()
         uic.loadUi('Annotation Details.ui', self)
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
         self.Submit_button.clicked.connect(self.submit)
@@ -77,12 +82,6 @@ class annotations_Window(QtWidgets.QMainWindow):
         return 0
 
 
-
-
-
-
-
-
 # =========================================================================================
 # CLASS NAME: CMainWindow
 # Inputs: Takes in the path information from the startup window and also all input parameters
@@ -129,7 +128,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
         self.progressBar.reset()
-        self.Annotation_Window = annotations_Window()
+        self.Annotation_Window = AnnotationsWindow()
 
         #Hide Added orgo boxes
         self.Added_Org_Combo.hide()
@@ -189,8 +188,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Added_Org_Label.show()
         self.Remove_Organism_Button.show()
 
-
-
+    # Function for collecting the settings from the input field and transferring them to run_results
     def gather_settings(self):
         inputstring = str(self.geneEntryField.toPlainText())
         self.progressBar.setValue(10)
@@ -205,12 +203,11 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.run_results("sequence", sinput)
 
 
-    # ---- IS ONLY CALLED FROM gather_settings!!!! ---- #
+# ---- Following functions are for running the auxillary algorithms and windows ---- #
     def run_results(self, inputtype, inputstring):
-        """kegginfo = Kegg()
+        kegginfo = Kegg()
         org = str(self.orgChoice.currentText())
         endo = str(self.endoChoice.currentText())
-        ginfo = {}  # each entry ginfo[gene] = (chromosome number, t/f strand, start pos, end pos)"""
         progvalue = 15
         self.searches = {}
         self.gene_list = {}
@@ -231,7 +228,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 else:
                     self.search_kegg()
             self.make_dictonary()
-            list_sVal = self.seperate_Line(inputstring[0])
+            list_sVal = self.separate_line(inputstring[0])
             for sValue in list_sVal:
                 sValue = self.removeWhiteSpace(sValue)
                 if len(sValue) == 0:
@@ -258,8 +255,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         if inputtype == "sequence":
             self.progressBar.setValue(45)
 
-
-
+        # For processing the gene sequence from a specified fasta file.
         """s = SeqFromFasta()
         filename = self.dbpath + org + ".fna"
         s.setfilename(filename)
@@ -283,7 +279,11 @@ class CMainWindow(QtWidgets.QMainWindow):
     def launch_CoTargeting(self):
         self.CoTargeting.launch(self.data,self.dbpath,self.shortHand)
         self.hide()
-    def seperate_Line(self,input_string):
+
+# ------------------------------------------------------------------------------------------------------ #
+
+# ----- Following Code is helper functions for processing input data ----- #
+    def separate_line(self, input_string):
         export_array = []
         while True:
             index = input_string.find('\n')
@@ -447,6 +447,12 @@ class CMainWindow(QtWidgets.QMainWindow):
             if (self.endoChoice.currentText() in self.data[item]) and (item != str(self.orgChoice.currentText())):
                 self.Add_Orgo_Combo.addItem(item)
 
+    def addOrgoCombo(self):
+        self.Add_Orgo_Combo.addItem("Select Organism")
+        for item in self.data:
+            if (self.endoChoice.currentText() in self.data[item]) and (item != str(self.orgChoice.currentText())):
+                self.Add_Orgo_Combo.addItem(item)
+
     # ----- CALLED IN STARTUP WINDOW ------ #
     def getData(self):
         mypath = os.getcwd()
@@ -479,11 +485,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.shortHand= shortName
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
         self.orgChoice.currentIndexChanged.connect(self.changeEndos)
-        self.Kegg_Search_Imput.setText(self.orgChoice.currentText())
-        self.addOrgoCombo()
-        return found
-        #os.chdir('/Users/brianmendoza/PycharmProjects/CASPERapp/')
-
     def changeEndos(self):
 
         self.endoChoice.clear()
@@ -499,10 +500,10 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def view_results(self):
+        self.view_my_results.transfer_data(org, endo, path, geneposdict, fasta)
         self.view_my_results.show()
         self.progressBar.setValue(0)
         self.pushButton_ViewTargets.setEnabled(False)
-
 
 
 # ----------------------------------------------------------------------------------------------------- #
@@ -628,7 +629,6 @@ class StartupWindow(QtWidgets.QDialog):
         else:
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
                                                                                       QtWidgets.QMessageBox.Ok)
-
 
 
 

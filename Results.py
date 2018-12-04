@@ -1,7 +1,8 @@
 import sys
 
-from PyQt5 import Qt, QtWidgets, uic
+from PyQt5 import Qt, QtWidgets, uic, QtCore
 from Scoring import OnTargetScore
+from Algorithms import SeqTranslate
 
 # =========================================================================================
 # CLASS NAME: Results
@@ -20,115 +21,99 @@ class Results(QtWidgets.QMainWindow):
         self.geneViewer.setReadOnly(True)
         # Scoring Class object #
         self.onscore = OnTargetScore()
-        # Data containers #
-        self.allGenes = []
-        self.allTargets = {}
-        self.allGeneSeqs = {}
+        self.S = SeqTranslate()
+
+        # Main Data container
+        # Keys: Gene names
+        # Values: #
+        self.AllData = {}
+
 
         self.startpos = 0
         self.endpos = 0
-        self.directory ='C:/Users/GregCantrall/Documents/Cspr files'
+        self.directory = ""
 
-
+        self.switcher = [1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
 
         # Target Table settings #
         self.targetTable.setColumnCount(7)  # hardcoded because there will always be seven columns
         self.targetTable.setShowGrid(False)
         self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Highlight".split(";"))
+        self.targetTable.horizontalHeader().setSectionsClickable(True)
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.targetTable.itemSelectionChanged.connect(self.selected)
 
-        self.fill_table_TEST()
+        self.targetTable.horizontalHeader().sectionClicked.connect(self.table_sorting)
+
+        self.targetTable.itemSelectionChanged.connect(self.item_select)
+
         self.show()
 
+    # Function that is called in main in order to pass along the information the user inputted and the information
+    # from the .cspr files that was discovered
+    def transfer_data(self, org, endo, path, geneposdict, fasta):
+        self.org = org
+        self.endo = endo
+        self.directory = path
+        self.fasta_ref = fasta
+        for gene in geneposdict:
+            self.comboBoxGene.addItem(gene)
+            self.get_targets(gene, geneposdict[gene])
 
-    def selected(self):
-        for item in self.targetTable.selectedItems():
-            print(item.text())
-    def getTargets(self, fileName):
-        file = ""
+    # Function grabs the information from the .cspr file and adds them to the AllData dictionary
+    def get_targets(self, genename, pos_tuple):
         targets = []
         if self.directory.find("/") != -1:
-            file = open(self.directory+"/"+fileName+".cspr")
+            file = open(self.directory+"/" + self.org + "_" + self.endo + ".cspr")
         else:
-            file = open(self.directory + "\\" + fileName + ".cspr")
-        hold = file.readline()
-        hold  = hold[8:hold.find('\n')]
-        file.readline()
+            file = open(self.directory + "\\" + self.org + "_" + self.endo + ".cspr")
+        header = file.readline()
+        # Find the right chromosome:
         while True:
-            string = file.readline()
-            if "REPEATS" in string:
+            # in the right chromosome/scaffold?
+            if header.find("(" + str(pos_tuple[0]) + ")"):
+                while True:
+                    # Find the appropriate location by quickly decompressing the location at the front of the line
+                    myline = file.readline()
+                    if self.S.decompress64(myline.split(",")[0]) >= pos_tuple[1]:
+                        while self.S.decompress64(myline.split(",")[0]) < pos_tuple[2]:
+                            targets.append(self.S.decompress_csf_tuple(myline))
+                            myline = file.readline()
+                    else:
+                        continue
+                    break
                 break
-            item = self.splitCsprFile(string)
-            targets.append(item)
-        self.allTargets[hold] = targets
+            else:
+                header = file.readline()
+
+        self.AllData[genename] = targets
         self.displayGeneData()
 
-
-
-    def splitCsprFile(self, holder):
-        item = []
-        strand = "+"
-        sep = holder.find(',')
-        item.append(holder[:sep])
-        holder = holder[sep+1:]
-        sep = holder.find('+')
-        if sep == -1:
-            strand = "-"
-            sep = holder.find("-")
-        item.append(holder[:sep])
-        item.append(strand)
-        holder = holder[sep+1:]
-        sep = holder.find(",")
-        item.append(holder[:sep])
-        item.append(holder[sep+1:])
-        return item
-
-
     def displayGeneData(self):
-        #curgene = str(self.comboBoxGene.currentText())
-        curgene = 'Thermoanaerobacterium saccharolyticum'
-        #cg = self.allGeneSeqs[curgene]
+        curgene = str(self.comboBoxGene.currentText())
         #self.geneViewer.setPlainText(cg)
         #  --- Shifting numbers over based on start and end ---  #
 
-        self.targetTable.setRowCount(len(self.allTargets[curgene]))
-        print(self.allTargets[curgene])
+        self.targetTable.setRowCount(len(self.AllData[curgene]))
+        print(self.AllData[curgene])
         index = 0
-        for item in self.allTargets[curgene]:
-            loc = QtWidgets.QTableWidgetItem(item[0])
+        for item in self.AllData[curgene]:
+            loc = QtWidgets.QTableWidgetItem(str(item[0]))
             seq = QtWidgets.QTableWidgetItem(item[1])
-            strand = QtWidgets.QTableWidgetItem(item[2])
-            PAM = QtWidgets.QTableWidgetItem(item[3])
-            score = QtWidgets.QTableWidgetItem(item[4])
+            strand = QtWidgets.QTableWidgetItem(str(item[4]))
+            PAM = QtWidgets.QTableWidgetItem(item[2])
+            score = QtWidgets.QTableWidgetItem(str(item[3]))
             self.targetTable.setItem(index, 0, loc)
             self.targetTable.setItem(index, 1, seq)
             self.targetTable.setItem(index, 2, strand)
             self.targetTable.setItem(index, 3, PAM)
             self.targetTable.setItem(index, 4, score)
-            """st = item[0]-self.startpos
-            print(st)
-            seq = QtWidgets.QTableWidgetItem(cg[st-20:st])
-            self.targetTable.setItem(index, 0, seq)
-            pam = QtWidgets.QTableWidgetItem(cg[st:st+3])  # this is only for a 3nt PAM need to import pam info
-            self.targetTable.setItem(index, 1, pam)
-            strand = QtWidgets.QTableWidgetItem(item[1])
-            self.targetTable.setItem(index, 2, strand)
-            scr = self.onscore.returnScore(cg[st-6:st+30])
-            print(scr)
-            score = QtWidgets.QTableWidgetItem(str(scr))
-            self.targetTable.setItem(index, 6, score)"""
-            self.btn_sell = QtWidgets.QPushButton('Find Off Targets')
-            self.btn_sell.clicked.connect(self.handleButtonClicked)
-            self.targetTable.setCellWidget(index, 5, self.btn_sell)
+            self.targetTable.setItem(index, 5, "--.--")
             ckbox = QtWidgets.QCheckBox()
             ckbox.clicked.connect(self.search_gene)
             self.targetTable.setCellWidget(index,6,ckbox)
-            """x = self.targetTable.cellWidget(index,6)
-            y = x.text()
-            x.setTextAlignment(Qt.AlignHCenter())"""
             index += 1
         self.targetTable.resizeColumnsToContents()
 
@@ -142,16 +127,43 @@ class Results(QtWidgets.QMainWindow):
         print(seq)
         x=1
 
+    def item_select(self):
+        print(self.targetTable.selectedItems())
+
+    def table_sorting(self, logicalIndex):
+        self.switcher[logicalIndex] *= -1
+        if self.switcher[logicalIndex] == -1:
+            self.targetTable.sortItems(logicalIndex, QtCore.Qt.DescendingOrder)
+        else:
+            self.targetTable.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
+
+    def offtargetButtonClicked(self):
+        for target in self.targetTable.selectedItems():
+            # pass the appropriate info into the OffTarget subprocess
+
+    def displayGene(self,fastafile=None, Kegg=False, NCBI=False):
+        organism_genome = list()  # list of chromosomes/scaffolds
+        if fastafile:
+            f = open(fastafile)
+            chr_string = str()
+            for line in f:
+                if not line.startswith(">"):
+                    chr_string += line[:-1]
+                else:
+                    organism_genome.append(chr_string)
+                    chr_string = ""
+            return organism_genome
+        elif Kegg:
+            # Get the gene from the Kegg database
+        elif NCBI:
+            # Get the gene from NCBI database (RefSeq)
+
+        else:
+            return "Error: Cannot find reference sequence.  Search Kegg, NCBI, or download a FASTA file to create a genome reference."
 
 
 
 
-    def handleButtonClicked(self):
-        # button = QtGui.qApp.focusWidget()
-        button = self.sender()
-        index = self.targetTable.indexAt(button.pos())
-        if index.isValid():
-            print(index.row(), index.column())
 
     #-----Testing Methods -----#
     def fill_table_TEST(self):
@@ -175,9 +187,11 @@ class Results(QtWidgets.QMainWindow):
 
 
 
+# Window opening and GUI launching code #
 # ----------------------------------------------------------------------------------------------------- #
 app = Qt.QApplication(sys.argv)
 app.setOrganizationName("TrinhLab-UTK")
 app.setApplicationName("CASPER")
 window = Results()
+window.transfer_data("yli", "spCas9", "/Users/brianmendoza/Dropbox/CrisprDB", {"myfakegene":(1,1293,3496)}, "/Volumes/Seagate_Drive/FASTAs/yli.fna")
 sys.exit(app.exec_())
