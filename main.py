@@ -91,10 +91,11 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
 
 
 class CMainWindow(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self,info_path):
         super(CMainWindow, self).__init__()
         uic.loadUi('CASPER_main.ui', self)
         self.dbpath = ""
+        self.info_path = info_path
         self.data = {}
         self.TNumbers = {}
         self.shortHand ={}
@@ -137,16 +138,16 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.actionChange_Directory.triggered.connect(self.change_directory)
         # --- Setup for Gene Entry Field --- #
         self.geneEntryField.setPlainText("Example Inputs: \n"
-                                         "Gene (LocusID): YOL086C  *for Saccharomyces Cerevisiae ADH1 gene* \n"
-                                         "Position: (chromosome,start,stop)(chromosome,start,stop)...\n"
-                                         "Sequence: *Pure sequence. CASPER will search for targets and report off"
-                                         "targets based on the genome selected if any*")
+                                               "Gene (LocusID): YOL086C  *for Saccharomyces Cerevisiae ADH1 gene* \n"
+                                               "Position: (chromosome,start,stop)(chromosome,start,stop)...\n"
+                                               "Sequence: *Pure sequence. CASPER will search for targets and report off"
+                                               "targets based on the genome selected if any*")
 
         #self.Kegg_Search_Imput.setPlainText("test")
         #show functionalities on window
-        self.view_my_results = Results()
-        self.newGenome = NewGenome()
-        self.CoTargeting = CoTargeting()
+        ############################self.view_my_results = Results()
+        self.newGenome = NewGenome(info_path)
+        self.CoTargeting = CoTargeting(info_path)
 
         #self.show()
     #def Ann_Window(self):
@@ -440,6 +441,11 @@ class CMainWindow(QtWidgets.QMainWindow):
     # This method checks if a check button or radio button works appropriately by printing the current organism
     def testcheckandradio(self):
          print(str(self.orgChoice.currentText()))
+    def addOrgoCombo(self):
+        self.Add_Orgo_Combo.addItem("Select Organism")
+        for item in self.data:
+            if (self.endoChoice.currentText() in self.data[item]) and (item != str(self.orgChoice.currentText())):
+                self.Add_Orgo_Combo.addItem(item)
 
     def addOrgoCombo(self):
         self.Add_Orgo_Combo.addItem("Select Organism")
@@ -450,6 +456,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     # ----- CALLED IN STARTUP WINDOW ------ #
     def getData(self):
         mypath = os.getcwd()
+        found = False;
         self.dbpath = mypath
         onlyfiles = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
         print(onlyfiles)
@@ -457,6 +464,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         shortName = {}
         for file in onlyfiles:
             if file.find('.cspr')!=-1:
+                found=True;
                 newname = file[0:-4]
                 s = newname.split('_')
                 hold = open(file)
@@ -471,32 +479,12 @@ class CMainWindow(QtWidgets.QMainWindow):
                     orgsandendos[species] =[endo]
                     self.orgChoice.addItem(species)
 
+        if found==False:
+            return False;
         self.data = orgsandendos
-        self.shortHand = shortName
+        self.shortHand= shortName
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
         self.orgChoice.currentIndexChanged.connect(self.changeEndos)
-        self.Kegg_Search_Imput.setText(self.orgChoice.currentText())
-        self.addOrgoCombo()
-        #os.chdir('/Users/brianmendoza/PycharmProjects/CASPERapp/')
-        """f = open('CASPERinfo')
-        while True:
-            line = f.readline()
-            if line.startswith('ORGA'):
-                while True:
-                    orginfo = f.readline()
-                    orginfo = orginfo[0:-1]
-                    if orginfo[0] == '-':
-                        break
-                    stuff = orginfo.split(":")
-                    self.orgcodes[stuff[1]] = stuff[0]
-                break
-        f.close()
-
-        for item in self.orgcodes:
-            self.orgChoice.addItem(item)
-        self.endoChoice.addItems(self.data[self.orgcodes[str(self.orgChoice.currentText())]])
-        self.orgChoice.currentIndexChanged.connect(self.changeEndos)
-"""
     def changeEndos(self):
 
         self.endoChoice.clear()
@@ -539,16 +527,17 @@ class StartupWindow(QtWidgets.QDialog):
         pixmap = QtGui.QPixmap('mainart.jpg')
         self.labelforart.setPixmap(pixmap)
         self.pushButton_2.setDefault(True)
+        self.info_path = os.getcwd()
+        self.gdirectory = self.check_dir()
 
-        self.gdirectory = os.path.expanduser("~")
-        self.gdirectory = "Please select a directory that contains .capr files"
         self.lineEdit.setText(self.gdirectory)
 
         self.pushButton_3.clicked.connect(self.changeDir)
         self.pushButton_2.clicked.connect(self.show_window)
         self.pushButton.clicked.connect(self.errormsgmulti)
         self.multi_targeting_window = Multitargeting("hold")
-        self.show_main_window = CMainWindow()
+        self.show_main_window = CMainWindow(self.info_path)
+
         #show functionalities on window
         self.show()
 
@@ -557,40 +546,91 @@ class StartupWindow(QtWidgets.QDialog):
         filed = QtWidgets.QFileDialog()
         mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a Folder",
                                                        self.gdirectory, QtWidgets.QFileDialog.ShowDirsOnly)
+        if mydir == "":
+            return;
+
         self.lineEdit.setText(mydir)
         cdir = self.lineEdit.text()
-        os.chdir(mydir)
         self.gdirectory = mydir
-
         print(mydir)
         print(cdir)
 
+
+
+
     def errormsgmulti(self):
+            self.gdirectory = str(self.lineEdit.text())
+            print(self.gdirectory)
+            if "Please select a directory that contains .capr files" in self.gdirectory:
+                QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory",
+                                               QtWidgets.QMessageBox.Ok)
+            elif (os.path.isdir(self.gdirectory)):
+                os.chdir(self.gdirectory)
+                self.multi_targeting_window.launch(self.gdirectory)
+                self.close()
+            else:
+                QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
+                                                                                    QtWidgets.QMessageBox.Ok)
+    def check_dir(self):
+        cspr_info = open(self.info_path+"\\CASPERinfo",'r+')
+        cspr_info = cspr_info.read()
+        lines = cspr_info.split('\n')
+        line = ""
+        for item in lines:
+            if 'DIRECTORY:' in item:
+                line = item
+                break
+        if len(line)<11:
+            return os.path.expanduser("~\Documents").replace('\\','/')
+        else:
+            return line[10:]
+
+    def re_write_dir(self):
+        cspr_info = open(self.info_path+"\\CASPERinfo", 'r+')
+        cspr_info_text = cspr_info.read()
+        cspr_info_text = cspr_info_text.split('\n')
+        full_doc = ""
+        for item in cspr_info_text:
+            if 'DIRECTORY:' in item:
+                line = item
+                break
+        line_final  = "DIRECTORY:"+self.gdirectory
+        for item in cspr_info_text:
+            if item == line:
+                full_doc= full_doc+"\n"+line_final
+            else:
+                full_doc = full_doc+"\n" + item
+        full_doc = full_doc[1:]
+        cspr_info.close()
+        cspr_info = open(self.info_path + "\\CASPERinfo", 'w+')
+        cspr_info.write(full_doc)
+
+        cspr_info.close()
+
+    def show_window(self):
+
+        self.gdirectory = str(self.lineEdit.text())
+        print(self.gdirectory)
         if "Please select a directory that contains .capr files" in self.gdirectory:
             QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory",
                                                                                       QtWidgets.QMessageBox.Ok)
-        else:
-            self.multi_targeting_window.launch(self.gdirectory)
-            self.close()
+        elif(os.path.isdir(self.gdirectory)):
 
-        #QtWidgets.QMessageBox.question(self, "Under Construction...", "Sorry this functionality is still"
-        #                                   " under construction and will be available shortly!",
-        #                                   QtWidgets.QMessageBox.Ok)
-
-    @QtCore.pyqtSlot()
-    def show_window(self):
-        if "Please select a directory that contains .cspr files" in self.gdirectory:
-            QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory",
-                                                                                      QtWidgets.QMessageBox.Ok)
-        else:
             os.chdir(self.gdirectory)
+            found = self.show_main_window.getData()
+            if found==False:
+                QtWidgets.QMessageBox.question(self, "No Cspr files", "Please select a directory that contains cspr files.",
+                                               QtWidgets.QMessageBox.Ok)
+                return
+
+            self.re_write_dir()
             self.show_main_window.show()
-            self.show_main_window.getData()
             self.close()
+        else:
+            QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
+                                                                                      QtWidgets.QMessageBox.Ok)
 
-# ----------------------------------------------------------------------------------------------------- #
 
-# ---- LAUNCHING MAIN WINDOW CODE ---- #
 
 
 if __name__ == '__main__':

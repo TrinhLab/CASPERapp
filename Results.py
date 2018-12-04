@@ -43,6 +43,7 @@ class Results(QtWidgets.QMainWindow):
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.targetTable.itemSelectionChanged.connect(self.selected)
 
         self.targetTable.horizontalHeader().sectionClicked.connect(self.table_sorting)
 
@@ -116,7 +117,6 @@ class Results(QtWidgets.QMainWindow):
             index += 1
         self.targetTable.resizeColumnsToContents()
 
-
     def search_gene(self):
         search_trms = []
         checkBox = self.sender()
@@ -162,6 +162,26 @@ class Results(QtWidgets.QMainWindow):
             return "Error: Cannot find reference sequence.  Search Kegg, NCBI, or download a FASTA file to create a genome reference."
 
 
+
+
+
+    #-----Testing Methods -----#
+    def fill_table_TEST(self):
+        y=2
+        x = self.getTargets("tsh_spCas9-VRER")
+
+        #self.loadGenesandTargets("testing_seq1",1,3,["target1","target2","target3"],"testo")
+        #self.splitCsprFile("BY,Xc9d+CV,q")
+        """self.targetTable.setRowCount(3)
+        seq = QtWidgets.QTableWidgetItem("testing")
+        self.targetTable.setItem(0, 0,seq )
+        seq = QtWidgets.QTableWidgetItem("other")
+        self.targetTable.setItem(1, 0, seq)
+        seq = QtWidgets.QTableWidgetItem("third")
+        self.targetTable.setItem(2, 0, seq)
+        self.geneViewer.setPlainText("this is testing the third other thing")
+        self.geneViewer.setFontItalic(True)
+        self.geneViewer.find("testing")"""
 
 
 
