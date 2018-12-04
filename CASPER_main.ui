@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>500</height>
+    <width>836</width>
+    <height>505</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,7 +21,7 @@
     <property name="geometry">
      <rect>
       <x>60</x>
-      <y>380</y>
+      <y>390</y>
       <width>301</width>
       <height>20</height>
      </rect>
@@ -34,7 +34,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>220</y>
+      <y>230</y>
       <width>381</width>
       <height>111</height>
      </rect>
@@ -47,7 +47,7 @@
     <property name="geometry">
      <rect>
       <x>150</x>
-      <y>340</y>
+      <y>350</y>
       <width>114</width>
       <height>32</height>
      </rect>
@@ -81,14 +81,14 @@
     <property name="geometry">
      <rect>
       <x>220</x>
-      <y>20</y>
-      <width>491</width>
-      <height>20</height>
+      <y>10</y>
+      <width>541</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
+      <pointsize>13</pointsize>
      </font>
     </property>
     <property name="text">
@@ -100,8 +100,8 @@
      <rect>
       <x>0</x>
       <y>40</y>
-      <width>801</width>
-      <height>20</height>
+      <width>841</width>
+      <height>21</height>
      </rect>
     </property>
     <property name="orientation">
@@ -130,7 +130,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>170</y>
+      <y>180</y>
       <width>381</width>
       <height>51</height>
      </rect>
@@ -140,6 +140,9 @@
       <widget class="QRadioButton" name="radioButton_Gene">
        <property name="text">
         <string>Gene (Locus ID)</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -163,7 +166,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>110</y>
+      <y>120</y>
       <width>331</width>
       <height>61</height>
      </rect>
@@ -190,7 +193,7 @@
     <property name="geometry">
      <rect>
       <x>150</x>
-      <y>410</y>
+      <y>420</y>
       <width>110</width>
       <height>32</height>
      </rect>
@@ -202,8 +205,8 @@
    <widget class="QCheckBox" name="checkBox">
     <property name="geometry">
      <rect>
-      <x>580</x>
-      <y>100</y>
+      <x>380</x>
+      <y>140</y>
       <width>171</width>
       <height>18</height>
      </rect>
@@ -212,69 +215,11 @@
      <string>No Reference Genome</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit_searchdisplay">
-    <property name="geometry">
-     <rect>
-      <x>440</x>
-      <y>220</y>
-      <width>341</width>
-      <height>191</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QWidget" name="horizontalLayoutWidget_4">
-    <property name="geometry">
-     <rect>
-      <x>440</x>
-      <y>170</y>
-      <width>341</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
-     <item>
-      <widget class="QLineEdit" name="lineEdit_search"/>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_search">
-       <property name="text">
-        <string>Search</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QLabel" name="label_4">
-    <property name="geometry">
-     <rect>
-      <x>440</x>
-      <y>150</y>
-      <width>241</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Search KEGG Database for genes</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_AdditionalOrgs">
-    <property name="geometry">
-     <rect>
-      <x>570</x>
-      <y>60</y>
-      <width>196</width>
-      <height>32</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Additional Organisms...</string>
-    </property>
-   </widget>
    <widget class="QWidget" name="horizontalLayoutWidget_2">
     <property name="geometry">
      <rect>
       <x>29</x>
-      <y>50</y>
+      <y>60</y>
       <width>491</width>
       <height>61</height>
      </rect>
@@ -304,14 +249,396 @@
      </item>
     </layout>
    </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget_5">
+    <property name="geometry">
+     <rect>
+      <x>450</x>
+      <y>220</y>
+      <width>311</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QRadioButton" name="Annotation_Kegg">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>17</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>17</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Kegg</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="Annotation_Ownfile">
+       <property name="text">
+        <string>Choose Annotation fiile</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="NCBI_Select">
+       <property name="text">
+        <string>NCBI</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QPushButton" name="Confused_Button">
+    <property name="geometry">
+     <rect>
+      <x>720</x>
+      <y>190</y>
+      <width>21</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>?</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>510</x>
+      <y>180</y>
+      <width>201</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+      <underline>true</underline>
+     </font>
+    </property>
+    <property name="text">
+     <string>                       Annotations</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::RichText</enum>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>450</x>
+      <y>280</y>
+      <width>311</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetMinimumSize</enum>
+     </property>
+     <item>
+      <widget class="QLabel" name="Kegg_Search_Label">
+       <property name="text">
+        <string>Search KEGG Database for genes</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QLineEdit" name="Kegg_Search_Imput"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Kegg_Search_Button">
+         <property name="text">
+          <string>Search</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="Own_File_Lable">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Select your own file</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="wordWrap">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="own_file_box">
+       <item>
+        <widget class="QLineEdit" name="Own_File_Imput">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Own_File_Button">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Browse</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="NCBI_Label">
+       <property name="text">
+        <string>Use NCBI database</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QLineEdit" name="NCBI_Imput">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="NCBI_Button">
+         <property name="text">
+          <string>Search</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QComboBox" name="Annotations_Organism">
+    <property name="geometry">
+     <rect>
+      <x>450</x>
+      <y>390</y>
+      <width>320</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>320</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="Show_All_Results">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>360</y>
+      <width>101</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Show all results </string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="Line" name="line_2">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>180</y>
+      <width>20</width>
+      <height>251</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_3">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>420</y>
+      <width>351</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_4">
+    <property name="geometry">
+     <rect>
+      <x>770</x>
+      <y>180</y>
+      <width>20</width>
+      <height>251</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_5">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>170</y>
+      <width>351</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_6">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>260</y>
+      <width>351</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="Add_Orgo_Combo">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>80</y>
+      <width>191</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Add_Orgo_Button">
+    <property name="geometry">
+     <rect>
+      <x>730</x>
+      <y>80</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Add Organism</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Added_Org_Label">
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>110</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Added Organisms</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="Added_Org_Combo">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>140</y>
+      <width>191</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Remove_Organism_Button">
+    <property name="geometry">
+     <rect>
+      <x>730</x>
+      <y>140</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Remove Org.</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Add_org_Label">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>60</y>
+      <width>151</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Add Additonal Organisms</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Question_Button_add_org">
+    <property name="geometry">
+     <rect>
+      <x>810</x>
+      <y>60</y>
+      <width>21</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>?</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
-     <height>22</height>
+     <width>836</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -345,6 +672,7 @@
     <addaction name="actionUpload_New_Genome"/>
     <addaction name="actionUpload_New_Endonuclease"/>
     <addaction name="actionChange_Directory"/>
+    <addaction name="actionCo_Targeting"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -445,7 +773,7 @@
   </action>
   <action name="actionUpload_New_Genome">
    <property name="text">
-    <string>Seq_Finder Analysis...</string>
+    <string>Analyze New Genome</string>
    </property>
   </action>
   <action name="actionUpload_New_Endonuclease">
@@ -491,6 +819,11 @@
   <action name="actionNew_CASPER_Window">
    <property name="text">
     <string>New CASPER Window</string>
+   </property>
+  </action>
+  <action name="actionCo_Targeting">
+   <property name="text">
+    <string>Co-Targeting</string>
    </property>
   </action>
  </widget>

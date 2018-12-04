@@ -70,7 +70,8 @@ class SeqTranslate:
         for i in range(len(base64seq)):
             power = len(base64seq) - (i+1)
             index = self.base_array_64.find(base64seq[i])
-            base10seq += index*pow(64, power)
+            if index != -1:
+                base10seq += index*pow(64, power)
         if toseq:
             seq = str()
             number = base10seq
@@ -83,27 +84,29 @@ class SeqTranslate:
         else:
             return base10seq
 
-    def decompress_csf_tuple(self, locseq):
+    def decompress_csf_tuple(self, locseq, pamlength=3, seqlength=20):
         mytuple = locseq.split(",")
         loc = self.decompress64(mytuple[0])
         seq = mytuple[1]
         scr = self.decompress64(mytuple[2])
         split = seq.find("+")
         if split != -1:
+            dira = True
             sequence = seq[:split]
             pam = seq[split+1:]
         else:
             seq = seq.split("-")
             sequence = seq[0]
             pam = seq[1]
+            dira = False
         sequence = self.decompress64(sequence, True)
         pam = self.decompress64(pam, True)
         # The for loops fixes the problem of A's not being added to the end because they are removed on compression
-        for i in range(len(sequence),20):
+        for i in range(len(sequence), seqlength):
             sequence += 'A'
-        for j in range(len(pam),4):
+        for j in range(len(pam), pamlength):
             pam += 'A'
-        return loc, sequence, pam, scr
+        return int(loc), sequence, pam, int(scr), dira
         #print("Location: " + str(myloc))
         #print("Sequence: " + myseq)
 
@@ -115,6 +118,7 @@ class SeqTranslate:
 
 
 #S = SeqTranslate()
-#print(S.compress("TCGGCGGAGTGGTTTG",64))
-#print(S.decompress64("",True))
+#print(S.decompress_csf_tuple("c,|LLmmwV/-8,t"))
+#print(S.decompress64("Uv",True))
+#print(S.compress("CCACTAGGACCCGGTGATGC",64))
 
