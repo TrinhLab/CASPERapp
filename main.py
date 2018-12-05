@@ -10,6 +10,7 @@ from Results import Results
 from NewGenome import NewGenome
 from multitargeting import Multitargeting
 import requests
+import GlobalSettings
 
 from bs4 import BeautifulSoup
 
@@ -30,6 +31,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.mainWindow=""
 
     def submit(self):
+        self.mainWindow.collect_table_data()
         self.hide()
         self.mainWindow.show()
 
@@ -104,6 +106,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.searches = {}
         self.checkBoxes = []
         self.add_orgo = []
+        self.checked_info = {}
+
         # --- Button Modifications --- #
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
         self.pushButton_FindTargets.clicked.connect(self.gather_settings)
@@ -121,6 +125,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Add_Orgo_Button.clicked.connect(self.add_Orgo)
         self.Remove_Organism_Button.clicked.connect(self.remove_Orgo)
         self.endoChoice.currentIndexChanged.connect(self.endo_Changed)
+
 
         self.change_annotation()
         #self.test_button.clicked.connect(self.Ann_Window)
@@ -148,6 +153,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         ############################self.view_my_results = Results()
         self.newGenome = NewGenome(info_path)
         self.CoTargeting = CoTargeting(info_path)
+        self.Results = Results()
 
         #self.show()
     #def Ann_Window(self):
@@ -254,7 +260,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.progressBar.setValue(45)
         if inputtype == "sequence":
             self.progressBar.setValue(45)
-
+        self.progressBar.setValue(100)
         # For processing the gene sequence from a specified fasta file.
         """s = SeqFromFasta()
         filename = self.dbpath + org + ".fna"
@@ -275,6 +281,25 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def launch_newGenome(self):
        self.newGenome.show()
+
+    def collect_table_data(self):
+        k = Kegg()
+        full_org = str(self.orgChoice.currentText())
+        organism= self.shortHand[full_org]
+        nameFull = ""
+        holder = ()
+        for item in self.checkBoxes:
+            if item[1].isChecked() ==True:
+                nameFull = item[0].split(" ")
+                name  = nameFull[len(nameFull)-1]
+
+                gene_info = k.gene_locator(organism+":"+name)
+                holder = (gene_info[0],gene_info[2],gene_info[3])
+                self.checked_info[item[0]]=holder
+
+        self.Results.transfer_data(organism,str(self.endoChoice.currentText()),os.getcwd(),self.checked_info,"")
+        self.pushButton_ViewTargets.setEnabled(True)
+
 
     def launch_CoTargeting(self):
         self.CoTargeting.launch(self.data,self.dbpath,self.shortHand)
@@ -500,10 +525,9 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def view_results(self):
-        self.view_my_results.transfer_data(org, endo, path, geneposdict, fasta)
-        self.view_my_results.show()
-        self.progressBar.setValue(0)
-        self.pushButton_ViewTargets.setEnabled(False)
+        self.hide()
+        self.Results.show()
+
 
 
 # ----------------------------------------------------------------------------------------------------- #
@@ -624,6 +648,7 @@ class StartupWindow(QtWidgets.QDialog):
                 return
 
             self.re_write_dir()
+            #GlobalSettings.CASPER_INFO_FILE_LOCATION = self.info_path + "\\CASPERinfo"
             self.show_main_window.show()
             self.close()
         else:

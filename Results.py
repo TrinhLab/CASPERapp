@@ -43,13 +43,12 @@ class Results(QtWidgets.QMainWindow):
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-        self.targetTable.itemSelectionChanged.connect(self.selected)
-
+        self.offTargetSearch.clicked.connect(self.offtargetButtonClicked)
         self.targetTable.horizontalHeader().sectionClicked.connect(self.table_sorting)
 
         self.targetTable.itemSelectionChanged.connect(self.item_select)
 
-        self.show()
+
 
     # Function that is called in main in order to pass along the information the user inputted and the information
     # from the .cspr files that was discovered
@@ -69,7 +68,10 @@ class Results(QtWidgets.QMainWindow):
             file = open(self.directory+"/" + self.org + "_" + self.endo + ".cspr")
         else:
             file = open(self.directory + "\\" + self.org + "_" + self.endo + ".cspr")
+        mainHeader = file.readline()
         header = file.readline()
+
+
         # Find the right chromosome:
         while True:
             # in the right chromosome/scaffold?
@@ -110,7 +112,7 @@ class Results(QtWidgets.QMainWindow):
             self.targetTable.setItem(index, 2, strand)
             self.targetTable.setItem(index, 3, PAM)
             self.targetTable.setItem(index, 4, score)
-            self.targetTable.setItem(index, 5, "--.--")
+            self.targetTable.setItem(index, 5, QtWidgets.QTableWidgetItem("--.--"))
             ckbox = QtWidgets.QCheckBox()
             ckbox.clicked.connect(self.search_gene)
             self.targetTable.setCellWidget(index,6,ckbox)
@@ -138,10 +140,19 @@ class Results(QtWidgets.QMainWindow):
             self.targetTable.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
 
     def offtargetButtonClicked(self):
-        for target in self.targetTable.selectedItems():
-            # pass the appropriate info into the OffTarget subprocess
+        all_targets = []
+        index = 0
+        holdt = ()
+        QtWidgets.QMessageBox.question(self, "Text File Created",
+                                       "A File with the off target data has been created.",
+                                       QtWidgets.QMessageBox.Ok)
+        """for target in self.targetTable.selectedItems():
+            for item in target:
+                print(item.text())
 
-    def displayGene(self,fastafile=None, Kegg=False, NCBI=False):
+            #print(target.text())
+        """
+    """def displayGene(self,fastafile=None, Kegg=False, NCBI=False):
         organism_genome = list()  # list of chromosomes/scaffolds
         if fastafile:
             f = open(fastafile)
@@ -159,7 +170,7 @@ class Results(QtWidgets.QMainWindow):
             # Get the gene from NCBI database (RefSeq)
 
         else:
-            return "Error: Cannot find reference sequence.  Search Kegg, NCBI, or download a FASTA file to create a genome reference."
+            return "Error: Cannot find reference sequence.  Search Kegg, NCBI, or download a FASTA file to create a genome reference."""""
 
 
 
@@ -189,9 +200,10 @@ class Results(QtWidgets.QMainWindow):
 
 # Window opening and GUI launching code #
 # ----------------------------------------------------------------------------------------------------- #
+"""
 app = Qt.QApplication(sys.argv)
 app.setOrganizationName("TrinhLab-UTK")
 app.setApplicationName("CASPER")
 window = Results()
-window.transfer_data("yli", "spCas9", "/Users/brianmendoza/Dropbox/CrisprDB", {"myfakegene":(1,1293,3496)}, "/Volumes/Seagate_Drive/FASTAs/yli.fna")
-sys.exit(app.exec_())
+window.transfer_data("yli", "spCas9", "C:\\Users\\GregCantrall\\Documents\\Cspr files", {"myfakegene":(1,1293,3496)}, "/Volumes/Seagate_Drive/FASTAs/yli.fna")
+sys.exit(app.exec_())"""
