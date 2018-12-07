@@ -4,6 +4,7 @@ from threading import Thread
 from queue import Queue, Empty
 from PyQt5 import QtWidgets, uic, QtGui, QtCore, Qt
 from bioservices import KEGG
+import GlobalSettings
 
 
 def iter_except(function, exception):
@@ -120,7 +121,10 @@ class NewGenome(QtWidgets.QMainWindow):
         self.JobsQueBox.setPlainText(self.JobsQueBox.toPlainText()+nxtLine+Job.Organism_Name)
 
     def fillEndo(self):
-        f = open(self.info_path+"\\CASPERinfo")
+        if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
+            f = open(self.info_path + "\\CASPERinfo")
+        else:
+            f = open(self.info_path + "/CASPERinfo")
         while True:
             line = f.readline()
             if line.startswith('ENDONUCLEASES'):

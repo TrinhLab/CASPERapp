@@ -1,5 +1,5 @@
 import sys
-import os
+import os, platform
 import io
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from APIs import Kegg, SeqFromFasta
@@ -247,7 +247,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                                 self.searches[sValue][defin].append(self.gene_list[defin])
                         else:
                             self.searches[sValue][defin] = self.gene_list[defin]
-                        print(self.searches[sValue][defin][0])
+                        #print(self.searches[sValue][defin][0])
             did_work = self.Annotation_Window.fill_Table(self)
             if did_work == -1:
                 QtWidgets.QMessageBox.question(self, "Gene Database Error",
@@ -466,6 +466,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     # This method checks if a check button or radio button works appropriately by printing the current organism
     def testcheckandradio(self):
          print(str(self.orgChoice.currentText()))
+
     def addOrgoCombo(self):
         self.Add_Orgo_Combo.addItem("Select Organism")
         for item in self.data:
@@ -484,7 +485,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         found = False;
         self.dbpath = mypath
         onlyfiles = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
-        print(onlyfiles)
         orgsandendos = {}
         shortName = {}
         for file in onlyfiles:
@@ -551,6 +551,8 @@ class StartupWindow(QtWidgets.QDialog):
         pixmap = QtGui.QPixmap('mainart.jpg')
         self.labelforart.setPixmap(pixmap)
         self.pushButton_2.setDefault(True)
+        # Check to see the operating system you are on and change this in Global Settings:
+        GlobalSettings.OPERATING_SYSTEM_ID = platform.system()
         self.info_path = os.getcwd()
         self.gdirectory = self.check_dir()
 
@@ -596,7 +598,10 @@ class StartupWindow(QtWidgets.QDialog):
                 QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
                                                                                     QtWidgets.QMessageBox.Ok)
     def check_dir(self):
-        cspr_info = open(self.info_path+"\\CASPERinfo",'r+')
+        if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
+            cspr_info = open(self.info_path+"\\CASPERinfo",'r+')
+        else:
+            cspr_info = open(self.info_path+"/CASPERinfo", 'r+')
         cspr_info = cspr_info.read()
         lines = cspr_info.split('\n')
         line = ""
@@ -610,7 +615,10 @@ class StartupWindow(QtWidgets.QDialog):
             return line[10:]
 
     def re_write_dir(self):
-        cspr_info = open(self.info_path+"\\CASPERinfo", 'r+')
+        if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
+            cspr_info = open(self.info_path+"\\CASPERinfo",'r+')
+        else:
+            cspr_info = open(self.info_path+"/CASPERinfo", 'r+')
         cspr_info_text = cspr_info.read()
         cspr_info_text = cspr_info_text.split('\n')
         full_doc = ""
@@ -626,7 +634,10 @@ class StartupWindow(QtWidgets.QDialog):
                 full_doc = full_doc+"\n" + item
         full_doc = full_doc[1:]
         cspr_info.close()
-        cspr_info = open(self.info_path + "\\CASPERinfo", 'w+')
+        if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
+            cspr_info = open(self.info_path+"\\CASPERinfo",'w+')
+        else:
+            cspr_info = open(self.info_path+"/CASPERinfo", 'w+')
         cspr_info.write(full_doc)
 
         cspr_info.close()

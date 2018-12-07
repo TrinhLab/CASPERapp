@@ -47,6 +47,20 @@ class Results(QtWidgets.QMainWindow):
         self.targetTable.horizontalHeader().sectionClicked.connect(self.table_sorting)
 
         self.targetTable.itemSelectionChanged.connect(self.item_select)
+        self.minScoreLine.setText("0")
+
+        # Connecting the filters to the displayGeneData function
+        self.fivegseqCheckBox.stateChanged.connect(self.displayGeneData)
+        self.minScoreLine.textChanged.connect(self.displayGeneData)
+
+        # Setting up the score filter:
+        self.scoreSlider.setMinimum(0)
+        self.scoreSlider.setMaximum(100)
+        self.scoreSlider.setTracking(False)
+
+        self.scoreSlider.valueChanged.connect(self.update_score_filter)
+
+
 
 
 
@@ -60,6 +74,8 @@ class Results(QtWidgets.QMainWindow):
         for gene in geneposdict:
             self.comboBoxGene.addItem(gene)
             self.get_targets(gene, geneposdict[gene])
+        # Enable the combobox to be toggled now that the data is in AllData
+        self.comboBoxGene.currentTextChanged.connect(self.displayGeneData)
 
     # Function grabs the information from the .cspr file and adds them to the AllData dictionary
     def get_targets(self, genename, pos_tuple):
@@ -68,14 +84,14 @@ class Results(QtWidgets.QMainWindow):
             file = open(self.directory+"/" + self.org + "_" + self.endo + ".cspr")
         else:
             file = open(self.directory + "\\" + self.org + "_" + self.endo + ".cspr")
-        mainHeader = file.readline()
+        mainHeader = file.readline()  # Empty variable containing the Genome name
         header = file.readline()
 
-
         # Find the right chromosome:
+        print(pos_tuple)
         while True:
             # in the right chromosome/scaffold?
-            if header.find("(" + str(pos_tuple[0]) + ")"):
+            if header.find("(" + str(pos_tuple[0]) + ")") != -1:
                 while True:
                     # Find the appropriate location by quickly decompressing the location at the front of the line
                     myline = file.readline()
@@ -93,15 +109,26 @@ class Results(QtWidgets.QMainWindow):
         self.AllData[genename] = targets
         self.displayGeneData()
 
+    ###############################################################################################################
+    # Main Function for updating the Table.  Connected to all filter buttons and the Gene toggling of the combobox.
+    ###############################################################################################################
     def displayGeneData(self):
-        curgene = str(self.comboBoxGene.currentText())
-        #self.geneViewer.setPlainText(cg)
-        #  --- Shifting numbers over based on start and end ---  #
-
-        self.targetTable.setRowCount(len(self.AllData[curgene]))
-        print(self.AllData[curgene])
-        index = 0
+        curgene = str(self.comboBoxGene.currentText())  # Gets the current gene
+        # Creates the set object from the list of the current gene:
+        subset_display = set()
+        # Removing all sequences below minimum score and creating the set:
         for item in self.AllData[curgene]:
+            if item[3] > int(self.minScoreLine.text()):
+                # Removing all non 5' G sequences:
+                if self.fivegseqCheckBox.isChecked():
+                    if item[1].startswith("G"):
+                        subset_display.add(item)
+                else:
+                    subset_display.add(item)
+
+        self.targetTable.setRowCount(len(subset_display))
+        index = 0
+        for item in subset_display:
             loc = QtWidgets.QTableWidgetItem(str(item[0]))
             seq = QtWidgets.QTableWidgetItem(item[1])
             strand = QtWidgets.QTableWidgetItem(str(item[4]))
@@ -118,6 +145,8 @@ class Results(QtWidgets.QMainWindow):
             self.targetTable.setCellWidget(index,6,ckbox)
             index += 1
         self.targetTable.resizeColumnsToContents()
+
+    ########################################## END UPDATING FUNCTION #############################################
 
     def search_gene(self):
         search_trms = []
@@ -146,12 +175,8 @@ class Results(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox.question(self, "Text File Created",
                                        "A File with the off target data has been created.",
                                        QtWidgets.QMessageBox.Ok)
-        """for target in self.targetTable.selectedItems():
-            for item in target:
-                print(item.text())
 
-            #print(target.text())
-        """
+    # Function for displaying the target in the gene viewer
     """def displayGene(self,fastafile=None, Kegg=False, NCBI=False):
         organism_genome = list()  # list of chromosomes/scaffolds
         if fastafile:
@@ -172,38 +197,21 @@ class Results(QtWidgets.QMainWindow):
         else:
             return "Error: Cannot find reference sequence.  Search Kegg, NCBI, or download a FASTA file to create a genome reference."""""
 
+    # -----------------------------------------------------------------------------------------------------#
+    # ---- All Filter functions below ---------------------------------------------------------------------#
+    # -----------------------------------------------------------------------------------------------------#
+    def update_score_filter(self):
+        self.minScoreLine.setText(str(self.scoreSlider.value()))
 
 
 
 
-    #-----Testing Methods -----#
-    def fill_table_TEST(self):
-        y=2
-        x = self.getTargets("tsh_spCas9-VRER")
-
-        #self.loadGenesandTargets("testing_seq1",1,3,["target1","target2","target3"],"testo")
-        #self.splitCsprFile("BY,Xc9d+CV,q")
-        """self.targetTable.setRowCount(3)
-        seq = QtWidgets.QTableWidgetItem("testing")
-        self.targetTable.setItem(0, 0,seq )
-        seq = QtWidgets.QTableWidgetItem("other")
-        self.targetTable.setItem(1, 0, seq)
-        seq = QtWidgets.QTableWidgetItem("third")
-        self.targetTable.setItem(2, 0, seq)
-        self.geneViewer.setPlainText("this is testing the third other thing")
-        self.geneViewer.setFontItalic(True)
-        self.geneViewer.find("testing")"""
-
-
-
-
-
-# Window opening and GUI launching code #
+# Window opening and GUI launching code for debugging #
 # ----------------------------------------------------------------------------------------------------- #
 """
 app = Qt.QApplication(sys.argv)
 app.setOrganizationName("TrinhLab-UTK")
 app.setApplicationName("CASPER")
 window = Results()
-window.transfer_data("yli", "spCas9", "C:\\Users\\GregCantrall\\Documents\\Cspr files", {"myfakegene":(1,1293,3496)}, "/Volumes/Seagate_Drive/FASTAs/yli.fna")
+window.transfer_data("yli", "spCas9", "/Users/brianmendoza/Dropbox/CrisprDB/", {"phos.carboxylase":(2,3030460,3032157)}, "/Volumes/Seagate_Drive/FASTAs/yli.fna")
 sys.exit(app.exec_())"""
