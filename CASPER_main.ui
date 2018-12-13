@@ -40,22 +40,6 @@
      </rect>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_FindTargets">
-    <property name="enabled">
-     <bool>true</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>150</x>
-      <y>350</y>
-      <width>114</width>
-      <height>32</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Find Targets</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="title">
     <property name="geometry">
      <rect>
@@ -192,9 +176,9 @@
    <widget class="QPushButton" name="pushButton_ViewTargets">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>420</y>
-      <width>110</width>
+      <x>140</x>
+      <y>410</y>
+      <width>141</width>
       <height>32</height>
      </rect>
     </property>
@@ -205,7 +189,7 @@
    <widget class="QCheckBox" name="checkBox">
     <property name="geometry">
      <rect>
-      <x>380</x>
+      <x>370</x>
       <y>140</y>
       <width>171</width>
       <height>18</height>
@@ -341,7 +325,7 @@
       <x>450</x>
       <y>280</y>
       <width>311</width>
-      <height>81</height>
+      <height>187</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -463,22 +447,6 @@
      <font>
       <pointsize>8</pointsize>
      </font>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="Show_All_Results">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>360</y>
-      <width>101</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Show all results </string>
-    </property>
-    <property name="checked">
-     <bool>true</bool>
     </property>
    </widget>
    <widget class="Line" name="line_2">
@@ -631,6 +599,38 @@
      <string>?</string>
     </property>
    </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget_4">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>350</y>
+      <width>301</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QPushButton" name="pushButton_FindTargets">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>Find Targets</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="Show_All_Results">
+       <property name="text">
+        <string>Show all results </string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -638,7 +638,7 @@
      <x>0</x>
      <y>0</y>
      <width>836</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
