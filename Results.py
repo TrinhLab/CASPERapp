@@ -3,7 +3,7 @@ import sys
 from PyQt5 import Qt, QtWidgets, uic, QtCore
 from Scoring import OnTargetScore
 from Algorithms import SeqTranslate
-
+import GlobalSettings
 # =========================================================================================
 # CLASS NAME: Results
 # Inputs: Takes information from the main application window and displays the gRNA results
@@ -44,6 +44,7 @@ class Results(QtWidgets.QMainWindow):
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.offTargetSearch.clicked.connect(self.offtargetButtonClicked)
+        self.back_button.clicked.connect(self.goBack)
         self.targetTable.horizontalHeader().sectionClicked.connect(self.table_sorting)
 
         self.targetTable.itemSelectionChanged.connect(self.item_select)
@@ -71,11 +72,19 @@ class Results(QtWidgets.QMainWindow):
         self.endo = endo
         self.directory = path
         self.fasta_ref = fasta
+        self.comboBoxGene.clear()
+        self.AllData.clear()
         for gene in geneposdict:
             self.comboBoxGene.addItem(gene)
             self.get_targets(gene, geneposdict[gene])
         # Enable the combobox to be toggled now that the data is in AllData
         self.comboBoxGene.currentTextChanged.connect(self.displayGeneData)
+    def goBack(self):
+
+        GlobalSettings.mainWindow.show()
+        self.hide()
+
+
 
     # Function grabs the information from the .cspr file and adds them to the AllData dictionary
     def get_targets(self, genename, pos_tuple):
@@ -115,6 +124,9 @@ class Results(QtWidgets.QMainWindow):
     def displayGeneData(self):
         curgene = str(self.comboBoxGene.currentText())  # Gets the current gene
         # Creates the set object from the list of the current gene:
+        if curgene=='' or len(self.AllData)<1:
+            return
+
         subset_display = set()
         # Removing all sequences below minimum score and creating the set:
         for item in self.AllData[curgene]:
