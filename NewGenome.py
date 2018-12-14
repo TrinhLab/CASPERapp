@@ -16,15 +16,6 @@ def iter_except(function, exception):
         return
 
 
-class job:
-        def __init__(self, Name ="", subspecies="",code="",endo="", file=""):
-            self.Organism_Name = Name
-            self.Sub_Species = subspecies
-            self.Org_Code = code
-            self.Endonuclease = endo
-            self.File = file
-
-
 class NewGenome(QtWidgets.QMainWindow):
     def __init__(self, info_path):
         super(NewGenome, self).__init__()
@@ -99,7 +90,8 @@ class NewGenome(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.information(self, "Required Information", warning, QtWidgets.QMessageBox.Ok)
             return
         else:
-            self.JobsQueue.append(CasperJob(self.lineEdit_1.text(), ))
+            self.JobsQueue.append(CasperJob(self.lineEdit_1.text() + self.lineEdit_2.text(),
+                                            self.comboBoxEndo.currentText(), self.lineEdit_3.text(), self.nameFile))
 
         if len(self.lineEdit_2.text()) == 0:
             warning = warning + "\nIt is recommended to include the organism's subspecies/strain."
@@ -197,18 +189,18 @@ class NewGenome(QtWidgets.QMainWindow):
         self.keggSuggested.resizeColumnsToContents()
 
     def run_jobs(self):
-        self.process.setProgram(GlobalSettings.CASPER_FOLDER_LOCATION + "/Casper_Seq_Finder_" + GlobalSettings.OPERATING_SYSTEM_ID)
-        args_array = []
-        self.process.setArguments()
-        if self.process.state() == QtCore.QProcess.NotRunning:
-            self.JobInProgress.setText(self.JobsQueue[self.JobIndexInProgress])
-            self.process.start(self.JobsQueue[self.JobIndexInProgress])
-            self.JobIndexInProgress += 1
-        newdatafile = self.lineEdit_3.text() + self.comboBoxEndo.currentText() + ".txt"
-        newdatafile = str(os.curdir) + newdatafile
-        f = open(newdatafile, 'w')
-        # Write the organism name and subspecies/strain if applicable to the top of the file
-        f.write(self.lineEdit_1.text() + self.lineEdit_2.text() + self.comboBoxEndo.currentText())
+        # Top layer for loop to go through all of the jobs in the queue:
+        for job in self.JobsQueue:
+            self.process.setProgram(GlobalSettings.CASPER_FOLDER_LOCATION + "/Casper_Seq_Finder_" + GlobalSettings.OPERATING_SYSTEM_ID)
+            self.process.setArguments(job.get_arguments())
+            if self.process.state() == QtCore.QProcess.NotRunning:
+                self.JobInProgress.setText(job.name)
+                self.process.start(GlobalSettings.CASPER_FOLDER_LOCATION + "/Casper_Seq_Finder_" + GlobalSettings.OPERATING_SYSTEM_ID, job.get_arguments())
+            newdatafile = self.lineEdit_3.text() + self.comboBoxEndo.currentText() + ".txt"
+            newdatafile = str(os.curdir) + newdatafile
+            f = open(newdatafile, 'w')
+            # Write the organism name and subspecies/strain if applicable to the top of the file
+            f.write(self.lineEdit_1.text() + self.lineEdit_2.text() + self.comboBoxEndo.currentText())
 
     def reset(self):
         self.lineEdit_1.clear()
@@ -219,11 +211,31 @@ class NewGenome(QtWidgets.QMainWindow):
 
 
 class CasperJob:
-    def __init__(self, org, endo):
+    def __init__(self, org, endo, org_code, ref_file):
         self.name = endo + " targets in " + org
         self.organism_name = org
-        self.organism_code = str()
+        self.organism_code = org_code
         self.endo_name = endo[:endo.find("PAM:")-1]
         self.endo_pam = endo[endo.find("PAM: "):]
-        self.reference_file = str()
+        self.reference_file = ref_file
+
+        # These are endonuclease specific settings that should be pulled from CASPERinfo
+        self.anti = bool()
+        self.sequence_length = int()
+        self.seed_length = int()
+
+    def get_arguments(self):
+        ret_array = [self.endo_name, self.endo_pam, self.organism_code]
+        # attach the 5' or 3' direction
+        if self.anti:
+            ret_array.append("TRUE")
+        else:
+            ret_array.append("FALSE")
+        ret_array.append(GlobalSettings.CSPR_DB)
+        ret_array.append(GlobalSettings.CASPER_FOLDER_LOCATION + "/CRISPRscan.txt")
+        ret_array.append(self.reference_file)
+        ret_array.append(self.organism_name)
+        ret_array.append(self.sequence_length)
+        ret_array.append(self.seed_length)
+
 

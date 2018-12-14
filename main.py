@@ -660,6 +660,7 @@ class StartupWindow(QtWidgets.QDialog):
 
             self.re_write_dir()
             GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
+            GlobalSettings.CSPR_DB = self.info_path  # currently the same as the CASPER_FOLDER but will change for flexibility
             self.show_main_window.show()
             self.close()
         else:
