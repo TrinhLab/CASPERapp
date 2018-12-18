@@ -555,6 +555,7 @@ class StartupWindow(QtWidgets.QDialog):
         GlobalSettings.OPERATING_SYSTEM_ID = platform.system()
         self.info_path = os.getcwd()
         self.gdirectory = self.check_dir()
+        GlobalSettings.CSPR_DB = self.gdirectory
 
         self.lineEdit.setText(self.gdirectory)
 
@@ -573,11 +574,12 @@ class StartupWindow(QtWidgets.QDialog):
         mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a Folder",
                                                        self.gdirectory, QtWidgets.QFileDialog.ShowDirsOnly)
         if mydir == "":
-            return;
+            return
 
         self.lineEdit.setText(mydir)
         cdir = self.lineEdit.text()
         self.gdirectory = mydir
+        GlobalSettings.CSPR_DB = cdir
         print(mydir)
         print(cdir)
 
@@ -660,7 +662,6 @@ class StartupWindow(QtWidgets.QDialog):
 
             self.re_write_dir()
             GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
-            GlobalSettings.CSPR_DB = self.info_path  # currently the same as the CASPER_FOLDER but will change for flexibility
             self.show_main_window.show()
             self.close()
         else:

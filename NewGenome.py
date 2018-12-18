@@ -31,7 +31,15 @@ class NewGenome(QtWidgets.QMainWindow):
         self.resetButton.clicked.connect(self.reset)
         self.submitButton.clicked.connect(self.submit)
         self.selectFastaButton.clicked.connect(self.selectFasta)
-        self.JobsQueBox.setReadOnly(True)
+        self.JobsQueueBox.setReadOnly(True)
+        self.output_browser.setText("Waiting for program initiation...")
+        self.CompletedJobs.setText(" ")
+
+        self.tot_len_box.setText("20")
+        self.seed_len_box.setText("16")
+
+        self.runButton.clicked.connect(self.run_jobs)
+        self.clearButton.clicked.connect(self.clear_job_queue)
 
         self.viewStatButton.setEnabled(False)
 
@@ -40,7 +48,9 @@ class NewGenome(QtWidgets.QMainWindow):
         self.Endos = []
         self.file = ""
 
-        self.process = QtCore.QProcess(self)
+        self.process = QtCore.QProcess()
+        self.process.setProcessChannelMode(QtCore.QProcess.MergedChannels)
+        self.process.finished.connect(self.upon_process_finishing)
 
 
 
@@ -89,15 +99,11 @@ class NewGenome(QtWidgets.QMainWindow):
         if len(warning) !=0:
             QtWidgets.QMessageBox.information(self, "Required Information", warning, QtWidgets.QMessageBox.Ok)
             return
-        else:
-            self.JobsQueue.append(CasperJob(self.lineEdit_1.text() + self.lineEdit_2.text(),
-                                            self.comboBoxEndo.currentText(), self.lineEdit_3.text(), self.nameFile))
 
         if len(self.lineEdit_2.text()) == 0:
             warning = warning + "\nIt is recommended to include the organism's subspecies/strain."
         if len(self.lineEdit_3.text()) == 0:
             warning = warning + "\nYou must include an organism code (KEGG code recommended)."
-            return
         if len(warning)!=0:
             hold = QtWidgets.QMessageBox.question(self, "Missing information", warning+
                                         "\n\nDo you wish to continue without including this information?"
@@ -107,13 +113,14 @@ class NewGenome(QtWidgets.QMainWindow):
             if hold == QtWidgets.QMessageBox.No:
                 return
 
-        Job = job(self.lineEdit_1.text(), self.lineEdit_2.text(), self.lineEdit_3.text(),
-                  self.comboBoxEndo.currentText(), self.file)
-        self.JobsQue.append(Job)
+        myjob = CasperJob(self.lineEdit_1.text() + self.lineEdit_2.text(),
+                            self.comboBoxEndo.currentText(), self.lineEdit_3.text(), self.file,
+                          self.tot_len_box.text(), self.seed_len_box.text(), self.pamBox.isChecked())
+        self.JobsQueue.append(myjob)
         nxtLine=""
-        if len(self.JobsQueBox.toPlainText())!=0:
+        if len(self.JobsQueueBox.toPlainText())!=0:
             nxtLine = "\n"
-        self.JobsQueBox.setPlainText(self.JobsQueBox.toPlainText()+nxtLine+Job.Organism_Name)
+        self.JobsQueueBox.setPlainText(self.JobsQueueBox.toPlainText()+nxtLine+myjob.name)
 
     def fillEndo(self):
         if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
@@ -132,9 +139,9 @@ class NewGenome(QtWidgets.QMainWindow):
                         line = line[line.find("\t")+1:]
                         index = line.find("\t")
                         if(index ==-1):
-                            self.Endos.append(endo+" (Pam: " +line[:len(line)-1]+")")
+                            self.Endos.append(endo+" (PAM: " +line[:len(line)-1]+")")
                             break
-                        self.Endos.append(endo+" "+"(Pam: " +line[:index]+")")
+                        self.Endos.append(endo+" "+"(PAM: " +line[:index]+")")
 
                 break
         f.close()
@@ -190,17 +197,27 @@ class NewGenome(QtWidgets.QMainWindow):
 
     def run_jobs(self):
         # Top layer for loop to go through all of the jobs in the queue:
-        for job in self.JobsQueue:
-            self.process.setProgram(GlobalSettings.CASPER_FOLDER_LOCATION + "/Casper_Seq_Finder_" + GlobalSettings.OPERATING_SYSTEM_ID)
-            self.process.setArguments(job.get_arguments())
-            if self.process.state() == QtCore.QProcess.NotRunning:
-                self.JobInProgress.setText(job.name)
-                self.process.start(GlobalSettings.CASPER_FOLDER_LOCATION + "/Casper_Seq_Finder_" + GlobalSettings.OPERATING_SYSTEM_ID, job.get_arguments())
-            newdatafile = self.lineEdit_3.text() + self.comboBoxEndo.currentText() + ".txt"
-            newdatafile = str(os.curdir) + newdatafile
-            f = open(newdatafile, 'w')
-            # Write the organism name and subspecies/strain if applicable to the top of the file
-            f.write(self.lineEdit_1.text() + self.lineEdit_2.text() + self.comboBoxEndo.currentText())
+        job = self.JobsQueue[self.JobIndexInProgress]
+        program = GlobalSettings.CASPER_FOLDER_LOCATION + "/Casper_Seq_Finder_" + GlobalSettings.OPERATING_SYSTEM_ID
+        self.JobInProgress.setText(job.name)
+        self.process.start(program, job.get_arguments())
+        self.process.readyReadStandardOutput.connect(self.output_stdout)
+
+    def output_stdout(self):
+        outputBytes = self.process.readAllStandardOutput().data()
+        outputUnicode = outputBytes.decode('utf-8')
+        self.output_browser.append(outputUnicode)
+
+    def upon_process_finishing(self):
+        self.CompletedJobs.append(self.JobsQueue[self.JobIndexInProgress].name)
+        self.process.close()
+        if self.JobIndexInProgress < len(self.JobsQueue)-1:
+            self.JobIndexInProgress += 1
+            self.run_jobs()
+
+    def clear_job_queue(self):
+        self.JobsQueue = []
+        self.JobsQueueBox.setPlainText("")
 
     def reset(self):
         self.lineEdit_1.clear()
@@ -211,18 +228,18 @@ class NewGenome(QtWidgets.QMainWindow):
 
 
 class CasperJob:
-    def __init__(self, org, endo, org_code, ref_file):
+    def __init__(self, org, endo, org_code, ref_file, tot_len, seed_len, pamdir):
         self.name = endo + " targets in " + org
         self.organism_name = org
         self.organism_code = org_code
-        self.endo_name = endo[:endo.find("PAM:")-1]
-        self.endo_pam = endo[endo.find("PAM: "):]
+        self.endo_name = endo[:endo.find("(PAM:")-1]
+        self.endo_pam = endo[endo.find("(PAM: ")+6:-1]
         self.reference_file = ref_file
 
         # These are endonuclease specific settings that should be pulled from CASPERinfo
-        self.anti = bool()
-        self.sequence_length = int()
-        self.seed_length = int()
+        self.anti = pamdir
+        self.sequence_length = tot_len
+        self.seed_length = seed_len
 
     def get_arguments(self):
         ret_array = [self.endo_name, self.endo_pam, self.organism_code]
@@ -231,11 +248,16 @@ class CasperJob:
             ret_array.append("TRUE")
         else:
             ret_array.append("FALSE")
-        ret_array.append(GlobalSettings.CSPR_DB)
+        if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
+            ret_array.append(GlobalSettings.CSPR_DB + "\\")
+        else:
+            ret_array.append(GlobalSettings.CSPR_DB + "/")
         ret_array.append(GlobalSettings.CASPER_FOLDER_LOCATION + "/CRISPRscan.txt")
         ret_array.append(self.reference_file)
         ret_array.append(self.organism_name)
         ret_array.append(self.sequence_length)
         ret_array.append(self.seed_length)
+        print(ret_array)
+        return ret_array
 
 

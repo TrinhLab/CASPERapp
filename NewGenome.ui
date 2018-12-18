@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>700</width>
-    <height>515</height>
+    <width>725</width>
+    <height>530</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,8 +17,8 @@
    <widget class="QProgressBar" name="progressBar">
     <property name="geometry">
      <rect>
-      <x>470</x>
-      <y>330</y>
+      <x>480</x>
+      <y>350</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -30,8 +30,8 @@
    <widget class="QLabel" name="keggTitle">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>170</y>
+      <x>390</x>
+      <y>0</y>
       <width>271</width>
       <height>16</height>
      </rect>
@@ -188,32 +188,6 @@
      <string>RUN</string>
     </property>
    </widget>
-   <widget class="QLabel" name="chrom_label">
-    <property name="geometry">
-     <rect>
-      <x>320</x>
-      <y>290</y>
-      <width>201</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Searching Chromosome 1/2...</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="pos_label">
-    <property name="geometry">
-     <rect>
-      <x>320</x>
-      <y>320</y>
-      <width>201</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>x Positions Searched.</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="viewStatButton">
     <property name="geometry">
      <rect>
@@ -291,10 +265,10 @@
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
-      <x>430</x>
-      <y>10</y>
-      <width>211</width>
-      <height>131</height>
+      <x>10</x>
+      <y>170</y>
+      <width>281</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="title">
@@ -303,34 +277,34 @@
     <widget class="QPushButton" name="selectGenBank">
      <property name="geometry">
       <rect>
-       <x>20</x>
+       <x>0</x>
        <y>20</y>
-       <width>171</width>
+       <width>121</width>
        <height>41</height>
       </rect>
      </property>
      <property name="text">
-      <string>Select GenBank File...</string>
+      <string>GenBank File...</string>
      </property>
     </widget>
     <widget class="QPushButton" name="selectFastaButton">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>80</y>
-       <width>171</width>
+       <x>160</x>
+       <y>20</y>
+       <width>111</width>
        <height>41</height>
       </rect>
      </property>
      <property name="text">
-      <string>Select Fasta File...</string>
+      <string>Fasta File...</string>
      </property>
     </widget>
     <widget class="QLabel" name="genBankFile_2">
      <property name="geometry">
       <rect>
-       <x>90</x>
-       <y>60</y>
+       <x>130</x>
+       <y>30</y>
        <width>31</width>
        <height>16</height>
       </rect>
@@ -340,7 +314,7 @@
      </property>
     </widget>
    </widget>
-   <widget class="QTextBrowser" name="JobsQueBox">
+   <widget class="QTextBrowser" name="JobsQueueBox">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -353,10 +327,10 @@
    <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
      <rect>
-      <x>370</x>
-      <y>150</y>
-      <width>281</width>
-      <height>80</height>
+      <x>310</x>
+      <y>169</y>
+      <width>401</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="title">
@@ -366,8 +340,8 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>30</y>
-       <width>251</width>
+       <y>20</y>
+       <width>381</width>
        <height>31</height>
       </rect>
      </property>
@@ -435,10 +409,10 @@
    <widget class="QTableWidget" name="keggSuggested">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>190</y>
-      <width>341</width>
-      <height>81</height>
+      <x>390</x>
+      <y>20</y>
+      <width>321</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="rowCount">
@@ -453,13 +427,95 @@
     <row/>
     <row/>
    </widget>
+   <widget class="QGroupBox" name="groupBox_3">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>90</y>
+      <width>321</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Endonuclease Features:</string>
+    </property>
+    <widget class="QCheckBox" name="pamBox">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>40</y>
+       <width>87</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>5' PAM</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="tot_len_box">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>50</y>
+       <width>51</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="seed_len_box">
+     <property name="geometry">
+      <rect>
+       <x>140</x>
+       <y>50</y>
+       <width>51</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>121</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Total gRNA length</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>140</x>
+       <y>30</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Seed Length</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QTextBrowser" name="output_browser">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>290</y>
+      <width>371</width>
+      <height>61</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>700</width>
+     <width>725</width>
      <height>22</height>
     </rect>
    </property>
