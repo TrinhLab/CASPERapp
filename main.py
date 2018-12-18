@@ -283,6 +283,8 @@ class CMainWindow(QtWidgets.QMainWindow):
        self.newGenome.show()
 
     def collect_table_data(self):
+        self.checked_info.clear()
+
         k = Kegg()
         full_org = str(self.orgChoice.currentText())
         organism= self.shortHand[full_org]
@@ -563,7 +565,7 @@ class StartupWindow(QtWidgets.QDialog):
         self.pushButton_2.clicked.connect(self.show_window)
         self.pushButton.clicked.connect(self.errormsgmulti)
         self.multi_targeting_window = Multitargeting("hold")
-        self.show_main_window = CMainWindow(self.info_path)
+        GlobalSettings.mainWindow = CMainWindow(self.info_path)
 
         #show functionalities on window
         self.show()
@@ -654,7 +656,7 @@ class StartupWindow(QtWidgets.QDialog):
         elif(os.path.isdir(self.gdirectory)):
 
             os.chdir(self.gdirectory)
-            found = self.show_main_window.getData()
+            found = GlobalSettings.mainWindow.getData()
             if found==False:
                 QtWidgets.QMessageBox.question(self, "No Cspr files", "Please select a directory that contains cspr files.",
                                                QtWidgets.QMessageBox.Ok)
@@ -662,7 +664,7 @@ class StartupWindow(QtWidgets.QDialog):
 
             self.re_write_dir()
             GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
-            self.show_main_window.show()
+            GlobalSettings.mainWindow.show()
             self.close()
         else:
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
