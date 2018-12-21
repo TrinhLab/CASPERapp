@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>836</width>
-    <height>505</height>
+    <width>851</width>
+    <height>558</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -323,9 +323,9 @@
     <property name="geometry">
      <rect>
       <x>450</x>
-      <y>280</y>
+      <y>270</y>
       <width>311</width>
-      <height>187</height>
+      <height>91</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -333,7 +333,7 @@
       <enum>QLayout::SetMinimumSize</enum>
      </property>
      <item>
-      <widget class="QLabel" name="Kegg_Search_Label">
+      <widget class="QLabel" name="Search_Label">
        <property name="text">
         <string>Search KEGG Database for genes</string>
        </property>
@@ -345,80 +345,10 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <item>
-        <widget class="QLineEdit" name="Kegg_Search_Imput"/>
+        <widget class="QLineEdit" name="Search_Input"/>
        </item>
        <item>
-        <widget class="QPushButton" name="Kegg_Search_Button">
-         <property name="text">
-          <string>Search</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QLabel" name="Own_File_Lable">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Select your own file</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-       <property name="wordWrap">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="own_file_box">
-       <item>
-        <widget class="QLineEdit" name="Own_File_Imput">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="Own_File_Button">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>Browse</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QLabel" name="NCBI_Label">
-       <property name="text">
-        <string>Use NCBI database</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_6">
-       <item>
-        <widget class="QLineEdit" name="NCBI_Imput">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="NCBI_Button">
+        <widget class="QPushButton" name="Search_Button">
          <property name="text">
           <string>Search</string>
          </property>
@@ -432,7 +362,7 @@
     <property name="geometry">
      <rect>
       <x>450</x>
-      <y>390</y>
+      <y>380</y>
       <width>320</width>
       <height>21</height>
      </rect>
@@ -460,19 +390,6 @@
     </property>
     <property name="orientation">
      <enum>Qt::Vertical</enum>
-    </property>
-   </widget>
-   <widget class="Line" name="line_3">
-    <property name="geometry">
-     <rect>
-      <x>430</x>
-      <y>420</y>
-      <width>351</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
     </property>
    </widget>
    <widget class="Line" name="line_4">
@@ -631,13 +548,26 @@
      </item>
     </layout>
    </widget>
+   <widget class="Line" name="line_3">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>420</y>
+      <width>351</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>836</width>
+     <width>851</width>
      <height>22</height>
     </rect>
    </property>

@@ -4,6 +4,7 @@ import io
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from APIs import Kegg, SeqFromFasta
 from bioservices import KEGG
+from Bio import Entrez
 from CoTargeting import CoTargeting
 
 from Results import Results
@@ -116,7 +117,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.radioButton_Gene.clicked.connect(self.toggle_annotation)
         self.radioButton_Position.clicked.connect(self.toggle_annotation)
         self.radioButton_Sequence.clicked.connect(self.toggle_annotation)
-        self.Kegg_Search_Button.clicked.connect(self.search_kegg)
+        self.Search_Button.clicked.connect(self.search_kegg_ncbi_browse_own)
         self.Annotation_Kegg.clicked.connect(self.change_annotation)
         self.Annotation_Ownfile.clicked.connect(self.change_annotation)
         self.NCBI_Select.clicked.connect(self.change_annotation)
@@ -154,11 +155,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.newGenome = NewGenome(info_path)
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
-
-        #self.show()
-    #def Ann_Window(self):
-
-
 
     def endo_Changed(self):
         i=3
@@ -341,17 +337,20 @@ class CMainWindow(QtWidgets.QMainWindow):
             s = False
         current = self.selected_annotation()
         if current == "Own":
-            self.Own_File_Button.setEnabled(s)
-            self.Own_File_Imput.setEnabled(s)
-            self.Own_File_Lable.setEnabled(s)
+            self.Search_Button.setText("Browse")
+            self.Search_Button.setEnabled(s)
+            self.Search_Input.setEnabled(s)
+            self.Search_Label.setText("Select an annotation file...")
         elif current == "Kegg":
-            self.Kegg_Search_Imput.setEnabled(s)
-            self.Kegg_Search_Label.setEnabled(s)
-            self.Kegg_Search_Button.setEnabled(s)
+            self.Search_Button.setText("Search")
+            self.Search_Button.setEnabled(s)
+            self.Search_Input.setEnabled(s)
+            self.Search_Label.setText("Search KEGG Database for genes")
         else:
-            self.NCBI_Imput.setEnabled(s)
-            self.NCBI_Label.setEnabled(s)
-            self.NCBI_Button.setEnabled(s)
+            self.Search_Button.setText("Search")
+            self.Search_Button.setEnabled(s)
+            self.Search_Input.setEnabled(s)
+            self.Search_Label.setText("Search NCBI Database for genes")
         self.Annotations_Organism.setEnabled(s)
         self.Annotation_Ownfile.setEnabled(s)
         self.Annotation_Kegg.setEnabled(s)
@@ -365,32 +364,16 @@ class CMainWindow(QtWidgets.QMainWindow):
         else:
             return "NCBI"
 
-
     def change_annotation(self):
         if self.Annotation_Ownfile.isChecked():
-            self.Own_File_Button.show()
-            self.Own_File_Imput.show()
-            self.Own_File_Lable.show()
-        else:
-            self.Own_File_Button.hide()
-            self.Own_File_Imput.hide()
-            self.Own_File_Lable.hide()
-        if self.Annotation_Kegg.isChecked():
-            self.Kegg_Search_Imput.show()
-            self.Kegg_Search_Label.show()
-            self.Kegg_Search_Button.show()
-        else:
-            self.Kegg_Search_Imput.hide()
-            self.Kegg_Search_Label.hide()
-            self.Kegg_Search_Button.hide()
-        if self.NCBI_Select.isChecked():
-            self.NCBI_Imput.show()
-            self.NCBI_Label.show()
-            self.NCBI_Button.show()
-        else:
-            self.NCBI_Imput.hide()
-            self.NCBI_Label.hide()
-            self.NCBI_Button.hide()
+            self.Search_Button.setText("Browse")
+            self.Search_Label.setText("Select an annotation file...")
+        elif self.Annotation_Kegg.isChecked():
+            self.Search_Button.setText("Search")
+            self.Search_Label.setText("Search KEGG Database for genome annotation")
+        elif self.NCBI_Select.isChecked():
+            self.Search_Button.setText("Search")
+            self.Search_Label.setText("Search NCBI Database for genome annotation")
 
 
 
@@ -398,18 +381,22 @@ class CMainWindow(QtWidgets.QMainWindow):
     # for the gene
 
 
-    def search_kegg(self):
-        k = KEGG()
-        #current_org = self.shortHand[self.orgChoice.currentText()]
-        #info = k.find("genes", str(self.Kegg_Search_Imput.text()))
-        #x = self.shortHand[self.Kegg_Search_Imput.text()]
+    def search_kegg_ncbi_browse_own(self):
+        if self.Annotation_Ownfile.isChecked():
+            poo = 1
+            #Open file browser
+        elif self.Annotation_Kegg.isChecked():
+            k = KEGG()
 
-        All_org = k.lookfor_organism(self.Kegg_Search_Imput.text())
-        """ self.lineEdit_search.text()"""
-        for item in All_org:
-            hold = self.organism_finder(item)
-            self.Annotations_Organism.addItem(hold)
-            self.TNumbers[hold] = item[:6]
+            All_org = k.lookfor_organism(self.Search_Input.text())
+            """ self.lineEdit_search.text()"""
+            for item in All_org:
+                hold = self.organism_finder(item)
+                self.Annotations_Organism.addItem(hold)
+                self.TNumbers[hold] = item[:6]
+        elif self.NCBI_Select.isChecked():
+            poo = 1
+            #Connect to NCBI database
 
     def make_dictonary(self):
         url = "https://www.genome.jp/dbget-bin/get_linkdb?-t+genes+gn:"+self.TNumbers[self.Annotations_Organism.currentText()]
@@ -507,16 +494,17 @@ class CMainWindow(QtWidgets.QMainWindow):
                     self.orgChoice.addItem(species)
 
         if found==False:
-            return False;
+            return False
         self.data = orgsandendos
         self.shortHand= shortName
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
         self.orgChoice.currentIndexChanged.connect(self.changeEndos)
+
     def changeEndos(self):
 
         self.endoChoice.clear()
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
-        self.Kegg_Search_Imput.setText(self.orgChoice.currentText())
+        self.Search_Input.setText(self.orgChoice.currentText())
 
     def change_directory(self):
         filed = QtWidgets.QFileDialog()
