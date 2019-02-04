@@ -81,4 +81,4 @@ class Ncbi:
 N = Ncbi('bmendoz1@vols.utk.edu')
 
 #N.get_file('nucleotide', 'CP010053.1')
-N.search_database('Saccharomyces cerevisiae[orgn] AND complete genome[title]', "nucleotide","C:\\Users\\Greg Cantrall\\Documents")
+N.search_database('Saccharomyces cerevisiae[orgn] AND complete genome[title]', "nucleotide","/Volumes/Seagate_Drive/FASTAs/")

@@ -177,7 +177,6 @@ class Multitargeting(QtWidgets.QMainWindow):
             holder +=1
 
             mytuple = line.split(",")
-
             hold = self.sq.decompress64(mytuple[2])
             sum+=hold
             prev_line = line
