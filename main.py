@@ -292,6 +292,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 name  = nameFull[len(nameFull)-1]
 
                 gene_info = k.gene_locator(organism+":"+name)
+                print(gene_info)
                 holder = (gene_info[0],gene_info[2],gene_info[3])
                 self.checked_info[item[0]]=holder
 

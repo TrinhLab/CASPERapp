@@ -14,5 +14,5 @@ def revcom(sequence):
 
 f = open("/Users/brianmendoza/Desktop/primer_sequences.txt")
 for line in f:
-    myseq = line[:-1]
+    myseq = line[:-1].upper()
     print(revcom(myseq))

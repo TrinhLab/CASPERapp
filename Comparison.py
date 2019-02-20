@@ -54,13 +54,14 @@ class Compare_Orgs:
 
     # Takes an organism and parses the target data into positions and repeated sequences containers
     def make_lists(self, org):
-        name1 = self.db_path + org + self.endo + ".cspr"
+        name1 = self.db_path + org + "_" + self.endo + ".cspr"
         f = open(name1, 'r')
-        curchrom = int()
+        curchrom = 0
+        genomeID = f.readline()
         while True:
             position = f.readline()
-            if position.find("CHROMOSOME") != -1:
-                curchrom = position[position.find("#")+1:-1]
+            if position.startswith(">"):
+                curchrom += 1
                 print(curchrom)
             else:
                 if position[0:-1] == "REPEATS":
@@ -152,17 +153,17 @@ class Compare_Orgs:
         for key in self.buckets:
             f.write(str(key) + " " + str(len(self.buckets[key])) + "\n")
             for seq in self.buckets[key]:
-                # f.write(self.ST.decompress64(seq[0], True) + "\n")
+                #f.write(self.ST.decompress64(seq[0], True) + "\n")
                 for suborg in seq[1]:
-                    # f.write(str(suborg) + ":")
+                    #f.write(str(suborg) + ":")
                     for locs in seq[1][suborg]:
                         poo = 1
-                        # f.write(str(locs[0]) + "," + str(self.ST.decompress64(locs[1])) + "\t")
-                        # f.write("\n")
+                        #f.write(str(locs[0]) + "," + str(self.ST.decompress64(locs[1])) + "\t")
+                        #f.write("\n")
             f.write("\n")
         f.close()
 
-C = Compare_Orgs("/Users/brianmendoza/Desktop/Skin_microbiome/", "/Users/brianmendoza/Desktop/Skin_microbiome/casper_files/",
-                 "sav","saCas9",
-                 ["camy","cjk","cstr","mgl","moo","mplu","mres","msym","paci","saho","sao","scap","sep","slg","swa"], 4)
+C = Compare_Orgs("/Users/brianmendoza/Desktop/Michener_microbiome/", "/Users/brianmendoza/Dropbox/CrisprDB/",
+                 "buq","spCas9",
+                 ["peoy","psgm","spha"], 4)
 

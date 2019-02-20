@@ -142,7 +142,7 @@ class CoTargeting(QtWidgets.QMainWindow):
 
         self.comp_endo_1 = self.import_data(self.Endos_Added[0])
 
-        index= 1
+        index = 1
         while index<len(self.Endos_Added):
             self.comp_endo_2= self.import_data(self.Endos_Added[index])
             self.comp_endo_1 = self.compare_two()

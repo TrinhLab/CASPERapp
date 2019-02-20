@@ -4,6 +4,7 @@ from bioservices import KEGG
 import requests
 from bs4 import BeautifulSoup
 from Algorithms import SeqTranslate
+from Bio import SeqIO
 
 
 class Kegg:
@@ -216,5 +217,3 @@ class SeqFromFasta:
                         break
                 break
         f.close()
-
-
