@@ -160,12 +160,12 @@ class Multitargeting(QtWidgets.QMainWindow):
         lines = file_info.split("\n")
         holder= 0
         sum = 0
-        prev_line=""
+        prev_line = ""
         for line in lines:
-            if "CHROMOSOME #1" == line or "GENOME:" in line:
+            if line.startswith(">") or "GENOME:" in line:
                 continue
-            if "CHROMOSOME" in line:
-                if prev_line=="CHROMO":
+            if line.startswith(">"):
+                if prev_line == "CHROMO":
                     self.chromo_length.append(-2)
                     continue
                 self.chromo_length.append(self.seqTrans.decompress64(prev_line.split(",")[0]))
@@ -174,7 +174,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             if "REPEAT" in line:
                 self.chromo_length.append(self.seqTrans.decompress64(prev_line.split(",")[0]))
                 break
-            holder +=1
+            holder += 1
 
             mytuple = line.split(",")
             hold = self.sq.decompress64(mytuple[2])
