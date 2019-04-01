@@ -12,7 +12,6 @@ class Library(QtWidgets.QDialog):
         uic.loadUi('library_prompt.ui', self)
         self.library_name = ""
 
-
         self.Targets = list()  # List of targets that contain information to be printed to the .csv file
 
     def generate_library(self):
@@ -22,10 +21,6 @@ class Library(QtWidgets.QDialog):
         num_guides = int(self.numGenescomboBox.currentText())
         min_on_score_filter = int(self.minON_comboBox.currentText())
         seq_spec = self.fiveprimeseq.text()
-
-
-
-
 
 
 
