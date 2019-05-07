@@ -11,3 +11,11 @@ the warnings
 CASPER will launch and you will be good to go!
 
 Any problems please email Brian Mendoza at bmendoz1@vols.utk.edu
+
+### Python Dependencies Needed
+- PyQt5
+- Bioservices
+- Bio
+- pyqtgraph
+- PyQtChart
+
