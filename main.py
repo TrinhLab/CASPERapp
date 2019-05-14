@@ -663,6 +663,9 @@ class StartupWindow(QtWidgets.QDialog):
 
 
 if __name__ == '__main__':
+    #enable DPI scaling
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+
     app = Qt.QApplication(sys.argv)
     app.setOrganizationName("TrinhLab-UTK")
     app.setApplicationName("CASPER")

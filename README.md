@@ -15,7 +15,7 @@ Any problems please email Brian Mendoza at bmendoz1@vols.utk.edu
 ### Python Dependencies Needed
 - PyQt5
 - Bioservices
-- Bio
+- biopython
 - pyqtgraph
 - PyQtChart
 
