@@ -22,8 +22,6 @@ from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 
 
 
-
-
 # ----------------------------------CODE BELOW CAN BE IGNORED BY USER------------------------------------------------ #
 
 
@@ -235,7 +233,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             if chromo == "-1":
                 continue
             if self.chromo_length[int(chromo)]=="-2":
-                chromo = self.chromo_length_helper(chromo,info)
+                chromo = self.chromo_length_helper(chromo, info)
             for position in info[self.sq.decompress64(self.chromo_seed.currentText())][chromo]:
 
                 pos_space = int(round(((position/self.chromo_length[int(chromo)])*100)/1.3157))

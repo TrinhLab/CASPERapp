@@ -35,7 +35,7 @@ class Ncbi:
         allfetch = list()
         item = identify[8]
         newhandle = Entrez.efetch(db=database, id=item, rettype = 'fasta', retmode='text')  #use id to get information from database in fasta format
-        mything = newhandle.read()                                                          #get informaion as string
+        mything = newhandle.read()                                                          #get information as string
         if not os.path.exists(path):                                                        #check to see if the directory path exist
             print("That path can not be found.")
         else:                                                                               #if it does then parse through data to get id and sequence as their own strings

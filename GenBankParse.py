@@ -71,3 +71,12 @@ class GenBankFile:
                 cstr = record.seq
                 return cstr
 
+
+class GffFile:
+
+    def __init__(self, organism):
+        self.directory = "/Users/brianmendoza/Desktop/GenBank_Files/"
+        self.org = organism
+
+
+
