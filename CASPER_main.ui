@@ -45,7 +45,7 @@
      <rect>
       <x>12</x>
       <y>12</y>
-      <width>132</width>
+      <width>181</width>
       <height>50</height>
      </rect>
     </property>
@@ -64,10 +64,10 @@
    <widget class="QLabel" name="casperDetail">
     <property name="geometry">
      <rect>
-      <x>283</x>
-      <y>12</y>
-      <width>412</width>
-      <height>16</height>
+      <x>350</x>
+      <y>20</y>
+      <width>511</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="font">
@@ -95,9 +95,9 @@
    <widget class="QLabel" name="versionNum">
     <property name="geometry">
      <rect>
-      <x>152</x>
-      <y>12</y>
-      <width>32</width>
+      <x>190</x>
+      <y>40</y>
+      <width>51</width>
       <height>18</height>
      </rect>
     </property>
@@ -116,7 +116,7 @@
       <x>12</x>
       <y>234</y>
       <width>304</width>
-      <height>20</height>
+      <height>22</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -151,8 +151,8 @@
      <rect>
       <x>12</x>
       <y>170</y>
-      <width>266</width>
-      <height>26</height>
+      <width>270</width>
+      <height>28</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -204,8 +204,8 @@
      <rect>
       <x>12</x>
       <y>89</y>
-      <width>451</width>
-      <height>26</height>
+      <width>486</width>
+      <height>28</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -239,7 +239,7 @@
       <x>538</x>
       <y>282</y>
       <width>300</width>
-      <height>20</height>
+      <height>22</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -581,7 +581,7 @@
      <x>0</x>
      <y>0</y>
      <width>940</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
