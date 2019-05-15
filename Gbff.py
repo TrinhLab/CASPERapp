@@ -22,62 +22,102 @@ class GBFF_Parse:
 class Assembly:
 
     def __init__(self, organism, database):
+        print('')
+        #Moved the code from this to its own function so that I can return the database URL
+
+    def getDataBaseURL(self, organism, database):
         handle = Entrez.esearch(db="assembly", retmax=20, term=organism)
         record = Entrez.read(handle)
         self.database = database
         myidlist = list()
         for id in record["IdList"]:
             myidlist.append(id)
-            print(id)
+            #print(id)
         handle.close()
 
-        """for ret in myidlist:
+        gca_rectList = list()
+        for ret in myidlist:
             handle = Entrez.esummary(db="assembly", id=ret)
             gca_rec = Entrez.read(handle)["DocumentSummarySet"]["DocumentSummary"][0]["AssemblyAccession"]
-            print(gca_rec)
+            #print(gca_rec)
+            gca_rectList.append(gca_rec)
             handle.close()
-            time.sleep(0.5)"""
+            time.sleep(0.5)
 
-        url = "https://www.ncbi.nlm.nih.gov/assembly/" + "GCF_000146045.2"
-        source = requests.get(url)
-        plain_text = source.text
-        soup = BeautifulSoup(plain_text, "html.parser")
+        #is it ok that the URL is hard coded?
+        if(gca_rectList):
+            url = "https://www.ncbi.nlm.nih.gov/assembly/" + gca_rectList[0] + "/"
+            source = requests.get(url)
+            plain_text = source.text
+            soup = BeautifulSoup(plain_text, "html.parser")
 
-        refseq_link = str(soup.find('a', text="Download the RefSeq assembly"))
-        genbank_link = str(soup.find('a', text="Download the GenBank assembly"))
-        refseq_link = refseq_link[refseq_link.find("=")+2: refseq_link.find(">")-1]
-        genbank_link = genbank_link[genbank_link.find("=") + 2: genbank_link.find(">") - 1]
-        # Checkpoint printing
-        print(refseq_link)
-        print(genbank_link)
-        # then go to that webpage then inspect and download with url service the gbff file
-        if self.database == "GenBank":
-            database_url = genbank_link
+            refseq_link = str(soup.find('a', text="Download the RefSeq assembly"))
+            genbank_link = str(soup.find('a', text="Download the GenBank assembly"))
+            refseq_link = refseq_link[refseq_link.find("=") + 2: refseq_link.find(">") - 1]
+            genbank_link = genbank_link[genbank_link.find("=") + 2: genbank_link.find(">") - 1]
+            # Checkpoint printing
+            #print(refseq_link)
+            #print(genbank_link)
+            # then go to that webpage then inspect and download with url service the gbff file
+            if self.database == "GenBank":
+                database_url = genbank_link
+            else:
+                database_url = refseq_link
+            # data_source = requests.get(database_url)
+            # soup = BeautifulSoup(data_source.text, "html.parser")
+            for link in soup.find_all('a', {'class': 'icon file'}):
+                print(link)
+
+            #check the links and catch errors
+            if(database == "RefSeq" and len(refseq_link) < 5):
+                print("Error: No RefSeq file to download!")
+            elif(database == "GenBank" and len(genbank_link) < 5):
+                print("Error: No GenBank file to download!")
+            elif(len(genbank_link) < 5 and len(refseq_link) < 5):
+                print("Error: No RefSeq or GenBank files to download")
+            else:
+                return database_url
         else:
-            database_url = refseq_link
-        data_source = requests.get(database_url)
-        soup = BeautifulSoup(data_source.text, "html.parser")
-        for link in soup.find_all('a', {'class': 'icon file'}):
-            print(link)
-
-        # can save or throw away, save for those with a bunch of space or call the gff for annotation when needed
-
+            print('Error: no link found. Check your spelling')
 
 #G = GBFF_Parse("/Users/brianmendoza/Desktop/FileExamples/PantoeaYR343.gbff")
 #G.convert_to_fasta()
 
-#A = Assembly("pantoea[Organism]","RefSeq")
+#What exacly is the pantoea[Organism]? user input?
+A = Assembly("pantoea[Organism]","RefSeq")
 
-ftp = FTP('ftp.ncbi.nlm.nih.gov')
-ftp.login()
-ftp.cwd("/genomes/all/GCF/000/146/045/GCF_000146045.2_R64/")
+#hard coded currently: pantoea will be from user as well as the GenBank or RefSeq
+print("Getting Database Link")
+database_url = A.getDataBaseURL("pantoea[Organism]", "GenBank")
 
-filename = "GCF_000146045.2_R64_genomic.fna.gz"
+#if it returns a good link
+if(database_url):
+    ftpLink = database_url[27:]
+    #print(ftpLink)
 
-#local_filename = os.path.join(r"c:\myfolder", filename)
-local_filename = "/Users/brianmendoza/Desktop/" + filename
-lf = open(local_filename, "wb")
-ftp.retrbinary("RETR " + filename, lf.write, 8*1024)
-lf.close()
+    ftp = FTP('ftp.ncbi.nlm.nih.gov')
+    ftp.login()
+    ftp.cwd(ftpLink)
 
-ftp.close()
+    #print(database_url.rfind('/'))
+    fileNameIndex = database_url.rfind('/') + 1
+
+    #currently hard coding the _genomic.fna.gz part in. Possibly taken in from user later on
+    print("Getting the file")
+    filename = database_url[fileNameIndex:]
+    filename = filename + "_genomic.fna.gz"
+
+
+    #store the file downloaded into the parent directory of wherever the CASPERapp is
+    local_filename = "../" + filename
+    #print(local_filename)
+    lf = open("../" + filename, "wb")
+
+    print("Writing the file")
+    #still expecting an archive file? Not sure
+    ftp.retrbinary("RETR " + filename, lf.write, 8*1024)
+    lf.close()
+
+    ftp.close()
+
+print('Done')
