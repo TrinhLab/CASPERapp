@@ -17,6 +17,7 @@ from PyQt5.QtChart import (QBarCategoryAxis,QBarSet, QChartView, QBarSeries,QCha
 
 from Algorithms import SeqTranslate
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
+from CSPRparser import CSPRparser
 
 
 
@@ -63,6 +64,8 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.mode = 0
         self.average_unique = 0
         self.average_rep = 0
+
+        self.parser = CSPRparser("")
 
 
         self.ready_chromo_min_max = True
@@ -121,65 +124,32 @@ class Multitargeting(QtWidgets.QMainWindow):
         sum = 0
         count = 0
 
-        self.repeats.clear()
-        self.seeds.clear()
-        while True:
-            if split_info[index] == "REPEATS":
-                index = index + 1
-                break
-            index = index + 1
-        while index+1<len(split_info):
-            seed = self.seqTrans.decompress64(split_info[index])
-            repeat = split_info[index+1].split("\t")
-            self.repeats[seed] =0
-            self.seeds[seed] = []
-            for item in repeat:
-                if item !="":
-                    self.repeats[seed] +=1
-                    sequence = item.split(",")
-                    self.seeds[seed].append(sequence)
-                    sum += self.sq.decompress64(sequence[3])
-                    count += 1
-            index +=2
-        self.average_rep = sum/count
+        file_name = self.shortHand[self.organism_drop.currentText()] + "_" + self.endo_drop.currentText()
+        if self.directory.find("/") != -1:
+            file = (self.directory + "/" + file_name + "cspr")
+        else:
+            file = (self.directory + "\\" + file_name + "cspr")
+
+        self.parser.fileName = file
+
+        self.parser.read_repeats()
+        self.parser.read_first_lines()
+
+
+        self.chromo_length = self.parser.karystatsList
+        print(self.chromo_length)
+
+        self.average_rep = self.parser.multiSum/self.parser.multiCount
         self.plot_repeats_vs_seeds()
         self.seeds_vs_repeats_bar()
         self.fill_min_max()
         #self.chro_bar_data()
-        self.nbr_seq.setText(str(len(self.seeds)))
+        self.nbr_seq.setText(str(len(self.parser.seeds)))
         self.avg_rep.setText(str(self.average))
         self.med_rep.setText(str(self.median))
         self.mode_rep.setText(str(self.mode))
         self.scr_lbl.setText(str(self.average_rep/self.average_unique))
 
-
-    def get_chromo_length(self):
-        file_info = self.get_file_info()
-        lines = file_info.split("\n")
-        holder= 0
-        sum = 0
-        prev_line = ""
-        for line in lines:
-            if line.startswith(">") or "GENOME:" in line:
-                continue
-            if line.startswith(">"):
-                if prev_line == "CHROMO":
-                    self.chromo_length.append(-2)
-                    continue
-                self.chromo_length.append(self.seqTrans.decompress64(prev_line.split(",")[0]))
-                prev_line = "CHROMO"
-                continue
-            if "REPEAT" in line:
-                self.chromo_length.append(self.seqTrans.decompress64(prev_line.split(",")[0]))
-                break
-            holder += 1
-
-            mytuple = line.split(",")
-            hold = self.sq.decompress64(mytuple[2])
-            sum+=hold
-            prev_line = line
-        self.average_unique = sum/holder
-        self.nbr_unq.setText(str(holder))
 
     def get_file_info(self):
         file_name = self.shortHand[self.organism_drop.currentText()]+"_"+self.endo_drop.currentText()
@@ -196,9 +166,9 @@ class Multitargeting(QtWidgets.QMainWindow):
         while index+1<len(split_info):
             seed = split_info[index]
             repeat = split_info[index+1].split("\t")
-            self.seeds[seed] =[]
+            self.parser.seeds[seed] =[]
             for item in repeat:
-                self.seeds[seed].append(item.split(","))
+                self.parser.seeds[seed].append(item.split(","))
             index +=2
 
 
@@ -208,15 +178,14 @@ class Multitargeting(QtWidgets.QMainWindow):
         if self.ready_chromo_make_graph==False:
             return
         dic_info = {}
-        for seed in self.seeds:
+        for seed in self.parser.seeds:
             dic_info[seed] = {}
-            for repeat in self.seeds[seed]:
+            for repeat in self.parser.seeds[seed]:
                 if repeat[0] in dic_info[seed]:
                     dic_info[seed][repeat[0]].append(self.seqTrans.decompress64(repeat[1]))
                 else:
                     dic_info[seed][repeat[0]]=[self.seqTrans.decompress64(repeat[1])]
         self.chro_bar_create(dic_info)
-        self.get_chromo_length()
         self.fill_Chromo_Text(dic_info)
     def chromo_length_helper(self,chromo,info):
         max = 0;
@@ -317,15 +286,15 @@ class Multitargeting(QtWidgets.QMainWindow):
     def seeds_vs_repeats_bar(self):
         data = {}
         self.average = 0
-        for seed in self.repeats:
-            self.average  += int(self.repeats[seed])
-            number = self.repeats[seed]
+        for seed in self.parser.repeats:
+            self.average  += int(self.parser.repeats[seed])
+            number = self.parser.repeats[seed]
             if number in data:
                 data[number]+=1
             else:
                 data[number] =1
         data = self.order_high_low_rep(data)
-        self.average = round(self.average/(len(self.repeats)))
+        self.average = round(self.average/(len(self.parser.repeats)))
         x_Vals = QBarSeries()
         Axes = []
         holder = QBarSet("test")
@@ -353,8 +322,8 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     def plot_repeats_vs_seeds(self):
         data = {}
-        for seed in self.repeats:
-            number = self.repeats[seed]
+        for seed in self.parser.repeats:
+            number = self.parser.repeats[seed]
             if number in data:
                 data[number]+=1
             else:
@@ -381,7 +350,7 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             hold = 0
             while hold<data[number]:
-                if index == int(round(len(self.repeats) / 2)):
+                if index == int(round(len(self.parser.repeats) / 2)):
                     self.median = number
                 series.append(index,number)
                 index= index+1
@@ -435,8 +404,8 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.ready_chromo_make_graph = False
         self.chromo_seed.clear()
         any = False
-        for seed in self.repeats:
-            if self.repeats[seed] >= int(self.min_chromo.currentText()) and self.repeats[seed]<=int(self.max_chromo.currentText()):
+        for seed in self.parser.repeats:
+            if self.parser.repeats[seed] >= int(self.min_chromo.currentText()) and self.parser.repeats[seed]<=int(self.max_chromo.currentText()):
                 any = True
                 self.chromo_seed.addItem(str(self.sq.compress(seed,64)))
         if any==False:
