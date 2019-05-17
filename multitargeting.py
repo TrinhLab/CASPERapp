@@ -79,8 +79,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.ready_chromo_min_max = True
         self.ready_chromo_make_graph = True
         self.directory = 'C:/Users/GregCantrall/Documents/Cspr files'
-        #self.parse_repeates("10001\nchr1,pos1,seq1,scr1\tchr2,pos2,seq2,scr2\n10002\nchr1,pos1,seq1,scr1\tchr2,pos2,seq2,scr2\tchr3,pos3,seq3,scr3\n")
-        #self.make_graphs(self.get_file_info("sce_asCpf1"))
 
         """self.file_name = CASPER_Seq_Finder_file
         self.get_instances()"""
@@ -153,7 +151,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.avg_rep.setText(str(self.average))
         self.med_rep.setText(str(self.median))
         self.mode_rep.setText(str(self.mode))
-        self.scr_lbl.setText(str(self.average_rep/self.average_unique))
+        self.scr_lbl.setText(str(self.average_rep))
 
 
     def get_file_info(self):
@@ -163,20 +161,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         else:
             file = open(self.directory + "\\" + file_name + "cspr")
         return file.read()
-
-
-    def parse_repeates(self, uncomp):
-        split_info = uncomp.split("\n")
-        index = 0
-        while index+1<len(split_info):
-            seed = split_info[index]
-            repeat = split_info[index+1].split("\t")
-            self.parser.seeds[seed] =[]
-            for item in repeat:
-                self.parser.seeds[seed].append(item.split(","))
-            index +=2
-
-
 
 
     def chro_bar_data(self):
@@ -197,11 +181,7 @@ class Multitargeting(QtWidgets.QMainWindow):
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
         for chromo in info[self.sq.decompress64(self.chromo_seed.currentText())]:
-
             pos = []
-
-            if chromo == "-1":
-                continue
             for position in info[self.sq.decompress64(self.chromo_seed.currentText())][chromo]:
 
                 pos_space = int(round(((position/self.chromo_length[int(chromo) - 1])*100)/1.3157))
