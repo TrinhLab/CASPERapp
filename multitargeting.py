@@ -121,27 +121,20 @@ class Multitargeting(QtWidgets.QMainWindow):
 
 
     def make_graphs(self):
-        file = self.get_file_info()
-        split_info = file.split("\n")
-        index = 0
-        sum = 0
-        count = 0
-
+        #get the correct file name
         file_name = self.shortHand[self.organism_drop.currentText()] + "_" + self.endo_drop.currentText()
         if self.directory.find("/") != -1:
             file = (self.directory + "/" + file_name + "cspr")
         else:
             file = (self.directory + "\\" + file_name + "cspr")
 
+        #set up parser, and get the repeats and carry stats
         self.parser.fileName = file
-
         self.parser.read_repeats()
         self.parser.read_first_lines()
-
-
         self.chromo_length = self.parser.karystatsList
-        print(self.chromo_length)
 
+        #calculations and setting the windows
         self.average_rep = self.parser.multiSum/self.parser.multiCount
         self.plot_repeats_vs_seeds()
         self.seeds_vs_repeats_bar()
@@ -152,16 +145,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.med_rep.setText(str(self.median))
         self.mode_rep.setText(str(self.mode))
         self.scr_lbl.setText(str(self.average_rep))
-
-
-    def get_file_info(self):
-        file_name = self.shortHand[self.organism_drop.currentText()]+"_"+self.endo_drop.currentText()
-        if self.directory.find("/") != -1:
-            file = open(self.directory+"/"+file_name+"cspr")
-        else:
-            file = open(self.directory + "\\" + file_name + "cspr")
-        return file.read()
-
 
     def chro_bar_data(self):
         if self.ready_chromo_make_graph==False:
@@ -438,7 +421,7 @@ class Multitargeting(QtWidgets.QMainWindow):
 
 
 
-
+#not used
     def get_instances(self):
             ST = SeqTranslate()
             os.chdir(path)
@@ -474,6 +457,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 newtuple = (key, self.BAD_instances[key], size)  # sequence, location, size
                 self.sorted_instances.append(newtuple)
 
+#not used
     # Returns the container self.sorted_instances but removes all "single" repeats. Old Code to fix an off-by-1 error
     def return_all_seqs(self):
         myseqs = []
@@ -482,6 +466,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 myseqs.append(instance)
         return myseqs
 
+#not used
     def return_sorted(self):
         sorted_seqs = sorted(self.sorted_instances, key=operator.itemgetter(2), reverse=True)
         amounts = {}
@@ -495,6 +480,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         for element in amounts:
             print("Number of seed sequences with " + str(element) + " appearances: " + str(amounts[element]))
 
+#not used
     def return_positions(self):
         positions_mapped = []  # chromosme, beginning of range, end of range, and number of hits
         for instance in self.sorted_instances:
@@ -524,6 +510,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             print(sequences)
         return sorted_positions
 
+#not used
     def int_to_char(self, i):
         switcher = {
             0: 'A',
