@@ -1,15 +1,22 @@
 from Algorithms import SeqTranslate
 
+##################################################################################################################################
+# CLASS NAME: CSPRparser
+# Use: Use as a parser for the cspr files
+# Precondition: Only to the used with .cspr files. Will not work with any other files
+# This class also took some of the parsing functions from with classes (Multitargeting and Results) and stores them in here
+#INPUTS: takes things such as the file name
+##################################################################################################################################
+
 class CSPRparser:
     #default ctor: currently just sets the file name and initializes all of the variables I will be using
     def __init__(self, inputFileName):
-        super(CSPRparser, self).__init__()
 
         # variables used in this class
         self.multiSum = 0
         self.multiCount = 0
         self.seqTrans = SeqTranslate()
-        self.chromesomeList = list()  # list of a list for the chromesomes
+        self.chromesomeList = list()  # list of a list for the chromesomes. As it currently stands, this variable is used in both read_chromesomes and in read_targets
         self.karystatsList = list()  # list of (ints) of the karyStats (whatever those are) to be used for the get_chrom_length function
         self.genome = ""  # genome name
         self.misc = ""  # anything from the misc line
@@ -17,7 +24,6 @@ class CSPRparser:
         self.seeds = {}
 
         #file path variable
-        self.fileName = ""  # filename itself, intialized in the default ctor
         self.fileName = inputFileName
 
     #this function reads the first 3 lines of the file: also stores the karyStats in a list of ints
@@ -91,12 +97,16 @@ class CSPRparser:
                     #print(bufferString)
                     bufferString = fileStream.readline()
 
+########################################################################################################
     #this function reads just the repeats
-    #it stores this data in 2 dictionaries
+    #it stores this data in 2 dictionaries:
         #repeats dictionary is the number of dictionaries
         #seeds dictionary is each seed that is repeated
     #this function also stores the sum and count in the class itself as well
+    #this function is very similar to what make_graphs in Multitargeting.py was doing before
+########################################################################################################
     def read_repeats(self):
+        #get all of the data and split it
         file_info = self.get_whole_file()
         split_info = file_info.split('\n')
 
@@ -113,9 +123,6 @@ class CSPRparser:
         #clear what is already in there
         self.repeats.clear()
         self.seeds.clear()
-
-        self.multiSum = 0
-        self.multiCount = 0
 
         #parse the info now and store it in the correct dictionaries
         #this essentially copies what is happening in Multitargeting.py
@@ -136,7 +143,7 @@ class CSPRparser:
 
             index = index + 2
 
-    #this function just calls the above read functions
+    #this function just reads the whole file
     def read_all(self):
         print("Reading First Lines.")
         self.read_first_lines()
@@ -145,18 +152,51 @@ class CSPRparser:
         print("Reading Repeats.")
         self.read_repeats()
 
+    #this functions reads the entirety of the file into one string
     def get_whole_file(self):
         fileStream = open(self.fileName)
         return(fileStream.read())
 
+    #this function reads all of the targets in the file. It is essentially a copy of get_targets from the results.py file, written by Brian Mendoza
+    def read_targets(self, genename, pos_tuple):
+        #open the file, and store the genome and the misc tags.
+        #Note: The KARYSTATS is not stored at all. This should not be hard to implement if it is needed
+        fileStream = open(self.fileName)
+        self.genome = fileStream.readline()
+        fileStream.readline()
+        self.misc = fileStream.readline()
+
+        header = fileStream.readline()
+
+        # Find the right chromosome:
+        print(pos_tuple)
+        while True:
+            # in the right chromosome/scaffold?
+            if header.find("(" + str(pos_tuple[0]) + ")") != -1:
+                while True:
+                    # Find the appropriate location by quickly decompressing the location at the front of the line
+                    myline = fileStream.readline()
+                    if self.seqTrans.decompress64(myline.split(",")[0]) >= pos_tuple[1]:
+                        while self.seqTrans.decompress64(myline.split(",")[0]) < pos_tuple[2]:
+                            self.chromesomeList.append(self.seqTrans.decompress_csf_tuple(myline))
+                            myline = fileStream.readline()
+                    else:
+                        continue
+                    break
+                break
+            else:
+                header = fileStream.readline()
+        return self.chromesomeList
+
+
+#below is testing code
+"""
 if __name__ == '__main__':
     parser = CSPRparser("../NewCSPRFile.cspr")
     parser.read_first_lines()
 
     print(sum(parser.karystatsList))
-
-#below is testing code
-    """
+    
     print("Filename: " + parser.fileName)
     print("genome: " + parser.genome)
     print("Misc: " + parser.misc)
@@ -185,4 +225,4 @@ if __name__ == '__main__':
     chromesomeFile.close()
     repeatsNumFile.close()
     seedsFile.close()
-    """
+"""
