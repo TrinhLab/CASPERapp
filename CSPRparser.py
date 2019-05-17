@@ -5,7 +5,6 @@ from Algorithms import SeqTranslate
 # Use: Use as a parser for the cspr files
 # Precondition: Only to the used with .cspr files. Will not work with any other files
 # This class also took some of the parsing functions from with classes (Multitargeting and Results) and stores them in here
-#INPUTS: takes things such as the file name
 ##################################################################################################################################
 
 class CSPRparser:
@@ -13,15 +12,15 @@ class CSPRparser:
     def __init__(self, inputFileName):
 
         # variables used in this class
-        self.multiSum = 0
-        self.multiCount = 0
-        self.seqTrans = SeqTranslate()
+        self.multiSum = 0 #multitargetting sum taken from the previous version of make_graphs
+        self.multiCount = 0 #multitargetting count taken from the previous version of make_graphs
+        self.seqTrans = SeqTranslate() #SeqTranslate variable. for decrompressing the data
         self.chromesomeList = list()  # list of a list for the chromesomes. As it currently stands, this variable is used in both read_chromesomes and in read_targets
         self.karystatsList = list()  # list of (ints) of the karyStats (whatever those are) to be used for the get_chrom_length function
         self.genome = ""  # genome name
         self.misc = ""  # anything from the misc line
-        self.repeats = {}  # list of all the repeats. may need to be change, still not that sure about what the repeats are
-        self.seeds = {}
+        self.repeats = {}  #dictionary of the number of repeats. See the read_repeats function for more info
+        self.seeds = {} #dictionary of which chromesomes are repeats. See the read_repeats function for more info
 
         #file path variable
         self.fileName = inputFileName
@@ -98,12 +97,14 @@ class CSPRparser:
                     bufferString = fileStream.readline()
 
 ########################################################################################################
-    #this function reads just the repeats
-    #it stores this data in 2 dictionaries:
-        #repeats dictionary is the number of dictionaries
-        #seeds dictionary is each seed that is repeated
-    #this function also stores the sum and count in the class itself as well
-    #this function is very similar to what make_graphs in Multitargeting.py was doing before
+#    this function reads just the repeats
+#    it stores this data in 2 dictionaries:
+#        repeats dictionary is the number of dictionaries
+#               key = the seed, and the value is the number of repeats
+#        seeds dictionary is each seed that is repeated
+#           key =  the seeds, and the value is the actual chromesome that is repeated
+#    this function also stores the sum and count in the class itself as well
+#    this function is very similar to what make_graphs in Multitargeting.py was doing before
 ########################################################################################################
     def read_repeats(self):
         #get all of the data and split it
