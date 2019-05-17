@@ -3,6 +3,7 @@ import sys
 from PyQt5 import Qt, QtWidgets, uic, QtCore
 from Scoring import OnTargetScore
 from Algorithms import SeqTranslate
+from CSPRparser import CSPRparser
 import GlobalSettings
 # =========================================================================================
 # CLASS NAME: Results
@@ -87,35 +88,17 @@ class Results(QtWidgets.QMainWindow):
 
 
     # Function grabs the information from the .cspr file and adds them to the AllData dictionary
+    #changed to now call CSPRparser's function. Same function essentially, just cleaned up here
     def get_targets(self, genename, pos_tuple):
-        targets = []
+        #get the right files
         if self.directory.find("/") != -1:
-            file = open(self.directory+"/" + self.org + "_" + self.endo + ".cspr")
+            file = (self.directory+"/" + self.org + "_" + self.endo + ".cspr")
         else:
-            file = open(self.directory + "\\" + self.org + "_" + self.endo + ".cspr")
-        mainHeader = file.readline()  # Empty variable containing the Genome name
-        header = file.readline()
+            file = (self.directory + "\\" + self.org + "_" + self.endo + ".cspr")
 
-        # Find the right chromosome:
-        print(pos_tuple)
-        while True:
-            # in the right chromosome/scaffold?
-            if header.find("(" + str(pos_tuple[0]) + ")") != -1:
-                while True:
-                    # Find the appropriate location by quickly decompressing the location at the front of the line
-                    myline = file.readline()
-                    if self.S.decompress64(myline.split(",")[0]) >= pos_tuple[1]:
-                        while self.S.decompress64(myline.split(",")[0]) < pos_tuple[2]:
-                            targets.append(self.S.decompress_csf_tuple(myline))
-                            myline = file.readline()
-                    else:
-                        continue
-                    break
-                break
-            else:
-                header = file.readline()
-
-        self.AllData[genename] = targets
+        #create the parser, read the targets store it. then display the GeneData screen
+        parser = CSPRparser(file)
+        self.AllData[genename] = parser.read_targets(genename, pos_tuple)
         self.displayGeneData()
 
     ###############################################################################################################
