@@ -38,8 +38,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
 
         # Storage containers for the repeats and seed sequences
-        self.repeats = {}
-        self.seeds = {}
         self.sq=SeqTranslate()  # SeqTranslate object used in class
 
         # Initializes the three graphs
@@ -74,6 +72,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.average_unique = 0
         self.average_rep = 0
 
+        #parser object
         self.parser = CSPRparser("")
 
 
@@ -188,30 +187,24 @@ class Multitargeting(QtWidgets.QMainWindow):
             dic_info[seed] = {}
             for repeat in self.parser.seeds[seed]:
                 if repeat[0] in dic_info[seed]:
-                    dic_info[seed][repeat[0]].append(self.seqTrans.decompress64(repeat[1]))
+                    dic_info[seed][repeat[0]].append(self.sq.decompress64(repeat[1]))
                 else:
-                    dic_info[seed][repeat[0]]=[self.seqTrans.decompress64(repeat[1])]
+                    dic_info[seed][repeat[0]]=[self.sq.decompress64(repeat[1])]
         self.chro_bar_create(dic_info)
         self.fill_Chromo_Text(dic_info)
-    def chromo_length_helper(self,chromo,info):
-        max = 0;
-        for position in info[self.sq.decompress64(self.chromo_seed.currentText())][chromo]:
-            if int(position)>max:
-                max = int(position);
-        self.chromo_length[chromo] = max;
+
 
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
         for chromo in info[self.sq.decompress64(self.chromo_seed.currentText())]:
+
             pos = []
 
             if chromo == "-1":
                 continue
-            if self.chromo_length[int(chromo)]=="-2":
-                chromo = self.chromo_length_helper(chromo, info)
             for position in info[self.sq.decompress64(self.chromo_seed.currentText())][chromo]:
 
-                pos_space = int(round(((position/self.chromo_length[int(chromo)])*100)/1.3157))
+                pos_space = int(round(((position/self.chromo_length[int(chromo) - 1])*100)/1.3157))
                 pos.append(pos_space)
             chromo_pos[chromo] = pos
 
