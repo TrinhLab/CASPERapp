@@ -31,33 +31,42 @@ class Multitargeting(QtWidgets.QMainWindow):
     BAD_instances = {}
     sorted_instances = []
 
-    def __init__(self,path, parent = None):
+    def __init__(self, parent = None):
 
         super(Multitargeting, self).__init__()
         uic.loadUi('multitargetingwindow.ui', self)
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
-        #self.show()
+
+        # Storage containers for the repeats and seed sequences
         self.repeats = {}
-        #self.cursor = Qt.Cursor()
-        self.sq=SeqTranslate()
         self.seeds = {}
+        self.sq=SeqTranslate()  # SeqTranslate object used in class
+
+        # Initializes the three graphs
         self.chart_view_chro_bar=QChartView()
         self.chart_view_repeat_bar = QChartView()
         self.chart_view_repeat_line = QChartView()
-        self.seqTrans = SeqTranslate()
+
+
         self.data = ""
         self.shortHand =""
-        self.chromo_length = [-1]
+        self.chromo_length = list()
+
+        # Sets up the layout of the three graphs
         self.layout_chromo_bar = QtGui.QGridLayout()
         self.layout_repeat_bar = QtGui.QGridLayout()
         self.layout_repeat_line = QtGui.QGridLayout()
         self.bar_graph_chro.setLayout(self.layout_chromo_bar)
         self.Bar_Graph_1.setLayout(self.layout_repeat_bar)
         self.LineGraph.setLayout(self.layout_repeat_line)
+
+        # Listeners for changing the seed sequence or the .cspr file
         self.max_chromo.currentIndexChanged.connect(self.fill_seed_id_chrom)
         self.min_chromo.currentIndexChanged.connect(self.fill_seed_id_chrom)
         self.chromo_seed.currentIndexChanged.connect(self.chro_bar_data)
         self.Analyze_Button.clicked.connect(self.make_graphs)
+
+        # Statistics storage variables
         self.max_repeats=1
         self.average = 0
         self.median = 0
@@ -78,13 +87,10 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.get_instances()"""
 
     def launch(self,path):
-
-
         self.directory = path
         self.get_data()
         self.make_graphs()
         self.show()
-        self.chromo_length = [-1]
 
     def get_data(self):
         onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]

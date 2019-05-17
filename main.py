@@ -553,7 +553,7 @@ class StartupWindow(QtWidgets.QDialog):
         self.pushButton_3.clicked.connect(self.changeDir)
         self.pushButton_2.clicked.connect(self.show_window)
         self.pushButton.clicked.connect(self.errormsgmulti)
-        self.multi_targeting_window = Multitargeting("hold")
+        self.multi_targeting_window = Multitargeting()
         GlobalSettings.mainWindow = CMainWindow(self.info_path)
 
         #show functionalities on window
