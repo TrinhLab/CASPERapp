@@ -127,6 +127,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Remove_Organism_Button.clicked.connect(self.remove_Orgo)
         self.endoChoice.currentIndexChanged.connect(self.endo_Changed)
 
+        self.Search_Input.setEnabled(False)
 
         self.change_annotation()
         #self.test_button.clicked.connect(self.Ann_Window)
@@ -225,21 +226,27 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.searches = {}
         self.gene_list = {}
         self.progressBar.setValue(progvalue)
+
+        #make sure that the annotation file and the type of cspr file matches
+        #annotation, if split its [1]
+
+        #annotation parser
+            #super fast: someone gives you a gene name
+                #append only specific lines and parse those
+            #parse all lines
+
         if inputtype == "gene":
             if self.Annotations_Organism.currentText() == "":
-                error = QtWidgets.QMessageBox.question(self, "No Annotation", "You have not searched for an annotation "
-                                                                            "yet, if you continue your organism will be"
-                                                                            " searched in kegg and the first match"
-                                                                            " will be used.\n\n"
-                                                                            "Do you wish to continue?"
-                                                                            , QtWidgets.QMessageBox.Yes |
-                                                                            QtWidgets.QMessageBox.No,
-                                                                            QtWidgets.QMessageBox.No)
-                if error == QtWidgets.QMessageBox.No:
-                    self.progressBar.setValue(0)
-                    return
-                else:
-                    self.search_kegg()
+                error = QtWidgets.QMessageBox.question(self, "No Annotation", "Please select an Annotation from either KEGG, NCBI, or provide you own Annotation File"
+                                                                            , QtWidgets.QMessageBox.Ok)
+                return
+
+            #check now for the error of miss-matched annotation files
+            checkList = self.Annotations_Organism.currentText().split(" ")
+
+            print(checkList[1])
+            print(self.shortHand)
+
             self.make_dictonary()
             list_sVal = self.separate_line(inputstring[0])
             for sValue in list_sVal:
@@ -353,17 +360,17 @@ class CMainWindow(QtWidgets.QMainWindow):
         if current == "Own":
             self.Search_Button.setText("Browse")
             self.Search_Button.setEnabled(s)
-            self.Search_Input.setEnabled(s)
+            #self.Search_Input.setEnabled(s)
             self.Search_Label.setText("Select an annotation file...")
         elif current == "Kegg":
             self.Search_Button.setText("Search")
             self.Search_Button.setEnabled(s)
-            self.Search_Input.setEnabled(s)
+            #self.Search_Input.setEnabled(s)
             self.Search_Label.setText("Search KEGG Database for genes")
         else:
             self.Search_Button.setText("Search")
             self.Search_Button.setEnabled(s)
-            self.Search_Input.setEnabled(s)
+            #self.Search_Input.setEnabled(s)
             self.Search_Label.setText("Search NCBI Database for genes")
         self.Annotations_Organism.setEnabled(s)
         self.Annotation_Ownfile.setEnabled(s)
@@ -482,7 +489,7 @@ class CMainWindow(QtWidgets.QMainWindow):
          print(str(self.orgChoice.currentText()))
 
     def addOrgoCombo(self):
-        self.Add_Orgo_Combo.addItem("Select Organism123")
+        self.Add_Orgo_Combo.addItem("Select Organism")
         for item in self.data:
             if (self.endoChoice.currentText() in self.data[item]) and (item != str(self.orgChoice.currentText())):
                 self.Add_Orgo_Combo.addItem(item)
@@ -525,6 +532,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             return False
         self.data = orgsandendos
         self.shortHand= shortName
+        print(self.shortHand)
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
         self.orgChoice.currentIndexChanged.connect(self.changeEndos)
 
