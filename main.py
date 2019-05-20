@@ -156,6 +156,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
 
+
     def endo_Changed(self):
         i=3
         self.add_orgo.clear()
@@ -193,16 +194,26 @@ class CMainWindow(QtWidgets.QMainWindow):
     # Function for collecting the settings from the input field and transferring them to run_results
     def gather_settings(self):
         inputstring = str(self.geneEntryField.toPlainText())
-        self.progressBar.setValue(10)
-        if self.radioButton_Gene.isChecked():
-            ginput = inputstring.split(',')
-            self.run_results("gene", ginput)
-        elif self.radioButton_Position.isChecked():
-            pinput = inputstring.split(';')
-            self.run_results("position", pinput)
-        elif self.radioButton_Sequence.isChecked():
-            sinput = inputstring
-            self.run_results("sequence", sinput)
+
+        #Error check: make sure the user actually inputs something
+        if(inputstring.startswith("Example Inputs:") or inputstring == ""):
+            QtWidgets.QMessageBox.question(self, "Error",
+                "No Gene has been entered. Please enter a gene." ,
+                QtWidgets.QMessageBox.Ok)
+        else:
+            #standardize the input
+            inputstring = inputstring.lower()
+
+            self.progressBar.setValue(10)
+            if self.radioButton_Gene.isChecked():
+                ginput = inputstring.split(',')
+                self.run_results("gene", ginput)
+            elif self.radioButton_Position.isChecked():
+                pinput = inputstring.split(';')
+                self.run_results("position", pinput)
+            elif self.radioButton_Sequence.isChecked():
+                sinput = inputstring
+                self.run_results("sequence", sinput)
 
 
 # ---- Following functions are for running the auxillary algorithms and windows ---- #
@@ -237,7 +248,9 @@ class CMainWindow(QtWidgets.QMainWindow):
                     continue
                 self.searches[sValue] = {}
                 for defin in self.gene_list:
-                    if sValue in defin or (sValue in self.gene_list[defin]):
+                    #set a string equal to a string version of defin lowercased. That way the case of user input does not matter
+                    checkString = str(defin).lower()
+                    if sValue in checkString or (sValue in self.gene_list[defin]):
                         if defin in self.searches[sValue]:
                             if self.gene_list[defin] not in self.searches[sValue][defin]:
                                 self.searches[sValue][defin].append(self.gene_list[defin])
@@ -387,14 +400,25 @@ class CMainWindow(QtWidgets.QMainWindow):
             poo = 1
             #Open file browser
         elif self.Annotation_Kegg.isChecked():
-            k = KEGG()
+            #make sure user actually inputs something
+            if (self.Search_Input.text() == ""):
+                QtWidgets.QMessageBox.question(self, "Error",
+                                               "Please eneter a search parameter.",
+                                               QtWidgets.QMessageBox.Ok)
+            else:
+                self.Annotations_Organism.clear()
+                k = KEGG()
 
-            All_org = k.lookfor_organism(self.Search_Input.text())
-            """ self.lineEdit_search.text()"""
-            for item in All_org:
-                hold = self.organism_finder(item)
-                self.Annotations_Organism.addItem(hold)
-                self.TNumbers[hold] = item[:6]
+                All_org = k.lookfor_organism(self.Search_Input.text())
+                """ self.lineEdit_search.text()"""
+                for item in All_org:
+                    hold = self.organism_finder(item)
+                    self.Annotations_Organism.addItem(hold)
+                    self.TNumbers[hold] = item[:6]
+                if(len(self.Annotations_Organism) <= 0):
+                    QtWidgets.QMessageBox.question(self, "Error",
+                                                   "No matches found with that search parameter",
+                                                   QtWidgets.QMessageBox.Ok)
         elif self.NCBI_Select.isChecked():
             poo = 1
             #Connect to NCBI database
@@ -458,7 +482,7 @@ class CMainWindow(QtWidgets.QMainWindow):
          print(str(self.orgChoice.currentText()))
 
     def addOrgoCombo(self):
-        self.Add_Orgo_Combo.addItem("Select Organism")
+        self.Add_Orgo_Combo.addItem("Select Organism123")
         for item in self.data:
             if (self.endoChoice.currentText() in self.data[item]) and (item != str(self.orgChoice.currentText())):
                 self.Add_Orgo_Combo.addItem(item)
@@ -494,6 +518,9 @@ class CMainWindow(QtWidgets.QMainWindow):
                     orgsandendos[species] =[endo]
                     self.orgChoice.addItem(species)
 
+        #auto fill the kegg search bar with the first choice in orgChoice
+        self.Search_Input.setText(self.orgChoice.currentText())
+
         if found==False:
             return False
         self.data = orgsandendos
@@ -511,7 +538,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         filed = QtWidgets.QFileDialog()
         mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a Folder",
                                                            self.dbpath, QtWidgets.QFileDialog.ShowDirsOnly)
-        os.chdir(mydir)
+
+        if(mydir != ""):
+            os.chdir(mydir)
         self.getData()
 
     @QtCore.pyqtSlot()
