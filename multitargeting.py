@@ -18,6 +18,7 @@ from PyQt5.QtChart import (QBarCategoryAxis,QBarSet, QChartView, QBarSeries,QCha
 from Algorithms import SeqTranslate
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from CSPRparser import CSPRparser
+import main
 
 
 
@@ -28,7 +29,6 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     BAD_instances = {}
     sorted_instances = []
-
     def __init__(self, parent = None):
 
         super(Multitargeting, self).__init__()
@@ -62,6 +62,9 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.chromo_seed.currentIndexChanged.connect(self.chro_bar_data)
         self.Analyze_Button.clicked.connect(self.make_graphs)
 
+        #Tool Bar options
+        self.actionMain.triggered.connect(self.changeto_main)
+
         # Statistics storage variables
         self.max_repeats=1
         self.average = 0
@@ -77,7 +80,8 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.ready_chromo_min_max = True
         self.ready_chromo_make_graph = True
         self.directory = 'C:/Users/GregCantrall/Documents/Cspr files'
-
+        self.info_path = os.getcwd()
+        self.main_window = main.CMainWindow(self.info_path)
         """self.file_name = CASPER_Seq_Finder_file
         self.get_instances()"""
 
@@ -409,6 +413,9 @@ class Multitargeting(QtWidgets.QMainWindow):
             del data[max_index]
         return data_ordered
 
+    def changeto_main(self):
+        self.main_window.launch()
+        self.close()
 
 
 
