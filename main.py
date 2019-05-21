@@ -227,25 +227,29 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.gene_list = {}
         self.progressBar.setValue(progvalue)
 
-        #make sure that the annotation file and the type of cspr file matches
-        #annotation, if split its [1]
+        # make sure an annotation file has been selected
+        if self.Annotations_Organism.currentText() == "":
+            error = QtWidgets.QMessageBox.question(self, "No Annotation",
+                                                   "Please select an Annotation from either KEGG, NCBI, or provide you own Annotation File"
+                                                   , QtWidgets.QMessageBox.Ok)
+            self.progressBar.setValue(0)
+            return
 
-        #annotation parser
-            #super fast: someone gives you a gene name
-                #append only specific lines and parse those
-            #parse all lines
 
         if inputtype == "gene":
-            if self.Annotations_Organism.currentText() == "":
-                error = QtWidgets.QMessageBox.question(self, "No Annotation", "Please select an Annotation from either KEGG, NCBI, or provide you own Annotation File"
-                                                                            , QtWidgets.QMessageBox.Ok)
-                return
-
-            #check now for the error of miss-matched annotation files
+            #check to make sure that both the annotation file and the cspr files have the same version
+            #IE both have bsu or otherwise
             checkList = self.Annotations_Organism.currentText().split(" ")
+            if(checkList[1] != self.shortHand[self.orgChoice.currentText()]):
+                error = QtWidgets.QMessageBox.question(self, "Miss-matched Annotation File", "The annotation file you have selected does not match the CSPR file selected. Continuing could result in the program crashing.\n\n"
+                                                             "Do you wish to continue?",
+                                                       QtWidgets.QMessageBox.Yes |
+                                                       QtWidgets.QMessageBox.No,
+                                                       QtWidgets.QMessageBox.No)
 
-            print(checkList[1])
-            print(self.shortHand)
+                if(error == QtWidgets.QMessageBox.No):
+                    self.progressBar.setValue(0)
+                    return
 
             self.make_dictonary()
             list_sVal = self.separate_line(inputstring[0])
@@ -271,12 +275,13 @@ class CMainWindow(QtWidgets.QMainWindow):
                                                "Please make sure you entered everything correctly and try again.",
                                                QtWidgets.QMessageBox.Ok)
                 self.progressBar.setValue(0)
+            else:
+                self.progressBar.setValue(100)
         if inputtype == "position":
             ginfo = inputstring[1:-1].split(",")
             self.progressBar.setValue(45)
         if inputtype == "sequence":
             self.progressBar.setValue(45)
-        self.progressBar.setValue(100)
         # For processing the gene sequence from a specified fasta file.
         """s = SeqFromFasta()
         filename = self.dbpath + org + ".fna"
@@ -416,16 +421,35 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.Annotations_Organism.clear()
                 k = KEGG()
 
+                print("Searching Kegg for: ", self.Search_Input.text())
+
+                #search the kegg database. If the orignal search input returns nothing, split it up on spaces and search each individual term
                 All_org = k.lookfor_organism(self.Search_Input.text())
                 """ self.lineEdit_search.text()"""
                 for item in All_org:
                     hold = self.organism_finder(item)
                     self.Annotations_Organism.addItem(hold)
                     self.TNumbers[hold] = item[:6]
+                #if the main string returned nothing, split it up and search each individual term
+                if(len(self.Annotations_Organism) <= 0):
+                    stringList = self.Search_Input.text().split(" ")
+                    for i in range(len(stringList)):
+                        print("Searching Kegg for: ", stringList[i])
+                        All_org = k.lookfor_organism(stringList[i])
+
+                        for item in All_org:
+                            hold = self.organism_finder(item)
+                            #make sure that there are no repeats
+                            if(self.Annotations_Organism.findText(hold) == -1):
+                                self.Annotations_Organism.addItem(hold)
+                                self.TNumbers[hold] = item[:6]
+
+                print("Done searching.\n")
                 if(len(self.Annotations_Organism) <= 0):
                     QtWidgets.QMessageBox.question(self, "Error",
-                                                   "No matches found with that search parameter",
+                                                  "No matches found with that search parameter",
                                                    QtWidgets.QMessageBox.Ok)
+
         elif self.NCBI_Select.isChecked():
             poo = 1
             #Connect to NCBI database
@@ -532,7 +556,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             return False
         self.data = orgsandendos
         self.shortHand= shortName
-        print(self.shortHand)
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
         self.orgChoice.currentIndexChanged.connect(self.changeEndos)
 
