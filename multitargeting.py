@@ -514,4 +514,3 @@ class Multitargeting(QtWidgets.QMainWindow):
 #r = Multitargeting()
 #r.return_sorted()
 #r.return_positions()
-

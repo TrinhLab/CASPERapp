@@ -297,9 +297,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.view_my_results.loadGenesandTargets(s.getgenesequence(), ginfo[gene][2]+100, ginfo[gene][3]-100,
                                                      s.gettargets(), gene)
         self.progressBar.setValue(100)
-
-
-
         self.pushButton_ViewTargets.setEnabled(True)"""
 
     def launch_newGenome(self):
