@@ -21,8 +21,6 @@ from CSPRparser import CSPRparser
 
 
 
-
-
 # ----------------------------------CODE BELOW CAN BE IGNORED BY USER------------------------------------------------ #
 
 
@@ -118,8 +116,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.endo_drop.clear()
         self.endo_drop.addItems(self.data[str(self.organism_drop.currentText())])
 
-
-
     def make_graphs(self):
         #get the correct file name
         file_name = self.shortHand[self.organism_drop.currentText()] + "_" + self.endo_drop.currentText()
@@ -151,22 +147,22 @@ class Multitargeting(QtWidgets.QMainWindow):
             return
         dic_info = {}
         for seed in self.parser.seeds:
-            dic_info[seed] = {}
+            temp = self.sq.compress(seed,64)
+            dic_info[str(self.sq.decompress64(temp, True))] = {}
             for repeat in self.parser.seeds[seed]:
-                if repeat[0] in dic_info[seed]:
-                    dic_info[seed][repeat[0]].append(self.sq.decompress64(repeat[1]))
+                if repeat[0] in dic_info[str(self.sq.decompress64(temp, True))]:
+                    dic_info[str(self.sq.decompress64(temp, True))][repeat[0]].append(self.sq.decompress64(repeat[1]))
                 else:
-                    dic_info[seed][repeat[0]]=[self.sq.decompress64(repeat[1])]
+                    dic_info[str(self.sq.decompress64(temp, True))][repeat[0]] = [self.sq.decompress64(repeat[1])]
         self.chro_bar_create(dic_info)
         self.fill_Chromo_Text(dic_info)
 
-
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
-        for chromo in info[self.sq.decompress64(self.chromo_seed.currentText())]:
+        test = self.sq.compress(self.chromo_seed.currentText(), 64)
+        for chromo in info[self.chromo_seed.currentText()]:
             pos = []
-            for position in info[self.sq.decompress64(self.chromo_seed.currentText())][chromo]:
-
+            for position in info[(self.chromo_seed.currentText())][chromo]:
                 pos_space = int(round(((position/self.chromo_length[int(chromo) - 1])*100)/1.3157))
                 pos.append(pos_space)
             chromo_pos[chromo] = pos
@@ -227,9 +223,9 @@ class Multitargeting(QtWidgets.QMainWindow):
         x_Vals = QBarSeries()
         Axes = []
         holder = QBarSet("test")
-        for chromo in info[self.sq.decompress64(self.chromo_seed.currentText())]:
 
-            holder.append(len(info[self.sq.decompress64(self.chromo_seed.currentText())][chromo]))
+        for chromo in info[self.chromo_seed.currentText()]:
+            holder.append(len(info[self.chromo_seed.currentText()][chromo]))
             Axes.append(chromo)
             x_Vals.append(holder)
         chart  = QChart()
@@ -243,7 +239,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         chartView.setChart(chart)
         self.layout_chromo_bar.addWidget(chartView,0,1)
         self.chart_view_chro_bar = chartView
-
 
     def seeds_vs_repeats_bar(self):
         data = {}
@@ -280,7 +275,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         chartView.setChart(chart)
         self.layout_repeat_bar.addWidget(chartView,0,1)
         self.chart_view_repeat_bar = chartView
-
 
     def plot_repeats_vs_seeds(self):
         data = {}
@@ -348,7 +342,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         if run_seed_fill:
             self.fill_seed_id_chrom()
 
-
     def fill_seed_id_chrom(self):
         if self.ready_chromo_min_max==False:
             return
@@ -369,7 +362,8 @@ class Multitargeting(QtWidgets.QMainWindow):
         for seed in self.parser.repeats:
             if self.parser.repeats[seed] >= int(self.min_chromo.currentText()) and self.parser.repeats[seed]<=int(self.max_chromo.currentText()):
                 any = True
-                self.chromo_seed.addItem(str(self.sq.compress(seed,64)))
+                temp = self.sq.compress(seed,64)
+                self.chromo_seed.addItem(str(self.sq.decompress64(temp, True)))
         if any==False:
             QtWidgets.QMessageBox.question(self, "No matches found",
                                            "No seed that is within the specifications could be found",
@@ -384,7 +378,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.ready_chromo_make_graph=True
         self.chro_bar_data()
 
-
     def order(self,data_par):
         data = dict(data_par)
         data2  = []
@@ -398,7 +391,6 @@ class Multitargeting(QtWidgets.QMainWindow):
                 self.max_repeats =max
             del data[max]
         return data2
-
 
     def order_high_low_rep(self,dictionary):
         data = dict(dictionary)
@@ -416,7 +408,6 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             del data[max_index]
         return data_ordered
-
 
 
 

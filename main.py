@@ -143,6 +143,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Added_Org_Label.hide()
         # --- Menubar commands --- #
         self.actionChange_Directory.triggered.connect(self.change_directory)
+        self.actionMultitargeting.triggered.connect(self.changeto_multitargeting)
         # --- Setup for Gene Entry Field --- #
         self.geneEntryField.setPlainText("Example Inputs: \n"
                                                "Gene (LocusID): YOL086C  *for Saccharomyces Cerevisiae ADH1 gene* \n"
@@ -156,6 +157,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.newGenome = NewGenome(info_path)
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
+        self.multi_targeting_window = Multitargeting()
 
 
     def endo_Changed(self):
@@ -570,9 +572,15 @@ class CMainWindow(QtWidgets.QMainWindow):
         mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a Folder",
                                                            self.dbpath, QtWidgets.QFileDialog.ShowDirsOnly)
 
-        if(mydir != ""):
+        if(os.path.isdir(mydir)):
             os.chdir(mydir)
         self.getData()
+
+    #Tanner - added this function to allow the Tools->Multitargeting button to work
+    #Function launches the multitargeting window and closing the current one
+    def changeto_multitargeting(self):
+        self.multi_targeting_window.launch(self.dbpath)
+        self.close()
 
     @QtCore.pyqtSlot()
     def view_results(self):
@@ -624,7 +632,7 @@ class StartupWindow(QtWidgets.QDialog):
         filed = QtWidgets.QFileDialog()
         mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a Folder",
                                                        self.gdirectory, QtWidgets.QFileDialog.ShowDirsOnly)
-        if mydir == "":
+        if(os.path.isdir(mydir) == False):
             return
 
         self.lineEdit.setText(mydir)

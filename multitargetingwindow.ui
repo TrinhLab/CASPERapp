@@ -189,7 +189,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QComboBox" name="chromo_seed">
     <property name="geometry">
      <rect>
-      <x>930</x>
+      <x>910</x>
       <y>120</y>
       <width>141</width>
       <height>21</height>
@@ -408,10 +408,10 @@ Repeats</string>
    <widget class="QLabel" name="label_19">
     <property name="geometry">
      <rect>
-      <x>980</x>
+      <x>960</x>
       <y>100</y>
-      <width>47</width>
-      <height>13</height>
+      <width>41</width>
+      <height>20</height>
      </rect>
     </property>
     <property name="text">
