@@ -9,10 +9,10 @@ from CoTargeting import CoTargeting
 
 from Results import Results
 from NewGenome import NewGenome
-from multitargeting import Multitargeting
+
 import requests
 import GlobalSettings
-
+import multitargeting
 from bs4 import BeautifulSoup
 
 
@@ -94,7 +94,9 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
 
 
 class CMainWindow(QtWidgets.QMainWindow):
+
     def __init__(self,info_path):
+
         super(CMainWindow, self).__init__()
         uic.loadUi('CASPER_main.ui', self)
         self.dbpath = ""
@@ -157,7 +159,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.newGenome = NewGenome(info_path)
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
-        self.multi_targeting_window = Multitargeting()
+        self.multi_targeting_window = multitargeting.Multitargeting()
 
 
     def endo_Changed(self):
@@ -599,7 +601,9 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
 class StartupWindow(QtWidgets.QDialog):
+
     def __init__(self):
+
         super(StartupWindow, self).__init__()
         uic.loadUi('startupCASPER.ui', self)
         self.setWindowTitle('WELCOME TO CASPER!')
@@ -621,7 +625,7 @@ class StartupWindow(QtWidgets.QDialog):
         self.pushButton_3.clicked.connect(self.changeDir)
         self.pushButton_2.clicked.connect(self.show_window)
         self.pushButton.clicked.connect(self.errormsgmulti)
-        self.multi_targeting_window = Multitargeting()
+        self.multi_targeting_window = multitargeting.Multitargeting()
         GlobalSettings.mainWindow = CMainWindow(self.info_path)
 
         #show functionalities on window
@@ -642,9 +646,6 @@ class StartupWindow(QtWidgets.QDialog):
         print(mydir)
         print(cdir)
 
-
-
-
     def errormsgmulti(self):
             self.gdirectory = str(self.lineEdit.text())
             print(self.gdirectory)
@@ -658,6 +659,7 @@ class StartupWindow(QtWidgets.QDialog):
             else:
                 QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
                                                                                     QtWidgets.QMessageBox.Ok)
+
     def check_dir(self):
         if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
             cspr_info = open(self.info_path+"\\CASPERinfo",'r+')

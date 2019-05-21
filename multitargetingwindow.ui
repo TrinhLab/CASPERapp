@@ -521,8 +521,15 @@ Repeats</string>
     <addaction name="actionGenome_Viewer"/>
     <addaction name="actionLocation_List"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionMain"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
+   <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionUpload_Organism">
@@ -538,6 +545,11 @@ Repeats</string>
   <action name="actionLocation_List">
    <property name="text">
     <string>Location List</string>
+   </property>
+  </action>
+  <action name="actionMain">
+   <property name="text">
+    <string>Main</string>
    </property>
   </action>
  </widget>
