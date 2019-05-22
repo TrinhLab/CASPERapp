@@ -188,7 +188,6 @@ class Results(QtWidgets.QMainWindow):
             # Get the gene from the Kegg database
         elif NCBI:
             # Get the gene from NCBI database (RefSeq)
-
         else:
             return "Error: Cannot find reference sequence.  Search Kegg, NCBI, or download a FASTA file to create a genome reference."""""
 

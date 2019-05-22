@@ -259,5 +259,3 @@ class CasperJob:
         ret_array.append(self.seed_length)
         print(ret_array)
         return ret_array
-
-

@@ -1,4 +1,3 @@
-
 import operator
 import sys
 import os
@@ -203,8 +202,3 @@ class CoTargeting(QtWidgets.QMainWindow):
                                        QtWidgets.QMessageBox.Ok)
         self.progress = 0
         self.progressBar.setValue(self.progress)
-
-
-
-
-

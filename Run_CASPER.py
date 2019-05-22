@@ -5,7 +5,7 @@
 # ==== IMPORT SETTINGS ==== #
 from CASPERQuick import CasperQuick
 from OffTarget import OffTargetAlgorithm
-from multitargeting import Multitargeting
+import main
 from Comparison import Compare_Orgs
 
 # ---------- OPTIONS FOR RUN ----------- #
@@ -53,7 +53,7 @@ elif run == "__OffTarget__":
     O = OffTargetAlgorithm(threshold_score, endonuclease, base_organism_code, csf_file,
                            other_orgs_off, casperOffList_file_path, output_file_path)
 elif run == "__Multitargeting__":
-    M = Multitargeting(csf_file, output_file_path)
+    M = main.Multitargeting(csf_file, output_file_path)
 elif run == "__Populations__":
     P = Compare_Orgs(output_file_path, csf_file, base_organism_code, endonuclease, other_orgs)
 else:
