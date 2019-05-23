@@ -20,7 +20,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         super(Multitargeting, self).__init__()
         uic.loadUi('multitargetingwindow.ui', self)
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
-
         # Storage containers for the repeats and seed sequences
         self.sq=SeqTranslate()  # SeqTranslate object used in class
 
@@ -48,8 +47,11 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.chromo_seed.currentIndexChanged.connect(self.chro_bar_data)
         self.Analyze_Button.clicked.connect(self.make_graphs)
 
+        #go back to main button
+        self.back_button.clicked.connect(self.go_back)
+
         #Tool Bar options
-        self.actionMain.triggered.connect(self.changeto_main)
+        self.actionCASPER.triggered.connect(self.changeto_main)
 
         # Statistics storage variables
         self.max_repeats=1
@@ -404,7 +406,9 @@ class Multitargeting(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.show()
         self.hide()
 
-
+    def go_back(self):
+        GlobalSettings.mainWindow.show()
+        self.hide()
 
     #-----------------------NOT USED----------------------------#
     def get_instances(self):
