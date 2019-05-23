@@ -419,8 +419,11 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def search_kegg_ncbi_browse_own(self):
         if self.Annotation_Ownfile.isChecked():
-            poo = 1
-            #Open file browser
+            # have the user choose an annotaiton file, set Search_Input's text to that file
+            filed = QtWidgets.QFileDialog()
+            myFile = QtWidgets.QFileDialog.getOpenFileName(filed, "Choose an Annotation File")
+            self.Search_Input.setText(myFile[0])
+            self.Annotations_Organism.addItem(myFile[0])
         elif self.Annotation_Kegg.isChecked():
             #make sure user actually inputs something
             if (self.Search_Input.text() == ""):
