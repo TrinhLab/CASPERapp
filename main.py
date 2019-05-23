@@ -41,7 +41,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.mainWindow=""
 
     def submit(self):
-        os.chdir(filedir)
         self.mainWindow.collect_table_data()
         self.hide()
         self.mainWindow.show()
@@ -422,8 +421,10 @@ class CMainWindow(QtWidgets.QMainWindow):
             # have the user choose an annotaiton file, set Search_Input's text to that file
             filed = QtWidgets.QFileDialog()
             myFile = QtWidgets.QFileDialog.getOpenFileName(filed, "Choose an Annotation File")
-            self.Search_Input.setText(myFile[0])
-            self.Annotations_Organism.addItem(myFile[0])
+            if(myFile[0] != ""):
+                self.Annotations_Organism.clear()
+                self.Search_Input.setText(myFile[0])
+                self.Annotations_Organism.addItem(myFile[0])
         elif self.Annotation_Kegg.isChecked():
             #make sure user actually inputs something
             if (self.Search_Input.text() == ""):
