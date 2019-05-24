@@ -54,11 +54,11 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.hide()
 
     def fill_Table(self,mainWindow):
-
         self.mainWindow = mainWindow
         index = 0
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setColumnCount(3)
+        self.mainWindow.progressBar.setValue(25)
         self.tableWidget.setHorizontalHeaderLabels("Description;Gene ID;Select".split(";"))
 
         mainWindow.checkBoxes = []
@@ -85,12 +85,24 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
                     self.tableWidget.setCellWidget(index, 2,ckbox)
                     index = index+1
         self.tableWidget.resizeColumnsToContents()
+        self.mainWindow.progressBar.setValue(50)
         if mainWindow.Show_All_Results.isChecked():
             mainWindow.hide()
             self.show()
-        else:
-            for obj in mainWindow.checkBoxes:
+        else: #Show all not checked
+            if(len(mainWindow.checkBoxes) > 15):#check the size, throw an error if it is too large
+                error = QtWidgets.QMessageBox.question(self, "Large File Found",
+                                                       "This Annotation file and search parameter yieled many matches, and could cause a slow down.\n\n"
+                                                       "Do you wish to continue?",
+                                                       QtWidgets.QMessageBox.Yes |
+                                                       QtWidgets.QMessageBox.No,
+                                                       QtWidgets.QMessageBox.No)
+                if(error == QtWidgets.QMessageBox.No):
+                    return -2
+            self.mainWindow.progressBar.setValue(65)
+            for obj in mainWindow.checkBoxes: #check every match
                 obj[1].setChecked(True)
+            self.mainWindow.collect_table_data() #collect the data
         return 0
 
 
@@ -280,12 +292,15 @@ class CMainWindow(QtWidgets.QMainWindow):
                         else:
                             self.searches[sValue][defin] = self.gene_list[defin]
                         #print(self.searches[sValue][defin][0])
+
             did_work = self.Annotation_Window.fill_Table(self)
             if did_work == -1:
                 QtWidgets.QMessageBox.question(self, "Gene Database Error",
                                                "The Gene you entered could not be found in the Kegg database. "
                                                "Please make sure you entered everything correctly and try again.",
                                                QtWidgets.QMessageBox.Ok)
+                self.progressBar.setValue(0)
+            elif did_work == -2: #if the user selects 'no' from the warning of a large file
                 self.progressBar.setValue(0)
             else:
                 self.progressBar.setValue(100)
@@ -330,6 +345,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 holder = (gene_info[0],gene_info[2],gene_info[3])
                 self.checked_info[item[0]]=holder
 
+        self.progressBar.setValue(80)
         self.Results.transfer_data(organism,str(self.endoChoice.currentText()),os.getcwd(),self.checked_info,"")
         self.pushButton_ViewTargets.setEnabled(True)
 
