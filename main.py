@@ -8,7 +8,7 @@ from Bio import Entrez
 from CoTargeting import CoTargeting
 
 from Results import Results
-from NewGenome import NewGenome
+from NewGenome import NewGenome, NCBI_Search_File
 
 import requests
 import GlobalSettings
@@ -178,6 +178,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         #show functionalities on window
         ############################self.view_my_results = Results()
         self.newGenome = NewGenome(info_path)
+        self.ncbi_search_dialog = NCBI_Search_File()
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
 
