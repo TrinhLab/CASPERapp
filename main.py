@@ -347,6 +347,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         self.progressBar.setValue(80)
         self.Results.transfer_data(organism,str(self.endoChoice.currentText()),os.getcwd(),self.checked_info,"")
+        self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
 
 
