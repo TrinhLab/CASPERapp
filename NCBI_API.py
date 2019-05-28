@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import requests
 from ftplib import FTP
 import time
+import GlobalSettings
 
 Entrez.email = "bmendoz1@vols.utk.edu"
 
@@ -21,7 +22,7 @@ class GBFF_Parse:
 
 class Assembly:
 
-    def __init__(self, organism, database):
+    def __init__(self):
         print('')
         #Moved the code from this to its own function so that I can return the database URL
 
@@ -30,10 +31,12 @@ class Assembly:
         record = Entrez.read(handle)
         self.database = database
         myidlist = list()
+
         for id in record["IdList"]:
             myidlist.append(id)
             #print(id)
         handle.close()
+        GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(30)
 
         gca_rectList = list()
         for ret in myidlist:
@@ -42,7 +45,8 @@ class Assembly:
             #print(gca_rec)
             gca_rectList.append(gca_rec)
             handle.close()
-            time.sleep(0.5)
+            time.sleep(0.1)
+        GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(60)
 
         #is it ok that the URL is hard coded?
         if(gca_rectList):
@@ -71,15 +75,21 @@ class Assembly:
             #check the links and catch errors
             if(database == "RefSeq" and len(refseq_link) < 5):
                 print("Error: No RefSeq file to download!")
+                return ("Error: No RefSeq file to download!", list())
             elif(database == "GenBank" and len(genbank_link) < 5):
                 print("Error: No GenBank file to download!")
+                return ("Error: No GenBank file to download!", list())
             elif(len(genbank_link) < 5 and len(refseq_link) < 5):
                 print("Error: No RefSeq or GenBank files to download")
+                return ("Error: No RefSeq or GenBank files to download", list())
             else:
-                return database_url
+                return database_url, myidlist
         else:
             print('Error: no link found. Check your spelling')
+            return ("No link found", list())
 
+#Testing below
+"""
 #G = GBFF_Parse("/Users/brianmendoza/Desktop/FileExamples/PantoeaYR343.gbff")
 #G.convert_to_fasta()
 
@@ -121,3 +131,4 @@ if(database_url):
     ftp.close()
 
 print('Done')
+"""
