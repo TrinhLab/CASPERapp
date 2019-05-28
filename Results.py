@@ -5,6 +5,7 @@ from Scoring import OnTargetScore
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
 import GlobalSettings
+import os
 # =========================================================================================
 # CLASS NAME: Results
 # Inputs: Takes information from the main application window and displays the gRNA results
@@ -23,12 +24,12 @@ class Results(QtWidgets.QMainWindow):
         # Scoring Class object #
         self.onscore = OnTargetScore()
         self.S = SeqTranslate()
-
+        self.dbpath = ""
         # Main Data container
         # Keys: Gene names
         # Values: #
         self.AllData = {}
-
+        self.highlighted = {}
 
         self.startpos = 0
         self.endpos = 0
@@ -47,6 +48,8 @@ class Results(QtWidgets.QMainWindow):
         self.offTargetSearch.clicked.connect(self.offtargetButtonClicked)
         self.back_button.clicked.connect(self.goBack)
         self.targetTable.horizontalHeader().sectionClicked.connect(self.table_sorting)
+        self.actionSave.triggered.connect(self.save_data)
+        self.actionOpen.triggered.connect(self.open_data)
 
         self.targetTable.itemSelectionChanged.connect(self.item_select)
         self.minScoreLine.setText("0")
@@ -65,7 +68,6 @@ class Results(QtWidgets.QMainWindow):
 
 
 
-
     # Function that is called in main in order to pass along the information the user inputted and the information
     # from the .cspr files that was discovered
     def transfer_data(self, org, endo, path, geneposdict, fasta):
@@ -75,9 +77,13 @@ class Results(QtWidgets.QMainWindow):
         self.fasta_ref = fasta
         self.comboBoxGene.clear()
         self.AllData.clear()
+
+        self.highlighted.clear()
         for gene in geneposdict:
             self.comboBoxGene.addItem(gene)
+            print('gene: ' + gene)
             self.get_targets(gene, geneposdict[gene])
+
         # Enable the combobox to be toggled now that the data is in AllData
         self.comboBoxGene.currentTextChanged.connect(self.displayGeneData)
     def goBack(self):
@@ -98,22 +104,31 @@ class Results(QtWidgets.QMainWindow):
 
         #create the parser, read the targets store it. then display the GeneData screen
         parser = CSPRparser(file)
+        print('postupe: '+str(pos_tuple))
+        temp = parser.read_targets(genename, pos_tuple)
         self.AllData[genename] = parser.read_targets(genename, pos_tuple)
+        for item in self.AllData[genename]:
+            self.highlighted[item[1]] = False
         self.displayGeneData()
+
 
     ###############################################################################################################
     # Main Function for updating the Table.  Connected to all filter buttons and the Gene toggling of the combobox.
     ###############################################################################################################
     def displayGeneData(self):
         curgene = str(self.comboBoxGene.currentText())  # Gets the current gene
+        #temp = list(self.AllData.keys())
+        #curgene = temp[0]
+        #print('curgene: ' + curgene)
         # Creates the set object from the list of the current gene:
         if curgene=='' or len(self.AllData)<1:
             return
 
         subset_display = set()
         # Removing all sequences below minimum score and creating the set:
+
         for item in self.AllData[curgene]:
-            if item[3] > int(self.minScoreLine.text()):
+            if int(item[3]) > int(self.minScoreLine.text()):
                 # Removing all non 5' G sequences:
                 if self.fivegseqCheckBox.isChecked():
                     if item[1].startswith("G"):
@@ -138,6 +153,9 @@ class Results(QtWidgets.QMainWindow):
             ckbox = QtWidgets.QCheckBox()
             ckbox.clicked.connect(self.search_gene)
             self.targetTable.setCellWidget(index,6,ckbox)
+            #print(self.highlighted)
+            if(self.highlighted[str(item[1])] == True):
+                ckbox.click()
             index += 1
         self.targetTable.resizeColumnsToContents()
 
@@ -150,6 +168,7 @@ class Results(QtWidgets.QMainWindow):
         print(index.column(), index.row(), checkBox.isChecked())
         #self.geneViewer.setPlainText(self.geneViewer.text())
         seq = self.targetTable.item(index.row(),1).text()
+        self.highlighted[str(seq)] = checkBox.isChecked()
         print(seq)
         x=1
 
@@ -197,6 +216,74 @@ class Results(QtWidgets.QMainWindow):
     def update_score_filter(self):
         self.minScoreLine.setText(str(self.scoreSlider.value()))
 
+
+    def save_data(self):
+        #filed = QtWidgets.QFileDialog()
+        filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')
+        #print(filename[0])
+        if(os.path.isfile(str(filename[0]))):
+            #print('success')
+            f = open(str(filename[0]), "w+")
+            for genomes in self.AllData:
+                f.write("***"+genomes + "\n")
+                for items in self.AllData[genomes]:
+                    for i in items:
+                        f.write(str(i) + '|')
+                    f.write(str(self.highlighted[items[1]]))
+                    f.write("\n")
+            f.close()
+        else:
+            #change to dialog box
+            print('Could not open file')
+
+
+    def open_data(self):
+        filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')
+        #print(filename[0])
+        #print(self.AllData)
+        print(self.highlighted)
+        self.AllData.clear()
+        self.highlighted.clear()
+        #print(self.AllData)
+        first = 1
+        list1 = []
+        s = ""
+        self.comboBoxGene.clear()
+        if (os.path.isfile(str(filename[0]))):
+            print('success')
+            f = open(str(filename[0]), "r+")
+            for line in f:
+                if(line.startswith("***")):
+                    if(first == 0):
+                        self.AllData[s] = list1
+                        #print(list1)
+                    else:
+                        first = 0
+                    s = line[3:]
+                    s = s.strip('\n')
+                    list1 = []
+                    self.comboBoxGene.addItem(s)
+                    print('s: '+s)
+                else:
+                    temp = line.split("|")
+                    h = temp.pop()
+                    h = h.strip('\n')
+                    self.highlighted[temp[1]] = eval(h)
+                    print(temp[1])
+                    print('h: '+str(h))
+
+
+                    tup = tuple(temp)
+                    list1.append(tup)
+            self.AllData[s] = list1
+            f.close()
+            #print(self.AllData)
+            print(self.highlighted)
+            self.displayGeneData()
+
+        else:
+            # change to dialog box
+            print('Could not open file')
 
 
 
