@@ -676,10 +676,14 @@ class StartupWindow(QtWidgets.QDialog):
                                                QtWidgets.QMessageBox.Ok)
             elif (os.path.isdir(self.gdirectory)):
                 os.chdir(self.gdirectory)
+
+                #change dir, still load main window, still load MT data, and then open main window and newGenome window
+                filepath = self.gdirectory
+                self.re_write_dir()
+                GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
+                GlobalSettings.mainWindow.show()
+                GlobalSettings.mainWindow.launch_newGenome()
                 MTwin.launch(self.gdirectory)
-                MTwin.show()
-                #Tanner - still setup data for main
-                GlobalSettings.mainWindow.getData()
                 self.close()
             else:
                 QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",

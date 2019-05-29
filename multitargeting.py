@@ -3,11 +3,13 @@ from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 import GlobalSettings
 import operator
 import pyqtgraph as pg
-from PyQt5.QtChart import (QBarCategoryAxis,QBarSet, QChartView, QBarSeries,QChart,QLineSeries)
+from PyQt5.QtChart import (QBarCategoryAxis,QBarSet, QChartView, QBarSeries,QChart,QLineSeries, QValueAxis)
+#import PyQt5
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
-
-
+from matplotlib.backends.backend_qt5agg import (NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.backends.backend_qt5agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.ticker import MaxNLocator
 
 
 
@@ -33,19 +35,12 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.shortHand =""
         self.chromo_length = list()
 
-        # Sets up the layout of the three graphs
-        self.layout_chromo_bar = QtGui.QGridLayout()
-        self.layout_repeat_bar = QtGui.QGridLayout()
-        self.layout_repeat_line = QtGui.QGridLayout()
-        self.bar_graph_chro.setLayout(self.layout_chromo_bar)
-        self.Bar_Graph_1.setLayout(self.layout_repeat_bar)
-        self.LineGraph.setLayout(self.layout_repeat_line)
-
         # Listeners for changing the seed sequence or the .cspr file
         self.max_chromo.currentIndexChanged.connect(self.fill_seed_id_chrom)
         self.min_chromo.currentIndexChanged.connect(self.fill_seed_id_chrom)
         self.chromo_seed.currentIndexChanged.connect(self.chro_bar_data)
         self.Analyze_Button.clicked.connect(self.make_graphs)
+
 
         #go back to main button
         self.back_button.clicked.connect(self.go_back)
@@ -69,10 +64,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.ready_chromo_make_graph = True
         self.directory = 'Cspr files'
         self.info_path = os.getcwd()
-
-
-        """self.file_name = CASPER_Seq_Finder_file
-        self.get_instances()"""
 
     def launch(self,path):
         os.chdir(path)
@@ -126,7 +117,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         #calculations and setting the windows
         self.average_rep = self.parser.multiSum/self.parser.multiCount
         self.plot_repeats_vs_seeds()
-        self.seeds_vs_repeats_bar()
+        self.bar_seeds_vs_repeats()
         self.fill_min_max()
         #self.chro_bar_data()
         self.nbr_seq.setText(str(len(self.parser.seeds)))
@@ -135,6 +126,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.mode_rep.setText(str(self.mode))
         self.scr_lbl.setText(str(self.average_rep))
 
+    #fill in chromo bar visualization
     def chro_bar_data(self):
         if self.ready_chromo_make_graph==False:
             return
@@ -150,6 +142,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.chro_bar_create(dic_info)
         self.fill_Chromo_Text(dic_info)
 
+    #fill in chromo bar visualization
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
         test = self.sq.compress(self.chromo_seed.currentText(), 64)
@@ -212,28 +205,37 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.GeneText.insertPlainText("0")
             index += 1
 
+    #creates bar graph num of repeats vs. chromsome
+    #this graphs is connected to the repeats_vs_chromo.py file
+    #to represent the widget space in the UI file
     def chro_bar_create(self,info):
-        x_Vals = QBarSeries()
-        Axes = []
-        holder = QBarSet("test")
+        x1 = []
+        y1 = []
 
         for chromo in info[self.chromo_seed.currentText()]:
-            holder.append(len(info[self.chromo_seed.currentText()][chromo]))
-            Axes.append(chromo)
-            x_Vals.append(holder)
-        chart  = QChart()
-        chart.addSeries(x_Vals)
-        chart.legend().hide()
-        Full_Axes = QBarCategoryAxis()
-        Full_Axes.append(Axes)
-        chart.createDefaultAxes()
-        chart.setAxisX(Full_Axes,x_Vals)
-        chartView = QChartView()
-        chartView.setChart(chart)
-        self.layout_chromo_bar.addWidget(chartView,0,1)
-        self.chart_view_chro_bar = chartView
+            y1.append(len(info[self.chromo_seed.currentText()][chromo]))
+            x1.append(chromo)
 
-    def seeds_vs_repeats_bar(self):
+        #clear the old graph
+        self.repeats_vs_chromo.canvas.axes.clear()
+        #x_pos used to format the addition of more bars appropriately
+        x_pos = [i for i, _ in enumerate(x1)]
+        #the following statements are plottings / formatting for the graph
+        self.repeats_vs_chromo.canvas.axes.bar(x_pos, y1,align='center')
+        self.repeats_vs_chromo.canvas.axes.yaxis.set_major_locator(MaxNLocator(integer=True))
+        self.repeats_vs_chromo.canvas.axes.set_ylim(0,max(y1)+1)
+        self.repeats_vs_chromo.canvas.axes.set_xticks(x_pos)
+        self.repeats_vs_chromo.canvas.axes.set_xticklabels(x1)
+        self.repeats_vs_chromo.canvas.axes.set_xlabel('Chromosome')
+        self.repeats_vs_chromo.canvas.axes.set_ylabel('Number of Repeats')
+        #always redraw at the end
+        self.repeats_vs_chromo.canvas.draw()
+
+
+    #plots the sequences per Number Repeats bar graph
+    #this graph is connected to the seeds_vs_repeats_bar.py file
+    #to represent the wdiget space in the UI file
+    def bar_seeds_vs_repeats(self):
         data = {}
         self.average = 0
         for seed in self.parser.repeats:
@@ -245,30 +247,60 @@ class Multitargeting(QtWidgets.QMainWindow):
                 data[number] =1
         data = self.order_high_low_rep(data)
         self.average = round(self.average/(len(self.parser.repeats)))
-        x_Vals = QBarSeries()
-        Axes = []
-        holder = QBarSet("test")
+        holder = []
+        repeats = []
         max = 0
         for number in data:
-            #holder = QBarSet(str(number))
             if data[number]>max:
                 max = data[number]
             if (data[number]/max)>.01:
                 holder.append(data[number])
-                Axes.append(str(int(number)))
-                x_Vals.append(holder)
-        chart  = QChart()
-        chart.addSeries(x_Vals)
-        chart.legend().hide()
-        Full_Axes = QBarCategoryAxis()
-        Full_Axes.append(Axes)
-        chart.createDefaultAxes()
-        chart.setAxisX(Full_Axes,x_Vals)
-        chartView = QChartView()
-        chartView.setChart(chart)
-        self.layout_repeat_bar.addWidget(chartView,0,1)
-        self.chart_view_repeat_bar = chartView
+                repeats.append(number)
+        #clear graph space
+        self.seeds_vs_repeats_bar.canvas.axes.clear()
+        #xpos used to handle appropriate formatting for more bars being added in
+        x_pos = [i for i, _ in enumerate(repeats)]
+        #the following are plotting / formatting for the graph
+        self.seeds_vs_repeats_bar.canvas.axes.bar(x_pos, holder)
+        self.seeds_vs_repeats_bar.canvas.axes.set_xticks(x_pos)
+        self.seeds_vs_repeats_bar.canvas.axes.set_xticklabels(repeats)
+        self.seeds_vs_repeats_bar.canvas.axes.set_xlabel('Number of Repeats')
+        self.seeds_vs_repeats_bar.canvas.axes.set_ylabel('Number of Sequences')
+        self.seeds_vs_repeats_bar.canvas.axes.set_title('Amount of sequence per number of repeats')
+        #rects are all the bar objects in the graph
+        rects = self.seeds_vs_repeats_bar.canvas.axes.patches
+        rect_vals = []
+        #this for loop will calculate the height and create an annotation for each bar
+        for rect in rects:
+            height = rect.get_height()
+            temp = self.seeds_vs_repeats_bar.canvas.axes.text(rect.get_x() + rect.get_width() / 2, height,
+                                                        '%d' % int(height),
+                                                        ha='center', va='bottom')
+            temp.set_visible(False)
+            rect_vals.append(temp)
+        #function used for when user cursor is hovering over the bar, if hovering over a bar, the
+        #height annotatin will appear above the bar, otherwise it will be hidden
+        def on_plot_hover(event):
+            i = 0
+            for rect in rects:
+                height = rect.get_height()
+                if rect.contains(event)[0]:
+                    rect_vals[i].set_visible(True)
+                else:
+                    rect_vals[i].set_visible(False)
 
+                i = i + 1
+
+            self.seeds_vs_repeats_bar.canvas.draw()
+        #statement to detect cursor hovering over the bars
+        self.seeds_vs_repeats_bar.canvas.mpl_connect('motion_notify_event', on_plot_hover)
+        #must redraw after every change
+        self.seeds_vs_repeats_bar.canvas.draw()
+
+
+    #plots the repeats per ID number graph as line graph
+    #this graph is connected to the repeats_vs_seeds_line.py file
+    #to represent the widget space in the UI file
     def plot_repeats_vs_seeds(self):
         data = {}
         for seed in self.parser.repeats:
@@ -279,15 +311,8 @@ class Multitargeting(QtWidgets.QMainWindow):
                 data[number] =1
 
         max = 0
-
-
-
-        y=[]
-        axisy = 0
-        while axisy<self.max_repeats:
-            y.append(str(axisy))
-            axisy+=1
-        series = QLineSeries()
+        y1 = []
+        x1 = []
         index = 0
         time = 0
         for number in self.order(data):
@@ -301,27 +326,23 @@ class Multitargeting(QtWidgets.QMainWindow):
             while hold<data[number]:
                 if index == int(round(len(self.parser.repeats) / 2)):
                     self.median = number
-                series.append(index,number)
+                x1.append(index)
+                y1.append(number)
                 index= index+1
                 hold +=1
-        Full_Axes = QBarCategoryAxis()
-        Full_Axes.append(y)
-        chart = QChart()
-        chartView = QChartView()
-        chart.addSeries(series)
-        chart.legend().hide()
-        chart.setAxisY(Full_Axes)
-        chart.createDefaultAxes()
-        chartView.setChart(chart)
 
-        self.layout_repeat_line.addWidget(chartView, 0, 1)
-        self.chart_view_repeat_plot = chartView
-        """plot = pg.PlotWidget()
-        plot.plot(xb,y,title="Number of Repeats Vs. Seed Id's")
-        layout = QtGui.QGridLayout()
-        self.LineGraph.setLayout(layout)
-        layout.addWidget(plot,0,1)"""
+        #clear axes
+        self.repeats_vs_seeds_line.canvas.axes.clear()
+        #the following are for plotting / formatting
+        self.repeats_vs_seeds_line.canvas.axes.plot(x1,y1)
+        self.repeats_vs_seeds_line.canvas.axes.set_xlabel('Seed Id Number')
+        self.repeats_vs_seeds_line.canvas.axes.set_ylabel('Number of Repeats')
+        self.repeats_vs_seeds_line.canvas.axes.set_title('Number of Repeats per Seed Id Number')
+        #always redraw at the end
+        self.repeats_vs_seeds_line.canvas.draw()
 
+
+    #fills min and max dropdown windows
     def fill_min_max(self,run_seed_fill=True):
         self.ready_chromo_min_max = False
         index =1
@@ -335,6 +356,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         if run_seed_fill:
             self.fill_seed_id_chrom()
 
+    #fill_seed_id_chrom will fill the seed ID dropdown, and create the chromosome graph
     def fill_seed_id_chrom(self):
         if self.ready_chromo_min_max==False:
             return
@@ -402,13 +424,23 @@ class Multitargeting(QtWidgets.QMainWindow):
             del data[max_index]
         return data_ordered
 
+    #connects to view->CASPER to switch back to the main CASPER window
     def changeto_main(self):
         GlobalSettings.mainWindow.show()
         self.hide()
 
+    #connects to go back button in bottom left to switch back to the main CASPER window
     def go_back(self):
         GlobalSettings.mainWindow.show()
         self.hide()
+
+
+
+
+
+
+
+
 
     #-----------------------NOT USED----------------------------#
     def get_instances(self):
