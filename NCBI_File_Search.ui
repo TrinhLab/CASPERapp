@@ -16,11 +16,14 @@
   <widget class="QPushButton" name="submitPushButton">
    <property name="geometry">
     <rect>
-     <x>340</x>
-     <y>310</y>
+     <x>310</x>
+     <y>320</y>
      <width>75</width>
      <height>23</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Selecting 'Ok' will download the files in the 'Selected Matches' table&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="text">
     <string>Ok</string>
@@ -29,11 +32,14 @@
   <widget class="QPushButton" name="cancelPushButton">
    <property name="geometry">
     <rect>
-     <x>130</x>
-     <y>310</y>
+     <x>110</x>
+     <y>320</y>
      <width>75</width>
      <height>23</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;'Cancel' clears everything and closes this window&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="text">
     <string>Cancel</string>
@@ -47,6 +53,9 @@
      <width>75</width>
      <height>23</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;'Search' searches the NCBI database for either RefSeq or Genbank files that match the organism entered&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="text">
     <string>Search</string>
@@ -66,7 +75,7 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>61</y>
+     <y>80</y>
      <width>211</width>
      <height>231</height>
     </rect>
@@ -75,8 +84,8 @@
   <widget class="QTableWidget" name="submissionTableWidget">
    <property name="geometry">
     <rect>
-     <x>325</x>
-     <y>61</y>
+     <x>310</x>
+     <y>80</y>
      <width>211</width>
      <height>231</height>
     </rect>
@@ -85,11 +94,14 @@
   <widget class="QPushButton" name="deselectButton">
    <property name="geometry">
     <rect>
-     <x>270</x>
-     <y>200</y>
+     <x>260</x>
+     <y>270</y>
      <width>21</width>
      <height>23</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;'Deselect' removes selected items from the 'Selected Matches' Table&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="text">
     <string>&lt;</string>
@@ -98,11 +110,14 @@
   <widget class="QPushButton" name="selectButton">
    <property name="geometry">
     <rect>
-     <x>270</x>
-     <y>140</y>
+     <x>260</x>
+     <y>120</y>
      <width>21</width>
      <height>23</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;'Select' moves the selected matches in 'Found Matches' to the 'Selected Matches' table&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="text">
     <string>&gt;</string>
@@ -132,6 +147,58 @@
    </property>
    <property name="value">
     <number>24</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="found_matches_label">
+   <property name="geometry">
+    <rect>
+     <x>90</x>
+     <y>60</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Found Matches</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="selected_matches_label">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>60</y>
+     <width>91</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Selected Matches</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="select_label">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>100</y>
+     <width>31</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Select</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="deselect_label">
+   <property name="geometry">
+    <rect>
+     <x>250</x>
+     <y>250</y>
+     <width>47</width>
+     <height>14</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Deselect</string>
    </property>
   </widget>
  </widget>

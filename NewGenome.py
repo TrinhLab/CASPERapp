@@ -23,33 +23,38 @@ def iter_except(function, exception):
 ##############################################
 class NCBI_Search_File(QtWidgets.QDialog):
     def __init__(self):
+        # Qt init stuff
         super(NCBI_Search_File, self).__init__()
         uic.loadUi("NCBI_File_Search.ui", self)
         self.setWindowTitle("Search NCBI For a File")
         self.searchProgressBar.setValue(0)
+        self.setWindowIcon(Qt.QIcon("cas9image.png"))
 
-        #selection table stuff
+        # selection table stuff
         self.selectionTableWidget.setColumnCount(1)  # hardcoded because there will always be 2 columns
         self.selectionTableWidget.setShowGrid(True)
-        self.selectionTableWidget.setHorizontalHeaderLabels("ID Number;Selection".split(";"))
+        self.selectionTableWidget.setHorizontalHeaderLabels("Description;Selection".split(";"))
         self.selectionTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.selectionTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.selectionTableWidget.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
 
-        #submission table stuff
+        # submission table stuff
         self.submissionTableWidget.setColumnCount(1) # hardcoded because it will always be 2
         self.submissionTableWidget.setShowGrid(True)
-        self.submissionTableWidget.setHorizontalHeaderLabels("ID Number;Selection".split(";"))
+        self.submissionTableWidget.setHorizontalHeaderLabels("Description;Selection".split(";"))
         self.submissionTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.submissionTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.submissionTableWidget.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
 
-        #variables below:
+        # variables below:
         self.searchType = "" #RefSeq or Genbank
-        self.database_url = ""
+        self.database_url_list = list()
         self.idList = list()
+        self.ncbi_searcher = Assembly()
+        self.compressedFilePaths = list()
+        self.decompressedFilePaths = list()
 
-        #button modifications below:
+        # button modifications below:
         self.searchPushButton.clicked.connect(self.searchFunction)
         self.selectButton.clicked.connect(self.selectHighlighted)
         self.deselectButton.clicked.connect(self.deselectHighlighted)
@@ -60,6 +65,7 @@ class NCBI_Search_File(QtWidgets.QDialog):
     # button functions below
     # this function searchs ncbi for the organism file, adds any matches to the selectionTableWidget
     def searchFunction(self):
+        print("searching for: ", self.organismLineEdit.displayText())
         # clear any previous searches
         self.selectionTableWidget.clearContents()
         self.submissionTableWidget.clearContents()
@@ -75,9 +81,8 @@ class NCBI_Search_File(QtWidgets.QDialog):
         else:
             # search the ncbi database
             self.searchProgressBar.setValue(15)
-            ncbi_searcher = Assembly()
             searchOrganism = self.organismLineEdit.displayText() + "[Organism]"
-            self.database_url, self.idList = ncbi_searcher.getDataBaseURL(searchOrganism, self.searchType)
+            self.database_url_list, self.idList = self.ncbi_searcher.getDataBaseURL(searchOrganism, self.searchType)
             self.searchProgressBar.setValue(85)
 
             # check and make sure something was found
@@ -151,9 +156,40 @@ class NCBI_Search_File(QtWidgets.QDialog):
         self.searchProgressBar.setValue(0)
         self.hide()
 
+    # this function downloads the selected compressed files, decompresses them, and then deletes the used
+    # decompressed files. It also hides the window
     def submissionFunction(self):
-        # TO DO: finish this function, and ask Brian how he wants the data returned
-        print("We return stuff here, but then close out")
+        # clear previous searches
+        self.compressedFilePaths.clear()
+        self.decompressedFilePaths.clear()
+
+        # basic error checking
+        if self.submissionTableWidget.rowCount() <= 0 and self.selectionTableWidget.rowCount() <= 0:
+            return
+        elif self.submissionTableWidget.rowCount() <= 0:
+            QtWidgets.QMessageBox.question(self, "Nothing Selected", "No items selected, please select some files to download",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+        # go through and download the compressed files
+        for i in range(self.submissionTableWidget.rowCount()):
+            tableWidgetData = self.submissionTableWidget.item(i, 0)
+            for j in range(len(self.database_url_list)):
+                if tableWidgetData.text() in self.database_url_list[j] and tableWidgetData.text() not in self.compressedFilePaths:
+                    self.compressedFilePaths.append(self.ncbi_searcher.download_compressed_file(self.database_url_list[j]))
+
+        # go through and decompress those files
+        for i in range(len(self.compressedFilePaths)):
+            self.decompressedFilePaths.append(self.ncbi_searcher.decompress_file(self.compressedFilePaths[i]))
+
+        # go through and delete the compressed files
+        file_names = os.listdir(GlobalSettings.CSPR_DB)
+        for file in file_names:
+            if ".gz" in file:
+                print("Deleting: ", file)
+                os.remove(file)
+
+        self.hide()
 
 #########################END OF the NCBI_Search_Window class
 
@@ -239,6 +275,9 @@ class NewGenome(QtWidgets.QMainWindow):
         print(mydir)
         print(cdir)"""
 
+    # this function figures out which type of file the user is searching for, and then shows the
+    # ncbi_search_dialog window
+    # connected to the button: self.NCBI_File_Search
     def prep_ncbi_search(self):
         fileSearchType = ""
 
