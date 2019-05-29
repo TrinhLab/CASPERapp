@@ -4,6 +4,7 @@ from threading import Thread
 from queue import Queue, Empty
 from PyQt5 import QtWidgets, uic, QtGui, QtCore, Qt
 from bioservices import KEGG
+from NCBI_API import Assembly, GBFF_Parse
 import GlobalSettings
 
 
@@ -15,6 +16,146 @@ def iter_except(function, exception):
     except exception:
         return
 
+
+##############################################
+# Class-Name: NCBI_Search_File
+# What it does: this is the ncbi search window that opens up. Allows the user to search for a ncbi refseq or genbank file
+##############################################
+class NCBI_Search_File(QtWidgets.QDialog):
+    def __init__(self):
+        super(NCBI_Search_File, self).__init__()
+        uic.loadUi("NCBI_File_Search.ui", self)
+        self.setWindowTitle("Search NCBI For a File")
+        self.searchProgressBar.setValue(0)
+
+        #selection table stuff
+        self.selectionTableWidget.setColumnCount(1)  # hardcoded because there will always be 2 columns
+        self.selectionTableWidget.setShowGrid(True)
+        self.selectionTableWidget.setHorizontalHeaderLabels("ID Number;Selection".split(";"))
+        self.selectionTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.selectionTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.selectionTableWidget.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+
+        #submission table stuff
+        self.submissionTableWidget.setColumnCount(1) # hardcoded because it will always be 2
+        self.submissionTableWidget.setShowGrid(True)
+        self.submissionTableWidget.setHorizontalHeaderLabels("ID Number;Selection".split(";"))
+        self.submissionTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.submissionTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.submissionTableWidget.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+
+        #variables below:
+        self.searchType = "" #RefSeq or Genbank
+        self.database_url = ""
+        self.idList = list()
+
+        #button modifications below:
+        self.searchPushButton.clicked.connect(self.searchFunction)
+        self.selectButton.clicked.connect(self.selectHighlighted)
+        self.deselectButton.clicked.connect(self.deselectHighlighted)
+        self.cancelPushButton.clicked.connect(self.cancelFunction)
+        self.submitPushButton.clicked.connect(self.submissionFunction)
+
+
+    # button functions below
+    # this function searchs ncbi for the organism file, adds any matches to the selectionTableWidget
+    def searchFunction(self):
+        # clear any previous searches
+        self.selectionTableWidget.clearContents()
+        self.submissionTableWidget.clearContents()
+        self.selectionTableWidget.setRowCount(0)
+        self.submissionTableWidget.setRowCount(0)
+
+        # check and make sure that the user enters an organism
+        if self.organismLineEdit.displayText() == "":
+            QtWidgets.QMessageBox.question(self, "No Organism Entered",
+                                           "No organism has been entered to search for. "
+                                           "Please type in an organism to search for.",
+                                           QtWidgets.QMessageBox.Ok)
+        else:
+            # search the ncbi database
+            self.searchProgressBar.setValue(15)
+            ncbi_searcher = Assembly()
+            searchOrganism = self.organismLineEdit.displayText() + "[Organism]"
+            self.database_url, self.idList = ncbi_searcher.getDataBaseURL(searchOrganism, self.searchType)
+            self.searchProgressBar.setValue(85)
+
+            # check and make sure something was found
+            if len(self.idList) <= 0:
+                QtWidgets.QMessageBox.question(self, "No matches found!", "No matches found for the search, please try "
+                                                                          "again.",
+                                               QtWidgets.QMessageBox.Ok)
+                self.searchProgressBar.setValue(0)
+                return
+            # now update the table
+            self.selectionTableWidget.setRowCount(len(self.idList))
+            for i in range(len(self.idList)):
+                tabWidget = QtWidgets.QTableWidgetItem(self.idList[i])
+                self.selectionTableWidget.setItem(i, 0, tabWidget)
+            self.selectionTableWidget.resizeColumnsToContents()
+            self.searchProgressBar.setValue(100)
+
+    # this function takes the selected table widgets, and adds them to the submissionTableWidget
+    def selectHighlighted(self):
+        # get the selected items from selectionTableWidget
+        selectedList = self.selectionTableWidget.selectedItems()
+
+        # print an error if the user doesn't select anything
+        if len(selectedList) <= 0 and self.selectionTableWidget.rowCount() > 0:
+            QtWidgets.QMessageBox.question(self, "Nothing Seleted", "No items selected. Please selected items. "
+                                                                      "again.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+        # break out if the size of the selectionTableWidget is 0
+        elif self.selectionTableWidget.rowCount() <= 0:
+            return
+
+        # then set up the next table
+        self.submissionTableWidget.setRowCount(len(selectedList))
+        for i in range(len(selectedList)):
+            tabWidget = QtWidgets.QTableWidgetItem(selectedList[i])
+            self.submissionTableWidget.setItem(i, 0, tabWidget)
+        self.submissionTableWidget.resizeColumnsToContents()
+
+    # this function takes all of the selected widgets out of the submissionTableWidget
+    def deselectHighlighted(self):
+        # get the selected indicies
+        selectedList = self.submissionTableWidget.selectedItems()
+
+        # error checking
+        if len(selectedList) <= 0 and self.submissionTableWidget.rowCount() > 0:
+            QtWidgets.QMessageBox.question(self, "Nothing Seleted", "No items selected. Please selected items. "
+                                                                    "again.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+        elif self.submissionTableWidget.rowCount() <= 0:
+            return
+
+        # go through the delete the ones selected
+        for i in range(self.submissionTableWidget.rowCount()):
+            for j in range(len(selectedList)):
+                if self.submissionTableWidget.item(i, 0) in selectedList:
+                    self.submissionTableWidget.removeRow(i)
+
+
+    # this function clears everything and hides the window
+    def cancelFunction(self):
+        # reset everything, and then hide the window
+        self.organismLineEdit.setText("")
+        self.selectionTableWidget.clearContents()
+        self.submissionTableWidget.clearContents()
+        self.selectionTableWidget.setRowCount(0)
+        self.submissionTableWidget.setRowCount(0)
+        self.searchProgressBar.setValue(0)
+        self.hide()
+
+    def submissionFunction(self):
+        # TO DO: finish this function, and ask Brian how he wants the data returned
+        print("We return stuff here, but then close out")
+
+#########################END OF the NCBI_Search_Window class
 
 class NewGenome(QtWidgets.QMainWindow):
     def __init__(self, info_path):
@@ -30,7 +171,8 @@ class NewGenome(QtWidgets.QMainWindow):
         self.KeggSearchButton.clicked.connect(self.updatekegglist)
         self.resetButton.clicked.connect(self.reset)
         self.submitButton.clicked.connect(self.submit)
-        self.selectFastaButton.clicked.connect(self.selectFasta)
+        self.browseForFile.clicked.connect(self.selectFasta)
+        self.NCBI_File_Search.clicked.connect(self.prep_ncbi_search)
         self.JobsQueueBox.setReadOnly(True)
         self.output_browser.setText("Waiting for program initiation...")
         self.CompletedJobs.setText(" ")
@@ -74,21 +216,48 @@ class NewGenome(QtWidgets.QMainWindow):
         index = 0
         self.file = self.file[0]
         while True:
+            if(self.file == ""):
+                break
             if self.file[len(self.file)-1-index]=="/" or self.file[len(self.file)-1-index]=="\\" :
                 break
             fileName = self.file[len(self.file)-1-index]+fileName
             index+=1
 
+        if "genbank" not in fileName or "fasta" not in fileName or "gbff" not in fileName or "fna" not in fileName:
+            QtWidgets.QMessageBox.question(self, "File Selection Error",
+                                           "You have selected an incorrect type of file. "
+                                           "Please choose a genbank, fasta, gbff, or a fna file.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+        else:
 
 
-
-
-        self.nameFile.setText(fileName)
+            self.nameFile.setText(fileName)
         """cdir = self.lineEdit.text()
         os.chdir(mydir)
         self.gdirectory = mydir
         print(mydir)
         print(cdir)"""
+
+    def prep_ncbi_search(self):
+        fileSearchType = ""
+
+        # check and see which type of file to search for
+        if self.ref_seq_box.isChecked() and self.genbank_box.isChecked():
+            fileSearchType = "genbank"
+        elif self.ref_seq_box.isChecked() and not self.genbank_box.isChecked():
+            fileSearchType = "refseq"
+        elif not self.ref_seq_box.isChecked() and self.genbank_box.isChecked():
+            fileSearchType = "genbank"
+        elif not self.ref_seq_box.isChecked() and not self.genbank_box.isChecked():
+            QtWidgets.QMessageBox.question(self, "Selection Error", "Please select Genbank or RefSeq", QtWidgets.QMessageBox.Ok)
+            return
+
+        GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
+        GlobalSettings.mainWindow.ncbi_search_dialog.searchType = fileSearchType
+        GlobalSettings.mainWindow.ncbi_search_dialog.organismLineEdit.setText(self.lineEdit_1.displayText())
+        GlobalSettings.mainWindow.ncbi_search_dialog.show()
+
 
     def submit(self):
         warning = ""
