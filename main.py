@@ -616,6 +616,11 @@ class CMainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def view_results(self):
         self.hide()
+
+        # set Results endo combo box
+        self.Results.endonucleaseBox.clear()
+        self.Results.endonucleaseBox.addItems(self.data[str(self.orgChoice.currentText())])
+
         self.Results.show()
 
 

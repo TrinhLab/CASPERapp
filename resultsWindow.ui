@@ -238,32 +238,6 @@
      <string>Display On</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="offTargetSearch">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>20</y>
-      <width>201</width>
-      <height>32</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Search for Off Targets...</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="offTargetSettings">
-    <property name="geometry">
-     <rect>
-      <x>490</x>
-      <y>20</y>
-      <width>161</width>
-      <height>32</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Off Target Settings...</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="back_button">
     <property name="geometry">
      <rect>
@@ -277,6 +251,42 @@
      <string>Back</string>
     </property>
    </widget>
+   <widget class="QComboBox" name="endonucleaseBox">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>0</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="endoLabel">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>0</y>
+      <width>81</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Endonuclease:</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="changeEndoButton">
+    <property name="geometry">
+     <rect>
+      <x>274</x>
+      <y>30</y>
+      <width>131</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Change Endonulcease</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -284,7 +294,7 @@
      <x>0</x>
      <y>0</y>
      <width>1100</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

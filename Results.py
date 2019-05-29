@@ -45,11 +45,12 @@ class Results(QtWidgets.QMainWindow):
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-        self.offTargetSearch.clicked.connect(self.offtargetButtonClicked)
+
         self.back_button.clicked.connect(self.goBack)
         self.targetTable.horizontalHeader().sectionClicked.connect(self.table_sorting)
         self.actionSave.triggered.connect(self.save_data)
         self.actionOpen.triggered.connect(self.open_data)
+        self.changeEndoButton.clicked.connect(self.changeEndonuclease)
 
         self.targetTable.itemSelectionChanged.connect(self.item_select)
         self.minScoreLine.setText("0")
@@ -67,6 +68,13 @@ class Results(QtWidgets.QMainWindow):
 
 
 
+    # this function goes through and calls transfer_data again.
+    # Uses data from the mainWindow in Globalsettings, but that's because that info should not change
+    # unless the user closes out of the Results window
+    def changeEndonuclease(self):
+        full_org = str(GlobalSettings.mainWindow.orgChoice.currentText())
+        organism = GlobalSettings.mainWindow.shortHand[full_org]
+        self.transfer_data(organism, str(self.endonucleaseBox.currentText()), GlobalSettings.CSPR_DB, GlobalSettings.mainWindow.checked_info, "")
 
     # Function that is called in main in order to pass along the information the user inputted and the information
     # from the .cspr files that was discovered
@@ -78,10 +86,17 @@ class Results(QtWidgets.QMainWindow):
         self.comboBoxGene.clear()
         self.AllData.clear()
 
+        # print("Inside transfer_data, here is the stuff")
+        # print("Org: ", org)
+        # print("Endo: ", endo)
+        # print("Path: ", path)
+        # print("GenePosDict: ", geneposdict)
+        # print("Fasta: ", fasta)
+
         self.highlighted.clear()
         for gene in geneposdict:
             self.comboBoxGene.addItem(gene)
-            print('gene: ' + gene)
+            # print('gene: ' + gene)
             self.get_targets(gene, geneposdict[gene])
 
         # Enable the combobox to be toggled now that the data is in AllData
@@ -182,6 +197,8 @@ class Results(QtWidgets.QMainWindow):
         else:
             self.targetTable.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
 
+
+    # currently unused, but could be used with the offTargetButton when implemented
     def offtargetButtonClicked(self):
         all_targets = []
         index = 0
