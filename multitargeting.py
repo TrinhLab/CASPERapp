@@ -103,20 +103,32 @@ class Multitargeting(QtWidgets.QMainWindow):
                     self.organism_drop.addItem(species)
         self.data = orgsandendos
         self.shortHand = shortName
-        self.endo_drop.addItems(self.data[str(self.organism_drop.currentText())])
+        temp = self.data[str(self.organism_drop.currentText())]
+        temp1=[]
+        for i in temp:
+            i = i.strip('.')
+            temp1.append(i)
+        self.endo_drop.addItems(temp1)
         self.organism_drop.currentIndexChanged.connect(self.changeEndos)
 
     def changeEndos(self):
         self.endo_drop.clear()
-        self.endo_drop.addItems(self.data[str(self.organism_drop.currentText())])
+        temp = self.data[str(self.organism_drop.currentText())]
+        temp1 = []
+        for i in temp:
+            i = i.strip('.')
+            temp1.append(i)
+            print(i)
+        print(temp1)
+        self.endo_drop.addItems(temp1)
 
     def make_graphs(self):
         #get the correct file name
         file_name = self.shortHand[self.organism_drop.currentText()] + "_" + self.endo_drop.currentText()
         if self.directory.find("/") != -1:
-            file = (self.directory + "/" + file_name + "cspr")
+            file = (self.directory + "/" + file_name + ".cspr")
         else:
-            file = (self.directory + "\\" + file_name + "cspr")
+            file = (self.directory + "\\" + file_name + ".cspr")
 
         #set up parser, and get the repeats and carry stats
         self.parser.fileName = file
@@ -158,12 +170,20 @@ class Multitargeting(QtWidgets.QMainWindow):
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
         test = self.sq.compress(self.chromo_seed.currentText(), 64)
+        #print(test)
         for chromo in info[self.chromo_seed.currentText()]:
             pos = []
             for position in info[(self.chromo_seed.currentText())][chromo]:
                 pos_space = int(round(((position/self.chromo_length[int(chromo) - 1])*100)/1.3157))
+                test = position/self.chromo_length[int(chromo)-1]
+                print(str(position) + ' ' + str(self.chromo_length[int(chromo)-1]))
+                print('percentage: '+ str(test))
+                test = int(test * 500)
+                #print('position: ' + str(test))
                 pos.append(pos_space)
             chromo_pos[chromo] = pos
+        #print(pos)
+        #print(chromo_pos)
 
         # self.GeneText.find("3")
         # black = Qt.QColor('black')
@@ -180,13 +200,19 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.scene.clear()
 
         for chromo in chromo_pos:
-            #self.GeneText.setTextBackgroundColor(black)
-            #self.GeneText.setTextColor(black)
-            pen = QtGui.QPen(QtCore.Qt.black)
-            self.scene.addRect(0, (i * 25), 500, 25, pen)
-            self.scene.addRect(0, 50, 500, 25, pen)
-            self.scene.addLine(250, 0, 250, (i+1)*25, pen)
-            #self.scene.addRect(250, i * 25, 250, 25, pen)
+            # self.GeneText.setTextBackgroundColor(black)
+            # self.GeneText.setTextColor(black)
+            pen_blk = QtGui.QPen(QtCore.Qt.black)
+            pen_red = QtGui.QPen(QtCore.Qt.red)
+            pen_blk.setWidth(3)
+            pen_red.setWidth(3)
+
+            self.scene.addRect(0, (i * 25), 500, 25, pen_blk)
+            #self.scene.addRect(0, 50, 500, 25, pen_blk)
+            for k in chromo_pos[chromo]:
+                #print(k)
+                self.scene.addLine(k, 3, k, (i+1)*22, pen_red)
+
             i = i + 1
             index = 0
 
