@@ -4,6 +4,7 @@ import GlobalSettings
 import operator
 import pyqtgraph as pg
 from PyQt5.QtChart import (QBarCategoryAxis,QBarSet, QChartView, QBarSeries,QChart,QLineSeries, QValueAxis)
+from PyQt5.QtGui import QPainter, QBrush, QPen
 #import PyQt5
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
@@ -64,6 +65,15 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.ready_chromo_make_graph = True
         self.directory = 'Cspr files'
         self.info_path = os.getcwd()
+
+
+        ##################################
+        self.scene = QtWidgets.QGraphicsScene()
+        self.graphicsView.setScene(self.scene)
+
+        #scene.setSceneRect(0,0,571,221)
+        #scene.addRect(0,0,500,25, pen)
+
 
     def launch(self,path):
         os.chdir(path)
@@ -142,6 +152,8 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.chro_bar_create(dic_info)
         self.fill_Chromo_Text(dic_info)
 
+
+
     #fill in chromo bar visualization
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
@@ -153,57 +165,66 @@ class Multitargeting(QtWidgets.QMainWindow):
                 pos.append(pos_space)
             chromo_pos[chromo] = pos
 
-        self.GeneText.find("3")
-        black = Qt.QColor('black')
-        white = Qt.QColor("white")
-        green = Qt.QColor('green')
-
-        self.GeneText.setTextBackgroundColor(black)
-        self.GeneText.setTextColor(black)
-        self.GeneText.append("testing")
-        self.GeneText.clear()
+        # self.GeneText.find("3")
+        # black = Qt.QColor('black')
+        # white = Qt.QColor("white")
+        # green = Qt.QColor('green')
+        #
+        # self.GeneText.setTextBackgroundColor(black)
+        # self.GeneText.setTextColor(black)
+        # self.GeneText.append("testing")
+        # self.GeneText.clear()
         index = 0
+
+        i = 0
+        self.scene.clear()
 
         for chromo in chromo_pos:
-            self.GeneText.setTextBackgroundColor(black)
-            self.GeneText.setTextColor(black)
+            #self.GeneText.setTextBackgroundColor(black)
+            #self.GeneText.setTextColor(black)
+            pen = QtGui.QPen(QtCore.Qt.black)
+            self.scene.addRect(0, (i * 25), 500, 25, pen)
+            self.scene.addRect(0, 50, 500, 25, pen)
+            self.scene.addLine(250, 0, 250, (i+1)*25, pen)
+            #self.scene.addRect(250, i * 25, 250, 25, pen)
+            i = i + 1
             index = 0
 
-            while index<90:
-
-                self.GeneText.insertPlainText("0")
-                index+=1
-
-            self.GeneText.insertPlainText("\n000")
-            self.GeneText.setTextColor(white)
-            self.GeneText.insertPlainText(chromo)
-            self.GeneText.setTextColor(black)
-            index=len(chromo)
-            while index<3:
-                self.GeneText.insertPlainText("0")
-                index+=1
-            index=0
-            self.GeneText.setTextColor(white)
-            self.GeneText.setTextBackgroundColor(white)
-            while index<78:
-                if index in chromo_pos[chromo]:
-                    self.GeneText.setTextColor(green)
-                    self.GeneText.setTextBackgroundColor(green)
-                    self.GeneText.insertPlainText("0")
-                    self.GeneText.setTextColor(white)
-                    self.GeneText.setTextBackgroundColor(white)
-                    index+=1
-                    continue
-                self.GeneText.insertPlainText("0")
-                index+=1
-            self.GeneText.setTextBackgroundColor(black)
-            self.GeneText.setTextColor(black)
-            self.GeneText.insertPlainText("000000\n")
+            # while index<90:
+            #
+            #     self.GeneText.insertPlainText("0")
+            #     index+=1
+            #
+            # self.GeneText.insertPlainText("\n000")
+            # self.GeneText.setTextColor(white)
+            # self.GeneText.insertPlainText(chromo)
+            # self.GeneText.setTextColor(black)
+            # index=len(chromo)
+            # while index<3:
+            #     self.GeneText.insertPlainText("0")
+            #     index+=1
+            # index=0
+            # self.GeneText.setTextColor(white)
+            # self.GeneText.setTextBackgroundColor(white)
+            # while index<78:
+            #     if index in chromo_pos[chromo]:
+            #         self.GeneText.setTextColor(green)
+            #         self.GeneText.setTextBackgroundColor(green)
+            #         self.GeneText.insertPlainText("|")
+            #         self.GeneText.setTextColor(white)
+            #         self.GeneText.setTextBackgroundColor(white)
+            #         index+=1
+            #         continue
+            #     self.GeneText.insertPlainText("0")
+            #     index+=1
+            # self.GeneText.setTextBackgroundColor(black)
+            # self.GeneText.setTextColor(black)
+            # self.GeneText.insertPlainText("000000\n")
         x=2
         index = 0
-        while index < 90:
-            self.GeneText.insertPlainText("0")
-            index += 1
+        # while index < 90:
+        #     self.GeneText.insertPlainText("0")
+        #     index += 1
 
     #creates bar graph num of repeats vs. chromsome
     #this graphs is connected to the repeats_vs_chromo.py file
