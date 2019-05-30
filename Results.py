@@ -50,6 +50,7 @@ class Results(QtWidgets.QMainWindow):
         self.targetTable.horizontalHeader().sectionClicked.connect(self.table_sorting)
         self.actionSave.triggered.connect(self.save_data)
         self.actionOpen.triggered.connect(self.open_data)
+        self.actionCoTargeting.triggered.connect(self.open_cotarget)
         self.changeEndoButton.clicked.connect(self.changeEndonuclease)
 
         self.targetTable.itemSelectionChanged.connect(self.item_select)
@@ -67,6 +68,8 @@ class Results(QtWidgets.QMainWindow):
         self.scoreSlider.valueChanged.connect(self.update_score_filter)
 
 
+    def open_cotarget(self):
+        GlobalSettings.mainWindow.CoTargeting.launch(GlobalSettings.mainWindow.data, GlobalSettings.CSPR_DB, GlobalSettings.mainWindow.shortHand)
 
     # this function goes through and calls transfer_data again.
     # Uses data from the mainWindow in Globalsettings, but that's because that info should not change

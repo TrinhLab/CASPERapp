@@ -35,9 +35,9 @@
    <widget class="QPushButton" name="RemoveEndoButton">
     <property name="geometry">
      <rect>
-      <x>290</x>
+      <x>270</x>
       <y>240</y>
-      <width>171</width>
+      <width>201</width>
       <height>23</height>
      </rect>
     </property>
@@ -180,7 +180,7 @@
    <widget class="QTableWidget" name="AllEndos">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>150</y>
       <width>256</width>
       <height>161</height>
@@ -196,7 +196,7 @@
    <widget class="QTableWidget" name="AddedEndos">
     <property name="geometry">
      <rect>
-      <x>470</x>
+      <x>480</x>
       <y>150</y>
       <width>256</width>
       <height>161</height>

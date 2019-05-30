@@ -324,6 +324,7 @@
     <addaction name="actionScore_Settings"/>
     <addaction name="actionDesign_Repair_Oligos"/>
     <addaction name="actionBatch_Off_Target_Analysis"/>
+    <addaction name="actionCoTargeting"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -392,6 +393,11 @@
   <action name="actionExport">
    <property name="text">
     <string>Export</string>
+   </property>
+  </action>
+  <action name="actionCoTargeting">
+   <property name="text">
+    <string>CoTargeting</string>
    </property>
   </action>
  </widget>
