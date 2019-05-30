@@ -109,6 +109,16 @@ class Kegg:
             exon_position_tuples.append(pos)
         return exon_position_tuples                                                 #return the tuple of the exon's positions
 
+    # this function gets the NTSEQ from the kegg info
+    def get_nt_sequence(self, gene_id):
+        # get kegg's NTSEQ info
+        res = self.k.get(gene_id)
+        d = self.k.parse(res)
+        newstr = d['NTSEQ']
+
+        # remove kegg's extra spaces and return the string
+        newstr = newstr.replace(" ", "")
+        return newstr.upper()
 
 class SeqFromCSPR:
 

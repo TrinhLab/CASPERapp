@@ -131,6 +131,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.checkBoxes = []
         self.add_orgo = []
         self.checked_info = {}
+        self.check_ntseq_info = {}
 
         # --- Button Modifications --- #
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
@@ -330,6 +331,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def collect_table_data(self):
         self.checked_info.clear()
+        self.check_ntseq_info.clear()
 
         k = Kegg()
         full_org = str(self.orgChoice.currentText())
@@ -342,19 +344,19 @@ class CMainWindow(QtWidgets.QMainWindow):
                 name  = nameFull[len(nameFull)-1]
 
                 gene_info = k.gene_locator(organism+":"+name)
-                print(gene_info)
+                nt_sequence = k.get_nt_sequence(organism+":"+name)
                 holder = (gene_info[0],gene_info[2],gene_info[3])
                 self.checked_info[item[0]]=holder
+                self.check_ntseq_info[item[0]] = nt_sequence
 
         self.progressBar.setValue(80)
-        self.Results.transfer_data(organism,str(self.endoChoice.currentText()),os.getcwd(),self.checked_info,"")
+        self.Results.transfer_data(organism,str(self.endoChoice.currentText()),os.getcwd(),self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
 
 
     def launch_CoTargeting(self):
         self.CoTargeting.launch(self.data,self.dbpath,self.shortHand)
-        self.hide()
 
 # ------------------------------------------------------------------------------------------------------ #
 

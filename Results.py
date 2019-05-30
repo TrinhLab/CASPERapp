@@ -1,11 +1,13 @@
 import sys
 
-from PyQt5 import Qt, QtWidgets, uic, QtCore
+from PyQt5 import Qt, QtWidgets, uic, QtCore, QtGui
 from Scoring import OnTargetScore
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
 import GlobalSettings
 import os
+from APIs import Kegg
+
 # =========================================================================================
 # CLASS NAME: Results
 # Inputs: Takes information from the main application window and displays the gRNA results
@@ -34,6 +36,8 @@ class Results(QtWidgets.QMainWindow):
         self.startpos = 0
         self.endpos = 0
         self.directory = ""
+        self.geneDict = dict() # dictionary passed into transfer_data
+        self.geneNTDict = dict() #dictionary passed into transfer_data, same key as geneDict, but hols the NTSEQ
 
         self.switcher = [1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
 
@@ -52,6 +56,8 @@ class Results(QtWidgets.QMainWindow):
         self.actionOpen.triggered.connect(self.open_data)
         self.actionCoTargeting.triggered.connect(self.open_cotarget)
         self.changeEndoButton.clicked.connect(self.changeEndonuclease)
+        self.displayGeneViewer.stateChanged.connect(self.checkGeneViewer)
+        self.highlight_gene_viewer_button.clicked.connect(self.highlight_gene_viewer)
 
         self.targetTable.itemSelectionChanged.connect(self.item_select)
         self.minScoreLine.setText("0")
@@ -67,7 +73,67 @@ class Results(QtWidgets.QMainWindow):
 
         self.scoreSlider.valueChanged.connect(self.update_score_filter)
 
+    # hightlights the sequences found in the gene viewer
+    # currently only works with the kegg files
+    # STILL NEED TO ADD: functionality with fasta and genbank file, and functionality of changing the start/end numbers
+    def highlight_gene_viewer(self):
+        # make sure gene viewer is enabled
+        if not self.displayGeneViewer.isChecked():
+            QtWidgets.QMessageBox.question(self, "Gene Viewer Error",
+                                           "Gene Viewer display is off! "
+                                           "Please turn the Gene Viewer on in order to highlight the sequences selected",
+                                           QtWidgets.QMessageBox.Ok)
+            return
 
+        # variables needed
+        k = Kegg()
+        self.geneViewer.setText(self.geneNTDict[self.comboBoxGene.currentText()])
+        cursor = self.geneViewer.textCursor()
+        format = QtGui.QTextCharFormat()
+
+        # loop through the whole table and check if the checkbox is marked
+        #       Note: this could be changed to if its hightlighted as well, if needed
+        for i in range(self.targetTable.rowCount()):
+            # check and make sure that the box is checked
+            tempCheckBox = self.targetTable.cellWidget(i, 6)
+            if tempCheckBox.isChecked():
+                # get the strand
+                tempStrand = self.targetTable.item(i, 2)
+                strandString = tempStrand.text()
+
+                # get the sequence
+                tempBuffer = self.targetTable.item(i, 1)
+                buffer = tempBuffer.text()
+
+                # check which strand type, and edit accordingly
+                if strandString == "+":
+                    format.setBackground(QtGui.QBrush(QtGui.QColor("green")))
+                elif strandString == "-":
+                    format.setBackground(QtGui.QBrush(QtGui.QColor("red")))
+                    buffer = k.revcom(buffer)
+
+                # go through and highlight
+                regex = QtCore.QRegExp(buffer)
+                index = regex.indexIn(self.geneViewer.toPlainText(), 0)
+                cursor.setPosition(index)
+                for i in range(len(buffer)):
+                    cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
+                cursor.mergeCharFormat(format)
+
+    # this function updates the gene viewer based on the user clicking 'display on'
+    # if it is check marked, it displays the correct data
+    # if it is un-marked, it hides the data
+    def checkGeneViewer(self):
+        if self.displayGeneViewer.isChecked():
+            self.lineEditStart.setText(str(self.geneDict[self.comboBoxGene.currentText()][1]))
+            self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
+            self.geneViewer.setText(self.geneNTDict[self.comboBoxGene.currentText()])
+        elif not self.displayGeneViewer.isChecked():
+            self.lineEditStart.clear()
+            self.lineEditEnd.clear()
+            self.geneViewer.clear()
+
+    # this function just opens CoTargeting when the user clicks the CoTargeting button
     def open_cotarget(self):
         GlobalSettings.mainWindow.CoTargeting.launch(GlobalSettings.mainWindow.data, GlobalSettings.CSPR_DB, GlobalSettings.mainWindow.shortHand)
 
@@ -77,17 +143,20 @@ class Results(QtWidgets.QMainWindow):
     def changeEndonuclease(self):
         full_org = str(GlobalSettings.mainWindow.orgChoice.currentText())
         organism = GlobalSettings.mainWindow.shortHand[full_org]
-        self.transfer_data(organism, str(self.endonucleaseBox.currentText()), GlobalSettings.CSPR_DB, GlobalSettings.mainWindow.checked_info, "")
+        self.transfer_data(organism, str(self.endonucleaseBox.currentText()), GlobalSettings.CSPR_DB, self.geneDict,
+                           self.geneNTDict, "")
 
     # Function that is called in main in order to pass along the information the user inputted and the information
     # from the .cspr files that was discovered
-    def transfer_data(self, org, endo, path, geneposdict, fasta):
+    def transfer_data(self, org, endo, path, geneposdict, geneNTSeqDict, fasta):
         self.org = org
         self.endo = endo
         self.directory = path
         self.fasta_ref = fasta
         self.comboBoxGene.clear()
         self.AllData.clear()
+        self.geneDict = geneposdict
+        self.geneNTDict = geneNTSeqDict
 
         # print("Inside transfer_data, here is the stuff")
         # print("Org: ", org)
@@ -143,6 +212,13 @@ class Results(QtWidgets.QMainWindow):
             return
 
         subset_display = set()
+
+        # set the start and end numbers, as well as set the geneViewer text, if the displayGeneViewer is checked
+        if self.displayGeneViewer.isChecked():
+            self.lineEditStart.setText(str(self.geneDict[self.comboBoxGene.currentText()][1]))
+            self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
+            self.geneViewer.setText(self.geneNTDict[self.comboBoxGene.currentText()])
+
         # Removing all sequences below minimum score and creating the set:
 
         for item in self.AllData[curgene]:
@@ -184,10 +260,9 @@ class Results(QtWidgets.QMainWindow):
         checkBox = self.sender()
         index = self.targetTable.indexAt(checkBox.pos())
         print(index.column(), index.row(), checkBox.isChecked())
-        #self.geneViewer.setPlainText(self.geneViewer.text())
         seq = self.targetTable.item(index.row(),1).text()
         self.highlighted[str(seq)] = checkBox.isChecked()
-        print(seq)
+
         x=1
 
     def item_select(self):
