@@ -44,7 +44,7 @@ class Results(QtWidgets.QMainWindow):
         # Target Table settings #
         self.targetTable.setColumnCount(7)  # hardcoded because there will always be seven columns
         self.targetTable.setShowGrid(False)
-        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Highlight".split(";"))
+        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Off-Target".split(";"))
         self.targetTable.horizontalHeader().setSectionsClickable(True)
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -58,8 +58,10 @@ class Results(QtWidgets.QMainWindow):
         self.changeEndoButton.clicked.connect(self.changeEndonuclease)
         self.displayGeneViewer.stateChanged.connect(self.checkGeneViewer)
         self.highlight_gene_viewer_button.clicked.connect(self.highlight_gene_viewer)
+        self.checkBoxSelectAll.stateChanged.connect(self.selectAll)
+        self.pushButton_Deselect_All.clicked.connect(self.deselectAll)
 
-        self.targetTable.itemSelectionChanged.connect(self.item_select)
+        #self.targetTable.itemSelectionChanged.connect(self.item_select)
         self.minScoreLine.setText("0")
 
         # Connecting the filters to the displayGeneData function
@@ -73,9 +75,29 @@ class Results(QtWidgets.QMainWindow):
 
         self.scoreSlider.valueChanged.connect(self.update_score_filter)
 
+    # this function goes through and deselects all of the Off-Target checkboxes
+    # also sets the selectAllShown check box to unchecked as well
+    def deselectAll(self):
+        for i in range(self.targetTable.rowCount()):
+            self.targetTable.cellWidget(i, 6).setCheckState(0)
+        self.checkBoxSelectAll.setCheckState(0)
+
+    # this function listens for a stateChange in selectAllShown
+    # if it is checked, it selects all shown
+    # if it is unchecked, it deselects all shown
+    # Note: it is a little buggy, possibly because when you change the minimum score it resets it all
+    def selectAll(self):
+        if self.checkBoxSelectAll.isChecked():
+            for i in range(self.targetTable.rowCount()):
+                self.targetTable.cellWidget(i, 6).setCheckState(2)
+        elif not self.checkBoxSelectAll.isChecked():
+            for i in range(self.targetTable.rowCount()):
+                self.targetTable.cellWidget(i, 6).setCheckState(0)
+
+
     # hightlights the sequences found in the gene viewer
-    # currently only works with the kegg files
-    # STILL NEED TO ADD: functionality with fasta and genbank file, and functionality of changing the start/end numbers
+    # highlighting should stay the exact same with fasta and genbank files, as this function only edits what
+    #   is currently in the gene viewer text table anyways
     def highlight_gene_viewer(self):
         # make sure gene viewer is enabled
         if not self.displayGeneViewer.isChecked():
@@ -87,38 +109,54 @@ class Results(QtWidgets.QMainWindow):
 
         # variables needed
         k = Kegg()
-        self.geneViewer.setText(self.geneNTDict[self.comboBoxGene.currentText()])
         cursor = self.geneViewer.textCursor()
         format = QtGui.QTextCharFormat()
+        noMatchString = ""
 
-        # loop through the whole table and check if the checkbox is marked
-        #       Note: this could be changed to if its hightlighted as well, if needed
+        # reset the gene viewer text
+        self.geneViewer.setText(self.geneNTDict[self.comboBoxGene.currentText()])
+
+        # check and make sure still is actually highlighted!
+        selectedList = self.targetTable.selectedItems()
+        if len(selectedList) <= 0:
+            QtWidgets.QMessageBox.question(self, "Nothing Selected",
+                                           "No targets were highlighted "
+                                           "Please highlight the targets you want to be highlighted in the gene viewer!",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+        # this is the loop that actually goes in and highlights all the things
         for i in range(self.targetTable.rowCount()):
-            # check and make sure that the box is checked
-            tempCheckBox = self.targetTable.cellWidget(i, 6)
-            if tempCheckBox.isChecked():
-                # get the strand
-                tempStrand = self.targetTable.item(i, 2)
-                strandString = tempStrand.text()
+            if self.targetTable.item(i, 0).isSelected():
+                # get the strand and sequence strings
+                strandString = self.targetTable.item(i, 2).text()
+                sequenceString = self.targetTable.item(i, 1).text()
 
-                # get the sequence
-                tempBuffer = self.targetTable.item(i, 1)
-                buffer = tempBuffer.text()
-
-                # check which strand type, and edit accordingly
+                # check whether to be red or green
                 if strandString == "+":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("green")))
                 elif strandString == "-":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("red")))
-                    buffer = k.revcom(buffer)
+                    sequenceString = k.revcom(sequenceString)
 
-                # go through and highlight
-                regex = QtCore.QRegExp(buffer)
-                index = regex.indexIn(self.geneViewer.toPlainText(), 0)
-                cursor.setPosition(index)
-                for i in range(len(buffer)):
-                    cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
-                cursor.mergeCharFormat(format)
+                # go through and highlight if it's in the geneviewer
+                if sequenceString in self.geneViewer.toPlainText():
+                    regex = QtCore.QRegExp(sequenceString)
+                    index = regex.indexIn(self.geneViewer.toPlainText(), 0)
+                    cursor.setPosition(index)
+                    for i in range(len(sequenceString)):
+                        cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
+                    cursor.mergeCharFormat(format)
+                # catch the error if it is not in gene viewer
+                else:
+                    if noMatchString == "":
+                        noMatchString = sequenceString
+                    else:
+                        noMatchString = noMatchString + ";;" + sequenceString
+
+        # if any of the sequences return 0 matches, show the user which ones were not found
+        if len(noMatchString) >= 5:
+            QtWidgets.QMessageBox.question(self, "Warning", "The following sequence(s) were not found in the Gene Viewer"
+                                                                "text:\n\t" + noMatchString, QtWidgets.QMessageBox.Ok)
 
     # this function updates the gene viewer based on the user clicking 'display on'
     # if it is check marked, it displays the correct data
@@ -134,6 +172,7 @@ class Results(QtWidgets.QMainWindow):
             self.geneViewer.clear()
 
     # this function just opens CoTargeting when the user clicks the CoTargeting button
+    # opened the same way that main opens it
     def open_cotarget(self):
         GlobalSettings.mainWindow.CoTargeting.launch(GlobalSettings.mainWindow.data, GlobalSettings.CSPR_DB, GlobalSettings.mainWindow.shortHand)
 
@@ -174,7 +213,6 @@ class Results(QtWidgets.QMainWindow):
         # Enable the combobox to be toggled now that the data is in AllData
         self.comboBoxGene.currentTextChanged.connect(self.displayGeneData)
     def goBack(self):
-
         GlobalSettings.mainWindow.show()
         self.hide()
 
@@ -191,7 +229,7 @@ class Results(QtWidgets.QMainWindow):
 
         #create the parser, read the targets store it. then display the GeneData screen
         parser = CSPRparser(file)
-        print('postupe: '+str(pos_tuple))
+        # print('postupe: '+str(pos_tuple))
         temp = parser.read_targets(genename, pos_tuple)
         self.AllData[genename] = parser.read_targets(genename, pos_tuple)
         for item in self.AllData[genename]:
@@ -259,7 +297,7 @@ class Results(QtWidgets.QMainWindow):
         search_trms = []
         checkBox = self.sender()
         index = self.targetTable.indexAt(checkBox.pos())
-        print(index.column(), index.row(), checkBox.isChecked())
+        # print(index.column(), index.row(), checkBox.isChecked())
         seq = self.targetTable.item(index.row(),1).text()
         self.highlighted[str(seq)] = checkBox.isChecked()
 

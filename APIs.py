@@ -58,7 +58,9 @@ class Kegg:
         for list in types:                                                                      #check each list to see which the given chromosome is part of
             if chr in list:
                 ind = list.index(chr)                                                           #find index of chromosome in list and send back the number in that index/
-                return numbers[ind]
+                # changed this to return an int, easy to change back if it was needed as a char
+                # -Josh
+                return int(numbers[ind])
         return 1
 
     def revcom(self, sequence):                                       #Revcom - recives a sequance and returns the inverse of the sequance            

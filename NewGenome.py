@@ -158,10 +158,12 @@ class NCBI_Search_File(QtWidgets.QDialog):
 
     # this function downloads the selected compressed files, decompresses them, and then deletes the used
     # decompressed files. It also hides the window
+    # decompressed file paths are currently stored in this window's class is a list. Can change when needed
     def submissionFunction(self):
         # clear previous searches
         self.compressedFilePaths.clear()
         self.decompressedFilePaths.clear()
+        downloadedList = list()
 
         # basic error checking
         if self.submissionTableWidget.rowCount() <= 0 and self.selectionTableWidget.rowCount() <= 0:
@@ -175,8 +177,10 @@ class NCBI_Search_File(QtWidgets.QDialog):
         for i in range(self.submissionTableWidget.rowCount()):
             tableWidgetData = self.submissionTableWidget.item(i, 0)
             for j in range(len(self.database_url_list)):
-                if tableWidgetData.text() in self.database_url_list[j] and tableWidgetData.text() not in self.compressedFilePaths:
+                # download ones that are selected and aren't already downloaded
+                if tableWidgetData.text() in self.database_url_list[j] and self.database_url_list[j] not in downloadedList:
                     self.compressedFilePaths.append(self.ncbi_searcher.download_compressed_file(self.database_url_list[j]))
+                    downloadedList.append(self.database_url_list[j])
 
         # go through and decompress those files
         for i in range(len(self.compressedFilePaths)):

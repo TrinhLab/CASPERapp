@@ -349,8 +349,13 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 # this part may have to change if the user is using a fasta/genbank file
                 gene_info = k.gene_locator(organism+":"+name)
+
+                # this nt_sequence code works assuming we are using Kegg
                 nt_sequence = k.get_nt_sequence(organism+":"+name)
+
                 holder = (gene_info[0],gene_info[2],gene_info[3])
+                # this nt_sequence code works assuming we are using fasta
+                #nt_sequence = self.read_fasta_sequence(holder, "C:/Users/Josh/Desktop/Work/Testing/crisper files/New_CSPR_files/GCF_005849145.1_ASM584914v1_genomic.fna")
                 self.checked_info[item[0]]=holder
                 self.check_ntseq_info[item[0]] = nt_sequence
 
@@ -361,6 +366,65 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.pushButton_ViewTargets.setEnabled(True)
 
 
+    # put here now, will need to be moved for organization purposes (possibly moved to the results file, but not sure yet)
+    # not finished, still needs work
+    def read_fasta_sequence(self, locationData, file_path):
+        fileStream = open(file_path)
+        location_in_file = 0
+        total_string_return = ""
+        tempString = ""
+
+        startCount = 0
+        endCount = 0
+
+        buffer = fileStream.readline()
+        # go to the right chromesome
+        while location_in_file != (locationData[0] - 1):
+            if buffer == "":
+                print("end of file error")
+                return
+            if buffer.startswith(">"):
+                location_in_file += 1
+            else:
+                buffer = fileStream.readline()
+        if buffer.startswith(">"):
+            buffer = fileStream.readline()
+
+        while True:
+            if buffer.startswith(">"):
+                break
+            else:
+                if tempString == "":
+                    tempString = buffer
+                else:
+                    tempString = tempString + buffer
+            buffer = fileStream.readline()
+
+        tempString = tempString.replace('\n', '')
+
+        total_string_return = tempString[locationData[1]:-locationData[2]]
+        print(total_string_return)
+
+        return(total_string_return)
+        """
+        # skip all the stuff until the start location
+        for i in range(locationData[1]):
+            junk = fileStream.read(1)
+
+        # get everything from the start location to the end location
+        for i in range(locationData[1], locationData[2]):
+            temp = fileStream.read(1)
+            if temp == "\n":
+                continue
+            elif total_string_return == "":
+                total_string_return = temp
+            else:
+                total_string_return = total_string_return + temp
+
+        # make it all uppercase and return
+        total_string_return = total_string_return.upper()
+        return(total_string_return)
+        """
     def launch_CoTargeting(self):
         self.CoTargeting.launch(self.data,self.dbpath,self.shortHand)
 
