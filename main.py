@@ -335,7 +335,11 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         k = Kegg()
         full_org = str(self.orgChoice.currentText())
-        organism= self.shortHand[full_org]
+        #organism= self.shortHand[full_org]
+
+        # set organism (for kegg) to the selected annotations file's code
+        organism = self.Annotations_Organism.currentText().split(" ")[1]
+
         nameFull = ""
         holder = ()
         for item in self.checkBoxes:
@@ -343,6 +347,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 nameFull = item[0].split(" ")
                 name  = nameFull[len(nameFull)-1]
 
+                # this part may have to change if the user is using a fasta/genbank file
                 gene_info = k.gene_locator(organism+":"+name)
                 nt_sequence = k.get_nt_sequence(organism+":"+name)
                 holder = (gene_info[0],gene_info[2],gene_info[3])
@@ -350,7 +355,8 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.check_ntseq_info[item[0]] = nt_sequence
 
         self.progressBar.setValue(80)
-        self.Results.transfer_data(organism,str(self.endoChoice.currentText()),os.getcwd(),self.checked_info, self.check_ntseq_info, "")
+        # make sure to pass the selected organism's code to transfer_data, otherwise it won't find the right file
+        self.Results.transfer_data(self.shortHand[full_org],str(self.endoChoice.currentText()),os.getcwd(),self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
 

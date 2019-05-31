@@ -58,6 +58,7 @@ class CSPRparser:
                 colonIndex = i + 1
                 self.karystatsList.append(int(bufferString1))
 
+        fileStream.close()
         #print(self.karystatsList)
 
 
@@ -95,6 +96,7 @@ class CSPRparser:
                     tempList.append(bufferString)
                     #print(bufferString)
                     bufferString = fileStream.readline()
+        fileStream.close()
 
 ########################################################################################################
 #    this function reads just the repeats
@@ -156,7 +158,9 @@ class CSPRparser:
     #this functions reads the entirety of the file into one string
     def get_whole_file(self):
         fileStream = open(self.fileName)
-        return(fileStream.read())
+        fileData = fileStream.read()
+        fileStream.close()
+        return(fileData)
 
     #this function reads all of the targets in the file. It is essentially a copy of get_targets from the results.py file, written by Brian Mendoza
     def read_targets(self, genename, pos_tuple):
@@ -187,6 +191,7 @@ class CSPRparser:
                 break
             else:
                 header = fileStream.readline()
+        fileStream.close()
         return self.chromesomeList
 
 
