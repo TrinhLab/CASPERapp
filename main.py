@@ -131,6 +131,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.checkBoxes = []
         self.add_orgo = []
         self.checked_info = {}
+        self.check_ntseq_info = {} # the ntsequences that go along with the checked_info
 
         # --- Button Modifications --- #
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
@@ -245,6 +246,8 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 # ---- Following functions are for running the auxillary algorithms and windows ---- #
     def run_results(self, inputtype, inputstring):
+        # need to change this code so that it works with other types of files
+
         kegginfo = Kegg()
         org = str(self.orgChoice.currentText())
         endo = str(self.endoChoice.currentText())
@@ -267,7 +270,8 @@ class CMainWindow(QtWidgets.QMainWindow):
             #IE both have bsu or otherwise
             checkList = self.Annotations_Organism.currentText().split(" ")
             if(checkList[1] != self.shortHand[self.orgChoice.currentText()]):
-                error = QtWidgets.QMessageBox.question(self, "Miss-matched Annotation File", "The annotation file you have selected does not match the CSPR file selected. Continuing could result in the program crashing.\n\n"
+                error = QtWidgets.QMessageBox.question(self, "Miss-matched Annotation File", "The annotation file you have selected does not match the CSPR file selected. Continuing could result in the program crashing. "
+                                                                                             "Targets may not be found as well\n\n"
                                                              "Do you wish to continue?",
                                                        QtWidgets.QMessageBox.Yes |
                                                        QtWidgets.QMessageBox.No,
@@ -330,25 +334,31 @@ class CMainWindow(QtWidgets.QMainWindow):
        self.newGenome.show()
 
     def collect_table_data(self):
+        # need to change this code so that it works with other types of files
         self.checked_info.clear()
+        self.check_ntseq_info.clear()
 
         k = Kegg()
         full_org = str(self.orgChoice.currentText())
-        organism= self.shortHand[full_org]
+        organism= self.Annotations_Organism.currentText().split(" ")[1]
         nameFull = ""
         holder = ()
         for item in self.checkBoxes:
             if item[1].isChecked() ==True:
                 nameFull = item[0].split(" ")
                 name  = nameFull[len(nameFull)-1]
-
                 gene_info = k.gene_locator(organism+":"+name)
-                print(gene_info)
+
+                # get kegg's ntsequence and store it
+                nt_sequence = k.get_nt_sequence(organism+":"+name)
+
                 holder = (gene_info[0],gene_info[2],gene_info[3])
                 self.checked_info[item[0]]=holder
+                self.check_ntseq_info[item[0]] = nt_sequence
+
 
         self.progressBar.setValue(80)
-        self.Results.transfer_data(organism,str(self.endoChoice.currentText()),os.getcwd(),self.checked_info,"")
+        self.Results.transfer_data(self.shortHand[full_org],str(self.endoChoice.currentText()),os.getcwd(),self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
 
