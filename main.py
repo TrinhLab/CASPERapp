@@ -14,6 +14,7 @@ import requests
 import GlobalSettings
 from bs4 import BeautifulSoup
 import multitargeting
+from AnnotationParser import Annotation_Parser
 ############################## MT Libraries #####################
 import operator
 import pyqtgraph as pg
@@ -266,50 +267,122 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
         if inputtype == "gene":
-            #check to make sure that both the annotation file and the cspr files have the same version
-            #IE both have bsu or otherwise
-            checkList = self.Annotations_Organism.currentText().split(" ")
-            if(checkList[1] != self.shortHand[self.orgChoice.currentText()]):
-                error = QtWidgets.QMessageBox.question(self, "Miss-matched Annotation File", "The annotation file you have selected does not match the CSPR file selected. Continuing could result in the program crashing. "
-                                                                                             "Targets may not be found as well\n\n"
-                                                             "Do you wish to continue?",
-                                                       QtWidgets.QMessageBox.Yes |
-                                                       QtWidgets.QMessageBox.No,
-                                                       QtWidgets.QMessageBox.No)
+            # ncbi file search code
+            if self.NCBI_Select.isChecked():
+                print("Need to search for NCBI here")
+            # own annotation file code
+            if self.Annotation_Ownfile.isChecked():
+                # use the Annotation_Parser's functions to parse the file
+                annotation_parser = Annotation_Parser()
+                annotation_parser.annotationFileName = self.Annotations_Organism.currentText()
+                annotation_parser.find_which_file_version()
 
-                if(error == QtWidgets.QMessageBox.No):
-                    self.progressBar.setValue(0)
+                # now go through and search for the actual locus tag, in the case the user input that
+                searchValues = self.separate_line(inputstring[0])
+                self.searches.clear()
+                for search in searchValues:
+                    search = self.removeWhiteSpace(search)
+                    if len(search) == 0:
+                        continue
+
+                    # set the searche's dict of search equal to a new dictionary
+                    self.searches[search] = {}
+
+                    # upper case it, because the files seem to be all uppercase for this part
+                    checkNormalDict = search.upper()
+                    if checkNormalDict in annotation_parser.dict: # if it is in the normal dictionary
+                        for item in annotation_parser.dict[checkNormalDict]: # for each list item in that position
+                            if item[0] not in self.searches[search]: # if its not in the search's position yet
+                                self.searches[search][item[0]] = annotation_parser.dict[checkNormalDict]
+                            elif item not in self.searches[search][item[0]]: # assume it is in the searches position, but do not store duplicates
+                                self.searches[search][item[0]].append(annotation_parser.dict[checkNormalDict])
+                if len(self.searches[searchValues[0]]) >= 1: # if the previous search yielded results, do not continue
+                    # testing right now, but eventually we will be calling the fill_table_data
+                    for i in self.searches:
+                        print(i)
+                        for j in self.searches[i]:
+                            print("\t", j)
+                            for k in self.searches[i][j]:
+                                print("\t\t", k)
                     return
 
-            self.make_dictonary()
-            list_sVal = self.separate_line(inputstring[0])
-            for sValue in list_sVal:
-                sValue = self.removeWhiteSpace(sValue)
-                if len(sValue) == 0:
-                    continue
-                self.searches[sValue] = {}
-                for defin in self.gene_list:
-                    #set a string equal to a string version of defin lowercased. That way the case of user input does not matter
-                    checkString = str(defin).lower()
-                    if sValue in checkString or (sValue in self.gene_list[defin]):
-                        if defin in self.searches[sValue]:
-                            if self.gene_list[defin] not in self.searches[sValue][defin]:
-                                self.searches[sValue][defin].append(self.gene_list[defin])
-                        else:
-                            self.searches[sValue][defin] = self.gene_list[defin]
-                        #print(self.searches[sValue][defin][0])
+                # reset, and search the parallel dictionary now
+                self.searches = {}
+                for search in searchValues:
+                    search = self.removeWhiteSpace(search)
+                    if len(search) == 0:
+                        continue
 
-            did_work = self.Annotation_Window.fill_Table(self)
-            if did_work == -1:
-                QtWidgets.QMessageBox.question(self, "Gene Database Error",
-                                               "The Gene you entered could not be found in the Kegg database. "
-                                               "Please make sure you entered everything correctly and try again.",
-                                               QtWidgets.QMessageBox.Ok)
-                self.progressBar.setValue(0)
-            elif did_work == -2: #if the user selects 'no' from the warning of a large file
-                self.progressBar.setValue(0)
+                    self.searches[search] = {}
+                    for item in annotation_parser.para_dict:
+                        checkingItem = item.lower() # lowercase now, to match the user's input
+
+                        if search in checkingItem: # if what they are searching for is somewhere in that key
+                            # loop through each list ite now
+                            for i in range(len(annotation_parser.para_dict[item])):
+                                # now loop through the regular dict's position and store the ones we want
+                                for match in annotation_parser.dict[annotation_parser.para_dict[item][i]]:
+                                    if match[0] not in self.searches[search]:
+                                        self.searches[search][match[0]] = [match]
+                                    elif match not in self.searches[search][match[0]]:
+                                        self.searches[search][match[0]].append(match)
+                # jsut testing as of now
+                for i in self.searches:
+                    print(i)
+                    for j in self.searches[i]:
+                        print("\t", j)
+                        for k in self.searches[i][j]:
+                            print("\t\t", k)
+
+            # KEGG's code
+            elif self.Annotation_Kegg.isChecked():
+                #check to make sure that both the annotation file and the cspr files have the same version
+                #IE both have bsu or otherwise. Just warn the user that the program could crash, or that targets may not be found
+                checkList = self.Annotations_Organism.currentText().split(" ")
+                if(checkList[1] != self.shortHand[self.orgChoice.currentText()]):
+                    error = QtWidgets.QMessageBox.question(self, "Miss-matched Annotation File", "The annotation file you have selected does not match the CSPR file selected. Continuing could result in the program crashing. "
+                                                                                                 "Targets may not be found as well\n\n"
+                                                                 "Do you wish to continue?",
+                                                           QtWidgets.QMessageBox.Yes |
+                                                           QtWidgets.QMessageBox.No,
+                                                           QtWidgets.QMessageBox.No)
+
+                    if(error == QtWidgets.QMessageBox.No):
+                        self.progressBar.setValue(0)
+                        return
+
+                self.make_dictonary()
+                list_sVal = self.separate_line(inputstring[0])
+                for sValue in list_sVal:
+                    sValue = self.removeWhiteSpace(sValue)
+                    if len(sValue) == 0:
+                        continue
+                    self.searches[sValue] = {}
+                    for defin in self.gene_list:
+                        #set a string equal to a string version of defin lowercased. That way the case of user input does not matter
+                        checkString = str(defin).lower()
+                        if sValue in checkString or (sValue in self.gene_list[defin]):
+                            if defin in self.searches[sValue]:
+                                if self.gene_list[defin] not in self.searches[sValue][defin]:
+                                    self.searches[sValue][defin].append(self.gene_list[defin])
+                            else:
+                                self.searches[sValue][defin] = self.gene_list[defin]
+                            #print(self.searches[sValue][defin][0])
+
+                did_work = self.Annotation_Window.fill_Table(self)
+                if did_work == -1:
+                    QtWidgets.QMessageBox.question(self, "Gene Database Error",
+                                                   "The Gene you entered could not be found in the Kegg database. "
+                                                   "Please make sure you entered everything correctly and try again.",
+                                                   QtWidgets.QMessageBox.Ok)
+                    self.progressBar.setValue(0)
+                elif did_work == -2: #if the user selects 'no' from the warning of a large file
+                    self.progressBar.setValue(0)
+                else:
+                    self.progressBar.setValue(100)
             else:
-                self.progressBar.setValue(100)
+                self.progressBar.setValue(0)
+                return
         if inputtype == "position":
             ginfo = inputstring[1:-1].split(",")
             self.progressBar.setValue(45)
@@ -400,20 +473,18 @@ class CMainWindow(QtWidgets.QMainWindow):
         else:
             s = False
         current = self.selected_annotation()
+        print(current)
         if current == "Own":
             self.Search_Button.setText("Browse")
             self.Search_Button.setEnabled(s)
-            #self.Search_Input.setEnabled(s)
             self.Search_Label.setText("Select an annotation file...")
         elif current == "Kegg":
             self.Search_Button.setText("Search")
             self.Search_Button.setEnabled(s)
-            #self.Search_Input.setEnabled(s)
             self.Search_Label.setText("Search KEGG Database for genes")
         else:
             self.Search_Button.setText("Search")
             self.Search_Button.setEnabled(s)
-            #self.Search_Input.setEnabled(s)
             self.Search_Label.setText("Search NCBI Database for genes")
         self.Annotations_Organism.setEnabled(s)
         self.Annotation_Ownfile.setEnabled(s)
@@ -428,14 +499,22 @@ class CMainWindow(QtWidgets.QMainWindow):
         else:
             return "NCBI"
 
+
+
     def change_annotation(self):
         if self.Annotation_Ownfile.isChecked():
+            self.refseq_button.setEnabled(False)
+            self.genbank_button.setEnabled(False)
             self.Search_Button.setText("Browse")
             self.Search_Label.setText("Select an annotation file...")
         elif self.Annotation_Kegg.isChecked():
+            self.refseq_button.setEnabled(False)
+            self.genbank_button.setEnabled(False)
             self.Search_Button.setText("Search")
             self.Search_Label.setText("Search KEGG Database for genome annotation")
         elif self.NCBI_Select.isChecked():
+            self.refseq_button.setEnabled(True)
+            self.genbank_button.setEnabled(True)
             self.Search_Button.setText("Search")
             self.Search_Label.setText("Search NCBI Database for genome annotation")
 
@@ -446,6 +525,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def search_kegg_ncbi_browse_own(self):
+        # code that lets the user input their own Annotation File
         if self.Annotation_Ownfile.isChecked():
             # have the user choose an annotaiton file, set Search_Input's text to that file
             filed = QtWidgets.QFileDialog()
@@ -454,6 +534,8 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.Annotations_Organism.clear()
                 self.Search_Input.setText(myFile[0])
                 self.Annotations_Organism.addItem(myFile[0])
+
+        # code that uses Kegg
         elif self.Annotation_Kegg.isChecked():
             #make sure user actually inputs something
             if (self.Search_Input.text() == ""):
@@ -493,9 +575,20 @@ class CMainWindow(QtWidgets.QMainWindow):
                                                   "No matches found with that search parameter",
                                                    QtWidgets.QMessageBox.Ok)
 
+        # code that uses NCBI
         elif self.NCBI_Select.isChecked():
-            poo = 1
-            #Connect to NCBI database
+            if not self.refseq_button.isChecked() and not self.genbank_button.isChecked():
+                QtWidgets.QMessageBox.question(self, "Error", "Please select either RefSeq or GenBank databases.",
+                                               QtWidgets.QMessageBox.Ok)
+                return
+            database_type = ""
+
+            if self.refseq_button.isChecked():
+                database_type ="RefSeq"
+            else:
+                database_type = "GenBank"
+
+            print(database_type)
 
     def make_dictonary(self):
         url = "https://www.genome.jp/dbget-bin/get_linkdb?-t+genes+gn:"+self.TNumbers[self.Annotations_Organism.currentText()]

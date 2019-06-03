@@ -574,6 +574,50 @@
      <string>Generate Library</string>
     </property>
    </widget>
+   <widget class="QRadioButton" name="refseq_button">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>610</x>
+      <y>330</y>
+      <width>83</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>RefSeq</string>
+    </property>
+    <property name="autoExclusive">
+     <bool>true</bool>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">refseq_genbank_buttonGroup</string>
+    </attribute>
+   </widget>
+   <widget class="QRadioButton" name="genbank_button">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>720</x>
+      <y>330</y>
+      <width>83</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Genbank</string>
+    </property>
+    <property name="autoExclusive">
+     <bool>true</bool>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">refseq_genbank_buttonGroup</string>
+    </attribute>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -581,7 +625,7 @@
      <x>0</x>
      <y>0</y>
      <width>940</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -772,4 +816,7 @@
  </widget>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="refseq_genbank_buttonGroup"/>
+ </buttongroups>
 </ui>

@@ -50,6 +50,7 @@ class NCBI_Search_File(QtWidgets.QDialog):
         self.searchType = "" #RefSeq or Genbank
         self.database_url_list = list()
         self.idList = list()
+        self.organismNames = list()
         self.ncbi_searcher = Assembly()
         self.compressedFilePaths = list()
         self.decompressedFilePaths = list()
@@ -82,7 +83,7 @@ class NCBI_Search_File(QtWidgets.QDialog):
             # search the ncbi database
             self.searchProgressBar.setValue(15)
             searchOrganism = self.organismLineEdit.displayText() + "[Organism]"
-            self.database_url_list, self.idList = self.ncbi_searcher.getDataBaseURL(searchOrganism, self.searchType)
+            self.database_url_list, self.idList, self.organismNames = self.ncbi_searcher.getDataBaseURL(searchOrganism, self.searchType)
             self.searchProgressBar.setValue(85)
 
             # check and make sure something was found
@@ -93,9 +94,9 @@ class NCBI_Search_File(QtWidgets.QDialog):
                 self.searchProgressBar.setValue(0)
                 return
             # now update the table
-            self.selectionTableWidget.setRowCount(len(self.idList))
-            for i in range(len(self.idList)):
-                tabWidget = QtWidgets.QTableWidgetItem(self.idList[i])
+            self.selectionTableWidget.setRowCount(len(self.organismNames))
+            for i in range(len(self.organismNames)):
+                tabWidget = QtWidgets.QTableWidgetItem(self.organismNames[i])
                 self.selectionTableWidget.setItem(i, 0, tabWidget)
             self.selectionTableWidget.resizeColumnsToContents()
             self.searchProgressBar.setValue(100)
@@ -287,11 +288,11 @@ class NewGenome(QtWidgets.QMainWindow):
 
         # check and see which type of file to search for
         if self.ref_seq_box.isChecked() and self.genbank_box.isChecked():
-            fileSearchType = "genbank"
+            fileSearchType = "GenBank"
         elif self.ref_seq_box.isChecked() and not self.genbank_box.isChecked():
-            fileSearchType = "refseq"
+            fileSearchType = "RefSeq"
         elif not self.ref_seq_box.isChecked() and self.genbank_box.isChecked():
-            fileSearchType = "genbank"
+            fileSearchType = "GenBank"
         elif not self.ref_seq_box.isChecked() and not self.genbank_box.isChecked():
             QtWidgets.QMessageBox.question(self, "Selection Error", "Please select Genbank or RefSeq", QtWidgets.QMessageBox.Ok)
             return

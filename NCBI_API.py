@@ -26,6 +26,7 @@ class Assembly:
     def __init__(self):
         self.gca_rectList = list()
         self.database_url_list = list()
+        self.orgName_list = list()
         #Moved the code from this to its own function so that I can return the database URL
 
     #this function gets a list of GCA's and a list of database URLs for downloading
@@ -65,6 +66,7 @@ class Assembly:
 
             refseq_link = str(soup.find('a', text="Download the RefSeq assembly"))
             genbank_link = str(soup.find('a', text="Download the GenBank assembly"))
+            orgName = soup.find('dd')
             refseq_link = refseq_link[refseq_link.find("=") + 2: refseq_link.find(">") - 1]
             genbank_link = genbank_link[genbank_link.find("=") + 2: genbank_link.find(">") - 1]
             # Checkpoint printing
@@ -94,11 +96,12 @@ class Assembly:
                 #print(database_url)
                 #return database_url
                 self.database_url_list.append(database_url)
+                self.orgName_list.append(orgName.string)
         if len(self.database_url_list) <= 0:
             print("Error: no matches found. Please try again")
             return(self.database_url_list, self.gca_rectList)
         else:
-            return (self.database_url_list, self.gca_rectList)
+            return (self.database_url_list, self.gca_rectList, self.orgName_list)
 
     # this function downloads the .gz file from the given link, and stores it in the CSPR_DB folder from Global Settings
     # NOTE: this function should only be used to download .gz files, nothing else
