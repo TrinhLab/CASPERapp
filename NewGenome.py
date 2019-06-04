@@ -31,7 +31,7 @@ class NCBI_Search_File(QtWidgets.QDialog):
         self.setWindowIcon(Qt.QIcon("cas9image.png"))
 
         # selection table stuff
-        self.selectionTableWidget.setColumnCount(1)  # hardcoded because there will always be 2 columns
+        self.selectionTableWidget.setColumnCount(1)  # hardcoded because there will always be 1 columns
         self.selectionTableWidget.setShowGrid(True)
         self.selectionTableWidget.setHorizontalHeaderLabels("Description;Selection".split(";"))
         self.selectionTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -39,7 +39,7 @@ class NCBI_Search_File(QtWidgets.QDialog):
         self.selectionTableWidget.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
 
         # submission table stuff
-        self.submissionTableWidget.setColumnCount(1) # hardcoded because it will always be 2
+        self.submissionTableWidget.setColumnCount(1) # hardcoded because it will always be 1
         self.submissionTableWidget.setShowGrid(True)
         self.submissionTableWidget.setHorizontalHeaderLabels("Description;Selection".split(";"))
         self.submissionTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -49,11 +49,13 @@ class NCBI_Search_File(QtWidgets.QDialog):
         # variables below:
         self.searchType = "" #RefSeq or Genbank
         self.database_url_list = list()
-        self.idList = list()
-        self.organismNames = list()
         self.ncbi_searcher = Assembly()
         self.compressedFilePaths = list()
         self.decompressedFilePaths = list()
+
+        # dictionary: key = the description of the organism
+        # value = the GCA_ID that links it to the database link
+        self.idList_dict = dict()
 
         # button modifications below:
         self.searchPushButton.clicked.connect(self.searchFunction)
@@ -83,21 +85,24 @@ class NCBI_Search_File(QtWidgets.QDialog):
             # search the ncbi database
             self.searchProgressBar.setValue(15)
             searchOrganism = self.organismLineEdit.displayText() + "[Organism]"
-            self.database_url_list, self.idList, self.organismNames = self.ncbi_searcher.getDataBaseURL(searchOrganism, self.searchType)
+            self.database_url_list, self.idList_dict = self.ncbi_searcher.getDataBaseURL(searchOrganism, self.searchType)
             self.searchProgressBar.setValue(85)
 
+
             # check and make sure something was found
-            if len(self.idList) <= 0:
+            if len(self.idList_dict) <= 0:
                 QtWidgets.QMessageBox.question(self, "No matches found!", "No matches found for the search, please try "
                                                                           "again.",
                                                QtWidgets.QMessageBox.Ok)
                 self.searchProgressBar.setValue(0)
                 return
             # now update the table
-            self.selectionTableWidget.setRowCount(len(self.organismNames))
-            for i in range(len(self.organismNames)):
-                tabWidget = QtWidgets.QTableWidgetItem(self.organismNames[i])
-                self.selectionTableWidget.setItem(i, 0, tabWidget)
+            self.selectionTableWidget.setRowCount(len(self.idList_dict))
+            loopCount = 0
+            for item in self.idList_dict:
+                tabWidget = QtWidgets.QTableWidgetItem(item)
+                self.selectionTableWidget.setItem(loopCount, 0, tabWidget)
+                loopCount += 1
             self.selectionTableWidget.resizeColumnsToContents()
             self.searchProgressBar.setValue(100)
 
@@ -179,7 +184,7 @@ class NCBI_Search_File(QtWidgets.QDialog):
             tableWidgetData = self.submissionTableWidget.item(i, 0)
             for j in range(len(self.database_url_list)):
                 # download ones that are selected and aren't already downloaded
-                if tableWidgetData.text() in self.database_url_list[j] and self.database_url_list[j] not in downloadedList:
+                if self.idList_dict[tableWidgetData.text()] in self.database_url_list[j] and self.database_url_list[j] not in downloadedList:
                     self.compressedFilePaths.append(self.ncbi_searcher.download_compressed_file(self.database_url_list[j]))
                     downloadedList.append(self.database_url_list[j])
 

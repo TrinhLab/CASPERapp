@@ -74,9 +74,9 @@
   <widget class="QTableWidget" name="selectionTableWidget">
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>10</x>
      <y>80</y>
-     <width>211</width>
+     <width>241</width>
      <height>231</height>
     </rect>
    </property>
@@ -84,9 +84,9 @@
   <widget class="QTableWidget" name="submissionTableWidget">
    <property name="geometry">
     <rect>
-     <x>310</x>
+     <x>290</x>
      <y>80</y>
-     <width>211</width>
+     <width>251</width>
      <height>231</height>
     </rect>
    </property>

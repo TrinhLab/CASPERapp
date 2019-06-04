@@ -40,11 +40,17 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.Submit_button.clicked.connect(self.submit)
         self.Go_Back_Button.clicked.connect(self.go_Back)
         self.mainWindow=""
+        self.type = ""
 
     def submit(self):
-        self.mainWindow.collect_table_data()
-        self.hide()
-        self.mainWindow.show()
+        if self.type == "kegg":
+            self.mainWindow.collect_table_data()
+            self.hide()
+            self.mainWindow.show()
+        elif self.type == "nonkegg":
+            self.mainWindow.collect_table_data_nonkegg()
+            self.hide()
+            self.mainWindow.show()
 
     def go_Back(self):
         self.tableWidget.clear()
@@ -54,18 +60,89 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.mainWindow.show()
         self.hide()
 
+    # this function is very similar to the other fill_table, it just works with the other types of annotation files
+    def fill_table_nonKegg(self, mainWindow):
+        self.tableWidget.clearContents()
+        self.mainWindow = mainWindow
+        index = 0
+        self.tableWidget.setColumnCount(4)
+        self.mainWindow.progressBar.setValue(25)
+        self.tableWidget.setHorizontalHeaderLabels("Description;Type;Gene ID;Select".split(";"))
+        mainWindow.checkBoxes = []
+        self.type = "nonkegg"
+
+        # below chain of loops goes through and figures out how many rows are needed
+        for searchValue in mainWindow.searches:
+            for definition in mainWindow.searches[searchValue]:
+                for gene in mainWindow.searches[searchValue][definition]:
+                    index += 1
+        self.tableWidget.setRowCount(index)
+
+        index = 0
+        for searchValue in mainWindow.searches:
+            for definition in mainWindow.searches[searchValue]:
+                for gene in mainWindow.searches[searchValue][definition]:
+                    # set the checkbox
+                    ckbox = QtWidgets.QCheckBox()
+                    self.tableWidget.setCellWidget(index, 3, ckbox)
+
+                    # set the description part of the window as well as set the correct data for the checkbox
+                    if definition != gene[0]:
+                        defin_obj = QtWidgets.QTableWidgetItem(definition)
+                        self.tableWidget.setItem(index, 0, defin_obj)
+                        mainWindow.checkBoxes.append([definition])
+                    else:
+                        checkValue = searchValue.upper()
+                        defin_obj = QtWidgets.QTableWidgetItem(checkValue)
+                        self.tableWidget.setItem(index, 0 ,defin_obj)
+                        mainWindow.checkBoxes.append([checkValue])
+                    mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(gene)
+                    mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(ckbox)
+
+                    # set the type in the window
+                    type_obj = QtWidgets.QTableWidgetItem(gene[2])
+                    self.tableWidget.setItem(index, 1, type_obj)
+
+                    # set the gene id in the window
+                    gene_id_obj = QtWidgets.QTableWidgetItem(gene[0])
+                    self.tableWidget.setItem(index, 2, gene_id_obj)
+
+                    index += 1
+            index = 0
+        self.tableWidget.resizeColumnsToContents()
+
+        # if show all is checked, show the window so the user can select the genes they want
+        if mainWindow.Show_All_Results.isChecked():
+            mainWindow.hide()
+            self.show()
+        else: # show all not checked
+            if (len(mainWindow.checkBoxes) > 15):  # check the size, throw an error if it is too large
+                error = QtWidgets.QMessageBox.question(self, "Large File Found",
+                                                       "This Annotation file and search parameter yieled many matches, and could cause a slow down.\n\n"
+                                                       "Do you wish to continue?",
+                                                       QtWidgets.QMessageBox.Yes |
+                                                       QtWidgets.QMessageBox.No,
+                                                       QtWidgets.QMessageBox.No)
+                if (error == QtWidgets.QMessageBox.No):
+                    return -2
+            self.mainWindow.progressBar.setValue(65)
+            for obj in mainWindow.checkBoxes:  # check every match
+                obj[1].setChecked(True)
+        # TO DO: still need to add code for it to automatically call collect_table_data
+
     def fill_Table(self,mainWindow):
+        self.tableWidget.clearContents()
         self.mainWindow = mainWindow
         index = 0
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setColumnCount(3)
         self.mainWindow.progressBar.setValue(25)
         self.tableWidget.setHorizontalHeaderLabels("Description;Gene ID;Select".split(";"))
+        self.type = "kegg"
 
         mainWindow.checkBoxes = []
         for sValues in mainWindow.searches:
             for definition in mainWindow.searches[sValues]:
-                index = index+1
                 for gene in mainWindow.searches[sValues][definition]:
                     index = index+1
         self.tableWidget.setRowCount(index)
@@ -76,7 +153,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             for definition in mainWindow.searches[sValues]:
                 defin_obj = QtWidgets.QTableWidgetItem(definition)
                 self.tableWidget.setItem(index,0,defin_obj)
-                index+=1
                 for gene in mainWindow.searches[sValues][definition]:
                     ckbox = QtWidgets.QCheckBox()
                     mainWindow.checkBoxes.append([definition + " " + gene])
@@ -133,6 +209,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.add_orgo = []
         self.checked_info = {}
         self.check_ntseq_info = {} # the ntsequences that go along with the checked_info
+        self.annotation_parser = Annotation_Parser()
 
         # --- Button Modifications --- #
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
@@ -246,6 +323,78 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
 # ---- Following functions are for running the auxillary algorithms and windows ---- #
+    # this function is parses the annotation file given, and then goes through and goes onto results
+    # it will call other versions of collect_table_data and fill_table that work with these file types
+    # this function should work with the any type of annotation file, besides kegg.
+    # this assumes that the parsers all store the data the same way, which gff and feature table do
+    # please make sure the gbff parser stores the data in the same way
+    def run_results_own_ncbi_file(self, inputstring):
+        self.annotation_parser = Annotation_Parser()
+        self.annotation_parser.annotationFileName = self.Annotations_Organism.currentText()
+        self.annotation_parser.find_which_file_version()
+
+        # now go through and search for the actual locus tag, in the case the user input that
+        searchValues = self.separate_line(inputstring[0])
+        self.searches.clear()
+        for search in searchValues:
+            search = self.removeWhiteSpace(search)
+            if len(search) == 0:
+                continue
+
+            # set the searche's dict of search equal to a new dictionary
+            self.searches[search] = {}
+
+            # upper case it, because the files seem to be all uppercase for this part
+            checkNormalDict = search.upper()
+            if checkNormalDict in self.annotation_parser.dict:  # if it is in the normal dictionary
+                for item in self.annotation_parser.dict[checkNormalDict]:  # for each list item in that position
+                    if item[0] not in self.searches[search]:  # if its not in the search's position yet
+                        self.searches[search][item[0]] = self.annotation_parser.dict[checkNormalDict]
+                    elif item not in self.searches[search][
+                        item[0]]:  # assume it is in the searches position, but do not store duplicates
+                        self.searches[search][item[0]].append(self.annotation_parser.dict[checkNormalDict])
+        if len(self.searches[searchValues[0]]) >= 1:  # if the previous search yielded results, do not continue
+            # now call fill_table
+            self.Annotation_Window.fill_table_nonKegg(self)
+            return
+
+        # reset, and search the parallel dictionary now
+        self.searches = {}
+        for search in searchValues:
+            search = self.removeWhiteSpace(search)
+            if len(search) == 0:
+                continue
+
+            self.searches[search] = {}
+            for item in self.annotation_parser.para_dict:
+                checkingItem = item.lower()  # lowercase now, to match the user's input
+
+                if search in checkingItem:  # if what they are searching for is somewhere in that key
+                    # loop through each list item now
+                    for i in range(len(self.annotation_parser.para_dict[item])):
+                        # now loop through the regular dict's position and store the ones we want
+                        for match in self.annotation_parser.dict[self.annotation_parser.para_dict[item][i]]:
+                            if item not in self.searches[search]:
+                                self.searches[search][item] = [match]
+                            elif item not in self.searches[search][item]:
+                                self.searches[search][item].append(match)
+        # if the search returns nothing, throw an error
+        if len(self.searches[searchValues[0]]) <= 0:
+            QtWidgets.QMessageBox.question(self, "No Matches Found",
+                                           "No matches found with that search, please try again",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+        # jsut testing as of now
+        #for i in self.searches:
+         #  print(i)
+          # for j in self.searches[i]:
+           #     print("\t", j)
+            #    for k in self.searches[i][j]:
+             #       print("\t\t", k)
+        # if we get to this point, that means that the search yieleded results, so fill the table
+        self.Annotation_Window.fill_table_nonKegg(self)
+
     def run_results(self, inputtype, inputstring):
         # need to change this code so that it works with other types of files
 
@@ -272,68 +421,8 @@ class CMainWindow(QtWidgets.QMainWindow):
                 print("Need to search for NCBI here")
             # own annotation file code
             if self.Annotation_Ownfile.isChecked():
-                # use the Annotation_Parser's functions to parse the file
-                annotation_parser = Annotation_Parser()
-                annotation_parser.annotationFileName = self.Annotations_Organism.currentText()
-                annotation_parser.find_which_file_version()
-
-                # now go through and search for the actual locus tag, in the case the user input that
-                searchValues = self.separate_line(inputstring[0])
-                self.searches.clear()
-                for search in searchValues:
-                    search = self.removeWhiteSpace(search)
-                    if len(search) == 0:
-                        continue
-
-                    # set the searche's dict of search equal to a new dictionary
-                    self.searches[search] = {}
-
-                    # upper case it, because the files seem to be all uppercase for this part
-                    checkNormalDict = search.upper()
-                    if checkNormalDict in annotation_parser.dict: # if it is in the normal dictionary
-                        for item in annotation_parser.dict[checkNormalDict]: # for each list item in that position
-                            if item[0] not in self.searches[search]: # if its not in the search's position yet
-                                self.searches[search][item[0]] = annotation_parser.dict[checkNormalDict]
-                            elif item not in self.searches[search][item[0]]: # assume it is in the searches position, but do not store duplicates
-                                self.searches[search][item[0]].append(annotation_parser.dict[checkNormalDict])
-                if len(self.searches[searchValues[0]]) >= 1: # if the previous search yielded results, do not continue
-                    # testing right now, but eventually we will be calling the fill_table_data
-                    for i in self.searches:
-                        print(i)
-                        for j in self.searches[i]:
-                            print("\t", j)
-                            for k in self.searches[i][j]:
-                                print("\t\t", k)
-                    return
-
-                # reset, and search the parallel dictionary now
-                self.searches = {}
-                for search in searchValues:
-                    search = self.removeWhiteSpace(search)
-                    if len(search) == 0:
-                        continue
-
-                    self.searches[search] = {}
-                    for item in annotation_parser.para_dict:
-                        checkingItem = item.lower() # lowercase now, to match the user's input
-
-                        if search in checkingItem: # if what they are searching for is somewhere in that key
-                            # loop through each list ite now
-                            for i in range(len(annotation_parser.para_dict[item])):
-                                # now loop through the regular dict's position and store the ones we want
-                                for match in annotation_parser.dict[annotation_parser.para_dict[item][i]]:
-                                    if match[0] not in self.searches[search]:
-                                        self.searches[search][match[0]] = [match]
-                                    elif match not in self.searches[search][match[0]]:
-                                        self.searches[search][match[0]].append(match)
-                # jsut testing as of now
-                for i in self.searches:
-                    print(i)
-                    for j in self.searches[i]:
-                        print("\t", j)
-                        for k in self.searches[i][j]:
-                            print("\t\t", k)
-
+                # this now just goes onto the other version of run_results
+                self.run_results_own_ncbi_file(inputstring)
             # KEGG's code
             elif self.Annotation_Kegg.isChecked():
                 #check to make sure that both the annotation file and the cspr files have the same version
@@ -406,6 +495,42 @@ class CMainWindow(QtWidgets.QMainWindow):
     def launch_newGenome(self):
        self.newGenome.show()
 
+    # this function does the same stuff that the other collect_table_data does, but works with the other types of files
+    def collect_table_data_nonkegg(self):
+        # start out the same as the other collect_table_data
+        self.checked_info.clear()
+        self.check_ntseq_info.clear()
+        full_org = str(self.orgChoice.currentText())
+        holder = ()
+
+        for item in self.checkBoxes:
+            if item[2].isChecked():
+                # if they searched base on Locus Tag
+                if item[0] in self.annotation_parser.dict:
+                    # go through the dictionary, and if they match, store the item in holder
+                    for match in self.annotation_parser.dict[item[0]]:
+                        if item[1] == match:
+                            holder = (match[1] - 1, match[3], match[4])
+                            self.checked_info[item[0]] = holder
+                else:
+                    # now we need to go through the para_dict
+                    for i in range(len(self.annotation_parser.para_dict[item[0]])):
+                        # now go through the matches in the normal dict's data
+                        for match in self.annotation_parser.dict[self.annotation_parser.para_dict[item[0]][i]]:
+                            # if they match, store it in holder
+                            if item[1] == match:
+                                holder = (match[1] - 1, match[3], match[4])
+                                self.checked_info[item[0]] = holder
+
+        # now call transfer data, however I think we need to change how transfer data stores the data for these types of files
+        self.progressBar.setValue(80)
+        self.Results.transfer_data(self.shortHand[full_org], str(self.endoChoice.currentText()), os.getcwd(),
+                                   self.checked_info, self.check_ntseq_info, "")
+        self.progressBar.setValue(100)
+        self.pushButton_ViewTargets.setEnabled(True)
+
+
+
     def collect_table_data(self):
         # need to change this code so that it works with other types of files
         self.checked_info.clear()
@@ -425,6 +550,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 # get kegg's ntsequence and store it
                 nt_sequence = k.get_nt_sequence(organism+":"+name)
 
+                print(item[0])
                 holder = (gene_info[0],gene_info[2],gene_info[3])
                 self.checked_info[item[0]]=holder
                 self.check_ntseq_info[item[0]] = nt_sequence
@@ -727,6 +853,12 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         self.Results.show()
 
+    # this code will be needed when I start working on the closing of the application
+    # - Josh
+    def closeEvent(self, event):
+        print("This program has closed")
+        event.accept()
+
 
 
 # ----------------------------------------------------------------------------------------------------- #
@@ -887,5 +1019,4 @@ if __name__ == '__main__':
 
     startup = StartupWindow()
     GlobalSettings.filedir = startup.gdirectory #used as global constant
-
     sys.exit(app.exec_())

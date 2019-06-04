@@ -26,7 +26,7 @@ class Assembly:
     def __init__(self):
         self.gca_rectList = list()
         self.database_url_list = list()
-        self.orgName_list = list()
+        self.orgName_dict = dict()
         #Moved the code from this to its own function so that I can return the database URL
 
     #this function gets a list of GCA's and a list of database URLs for downloading
@@ -74,6 +74,10 @@ class Assembly:
             #print("Genbank link: ", genbank_link)
             # then go to that webpage then inspect and download with url service the gbff file
             if self.database == "GenBank":
+                # check and see if GCF is in the the GCA_ID, if so, swap it with GCA
+                # not sure if doing this is correct or not, but this way each description actually goes to a download link
+                if "GCF" in self.gca_rectList[i]:
+                    self.gca_rectList[i] = self.gca_rectList[i].replace("GCF", "GCA")
                 database_url = genbank_link
             else:
                 database_url = refseq_link
@@ -96,12 +100,13 @@ class Assembly:
                 #print(database_url)
                 #return database_url
                 self.database_url_list.append(database_url)
-                self.orgName_list.append(orgName.string)
+                self.orgName_dict[orgName.string] = self.gca_rectList[i]
+
         if len(self.database_url_list) <= 0:
             print("Error: no matches found. Please try again")
-            return(self.database_url_list, self.gca_rectList)
+            return(self.database_url_list, self.orgName_dict)
         else:
-            return (self.database_url_list, self.gca_rectList, self.orgName_list)
+            return (self.database_url_list, self.orgName_dict)
 
     # this function downloads the .gz file from the given link, and stores it in the CSPR_DB folder from Global Settings
     # NOTE: this function should only be used to download .gz files, nothing else
