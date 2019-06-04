@@ -11,7 +11,7 @@ from CSPRparser import CSPRparser
 from matplotlib.backends.backend_qt5agg import (NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.backends.backend_qt5agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.ticker import MaxNLocator
-
+import time
 
 
 class Multitargeting(QtWidgets.QMainWindow):
@@ -57,6 +57,8 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.average_unique = 0
         self.average_rep = 0
         self.bar_coords = []
+        self.seed_id_seq_pair = {}
+        self.positions = []
 
         #parser object
         self.parser = CSPRparser("")
@@ -76,41 +78,40 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.graphicsView.viewport().installEventFilter(self)
 
 
-        #scene.setSceneRect(0,0,571,221)
-        #scene.addRect(0,0,500,25, pen)
-
     def eventFilter(self, source, event):
         if (event.type() == QtCore.QEvent.MouseMove and source is self.graphicsView.viewport()):
             coord = self.graphicsView.mapToScene(event.pos())
-            print('Width: ' + str(coord.x()) + ' Height: ' + str(coord.y()))
-            self.scene2 = QtWidgets.QGraphicsScene()
-            self.graphicsView_2.setScene(self.scene2)
+            first = True
             for i in self.bar_coords:
                 ind = i[0]
                 x = i[1]
                 y1 = i[2]
                 y2 = i[3]
-                if((coord.x() == x or coord.x() == x+1 or coord.x() == x-1)and (coord.y() >= y1 and coord.y() <= y2)):
-                    text = self.scene2.addText('Sequence:  ' + str(self.seq_data[ind]))
+                if ((coord.x() == x or coord.x() == x + 1 or coord.x() == x - 1) and (
+                        coord.y() >= y1 and coord.y() <= y2)):
+
+                    dups = 0
+                    listtemp = []
+                    for a in self.bar_coords:
+                        if(x == a[1] and y1 == a[2] and y2 == a[3]):
+                            listtemp.append(a)
+                    self.scene2 = QtWidgets.QGraphicsScene()
+                    self.graphicsView_2.setScene(self.scene2)
+                    output = str()
+                    for item in listtemp:
+                        ind = item[0]
+                        seq = str(self.seq_data[ind])
+                        seed_id = self.seed_id_seq_pair[seq]
+                        temp = self.parser.dec_tup_data[seed_id]
+                        temp = temp[ind]
+                        output += 'Location: ' + str(temp[0]) + ' | Seq: ' + str(temp[1]) + ' | PAM: ' + str(
+                                temp[2]) + ' | SCR: ' + str(temp[3]) + ' | DIRA: ' + str(temp[4]) + '\n'
+                    text = self.scene2.addText(output)
                     font = QtGui.QFont()
                     font.setBold(True)
-                    font.setPointSize(11)
+                    font.setPointSize(9)
                     text.setFont(font)
-                    #self.scene2.addText('Width: ' + str(coord.x()) + ' Height: ' + str(coord.y()))
 
-
-
-            # if((coord.x() > 40 and coord.x() < self.scene.width()) and (coord.y() > 0 and coord.y() < self.scene.height())):
-            #     if(coord.x() > self.scene.width() - 85):
-            #         self.annotation.setPos(coord.x()-85, coord.y())
-            #         self.annotation.setTabChangesFocus(True)
-            #         self.annotation.setVisible(True)
-            #     else:
-            #         self.annotation.setPos(coord.x(),coord.y())
-            #         self.annotation.setTabChangesFocus(True)
-            #         self.annotation.setVisible(True)
-            # else:
-            #     self.annotation.setVisible(False)
         return QtGui.QWidget.eventFilter(self, source, event)
 
     def launch(self,path):
@@ -194,6 +195,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         dic_info = {}
         for seed in self.parser.seeds:
             temp = self.sq.compress(seed,64)
+            self.seed_id_seq_pair[str(self.sq.decompress64(temp, True))] = seed
             dic_info[str(self.sq.decompress64(temp, True))] = {}
             for repeat in self.parser.seeds[seed]:
                 if repeat[0] in dic_info[str(self.sq.decompress64(temp, True))]:
@@ -204,25 +206,20 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.fill_Chromo_Text(dic_info)
 
 
-
     #fill in chromo bar visualization
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
         self.seq_data = []
-        #test = self.sq.compress(self.chromo_seed.currentText(), 64)
-        #print('testing length: '+ str(self.chromo_length))
+        self.positions.clear()
         chomonum = 0
         for chromo in info[self.chromo_seed.currentText()]:
             pos = []
             for position in info[(self.chromo_seed.currentText())][chromo]:
-                print('Sequence: ' + str(self.chromo_seed.currentText()))
-                #print('chromosome ' + str(chromo))
+                print(position)
                 self.seq_data.append(self.chromo_seed.currentText())
                 test1 = position/self.chromo_length[int(chromo)-1]
-                #print('position: '+str(position) + ' length: ' + str(self.chromo_length[int(chromo)-1]))
-                #print('percentage: '+ str(test1))
                 test1 = int(test1 * 485)
-                #print('position: ' + str(test))
+                self.positions.append(test1)
                 pos.append(test1)
 
             chromo_pos[chromo] = pos
@@ -267,9 +264,6 @@ class Multitargeting(QtWidgets.QMainWindow):
                 self.bar_coords.append(temp) #push x, y1, and y2 to this list
                 ind += 1
             i = i + 1
-
-
-
 
 
     #creates bar graph num of repeats vs. chromsome
