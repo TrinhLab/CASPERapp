@@ -56,6 +56,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.mode = 0
         self.average_unique = 0
         self.average_rep = 0
+        self.bar_coords = []
 
         #parser object
         self.parser = CSPRparser("")
@@ -70,10 +71,47 @@ class Multitargeting(QtWidgets.QMainWindow):
         ##################################
         self.scene = QtWidgets.QGraphicsScene()
         self.graphicsView.setScene(self.scene)
+        self.scene2 = QtWidgets.QGraphicsScene()
+        self.graphicsView_2.setScene(self.scene2)
+        self.graphicsView.viewport().installEventFilter(self)
+
 
         #scene.setSceneRect(0,0,571,221)
         #scene.addRect(0,0,500,25, pen)
 
+    def eventFilter(self, source, event):
+        if (event.type() == QtCore.QEvent.MouseMove and source is self.graphicsView.viewport()):
+            coord = self.graphicsView.mapToScene(event.pos())
+            print('Width: ' + str(coord.x()) + ' Height: ' + str(coord.y()))
+            self.scene2 = QtWidgets.QGraphicsScene()
+            self.graphicsView_2.setScene(self.scene2)
+            for i in self.bar_coords:
+                ind = i[0]
+                x = i[1]
+                y1 = i[2]
+                y2 = i[3]
+                if((coord.x() == x or coord.x() == x+1 or coord.x() == x-1)and (coord.y() >= y1 and coord.y() <= y2)):
+                    text = self.scene2.addText('Sequence:  ' + str(self.seq_data[ind]))
+                    font = QtGui.QFont()
+                    font.setBold(True)
+                    font.setPointSize(11)
+                    text.setFont(font)
+                    #self.scene2.addText('Width: ' + str(coord.x()) + ' Height: ' + str(coord.y()))
+
+
+
+            # if((coord.x() > 40 and coord.x() < self.scene.width()) and (coord.y() > 0 and coord.y() < self.scene.height())):
+            #     if(coord.x() > self.scene.width() - 85):
+            #         self.annotation.setPos(coord.x()-85, coord.y())
+            #         self.annotation.setTabChangesFocus(True)
+            #         self.annotation.setVisible(True)
+            #     else:
+            #         self.annotation.setPos(coord.x(),coord.y())
+            #         self.annotation.setTabChangesFocus(True)
+            #         self.annotation.setVisible(True)
+            # else:
+            #     self.annotation.setVisible(False)
+        return QtGui.QWidget.eventFilter(self, source, event)
 
     def launch(self,path):
         os.chdir(path)
@@ -170,24 +208,31 @@ class Multitargeting(QtWidgets.QMainWindow):
     #fill in chromo bar visualization
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
-        test = self.sq.compress(self.chromo_seed.currentText(), 64)
+        self.seq_data = []
+        #test = self.sq.compress(self.chromo_seed.currentText(), 64)
         #print('testing length: '+ str(self.chromo_length))
+        chomonum = 0
         for chromo in info[self.chromo_seed.currentText()]:
             pos = []
             for position in info[(self.chromo_seed.currentText())][chromo]:
-                #print('Sequence: ' + str(self.chromo_seed.currentText()))
+                print('Sequence: ' + str(self.chromo_seed.currentText()))
                 #print('chromosome ' + str(chromo))
+                self.seq_data.append(self.chromo_seed.currentText())
                 test1 = position/self.chromo_length[int(chromo)-1]
                 #print('position: '+str(position) + ' length: ' + str(self.chromo_length[int(chromo)-1]))
                 #print('percentage: '+ str(test1))
-                test1 = int(test1 * 500)
+                test1 = int(test1 * 485)
                 #print('position: ' + str(test))
                 pos.append(test1)
+
             chromo_pos[chromo] = pos
+            chomonum+=1
 
         i = 0
         self.scene = QtWidgets.QGraphicsScene()
         self.graphicsView.setScene(self.scene)
+        self.bar_coords.clear() #clear bar_coords list before creating visual
+
         for chromo in chromo_pos:
             pen_blk = QtGui.QPen(QtCore.Qt.black)
             pen_red = QtGui.QPen(QtCore.Qt.red)
@@ -200,7 +245,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 font.setBold(True)
                 font.setPointSize(10)
                 text.setFont(font)
-                self.scene.addRect(25, (i * 25), 525, 25, pen_blk)
+                self.scene.addRect(40, (i * 25), 525, 25, pen_blk)
 
             else:
                 text = self.scene.addText(str(chromo))
@@ -209,13 +254,23 @@ class Multitargeting(QtWidgets.QMainWindow):
                 font.setPointSize(10)
                 text.setFont(font)
                 text.setPos(0,i*25+10*i)
-                self.scene.addRect(25, (i * 25)+10*i, 525, 25, pen_blk)
-            for k in chromo_pos[chromo]:
-                #print(k)
-                line = self.scene.addLine(k+25, (i*25)+3+10*i , k+25, (i*25)+22+10*i, pen_red)
-                line.setAcceptHoverEvents(True)
 
+                self.scene.addRect(40, (i * 25)+10*i, 525, 25, pen_blk)
+            ind = 0
+            for k in chromo_pos[chromo]:
+                line = self.scene.addLine(k+40, (i*25)+3+10*i , k+40, (i*25)+22+10*i, pen_red)
+                temp = [] #used for storing coordinates and saving them in self.bar_coords[]
+                temp.append(ind) #index value
+                temp.append(k+40) #x value
+                temp.append((i*25)+3+10*i) #y1
+                temp.append((i*25)+22+10*i) #y2
+                self.bar_coords.append(temp) #push x, y1, and y2 to this list
+                ind += 1
             i = i + 1
+
+
+
+
 
     #creates bar graph num of repeats vs. chromsome
     #this graphs is connected to the repeats_vs_chromo.py file
