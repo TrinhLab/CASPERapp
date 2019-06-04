@@ -21,6 +21,7 @@ class CSPRparser:
         self.misc = ""  # anything from the misc line
         self.repeats = {}  #dictionary of the number of repeats. See the read_repeats function for more info
         self.seeds = {} #dictionary of which chromesomes are repeats. See the read_repeats function for more info
+        self.dec_tup_data = {}
 
         #file path variable
         self.fileName = inputFileName
@@ -135,12 +136,15 @@ class CSPRparser:
 
             self.repeats[seed] = 0
             self.seeds[seed] = []
-
+            self.dec_tup_data[seed] = []
             for item in repeat:
                 if item != "":
                     self.repeats[seed] += 1
                     sequence =item.split(',')
                     self.seeds[seed].append(sequence)
+                    temp = sequence[1:4]
+                    string = ",".join(temp)
+                    self.dec_tup_data[seed].append(self.seqTrans.decompress_csf_tuple(string))
                     self.multiSum += self.seqTrans.decompress64(sequence[3])
                     self.multiCount += 1
 
