@@ -339,7 +339,7 @@
     </property>
     <addaction name="actionScore_Settings"/>
     <addaction name="actionDesign_Repair_Oligos"/>
-    <addaction name="actionBatch_Off_Target_Analysis"/>
+    <addaction name="actionOff_Target_Analysis"/>
     <addaction name="actionCoTargeting"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
@@ -371,9 +371,9 @@
     <string>Design Repair Oligos...</string>
    </property>
   </action>
-  <action name="actionBatch_Off_Target_Analysis">
+  <action name="actionOff_Target_Analysis">
    <property name="text">
-    <string>Batch Off Target Analysis</string>
+    <string>Off Target Analysis</string>
    </property>
   </action>
   <action name="actionNew">
