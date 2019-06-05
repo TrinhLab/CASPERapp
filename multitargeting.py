@@ -87,16 +87,19 @@ class Multitargeting(QtWidgets.QMainWindow):
                 x = i[1]
                 y1 = i[2]
                 y2 = i[3]
+                dups = 0
                 if ((coord.x() == x or coord.x() == x + 1 or coord.x() == x - 1) and (
                         coord.y() >= y1 and coord.y() <= y2)):
 
-                    dups = 0
+
                     listtemp = []
                     for a in self.bar_coords:
                         if(x == a[1] and y1 == a[2] and y2 == a[3]):
                             listtemp.append(a)
+                            dups += 1
                     self.scene2 = QtWidgets.QGraphicsScene()
                     self.graphicsView_2.setScene(self.scene2)
+                    #self.graphicsView_2.hide()
                     output = str()
                     for item in listtemp:
                         ind = item[0]
@@ -107,6 +110,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                         output += 'Location: ' + str(temp[0]) + ' | Seq: ' + str(temp[1]) + ' | PAM: ' + str(
                                 temp[2]) + ' | SCR: ' + str(temp[3]) + ' | DIRA: ' + str(temp[4]) + '\n'
                     text = self.scene2.addText(output)
+                    #self.graphicsView_2.adjustSize()
                     font = QtGui.QFont()
                     font.setBold(True)
                     font.setPointSize(9)
