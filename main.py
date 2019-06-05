@@ -15,6 +15,7 @@ import GlobalSettings
 from bs4 import BeautifulSoup
 import multitargeting
 from AnnotationParser import Annotation_Parser
+from NCBI_API import Assembly
 ############################## MT Libraries #####################
 import operator
 import pyqtgraph as pg
@@ -61,6 +62,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.hide()
 
     # this function is very similar to the other fill_table, it just works with the other types of annotation files
+    # TODO: go and in make sure it automatically goes into results if the show all is not checked
     def fill_table_nonKegg(self, mainWindow):
         self.tableWidget.clearContents()
         self.mainWindow = mainWindow
@@ -210,6 +212,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.checked_info = {}
         self.check_ntseq_info = {} # the ntsequences that go along with the checked_info
         self.annotation_parser = Annotation_Parser()
+        self.ncbi_searcher = Assembly()
+        self.link_list = list() # the list of the downloadable links from the NCBI search
+        self.organismDict = dict() # the dictionary for the links to download. Key is the description of the organism, value is the ID that can be found in link_list
 
         # --- Button Modifications --- #
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
@@ -328,9 +333,12 @@ class CMainWindow(QtWidgets.QMainWindow):
     # this function should work with the any type of annotation file, besides kegg.
     # this assumes that the parsers all store the data the same way, which gff and feature table do
     # please make sure the gbff parser stores the data in the same way
-    def run_results_own_ncbi_file(self, inputstring):
+    # so far the gff files seems to all be different. Need to think about how we want to parse it
+    # TODO: Still need to add the checker to see if the number of chromesomes match
+    # TODO: also need to set the progress value correctly through all this
+    def run_results_own_ncbi_file(self, inputstring, fileName):
         self.annotation_parser = Annotation_Parser()
-        self.annotation_parser.annotationFileName = self.Annotations_Organism.currentText()
+        self.annotation_parser.annotationFileName = fileName
         self.annotation_parser.find_which_file_version()
 
         # now go through and search for the actual locus tag, in the case the user input that
@@ -385,19 +393,18 @@ class CMainWindow(QtWidgets.QMainWindow):
                                            QtWidgets.QMessageBox.Ok)
             return
 
+
         # jsut testing as of now
         #for i in self.searches:
          #  print(i)
           # for j in self.searches[i]:
            #     print("\t", j)
             #    for k in self.searches[i][j]:
-             #       print("\t\t", k)
+             #      print("\t\t", k)
         # if we get to this point, that means that the search yieleded results, so fill the table
         self.Annotation_Window.fill_table_nonKegg(self)
 
     def run_results(self, inputtype, inputstring):
-        # need to change this code so that it works with other types of files
-
         kegginfo = Kegg()
         org = str(self.orgChoice.currentText())
         endo = str(self.endoChoice.currentText())
@@ -405,6 +412,14 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.searches = {}
         self.gene_list = {}
         self.progressBar.setValue(progvalue)
+
+        # set the gene viewer stuff to false so that the user can't open the gene viewer unless they have a
+        # FNA/GBFF file
+        # Note: if they are using kegg, the enabled's are set to True because it uses the kegg database by default
+        self.Results.displayGeneViewer.setEnabled(False)
+        self.Results.lineEditStart.setEnabled(False)
+        self.Results.lineEditEnd.setEnabled(False)
+        self.Results.displayGeneViewer.setChecked(0)
 
         # make sure an annotation file has been selected
         if self.Annotations_Organism.currentText() == "":
@@ -418,11 +433,52 @@ class CMainWindow(QtWidgets.QMainWindow):
         if inputtype == "gene":
             # ncbi file search code
             if self.NCBI_Select.isChecked():
-                print("Need to search for NCBI here")
+                type_of_annotation_file = ""
+                compressed_file = ""
+
+                # make sure they select a type of file
+                if not self.gbff_button.isChecked() and not self.gff_button.isChecked() and not self.feature_table_button.isChecked():
+                    QtWidgets.QMessageBox.question(self, "Error",
+                                                   "Please select a type of annotation file to download. (Ex: Feature_Table, GFF, GBFF)"
+                                                   , QtWidgets.QMessageBox.Ok)
+                    return
+
+                # check to see which file type they selected, and then make sure the program
+                # downloads that file
+                if self.gbff_button.isChecked():
+                    type_of_annotation_file = "_genomic.gbff.gz"
+                elif self.gff_button.isChecked():
+                    type_of_annotation_file = "_genomic.gff.gz"
+                elif self.feature_table_button.isChecked():
+                    type_of_annotation_file = "_feature_table.txt.gz"
+
+                # go through and find the link that works, and download that compressed file
+                for i in range(len(self.link_list)):
+                    if self.organismDict[self.Annotations_Organism.currentText()] in self.link_list[i]:
+                        compressed_file = self.ncbi_searcher.download_compressed_annotation_file(self.link_list[i], type_of_annotation_file)
+                        break
+
+                #decompress that file, and then delete the compressed version
+                if compressed_file:
+                    storeFileName = self.ncbi_searcher.decompress_annotation_file(compressed_file, type_of_annotation_file)
+                    file_names = os.listdir(GlobalSettings.CSPR_DB)
+                    for file in file_names:
+                        if ".gz" in file:
+                            print("Deleting: ", file)
+                            os.remove(file)
+
+                    # now run results
+                    self.run_results_own_ncbi_file(inputstring, storeFileName)
+                else:
+                    QtWidgets.QMessageBox.question(self, "Error",
+                                                   "The database does not have the type of file you have requested. Please try another type of file"
+                                                   , QtWidgets.QMessageBox.Ok)
+                    return
+
             # own annotation file code
             if self.Annotation_Ownfile.isChecked():
                 # this now just goes onto the other version of run_results
-                self.run_results_own_ncbi_file(inputstring)
+                self.run_results_own_ncbi_file(inputstring, self.Annotations_Organism.currentText())
             # KEGG's code
             elif self.Annotation_Kegg.isChecked():
                 #check to make sure that both the annotation file and the cspr files have the same version
@@ -441,6 +497,9 @@ class CMainWindow(QtWidgets.QMainWindow):
                         return
 
                 self.make_dictonary()
+                self.Results.displayGeneViewer.setEnabled(True)
+                self.Results.lineEditStart.setEnabled(True)
+                self.Results.lineEditEnd.setEnabled(True)
                 list_sVal = self.separate_line(inputstring[0])
                 for sValue in list_sVal:
                     sValue = self.removeWhiteSpace(sValue)
@@ -510,7 +569,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     # go through the dictionary, and if they match, store the item in holder
                     for match in self.annotation_parser.dict[item[0]]:
                         if item[1] == match:
-                            holder = (match[1] - 1, match[3], match[4])
+                            holder = (match[1], match[3], match[4])
                             self.checked_info[item[0]] = holder
                 else:
                     # now we need to go through the para_dict
@@ -519,7 +578,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                         for match in self.annotation_parser.dict[self.annotation_parser.para_dict[item[0]][i]]:
                             # if they match, store it in holder
                             if item[1] == match:
-                                holder = (match[1] - 1, match[3], match[4])
+                                holder = (match[1], match[3], match[4])
                                 self.checked_info[item[0]] = holder
 
         # now call transfer data, however I think we need to change how transfer data stores the data for these types of files
@@ -631,18 +690,29 @@ class CMainWindow(QtWidgets.QMainWindow):
         if self.Annotation_Ownfile.isChecked():
             self.refseq_button.setEnabled(False)
             self.genbank_button.setEnabled(False)
+            self.feature_table_button.setEnabled(False)
+            self.gff_button.setEnabled(False)
+            self.gbff_button.setEnabled(False)
             self.Search_Button.setText("Browse")
             self.Search_Label.setText("Select an annotation file...")
         elif self.Annotation_Kegg.isChecked():
             self.refseq_button.setEnabled(False)
             self.genbank_button.setEnabled(False)
+            self.feature_table_button.setEnabled(False)
+            self.gff_button.setEnabled(False)
+            self.gbff_button.setEnabled(False)
             self.Search_Button.setText("Search")
             self.Search_Label.setText("Search KEGG Database for genome annotation")
+            self.Search_Input.setText(self.orgChoice.currentText())
         elif self.NCBI_Select.isChecked():
             self.refseq_button.setEnabled(True)
             self.genbank_button.setEnabled(True)
+            self.feature_table_button.setEnabled(True)
+            self.gff_button.setEnabled(True)
+            self.gbff_button.setEnabled(True)
             self.Search_Button.setText("Search")
             self.Search_Label.setText("Search NCBI Database for genome annotation")
+            self.Search_Input.setText(self.orgChoice.currentText())
 
 
 
@@ -703,18 +773,34 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         # code that uses NCBI
         elif self.NCBI_Select.isChecked():
+            # error check
             if not self.refseq_button.isChecked() and not self.genbank_button.isChecked():
                 QtWidgets.QMessageBox.question(self, "Error", "Please select either RefSeq or GenBank databases.",
                                                QtWidgets.QMessageBox.Ok)
                 return
             database_type = ""
 
+            # clear all the things
+            self.link_list.clear()
+            self.organismDict.clear()
+            self.Annotations_Organism.clear()
             if self.refseq_button.isChecked():
                 database_type ="RefSeq"
             else:
                 database_type = "GenBank"
 
-            print(database_type)
+            # actually search, if nothing is returned, break out
+            self.link_list, self.organismDict = self.ncbi_searcher.get_annotation_file(self.orgChoice.currentText(), database_type)
+            if len(self.link_list) == 0 and len(self.organismDict) == 0:
+                QtWidgets.QMessageBox.question(self, "Error", "Search yielded 0 results. Please try again.",
+                                               QtWidgets.QMessageBox.Ok)
+                return
+            # add each item found into the dropdown menu
+            for item in self.organismDict:
+                self.Annotations_Organism.addItem(item)
+            print("Done searching NCBI")
+
+
 
     def make_dictonary(self):
         url = "https://www.genome.jp/dbget-bin/get_linkdb?-t+genes+gn:"+self.TNumbers[self.Annotations_Organism.currentText()]

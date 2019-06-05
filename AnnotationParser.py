@@ -17,6 +17,7 @@ class Annotation_Parser:
         self.txtLocusTag = False
         self.isGff = False
         self.isTxt = False
+        self.max_chrom = 0
 
         #dictionary used for finding the genes in a txt annotation file
         #key: locus_tag
@@ -35,6 +36,7 @@ class Annotation_Parser:
     # This function parses gff files and stores them in a dictionary
     # It also creates a parallel dictionary to use in searching
     # Precondition: ONLY TO BE USED WITH GFF FILES
+    # Yeah...this one needs work again. Need to figure out how we are going to set this one up
     ############################################
     def gff_parse(self):
         self.dict.clear()
@@ -52,7 +54,7 @@ class Annotation_Parser:
                 #print(buffer)
                 continue
             else:
-                if(len(buffer) <= 0):
+                if(len(buffer) <= 2):
                     break
                 splitLine = buffer[:-1].split("\t")
 
@@ -102,6 +104,7 @@ class Annotation_Parser:
                             self.para_dict[para_dict_key_string].append(currentLocusTag)
                 para_dict_key_string = ""
                 prevFirstIndex = splitLine[0]
+        self.max_chrom = indexNumber
 ############################END OF gff_parse
 
     ############################################
@@ -124,7 +127,7 @@ class Annotation_Parser:
             if(buffer.startswith("#")): #skip lines that start with #
                 continue
             else:
-                if(len(buffer) <= 0): # break out once we reach the end of the file
+                if(len(buffer) <= 2): # break out once we reach the end of the file
                     break
 
                 splitLine = buffer[:-1].split("\t")
@@ -167,6 +170,8 @@ class Annotation_Parser:
 
                 para_dict_key_string = ""
                 prevGenAccession = splitLine[6]
+        self.max_chrom = indexNumber
+        print(self.max_chrom)
 #########################END OF txt_parse
 
     ############################################

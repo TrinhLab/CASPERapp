@@ -580,8 +580,8 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>610</x>
-      <y>330</y>
+      <x>590</x>
+      <y>310</y>
       <width>83</width>
       <height>18</height>
      </rect>
@@ -602,8 +602,8 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>720</x>
-      <y>330</y>
+      <x>700</x>
+      <y>310</y>
       <width>83</width>
       <height>18</height>
      </rect>
@@ -618,6 +618,54 @@
      <string notr="true">refseq_genbank_buttonGroup</string>
     </attribute>
    </widget>
+   <widget class="QRadioButton" name="feature_table_button">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>340</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Feature Table</string>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">type_of_annotation_file</string>
+    </attribute>
+   </widget>
+   <widget class="QRadioButton" name="gff_button">
+    <property name="geometry">
+     <rect>
+      <x>664</x>
+      <y>340</y>
+      <width>51</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>GFF</string>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">type_of_annotation_file</string>
+    </attribute>
+   </widget>
+   <widget class="QRadioButton" name="gbff_button">
+    <property name="geometry">
+     <rect>
+      <x>730</x>
+      <y>340</y>
+      <width>51</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>GBFF</string>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">type_of_annotation_file</string>
+    </attribute>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -625,7 +673,7 @@
      <x>0</x>
      <y>0</y>
      <width>940</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -818,5 +866,6 @@
  <connections/>
  <buttongroups>
   <buttongroup name="refseq_genbank_buttonGroup"/>
+  <buttongroup name="type_of_annotation_file"/>
  </buttongroups>
 </ui>
