@@ -87,7 +87,6 @@ class SeqTranslate:
     def decompress_csf_tuple(self, locseq, pamlength=3, seqlength=20):
         #mytuple = locseq[:-1].split(",")
         mytuple = locseq.split(",")
-        print(mytuple)
         loc = self.decompress64(mytuple[0])
         seq = mytuple[1]
         scr = self.decompress64(mytuple[2])

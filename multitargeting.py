@@ -219,7 +219,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         for chromo in info[self.chromo_seed.currentText()]:
             pos = []
             for position in info[(self.chromo_seed.currentText())][chromo]:
-                print(position)
                 self.seq_data.append(self.chromo_seed.currentText())
                 test1 = position/self.chromo_length[int(chromo)-1]
                 test1 = int(test1 * 485)

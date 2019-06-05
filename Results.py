@@ -7,6 +7,7 @@ from CSPRparser import CSPRparser
 import GlobalSettings
 import os
 from APIs import Kegg
+import OffTarget
 
 # =========================================================================================
 # CLASS NAME: Results
@@ -54,6 +55,7 @@ class Results(QtWidgets.QMainWindow):
         self.targetTable.horizontalHeader().sectionClicked.connect(self.table_sorting)
         self.actionSave.triggered.connect(self.save_data)
         self.actionOpen.triggered.connect(self.open_data)
+        self.actionOff_Target_Analysis.triggered.connect(self.Off_Target_Analysis)
         self.actionCoTargeting.triggered.connect(self.open_cotarget)
         self.changeEndoButton.clicked.connect(self.changeEndonuclease)
         self.displayGeneViewer.stateChanged.connect(self.checkGeneViewer)
@@ -74,6 +76,8 @@ class Results(QtWidgets.QMainWindow):
         self.scoreSlider.setTracking(False)
 
         self.scoreSlider.valueChanged.connect(self.update_score_filter)
+
+        self.off_tar_win = OffTarget.OffTarget()
 
     # this function goes through and deselects all of the Off-Target checkboxes
     # also sets the selectAllShown check box to unchecked as well
@@ -315,13 +319,8 @@ class Results(QtWidgets.QMainWindow):
 
 
     # currently unused, but could be used with the offTargetButton when implemented
-    def offtargetButtonClicked(self):
-        all_targets = []
-        index = 0
-        holdt = ()
-        QtWidgets.QMessageBox.question(self, "Text File Created",
-                                       "A File with the off target data has been created.",
-                                       QtWidgets.QMessageBox.Ok)
+    def Off_Target_Analysis(self):
+        self.off_tar_win.show()
 
     # Function for displaying the target in the gene viewer
     """def displayGene(self,fastafile=None, Kegg=False, NCBI=False):

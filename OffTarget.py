@@ -7,43 +7,60 @@ O = OffTargetAlgorithm()"""
 
 
 import os, sys, math, datetime
+from PyQt5 import Qt, QtWidgets, uic, QtCore, QtGui
 import subprocess as sub
 from Algorithms import SeqTranslate
 
+#off_list, cspr_file, max_misses=4, threshold=0.05, compressed=False, output_path=None, detailed=False, average=True
+class OffTarget(QtWidgets.QDialog):
 
-class OffTargetAlgorithm:
+    def __init__(self):
 
-    def __init__(self, off_list, cspr_file, max_misses=4, threshold=0.05, compressed=False, output_path=None, detailed=False, average=True):
+        super(OffTarget, self).__init__()
+        uic.loadUi('OffTargetAnalysis.ui', self)
+        self.progressBar.setMinimum(0)
+        self.progressBar.setMaximum(100)
+        self.progressBar.reset()
 
-        self.output_file_path = "temp_off_results_file.txt"
-        self.detailed = False
-        self.average = False
 
-        # Fill the list of variables that get passed to the subprocess:
-        self.args_array = list()  # This is the list that gets passed into the file
-        self.args_array.append("C:\\Users\\Greg...")
-        self.args_array.append(off_list)
-        if compressed:
-            self.args_array.append("True")
-        else:
-            self.args_array.append("False")
-        self.args_array.append(cspr_file)
-        if output_path:
-            self.args_array.append(output_path)
-            self.output_file_path = output_path
-        self.args_array.append("C:\\Users\\Greg...")
-        self.args_array.append(str(max_misses))
-        self.args_array.append(str(threshold))
-        if detailed:
-            self.args_array.append("True")
-            self.detailed = True
-        else:
-            self.args_array.append("False")
-        if average:
-            self.args_array.append("True")
-            self.average = True
-        else:
-            self.args_array.append("False")
+
+
+
+
+
+
+
+
+
+        # self.output_file_path = "temp_off_results_file.txt"
+        # self.detailed = False
+        # self.average = False
+        #
+        # # Fill the list of variables that get passed to the subprocess:
+        # self.args_array = list()  # This is the list that gets passed into the file
+        # self.args_array.append("C:\\Users\\Greg...")
+        # self.args_array.append(off_list)
+        # if compressed:
+        #     self.args_array.append("True")
+        # else:
+        #     self.args_array.append("False")
+        # self.args_array.append(cspr_file)
+        # if output_path:
+        #     self.args_array.append(output_path)
+        #     self.output_file_path = output_path
+        # self.args_array.append("C:\\Users\\Greg...")
+        # self.args_array.append(str(max_misses))
+        # self.args_array.append(str(threshold))
+        # if detailed:
+        #     self.args_array.append("True")
+        #     self.detailed = True
+        # else:
+        #     self.args_array.append("False")
+        # if average:
+        #     self.args_array.append("True")
+        #     self.average = True
+        # else:
+        #     self.args_array.append("False")
 
     def run_off_target(self):
         sub.run(self.args_array)
