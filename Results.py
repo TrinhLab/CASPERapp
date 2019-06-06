@@ -1,6 +1,7 @@
 import sys
 
-from PyQt5 import Qt, QtWidgets, uic, QtCore, QtGui
+
+from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from Scoring import OnTargetScore
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
@@ -275,11 +276,15 @@ class Results(QtWidgets.QMainWindow):
         self.targetTable.setRowCount(len(subset_display))
         index = 0
         for item in subset_display:
-            loc = QtWidgets.QTableWidgetItem(str(item[0]))
+            num = int(item[0])
+            loc = QtWidgets.QTableWidgetItem()
+            loc.setData(QtCore.Qt.EditRole, num)
             seq = QtWidgets.QTableWidgetItem(item[1])
             strand = QtWidgets.QTableWidgetItem(str(item[4]))
             PAM = QtWidgets.QTableWidgetItem(item[2])
-            score = QtWidgets.QTableWidgetItem(str(item[3]))
+            num1 = int(item[3])
+            score = QtWidgets.QTableWidgetItem()
+            score.setData(QtCore.Qt.EditRole, num1)
             self.targetTable.setItem(index, 0, loc)
             self.targetTable.setItem(index, 1, seq)
             self.targetTable.setItem(index, 2, strand)

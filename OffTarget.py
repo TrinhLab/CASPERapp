@@ -7,6 +7,7 @@ O = OffTargetAlgorithm()"""
 
 
 import os, sys, math, datetime
+import subprocess
 from PyQt5 import Qt, QtWidgets, uic, QtCore, QtGui
 import subprocess as sub
 from Algorithms import SeqTranslate
@@ -21,6 +22,11 @@ class OffTarget(QtWidgets.QDialog):
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
         self.progressBar.reset()
+
+        #cmd = "dir"
+        #p = os.system(cmd)
+        #print(p)
+
 
 
 
