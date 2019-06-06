@@ -275,15 +275,31 @@ class Multitargeting(QtWidgets.QMainWindow):
     def chro_bar_create(self,info):
         x1 = []
         y1 = []
-
+        lentemp = 0
         for chromo in info[self.chromo_seed.currentText()]:
             y1.append(len(info[self.chromo_seed.currentText()][chromo]))
             x1.append(chromo)
-
+            if(int(chromo) > lentemp):
+                lentemp = int(chromo)
         #clear the old graph
         self.repeats_vs_chromo.canvas.axes.clear()
         #x_pos used to format the addition of more bars appropriately
         x_pos = [i for i, _ in enumerate(x1)]
+
+        #loop fixes when there is too many xlabels and they start running together,
+        #replaces some with an empty string to space out the labels
+        if(len(x_pos) > 20):
+            temp = 0
+            for i in x_pos:
+                if(i == 0):
+                    temp += 1
+                else:
+                    if(temp < len(str(lentemp))+2):
+                        x1[i] = ""
+                        temp += 1
+                    else:
+                        temp = 0
+
         #the following statements are plottings / formatting for the graph
         self.repeats_vs_chromo.canvas.axes.bar(x_pos, y1,align='center')
         self.repeats_vs_chromo.canvas.axes.yaxis.set_major_locator(MaxNLocator(integer=True))
@@ -292,7 +308,11 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.repeats_vs_chromo.canvas.axes.set_xticklabels(x1)
         self.repeats_vs_chromo.canvas.axes.set_xlabel('Chromosome')
         self.repeats_vs_chromo.canvas.axes.set_ylabel('Number of Repeats')
-        #always redraw at the end
+
+        #for loop below could be used to rotae labels for spacing
+        #for tick in self.repeats_vs_chromo.canvas.axes.get_xticklabels():
+        #   tick.set_rotation(90)
+
         self.repeats_vs_chromo.canvas.draw()
 
 
