@@ -181,6 +181,10 @@ class CSPRparser:
         # Find the right chromosome:
         print(pos_tuple)
         while True:
+            # quick error check so the loop eventually breaks out if nothing is found
+            if header == "":
+                print("Error: the target could not be found in this file!")
+                break
             # in the right chromosome/scaffold?
             if header.find("(" + str(pos_tuple[0]) + ")") != -1:
                 while True:

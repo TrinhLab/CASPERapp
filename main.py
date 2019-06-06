@@ -341,6 +341,16 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.annotation_parser.annotationFileName = fileName
         self.annotation_parser.find_which_file_version()
 
+        # this bit may not be needed here. Just a quick error check to make sure the chromesome numbers match
+        full_org = str(self.orgChoice.currentText())
+        cspr_file = (GlobalSettings.CSPR_DB + "/" + self.shortHand[full_org] + "_" + str(self.endoChoice.currentText()) + ".cspr")
+        own_cspr_parser = CSPRparser(cspr_file)
+        own_cspr_parser.read_first_lines()
+        if len(own_cspr_parser.karystatsList) - 1 != self.annotation_parser.max_chrom:
+            print("Error: the number of chromesomes in the CSPR file and the Annotation File do not match. This could"
+                  "result in targets not being found. Please check the files selected")
+        ###################
+
         # now go through and search for the actual locus tag, in the case the user input that
         searchValues = self.separate_line(inputstring[0])
         self.searches.clear()

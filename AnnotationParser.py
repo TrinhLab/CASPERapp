@@ -41,7 +41,7 @@ class Annotation_Parser:
     def gff_parse(self):
         self.dict.clear()
         prevFirstIndex = ""
-        indexNumber = 1
+        indexNumber = 0
         fileStream = open(self.annotationFileName)
         buffer = ""
         currentLocusTag = ""
@@ -115,7 +115,7 @@ class Annotation_Parser:
     def txt_parse(self):
         self.dict.clear()
         prevGenAccession = ""
-        indexNumber = 1
+        indexNumber = 0
         fileStream = open(self.annotationFileName)
         buffer = ""
         currentLocusTag = ""
@@ -171,7 +171,6 @@ class Annotation_Parser:
                 para_dict_key_string = ""
                 prevGenAccession = splitLine[6]
         self.max_chrom = indexNumber
-        print(self.max_chrom)
 #########################END OF txt_parse
 
     ############################################
