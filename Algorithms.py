@@ -84,11 +84,13 @@ class SeqTranslate:
         else:
             return base10seq
 
-    def decompress_csf_tuple(self, locseq, pamlength=3, seqlength=20, bool=False):
+    def decompress_csf_tuple(self, locseq, pamlength=3, seqlength=24, bool=False):
         if(bool == False):
             mytuple = locseq[:-1].split(",")
         else:
             mytuple = locseq.split(",")
+            front_seq = mytuple[3]
+
         loc = self.decompress64(mytuple[0])
         seq = mytuple[1]
         scr = self.decompress64(mytuple[2])
@@ -105,11 +107,12 @@ class SeqTranslate:
         sequence = self.decompress64(sequence, True)
         pam = self.decompress64(pam, True)
         # The for loops fixes the problem of A's not being added to the end because they are removed on compression
+        sequence = front_seq + sequence
         for i in range(len(sequence), seqlength):
             sequence += 'A'
         for j in range(len(pam), pamlength):
             pam += 'A'
-        return int(loc), sequence, pam, int(scr), dira
+        return int(loc), str(sequence), pam, int(scr), dira
         #print("Location: " + str(myloc))
         #print("Sequence: " + myseq)
 

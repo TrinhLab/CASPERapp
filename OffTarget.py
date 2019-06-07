@@ -9,7 +9,9 @@ O = OffTargetAlgorithm()"""
 import os, sys, math, datetime
 import subprocess
 from PyQt5 import Qt, QtWidgets, uic, QtCore, QtGui
-import subprocess as sub
+import subprocess
+import shlex
+import time
 from Algorithms import SeqTranslate
 
 #off_list, cspr_file, max_misses=4, threshold=0.05, compressed=False, output_path=None, detailed=False, average=True
@@ -23,12 +25,23 @@ class OffTarget(QtWidgets.QDialog):
         self.progressBar.setMaximum(100)
         self.progressBar.reset()
 
-        #cmd = "dir"
-        #p = os.system(cmd)
-        #print(p)
 
 
+        def run_command(command):
+            cmd = r'dir "C:\Users\MS USER\CASPERapp"'
+            ## run it ##
+            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
 
+            ## But do not wait till netstat finish, start displaying output immediately ##
+            while True:
+                out = p.stdout.readline()
+                if out == b'':
+                    break
+                else:
+                    print(out)
+
+
+        run_command(r'dir C:\Users')
 
 
 

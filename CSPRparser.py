@@ -143,7 +143,16 @@ class CSPRparser:
                     sequence =item.split(',')
                     self.seeds[seed].append(sequence)
                     temp = sequence[1:4]
-                    temp[1] = str(self.seqTrans.compress(seed,64)) + str(temp[1])
+
+                    #print(seed)
+                    #print(str(self.seqTrans.compress(seed,64)))
+                    #print(temp[1])
+
+                    #temp[1] = str(self.seqTrans.compress(seed,64)) + str(temp[1])
+                    #print(temp)
+
+                    temp.append(str(self.seqTrans.decompress64(str(self.seqTrans.compress(seed,64)),True)))
+                    #print(temp)
                     string = ",".join(temp)
                     self.dec_tup_data[seed].append(self.seqTrans.decompress_csf_tuple(string, bool=True))
                     self.multiSum += self.seqTrans.decompress64(sequence[3])
