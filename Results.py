@@ -355,33 +355,24 @@ class Results(QtWidgets.QMainWindow):
 
 
     def save_data(self):
-        #filed = QtWidgets.QFileDialog()
-        filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')
-        #print(filename[0])
-        if(os.path.isfile(str(filename[0]))):
-            #print('success')
-            f = open(str(filename[0]), "w+")
-            for genomes in self.AllData:
-                f.write("***"+genomes + "\n")
-                for items in self.AllData[genomes]:
-                    for i in items:
-                        f.write(str(i) + '|')
-                    f.write(str(self.highlighted[items[1]]))
-                    f.write("\n")
-            f.close()
-        else:
-            #change to dialog box
-            print('Could not open file')
+        filename = QtWidgets.QFileDialog.getSaveFileName(self,
+                                      "Enter Text File Name", ".txt",
+                                      "Text Document (*.txt)" )
+        f = open(str(filename[0]), "w+")
+        for genomes in self.AllData:
+            f.write("***"+genomes + "\n")
+            for items in self.AllData[genomes]:
+                for i in items:
+                    f.write(str(i) + '|')
+                f.write(str(self.highlighted[items[1]]))
+                f.write("\n")
+        f.close()
 
 
     def open_data(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')
-        #print(filename[0])
-        #print(self.AllData)
-        print(self.highlighted)
         self.AllData.clear()
         self.highlighted.clear()
-        #print(self.AllData)
         first = 1
         list1 = []
         s = ""
@@ -393,29 +384,21 @@ class Results(QtWidgets.QMainWindow):
                 if(line.startswith("***")):
                     if(first == 0):
                         self.AllData[s] = list1
-                        #print(list1)
                     else:
                         first = 0
                     s = line[3:]
                     s = s.strip('\n')
                     list1 = []
                     self.comboBoxGene.addItem(s)
-                    print('s: '+s)
                 else:
                     temp = line.split("|")
                     h = temp.pop()
                     h = h.strip('\n')
                     self.highlighted[temp[1]] = eval(h)
-                    print(temp[1])
-                    print('h: '+str(h))
-
-
                     tup = tuple(temp)
                     list1.append(tup)
             self.AllData[s] = list1
             f.close()
-            #print(self.AllData)
-            print(self.highlighted)
             self.displayGeneData()
 
         else:
