@@ -107,7 +107,8 @@ class SeqTranslate:
         sequence = self.decompress64(sequence, True)
         pam = self.decompress64(pam, True)
         # The for loops fixes the problem of A's not being added to the end because they are removed on compression
-        sequence = front_seq + sequence
+        if(bool == True):
+            sequence = front_seq + sequence
         for i in range(len(sequence), seqlength):
             sequence += 'A'
         for j in range(len(pam), pamlength):
