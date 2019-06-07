@@ -27,21 +27,21 @@ class OffTarget(QtWidgets.QDialog):
 
 
 
-        def run_command(command):
-            cmd = r'dir "C:\Users\MS USER\CASPERapp"'
-            ## run it ##
-            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-
-            ## But do not wait till netstat finish, start displaying output immediately ##
-            while True:
-                out = p.stdout.readline()
-                if out == b'':
-                    break
-                else:
-                    print(out)
-
-
-        run_command(r'dir C:\Users')
+        # def run_command(command):
+        #     cmd = r'dir "C:\Users\MS USER\CASPERapp"'
+        #     ## run it ##
+        #     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        #
+        #     ## But do not wait till netstat finish, start displaying output immediately ##
+        #     while True:
+        #         out = p.stdout.readline()
+        #         if out == b'':
+        #             break
+        #         else:
+        #             print(out)
+        #
+        #
+        # run_command(r'dir C:\Users')
 
 
 
