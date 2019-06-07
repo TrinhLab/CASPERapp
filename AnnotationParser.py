@@ -4,10 +4,8 @@
 # OUTPUTS: the outputs are data structures that store the parsed data
 ################################################################################
 
-from Algorithms import SeqTranslate
-from operator import itemgetter
-import os,sys
-import re
+import gffutils
+import GlobalSettings
 
 
 class Annotation_Parser:
@@ -40,70 +38,104 @@ class Annotation_Parser:
     ############################################
     def gff_parse(self):
         self.dict.clear()
+        self.para_dict.clear()
         prevFirstIndex = ""
-        indexNumber = 0
+        indexNumber = 1
         fileStream = open(self.annotationFileName)
-        buffer = ""
+        data_base_file_name = GlobalSettings.CSPR_DB + "/" + "gff_database.db"
+
+        # temp list will be the following each time it is put into the dictionary:
+        # [Sequence ID (genomic accession or scaffold), the index number itself, the feature type (cds, gene, mrna), the start(-1), end, and the strand]
+        tempList = list()
         currentLocusTag = ""
         para_dict_key_string = ""
 
-        while(True): #this loop breaks out once the file is empty
-            buffer = fileStream.readline()
+        # initialize the data base (this is what parses it for me)
+        print("Intializing the data base")
+        db = gffutils.create_db(self.annotationFileName, dbfn=data_base_file_name, force=True, keep_order=True,
+                                merge_strategy='merge', sort_attribute_values=True)
+        print("Finished intializing")
 
-            if(buffer.startswith("#")):
-                #print(buffer)
-                continue
-            else:
-                if(len(buffer) <= 2):
-                    break
-                splitLine = buffer[:-1].split("\t")
+        # call the feature version of that data base now
+        db = gffutils.FeatureDB(data_base_file_name, keep_order=True)
 
-                if prevFirstIndex != splitLine[0] and prevFirstIndex != "":
-                    indexNumber+=1
+        # now we go through that data base and get the data we want
+        for feature in db.all_features(limit=None, strand=None, featuretype=None, order_by=None, reverse=False,
+                                       completely_within=False):
+            # if the genomic accession/scaffold/chromseome changes, update the indexNumber
+            if prevFirstIndex != feature.seqid and prevFirstIndex != "":
+                indexNumber += 1
+            # if we find a new gene, update the locus_tag/name
+            if feature.featuretype == "gene":
 
-                keyWords = splitLine[8]
-                keyWordsSplit = keyWords.split(";")
+                # check and see if locus tag is in the attributes, go on the Name if locus_tag is not in there
+                if 'locus_tag' in feature.attributes:
+                    currentLocusTag = feature.attributes['locus_tag'][0]
+                else:
+                    currentLocusTag = feature.attributes["Name"][0]
 
-                #get the original dict's data
-                for i in range(len(keyWordsSplit)):
-                    # only get the lines that have Name, locus_tag, or standard_name,
-                    # however, Name and locus_tag are ideal
-                    if keyWordsSplit[i].startswith("Name=") or keyWordsSplit[i].startswith("locus_tag="):
-                        currentLocusTag = (keyWordsSplit[i][keyWordsSplit[i].find("=") + 1:])
-                        values = [splitLine[0], indexNumber, splitLine[2], int(splitLine[3]) - 1, int(splitLine[4]), splitLine[6]]
-
-                        if currentLocusTag not in self.dict:
-                            self.dict[currentLocusTag] = [values]
-                        elif currentLocusTag in self.dict:
-                            self.dict[currentLocusTag].append(values)
-
-                        break
-                    elif keyWordsSplit[i].startswith("standard_name="):
-                        currentLocusTag = (keyWordsSplit[i][keyWordsSplit[i].find("=") +1:-2])
-                        values = [splitLine[0], indexNumber, splitLine[2], int(splitLine[3]) - 1, int(splitLine[4]),
-                                  splitLine[6]]
-                        if currentLocusTag not in self.dict:
-                            self.dict[currentLocusTag] = [values]
-                        elif currentLocusTag in self.dict:
-                            self.dict[currentLocusTag].append(values)
-
-
-                # now get the para dict's data
-                for j in range(len(keyWordsSplit)):
-                    if keyWordsSplit[j].startswith("Note=") or keyWordsSplit[j].startswith("product="):
-                        para_dict_key_string = para_dict_key_string + " " + (
-                            keyWordsSplit[j][keyWordsSplit[j].find("=") + 1:])
-
-                # make sure that the string actually has data in it
-                if(para_dict_key_string != ""):
-                    if para_dict_key_string not in self.para_dict: # make a new input into the dict
-                        self.para_dict[para_dict_key_string] = [currentLocusTag]
-                    elif para_dict_key_string in self.para_dict:
+                # once the locus tag changes, append it to the para_dict
+                if para_dict_key_string != "":
+                    if para_dict_key_string not in self.para_dict:
+                        self.para_dict[para_dict_key_string] = list()
+                        self.para_dict[para_dict_key_string].append(currentLocusTag)
+                    else:
                         if currentLocusTag not in self.para_dict[para_dict_key_string]:
-                            # only append it to the dict's list if it isn't currently in there
                             self.para_dict[para_dict_key_string].append(currentLocusTag)
-                para_dict_key_string = ""
-                prevFirstIndex = splitLine[0]
+                    para_dict_key_string = ""
+
+                tempList = [feature.seqid, indexNumber, feature.featuretype, feature.start - 1, feature.end,
+                            feature.strand]
+
+                # insert that locus tag/name into the dictionary
+                if currentLocusTag not in self.dict:
+                    self.dict[currentLocusTag] = []
+                    self.dict[currentLocusTag].append(tempList)
+                elif currentLocusTag in self.dict:
+                    self.dict[currentLocusTag].append(tempList)
+
+                # go through each of this child's children
+                for child in db.children(feature.id, level=None, featuretype=None, order_by=None, reverse=False,
+                                         limit=None, completely_within=False):
+                    tempList = [child.seqid, indexNumber, child.featuretype, child.start - 1, child.end, child.strand]
+
+                    # only insert it if it hasn't been inserted before
+                    if tempList not in self.dict[currentLocusTag]:
+                        self.dict[currentLocusTag].append(tempList)
+
+            # now go through the other ones which are not region
+            elif feature.featuretype != "region" and feature.featuretype != "telomere" and feature.featuretype != "origin_of_replication":
+                tempList = [feature.seqid, indexNumber, feature.featuretype, feature.start - 1, feature.end,
+                            feature.strand]
+
+                # only insert if it hasn't been inserted before
+                if tempList not in self.dict[currentLocusTag]:
+                    self.dict[currentLocusTag].append(tempList)
+
+                    # now same as above, go through the children again
+                    for child in db.children(feature.id, level=None, featuretype=None, order_by=None, reverse=False,
+                                             limit=None, completely_within=False):
+                        tempList = [child.seqid, indexNumber, child.featuretype, child.start - 1, child.end,
+                                    child.strand]
+
+                        if tempList not in self.dict[currentLocusTag]:
+                            self.dict[currentLocusTag].append(tempList)
+
+            # now we need to get the para_dict up and running
+            # get the stuff out of the product part
+            if 'product' in feature.attributes and feature.featuretype == "CDS":
+                if para_dict_key_string == "":
+                    para_dict_key_string = feature.attributes['product'][0]
+                else:
+                    para_dict_key_string = para_dict_key_string + " " + feature.attributes['product'][0]
+            # get the stuff out of the Note part
+            if 'Note' in feature.attributes:
+                if para_dict_key_string == "":
+                    para_dict_key_string = feature.attributes['Note'][0]
+                else:
+                    para_dict_key_string = para_dict_key_string + " " + feature.attributes['Note'][0]
+
+            prevFirstIndex = feature.seqid
         self.max_chrom = indexNumber
 ############################END OF gff_parse
 
@@ -115,7 +147,7 @@ class Annotation_Parser:
     def txt_parse(self):
         self.dict.clear()
         prevGenAccession = ""
-        indexNumber = 0
+        indexNumber = 1
         fileStream = open(self.annotationFileName)
         buffer = ""
         currentLocusTag = ""

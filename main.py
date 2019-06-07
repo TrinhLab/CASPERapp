@@ -62,7 +62,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.hide()
 
     # this function is very similar to the other fill_table, it just works with the other types of annotation files
-    # TODO: go and in make sure it automatically goes into results if the show all is not checked
     def fill_table_nonKegg(self, mainWindow):
         self.tableWidget.clearContents()
         self.mainWindow = mainWindow
@@ -129,7 +128,9 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
                     return -2
             self.mainWindow.progressBar.setValue(65)
             for obj in mainWindow.checkBoxes:  # check every match
-                obj[1].setChecked(True)
+                obj[2].setChecked(True)
+            self.mainWindow.collect_table_data_nonkegg()
+        return 0
         # TO DO: still need to add code for it to automatically call collect_table_data
 
     def fill_Table(self,mainWindow):
@@ -346,9 +347,15 @@ class CMainWindow(QtWidgets.QMainWindow):
         cspr_file = (GlobalSettings.CSPR_DB + "/" + self.shortHand[full_org] + "_" + str(self.endoChoice.currentText()) + ".cspr")
         own_cspr_parser = CSPRparser(cspr_file)
         own_cspr_parser.read_first_lines()
-        if len(own_cspr_parser.karystatsList) - 1 != self.annotation_parser.max_chrom:
+
+        print("Karystats: ",len(own_cspr_parser.karystatsList))
+        print(self.annotation_parser.max_chrom)
+
+        if len(own_cspr_parser.karystatsList) != self.annotation_parser.max_chrom:
             print("Error: the number of chromesomes in the CSPR file and the Annotation File do not match. This could"
                   "result in targets not being found. Please check the files selected")
+
+        ##may need to open a message window here
         ###################
 
         # now go through and search for the actual locus tag, in the case the user input that
