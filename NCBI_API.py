@@ -8,6 +8,7 @@ from ftplib import FTP
 import time
 import GlobalSettings
 import gzip
+from PyQt5 import QtWidgets
 
 Entrez.email = "bmendoz1@vols.utk.edu"
 
@@ -30,35 +31,39 @@ class Assembly:
         #Moved the code from this to its own function so that I can return the database URL
 
     #this function gets a list of GCA's and a list of database URLs for downloading
-    def getDataBaseURL(self, organism, database):
-        progValue = 15
-        handle = Entrez.esearch(db="assembly", retmax=20, term=organism)
+    def getDataBaseURL(self, organism, database, ncbi_ret_max):
+        # search entrez
+        print("searching ncbi for: ", organism)
+        handle = Entrez.esearch(db="assembly", retmax=ncbi_ret_max, term=organism)
         record = Entrez.read(handle)
         self.database = database
+
+        # make sure to clear all the things
+        self.database_url_list = list()
+        self.orgName_dict = dict()
+        self.gca_rectList = list()
         myidlist = list()
 
+        # get the internal ID's
         for id in record["IdList"]:
             myidlist.append(id)
-            progValue += 1
-            GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(progValue)
-            #print(id)
-        handle.close()
 
-        gca_rectList = list()
+        # if the len of myIdList is still 0, then return out
+        if len(myidlist) == 0:
+            return (self.database_url_list, self.orgName_dict)
+
+        GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(30)
+        # go through and get the GCA/GCF ID's
         for ret in myidlist:
             handle = Entrez.esummary(db="assembly", id=ret)
             gca_rec = Entrez.read(handle)["DocumentSummarySet"]["DocumentSummary"][0]["AssemblyAccession"]
-            #print(gca_rec)
             self.gca_rectList.append(gca_rec)
             handle.close()
-            time.sleep(0.5)
-            progValue += 1
-            GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(progValue)
+            time.sleep(0.35)
 
+        GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(50)
+        # for each GCA_ID, go through and get the refseq/genbank link, and the organism name
         for i in range(len(self.gca_rectList)):
-            progValue += 1
-            GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(progValue)
-
             url = "https://www.ncbi.nlm.nih.gov/assembly/" + self.gca_rectList[i] + "/"
             source = requests.get(url)
             plain_text = source.text
@@ -69,10 +74,7 @@ class Assembly:
             orgName = soup.find('dd')
             refseq_link = refseq_link[refseq_link.find("=") + 2: refseq_link.find(">") - 1]
             genbank_link = genbank_link[genbank_link.find("=") + 2: genbank_link.find(">") - 1]
-            # Checkpoint printing
-            #print("RefSeq link: ", refseq_link)
-            #print("Genbank link: ", genbank_link)
-            # then go to that webpage then inspect and download with url service the gbff file
+
             if self.database == "GenBank":
                 # check and see if GCF is in the the GCA_ID, if so, swap it with GCA
                 # not sure if doing this is correct or not, but this way each description actually goes to a download link
@@ -81,30 +83,24 @@ class Assembly:
                 database_url = genbank_link
             else:
                 database_url = refseq_link
-            # data_source = requests.get(database_url)
-            # soup = BeautifulSoup(data_source.text, "html.parser")
-            for link in soup.find_all('a', {'class': 'icon file'}):
-                print("Link in for loop ", link)
 
-            #check the links and catch errors
-            if(database == "RefSeq" and len(refseq_link) < 5):
+            # check the links and catch errors
+            if (database == "RefSeq" and len(refseq_link) < 5):
                 print("Error: No RefSeq file to download!")
-                #return ("Error: No RefSeq file to download!", list())
-            elif(database == "GenBank" and len(genbank_link) < 5):
+            elif (database == "GenBank" and len(genbank_link) < 5):
                 print("Error: No GenBank file to download!")
-                #return ("Error: No GenBank file to download!", list())
-            elif(len(genbank_link) < 5 and len(refseq_link) < 5):
+            elif (len(genbank_link) < 5 and len(refseq_link) < 5):
                 print("Error: No RefSeq or GenBank files to download")
-                #return ("Error: No RefSeq or GenBank files to download", list())
+            self.database_url_list.append(database_url)
+            if orgName:
+                self.orgName_dict[orgName.string + "::" + self.gca_rectList[i]] = self.gca_rectList[i]
             else:
-                #print(database_url)
-                #return database_url
-                self.database_url_list.append(database_url)
-                self.orgName_dict[orgName.string] = self.gca_rectList[i]
+                self.orgName_dict["No Organism Name Found" + "::" + self.gca_rectList[i]] = self.gca_rectList[i]
+
+        GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(80)
 
         if len(self.database_url_list) <= 0:
-            print("Error: no matches found. Please try again")
-            return(self.database_url_list, self.orgName_dict)
+            return (self.database_url_list, self.orgName_dict)
         else:
             return (self.database_url_list, self.orgName_dict)
 
@@ -220,100 +216,6 @@ class Assembly:
         writeStream.close()
         print("\tDone Decompressing")
         return(storeFileName)
-
-
-    # this function is similar to the getDatabaseURl function, however if the intial search yields 0 results,
-    # it splits the organism and searches the rest of them as well
-    def get_annotation_file(self, organism, database):
-        # go through the handle and entrez for the first time
-        searchOrganism = organism + "[Organism]"
-        print("searching ncbi for: ", organism)
-        handle = Entrez.esearch(db="assembly", retmax=20, term=searchOrganism)
-        record = Entrez.read(handle)
-        self.database = database
-        self.database_url_list.clear()
-        self.orgName_dict.clear()
-        myidlist = list()
-
-        for id in record["IdList"]:
-            myidlist.append(id)
-            # print(id)
-
-        # if there's nothing in the list, go through and search the rest of them, otherwise skip this
-        if len(myidlist) == 0:
-            splitOrganism = organism.split(" ")
-            for i in range(len(splitOrganism)):
-                print("searching ncbi for: ", splitOrganism[i])
-                searchOrganism = splitOrganism[i] + "[Organism]"
-                handle = Entrez.esearch(db="assembly", retmax=20, term=searchOrganism)
-                record = Entrez.read(handle)
-
-                for id in record["IdList"]:
-                    myidlist.append(id)
-
-        # if the len of myIdList is still 0, then return out
-        if len(myidlist) == 0:
-            return (self.database_url_list, self.orgName_dict)
-
-        gca_rectList = list()
-        for ret in myidlist:
-            handle = Entrez.esummary(db="assembly", id=ret)
-            gca_rec = Entrez.read(handle)["DocumentSummarySet"]["DocumentSummary"][0]["AssemblyAccession"]
-            #print(gca_rec)
-            self.gca_rectList.append(gca_rec)
-            handle.close()
-            time.sleep(0.5)
-
-        for i in range(len(self.gca_rectList)):
-            url = "https://www.ncbi.nlm.nih.gov/assembly/" + self.gca_rectList[i] + "/"
-            source = requests.get(url)
-            plain_text = source.text
-            soup = BeautifulSoup(plain_text, "html.parser")
-
-            refseq_link = str(soup.find('a', text="Download the RefSeq assembly"))
-            genbank_link = str(soup.find('a', text="Download the GenBank assembly"))
-            orgName = soup.find('dd')
-            refseq_link = refseq_link[refseq_link.find("=") + 2: refseq_link.find(">") - 1]
-            genbank_link = genbank_link[genbank_link.find("=") + 2: genbank_link.find(">") - 1]
-            # Checkpoint printing
-            # print("RefSeq link: ", refseq_link)
-            # print("Genbank link: ", genbank_link)
-            if self.database == "GenBank":
-                # check and see if GCF is in the the GCA_ID, if so, swap it with GCA
-                # not sure if doing this is correct or not, but this way each description actually goes to a download link
-                if "GCF" in self.gca_rectList[i]:
-                    self.gca_rectList[i] = self.gca_rectList[i].replace("GCF", "GCA")
-                database_url = genbank_link
-            else:
-                database_url = refseq_link
-            # data_source = requests.get(database_url)
-            # soup = BeautifulSoup(data_source.text, "html.parser")
-            for link in soup.find_all('a', {'class': 'icon file'}):
-                print("Link in for loop ", link)
-
-            # check the links and catch errors
-            if (database == "RefSeq" and len(refseq_link) < 5):
-                print("Error: No RefSeq file to download!")
-                # return ("Error: No RefSeq file to download!", list())
-            elif (database == "GenBank" and len(genbank_link) < 5):
-                print("Error: No GenBank file to download!")
-                # return ("Error: No GenBank file to download!", list())
-            elif (len(genbank_link) < 5 and len(refseq_link) < 5):
-                print("Error: No RefSeq or GenBank files to download")
-                # return ("Error: No RefSeq or GenBank files to download", list())
-            else:
-                # print(database_url)
-                # return database_url
-                self.database_url_list.append(database_url)
-                self.orgName_dict[orgName.string] = self.gca_rectList[i]
-
-        if len(self.database_url_list) <= 0:
-            print("Error: no matches found. Please try again")
-            return (self.database_url_list, self.orgName_dict)
-        else:
-            return (self.database_url_list, self.orgName_dict)
-
-
 # testing below
 #myNCBI = Assembly()
 #myNCBI.get_annotation_file("Bacillus Subtilis[Organism]", "GenBank")

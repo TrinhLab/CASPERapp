@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>940</width>
+    <width>942</width>
     <height>602</height>
    </rect>
   </property>
@@ -666,14 +666,40 @@
      <string notr="true">type_of_annotation_file</string>
     </attribute>
    </widget>
+   <widget class="QLineEdit" name="ncbi_ret_max_line_edit">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>640</x>
+      <y>450</y>
+      <width>113</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="ncbi_ret_max_label">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>450</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>NCBI Return Max</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>940</width>
-     <height>21</height>
+     <width>942</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

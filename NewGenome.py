@@ -68,7 +68,17 @@ class NCBI_Search_File(QtWidgets.QDialog):
     # button functions below
     # this function searchs ncbi for the organism file, adds any matches to the selectionTableWidget
     def searchFunction(self):
-        print("searching for: ", self.organismLineEdit.displayText())
+
+        # if there is nothing set in the line edit, set the ret max to 20
+        if self.ncbi_ret_max_line_edit.displayText() != "":
+            # if the string is only digits (and non negative), set ret max to that, otherwise just set it to 20
+            if self.ncbi_ret_max_line_edit.displayText().isdigit() and int(self.ncbi_ret_max_line_edit.displayText()) > 0:
+                ret_max = int(self.ncbi_ret_max_line_edit.displayText())
+            else:
+                ret_max = 20
+        else:
+            ret_max = 20
+
         # clear any previous searches
         self.selectionTableWidget.clearContents()
         self.submissionTableWidget.clearContents()
@@ -81,11 +91,19 @@ class NCBI_Search_File(QtWidgets.QDialog):
                                            "No organism has been entered to search for. "
                                            "Please type in an organism to search for.",
                                            QtWidgets.QMessageBox.Ok)
+            return
+        # make sure that the retmax value is not too large
+        if ret_max > 100:
+            QtWidgets.QMessageBox.question(self, "Error",
+                                           "Return Max number is too high, please set it to something below 100",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
         else:
             # search the ncbi database
             self.searchProgressBar.setValue(15)
-            searchOrganism = self.organismLineEdit.displayText() + "[Organism]"
-            self.database_url_list, self.idList_dict = self.ncbi_searcher.getDataBaseURL(searchOrganism, self.searchType)
+            searchOrganism = self.organismLineEdit.displayText()
+            self.database_url_list, self.idList_dict = self.ncbi_searcher.getDataBaseURL(searchOrganism, self.searchType, ret_max)
             self.searchProgressBar.setValue(85)
 
 

@@ -335,7 +335,6 @@ class CMainWindow(QtWidgets.QMainWindow):
     # this assumes that the parsers all store the data the same way, which gff and feature table do
     # please make sure the gbff parser stores the data in the same way
     # so far the gff files seems to all be different. Need to think about how we want to parse it
-    # TODO: Still need to add the checker to see if the number of chromesomes match
     # TODO: also need to set the progress value correctly through all this
     def run_results_own_ncbi_file(self, inputstring, fileName):
         self.annotation_parser = Annotation_Parser()
@@ -710,6 +709,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.feature_table_button.setEnabled(False)
             self.gff_button.setEnabled(False)
             self.gbff_button.setEnabled(False)
+            self.ncbi_ret_max_line_edit.setEnabled(False)
             self.Search_Button.setText("Browse")
             self.Search_Label.setText("Select an annotation file...")
         elif self.Annotation_Kegg.isChecked():
@@ -718,6 +718,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.feature_table_button.setEnabled(False)
             self.gff_button.setEnabled(False)
             self.gbff_button.setEnabled(False)
+            self.ncbi_ret_max_line_edit.setEnabled(False)
             self.Search_Button.setText("Search")
             self.Search_Label.setText("Search KEGG Database for genome annotation")
             self.Search_Input.setText(self.orgChoice.currentText())
@@ -727,6 +728,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.feature_table_button.setEnabled(True)
             self.gff_button.setEnabled(True)
             self.gbff_button.setEnabled(True)
+            self.ncbi_ret_max_line_edit.setEnabled(True)
             self.Search_Button.setText("Search")
             self.Search_Label.setText("Search NCBI Database for genome annotation")
             self.Search_Input.setText(self.orgChoice.currentText())
@@ -795,19 +797,39 @@ class CMainWindow(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.question(self, "Error", "Please select either RefSeq or GenBank databases.",
                                                QtWidgets.QMessageBox.Ok)
                 return
-            database_type = ""
+
+            # if there is nothing set in the line edit, set the ret max to 20
+            if self.ncbi_ret_max_line_edit.displayText() != "":
+
+                # if the string is only digits (and non negative), set ret max to that, otherwise just set it to 20
+                if self.ncbi_ret_max_line_edit.displayText().isdigit() and int(self.ncbi_ret_max_line_edit.displayText()) > 0:
+                    ret_max = int(self.ncbi_ret_max_line_edit.displayText())
+                else:
+                    ret_max = 20
+            else:
+                ret_max = 20
+
+            # make sure that the retmax value is not too large
+            if ret_max > 100:
+                QtWidgets.QMessageBox.question(self, "Error",
+                                           "Return Max number is too high, please set it to something below 100",
+                                           QtWidgets.QMessageBox.Ok)
+                return
 
             # clear all the things
-            self.link_list.clear()
-            self.organismDict.clear()
+            self.link_list = list()
+            self.organismDict = dict()
             self.Annotations_Organism.clear()
+
+            # now we can finally search NCBI
+            database_type = ""
             if self.refseq_button.isChecked():
                 database_type ="RefSeq"
             else:
                 database_type = "GenBank"
 
             # actually search, if nothing is returned, break out
-            self.link_list, self.organismDict = self.ncbi_searcher.get_annotation_file(self.orgChoice.currentText(), database_type)
+            self.link_list, self.organismDict = self.ncbi_searcher.getDataBaseURL(self.orgChoice.currentText(), database_type, ret_max)
             if len(self.link_list) == 0 and len(self.organismDict) == 0:
                 QtWidgets.QMessageBox.question(self, "Error", "Search yielded 0 results. Please try again.",
                                                QtWidgets.QMessageBox.Ok)

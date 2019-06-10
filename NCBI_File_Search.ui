@@ -64,7 +64,7 @@
   <widget class="QLineEdit" name="organismLineEdit">
    <property name="geometry">
     <rect>
-     <x>80</x>
+     <x>50</x>
      <y>20</y>
      <width>113</width>
      <height>20</height>
@@ -126,7 +126,7 @@
   <widget class="QLabel" name="ogranismLabel">
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>0</x>
      <y>20</y>
      <width>47</width>
      <height>14</height>
@@ -199,6 +199,29 @@
    </property>
    <property name="text">
     <string>Deselect</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="ncbi_ret_max_line_edit">
+   <property name="geometry">
+    <rect>
+     <x>190</x>
+     <y>20</y>
+     <width>113</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="ncbi_ret_max_label">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>0</y>
+     <width>91</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>NCBI Return Max</string>
    </property>
   </widget>
  </widget>
