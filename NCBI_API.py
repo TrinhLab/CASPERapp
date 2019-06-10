@@ -198,8 +198,14 @@ class Assembly:
         readStream.close()
 
         # check the file type, and decompress accordingly
+        # i may be able to take the if statements out, and decompresss all of them in the same way.
+        # just need to talk to brian about that
         if file_type == "_genomic.gbff.gz":
-            print("Decompress a gbff file here")
+            tempString = str(zipFileContent)[2:-1]
+            tempString = tempString.replace("\\t", "\t")
+            tempList = tempString.split("\\n")
+            for i in range(len(tempList)):
+                writeStream.write(str(tempList[i] + "\n"))
         elif file_type == "_genomic.gff.gz":
             tempString = str(zipFileContent)[2:-1]
             tempString = tempString.replace("\\t", "\t")

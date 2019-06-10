@@ -6,7 +6,7 @@
 
 import gffutils
 import GlobalSettings
-
+from Bio import SeqIO
 
 class Annotation_Parser:
     def __init__(self):
@@ -30,11 +30,96 @@ class Annotation_Parser:
         self.para_dict = dict()
     #####################END OF INIT FUNCTION
 
+    ########################################
+    # this function parses GBFF files
+    # it stores the data in 2 dictionaries, a parallel one and a regular one
+    # ONLY TO BE USED WITH GBFF FILES, NOTHING ELSE
+    # testing: has been tested by Josh, and seems to work. Needs further testing by Brian
+    ########################################
+    def gbff_parse(self):
+        # variables used
+        self.dict.clear()
+        self.para_dict.clear()
+        prevFirstIndex = ""
+        indexNumber = 1
+        strandChar = ""
+        currentLocusTag = ""
+        para_dict_key_string = ""
+        values = list()
+
+        # get all of the record or sections
+        gb_record = SeqIO.parse(self.annotationFileName, 'genbank')
+
+        # for each section
+        for record in gb_record:
+            # for each feature in that section
+            for feature in record.features:
+                # only change the locus_tag and update the para_dict if the feature is a gene
+                if feature.type == "gene":
+                    # once the locus tag changes, append it to the para_dict
+                    if para_dict_key_string != "":
+                        if para_dict_key_string not in self.para_dict:
+                            self.para_dict[para_dict_key_string] = list()
+                            self.para_dict[para_dict_key_string].append(currentLocusTag)
+                        else:
+                            if currentLocusTag not in self.para_dict[para_dict_key_string]:
+                                self.para_dict[para_dict_key_string].append(currentLocusTag)
+                        para_dict_key_string = ""
+
+                    currentLocusTag = feature.qualifiers['locus_tag'][0]
+
+                    # check to see if the strand is + or -
+                    if feature.location.strand == -1:
+                        strandChar = '-'
+                    else:
+                        strandChar = '+'
+
+                    # update that one's values
+                    values = [record.id, indexNumber, feature.type, int(feature.location.start) - 1,
+                              int(feature.location.end), strandChar]
+
+                    # insert
+                    if currentLocusTag not in self.dict:
+                        self.dict[currentLocusTag] = list()
+                        self.dict[currentLocusTag].append(values)
+                    else:
+                        self.dict[currentLocusTag].append(values)
+
+                # if it's not a gene, skip rep_orgin, telomere, and source
+                elif feature.type != "rep_origin" and feature.type != "telomere" and feature.type != "source":
+                    # get the data for the normal dictionary and store it
+                    if feature.location.strand == -1:
+                        strandChar = '-'
+                    else:
+                        strandChar = '+'
+                    values = [record.id, indexNumber, feature.type, int(feature.location.start) - 1,
+                              int(feature.location.end), strandChar]
+                    # make sure it isn't a duplicate
+                    if values not in self.dict[currentLocusTag]:
+                        self.dict[currentLocusTag].append(values)
+                    # now get the para_dict's data
+
+                    # check for the note section
+                    if 'note' in feature.qualifiers:
+                        if para_dict_key_string == "":
+                            para_dict_key_string = feature.qualifiers['note'][0]
+                        else:
+                            para_dict_key_string = para_dict_key_string + " " + feature.qualifiers['note'][0]
+                    # check for the product section
+                    if 'product' in feature.qualifiers:
+                        if para_dict_key_string == "":
+                            para_dict_key_string = feature.qualifiers['product'][0]
+                        else:
+                            para_dict_key_string = para_dict_key_string + " " + feature.qualifiers['product'][0]
+            indexNumber += 1
+
+        # not sure if this number is correct, yet
+        self.max_chrom = indexNumber
+
     ############################################
     # This function parses gff files and stores them in a dictionary
     # It also creates a parallel dictionary to use in searching
     # Precondition: ONLY TO BE USED WITH GFF FILES
-    # Yeah...this one needs work again. Need to figure out how we are going to set this one up
     ############################################
     def gff_parse(self):
         self.dict.clear()
@@ -236,37 +321,9 @@ class Annotation_Parser:
             fileStream.close()
             self.isTxt = True
             self.txt_parse()
+        elif "gbff" in self.annotationFileName:
+            self.gbff_parse()
         else:
             print("Error: We cannot parse the file you have given")
 
 ####################END OF find_which_file_version
-
-#below code is for testing purposes
-"""
-if __name__ == '__main__':
-    myParser = Annotation_Parser()
-
-    #testing code with diffrent file names
-    #myParser.annotationFileName = "Annotation_Files/GCA_000146045.2_R64_feature_table.txt"
-    #myParser.annotationFileName = "Annotation_Files/GCA_003004805.1_ASM300480v1_feature_table.txt"
-    #myParser.annotationFileName = "GCA_900537225.1_YALIH222_genomic.gff"
-    #myParser.annotationFileName = "Kfedtschenkoi_382_v1.1.gene.gff3"
-    myParser.annotationFileName = "GCA_900537225.1_YALIH222_feature_table.txt"
-    myParser.find_which_file_version()
-
-    # this prints out the parallel dictionary
-    for item in myParser.para_dict:
-        print(item)
-        for i in range(len(myParser.para_dict[item])):
-            print("\t", myParser.para_dict[item][i])
-
-    # this prints out the regualr dictionary
-    #for item in myParser.dict:
-     #   print(item)
-      #  for i in range(len(myParser.dict[item])):
-       #     print("\t", myParser.dict[item][i])
-
-    # prints out the sizes of both of them
-    print("Regular dict size: ", len(myParser.dict))
-    print("Para dict size: ", len(myParser.para_dict))
-"""

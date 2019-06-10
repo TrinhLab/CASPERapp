@@ -678,6 +678,9 @@
       <height>20</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This allows you to set the maximum number of results returned from Entrez.&lt;/p&gt;&lt;p&gt;No value above 100 is allowed.&lt;/p&gt;&lt;p&gt;Note: The larger the number entered, the longer the search could take.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
    </widget>
    <widget class="QLabel" name="ncbi_ret_max_label">
     <property name="geometry">
@@ -699,7 +702,7 @@
      <x>0</x>
      <y>0</y>
      <width>942</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -891,7 +894,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="refseq_genbank_buttonGroup"/>
   <buttongroup name="type_of_annotation_file"/>
+  <buttongroup name="refseq_genbank_buttonGroup"/>
  </buttongroups>
 </ui>

@@ -210,6 +210,9 @@
      <height>20</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This allows you to set the maximum number of results returned from Entrez.&lt;/p&gt;&lt;p&gt;No number above 100 is allowed.&lt;/p&gt;&lt;p&gt;Note: the larger the number, the longer the search could take.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
   </widget>
   <widget class="QLabel" name="ncbi_ret_max_label">
    <property name="geometry">
