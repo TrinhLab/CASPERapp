@@ -7,7 +7,7 @@ from bioservices import KEGG
 from Bio import Entrez
 from CoTargeting import CoTargeting
 
-from Results import Results
+from Results import Results, geneViewerSettings
 from NewGenome import NewGenome, NCBI_Search_File
 
 import requests
@@ -266,6 +266,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.ncbi_search_dialog = NCBI_Search_File()
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
+        self.gene_viewer_settings = geneViewerSettings()
 
 
 
@@ -347,8 +348,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         own_cspr_parser = CSPRparser(cspr_file)
         own_cspr_parser.read_first_lines()
 
-        print("Karystats: ",len(own_cspr_parser.karystatsList))
-        print(self.annotation_parser.max_chrom)
+        #print("Karystats: ",len(own_cspr_parser.karystatsList))
+        #print(self.annotation_parser.max_chrom)
 
         if len(own_cspr_parser.karystatsList) != self.annotation_parser.max_chrom:
             print("Error: the number of chromesomes in the CSPR file and the Annotation File do not match. This could"
@@ -435,6 +436,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Results.displayGeneViewer.setEnabled(False)
         self.Results.lineEditStart.setEnabled(False)
         self.Results.lineEditEnd.setEnabled(False)
+        self.gene_viewer_settings.kegg_radio_button.setEnabled(False)
         self.Results.displayGeneViewer.setChecked(0)
 
         # make sure an annotation file has been selected
@@ -516,6 +518,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.Results.displayGeneViewer.setEnabled(True)
                 self.Results.lineEditStart.setEnabled(True)
                 self.Results.lineEditEnd.setEnabled(True)
+                self.gene_viewer_settings.kegg_radio_button.setEnabled(True)
                 list_sVal = self.separate_line(inputstring[0])
                 for sValue in list_sVal:
                     sValue = self.removeWhiteSpace(sValue)
@@ -597,7 +600,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                                 holder = (match[1], match[3], match[4])
                                 self.checked_info[item[0]] = holder
 
-        # now call transfer data, however I think we need to change how transfer data stores the data for these types of files
+        # now call transfer data
         self.progressBar.setValue(80)
         self.Results.transfer_data(self.shortHand[full_org], str(self.endoChoice.currentText()), os.getcwd(),
                                    self.checked_info, self.check_ntseq_info, "")
@@ -704,31 +707,34 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def change_annotation(self):
         if self.Annotation_Ownfile.isChecked():
-            self.refseq_button.setEnabled(False)
-            self.genbank_button.setEnabled(False)
-            self.feature_table_button.setEnabled(False)
-            self.gff_button.setEnabled(False)
-            self.gbff_button.setEnabled(False)
-            self.ncbi_ret_max_line_edit.setEnabled(False)
+            self.refseq_button.hide()
+            self.genbank_button.hide()
+            self.feature_table_button.hide()
+            self.gff_button.hide()
+            self.gbff_button.hide()
+            self.ncbi_ret_max_line_edit.hide()
+            self.ncbi_ret_max_label.hide()
             self.Search_Button.setText("Browse")
             self.Search_Label.setText("Select an annotation file...")
         elif self.Annotation_Kegg.isChecked():
-            self.refseq_button.setEnabled(False)
-            self.genbank_button.setEnabled(False)
-            self.feature_table_button.setEnabled(False)
-            self.gff_button.setEnabled(False)
-            self.gbff_button.setEnabled(False)
-            self.ncbi_ret_max_line_edit.setEnabled(False)
+            self.refseq_button.hide()
+            self.genbank_button.hide()
+            self.feature_table_button.hide()
+            self.gff_button.hide()
+            self.gbff_button.hide()
+            self.ncbi_ret_max_line_edit.hide()
+            self.ncbi_ret_max_label.hide()
             self.Search_Button.setText("Search")
             self.Search_Label.setText("Search KEGG Database for genome annotation")
             self.Search_Input.setText(self.orgChoice.currentText())
         elif self.NCBI_Select.isChecked():
-            self.refseq_button.setEnabled(True)
-            self.genbank_button.setEnabled(True)
-            self.feature_table_button.setEnabled(True)
-            self.gff_button.setEnabled(True)
-            self.gbff_button.setEnabled(True)
-            self.ncbi_ret_max_line_edit.setEnabled(True)
+            self.refseq_button.show()
+            self.genbank_button.show()
+            self.feature_table_button.show()
+            self.gff_button.show()
+            self.gbff_button.show()
+            self.ncbi_ret_max_line_edit.show()
+            self.ncbi_ret_max_label.show()
             self.Search_Button.setText("Search")
             self.Search_Label.setText("Search NCBI Database for genome annotation")
             self.Search_Input.setText(self.orgChoice.currentText())

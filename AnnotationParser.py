@@ -41,7 +41,7 @@ class Annotation_Parser:
         self.dict.clear()
         self.para_dict.clear()
         prevFirstIndex = ""
-        indexNumber = 1
+        indexNumber = 0
         strandChar = ""
         currentLocusTag = ""
         para_dict_key_string = ""
@@ -52,6 +52,7 @@ class Annotation_Parser:
 
         # for each section
         for record in gb_record:
+            indexNumber += 1
             # for each feature in that section
             for feature in record.features:
                 # only change the locus_tag and update the para_dict if the feature is a gene
@@ -111,7 +112,6 @@ class Annotation_Parser:
                             para_dict_key_string = feature.qualifiers['product'][0]
                         else:
                             para_dict_key_string = para_dict_key_string + " " + feature.qualifiers['product'][0]
-            indexNumber += 1
 
         # not sure if this number is correct, yet
         self.max_chrom = indexNumber

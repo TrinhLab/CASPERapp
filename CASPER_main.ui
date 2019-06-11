@@ -576,7 +576,7 @@
    </widget>
    <widget class="QRadioButton" name="refseq_button">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -598,7 +598,7 @@
    </widget>
    <widget class="QRadioButton" name="genbank_button">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -894,7 +894,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="type_of_annotation_file"/>
   <buttongroup name="refseq_genbank_buttonGroup"/>
+  <buttongroup name="type_of_annotation_file"/>
  </buttongroups>
 </ui>

@@ -1,7 +1,7 @@
 import sys
 
 
-from PyQt5 import QtWidgets, uic, QtCore, QtGui
+from PyQt5 import QtWidgets, uic, QtCore, QtGui, Qt
 from Scoring import OnTargetScore
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
@@ -63,6 +63,7 @@ class Results(QtWidgets.QMainWindow):
         self.highlight_gene_viewer_button.clicked.connect(self.highlight_gene_viewer)
         self.checkBoxSelectAll.stateChanged.connect(self.selectAll)
         self.pushButton_Deselect_All.clicked.connect(self.deselectAll)
+        self.gene_viewer_settings_button.clicked.connect(self.changeGeneViewerSettings)
 
         #self.targetTable.itemSelectionChanged.connect(self.item_select)
         self.minScoreLine.setText("0")
@@ -133,8 +134,18 @@ class Results(QtWidgets.QMainWindow):
         for i in range(self.targetTable.rowCount()):
             if self.targetTable.item(i, 0).isSelected():
                 # get the strand and sequence strings
+                locationString = self.targetTable.item(i,0).text()
                 strandString = self.targetTable.item(i, 2).text()
                 sequenceString = self.targetTable.item(i, 1).text()
+                #movementIndex = 0
+                #left_right = ""
+
+
+                #location = int(locationString) - self.geneDict[self.comboBoxGene.currentText()][1]
+
+                #location = location + len(self.targetTable.item(i, 3).text())
+
+                #print("Location is: ", location)
 
                 # check whether to be red or green
                 if strandString == "+":
@@ -142,6 +153,27 @@ class Results(QtWidgets.QMainWindow):
                 elif strandString == "-":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("red")))
                     sequenceString = k.revcom(sequenceString)
+
+                #if "Cas12" in self.endonucleaseBox.currentText():
+                 #   movementIndex = 24
+                  #  left_right = "+"
+                #elif "Cas9" in self.endonucleaseBox.currentText():
+                 #   movementIndex = 20
+                  #  left_right = "-"
+
+                #mySequence = ""
+
+                #if left_right == "-":
+                 #   mySequence = self.geneViewer.toPlainText()[location:-movementIndex]
+                #elif left_right == "+":
+                 #   for i in range(movementIndex):
+                  #      if mySequence == "":
+                   #         mySequence = self.geneViewer.toPlainText()[location]
+                    #    else:
+                     #       mySequence = mySequence + self.geneViewer.toPlainText()[location + i]
+                    #mySequence = self.geneViewer.toPlainText()[location:movementIndex]
+
+                #print(mySequence)
 
                 # go through and highlight if it's in the geneviewer
                 if sequenceString in self.geneViewer.toPlainText():
@@ -202,13 +234,6 @@ class Results(QtWidgets.QMainWindow):
         self.geneDict = geneposdict
         self.geneNTDict = geneNTSeqDict
 
-        # print("Inside transfer_data, here is the stuff")
-        # print("Org: ", org)
-        # print("Endo: ", endo)
-        # print("Path: ", path)
-        # print("GenePosDict: ", geneposdict)
-        # print("Fasta: ", fasta)
-
         self.highlighted.clear()
         for gene in geneposdict:
             self.comboBoxGene.addItem(gene)
@@ -221,7 +246,8 @@ class Results(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.show()
         self.hide()
 
-
+    def changeGeneViewerSettings(self):
+        GlobalSettings.mainWindow.gene_viewer_settings.show()
 
     # Function grabs the information from the .cspr file and adds them to the AllData dictionary
     #changed to now call CSPRparser's function. Same function essentially, just cleaned up here
@@ -404,6 +430,182 @@ class Results(QtWidgets.QMainWindow):
         else:
             # change to dialog box
             print('Could not open file')
+
+
+class geneViewerSettings(QtWidgets.QDialog):
+    def __init__(self):
+        # Qt init stuff
+        super(geneViewerSettings, self).__init__()
+        uic.loadUi("geneViewerSettings.ui", self)
+        self.setWindowTitle("Change Gene Viewer Settings")
+        self.setWindowIcon(Qt.QIcon("cas9image.png"))
+
+        # button connections
+        self.kegg_radio_button.clicked.connect(self.change_file_type)
+        self.gbff_radio_button.clicked.connect(self.change_file_type)
+        self.fna_radio_button.clicked.connect(self.change_file_type)
+        self.browse_button.clicked.connect(self.browseForFile)
+        self.cancel_button.clicked.connect(self.cancelFunction)
+        self.submit_button.clicked.connect(self.submitFunction)
+
+        # class variables
+        self.file_type = ""
+
+    # this function is called when the user changes the file type
+    # it just sets a class variable to the type of file selected
+    def change_file_type(self):
+        if self.kegg_radio_button.isChecked():
+            self.file_type = "kegg"
+        elif self.gbff_radio_button.isChecked():
+            self.file_type = "gbff"
+        elif self.fna_radio_button.isChecked():
+            self.file_type = "fna"
+
+
+    # this function is only called when the user selects browse for a file option
+    # it opens a window such that the user can search for a file to use for the gene viewer sequence
+    def browseForFile(self):
+        # return out if the user has selected Kegg
+        if self.kegg_radio_button.isChecked():
+            return
+
+        # make sure that either GBFF or FNA is checked
+        if not self.gbff_radio_button.isChecked() and not self.fna_radio_button.isChecked():
+            QtWidgets.QMessageBox.question(self, "Nothing Selected",
+                                           "Please select either the GBFF or the FNA radio button.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+        # open a window so that the user can select a file
+        filed = QtWidgets.QFileDialog()
+        myFile = QtWidgets.QFileDialog.getOpenFileName(filed, "Choose an Annotation File")
+
+        # make sure they choose the correct type of file
+        if self.file_type not in myFile[0]:
+            QtWidgets.QMessageBox.question(self, "Wrong type of file selected",
+                                           "Please select the same type of file selected in the radio buttons.",
+                                           QtWidgets.QMessageBox.Ok)
+            self.file_name_edit.setText("")
+            return
+
+        # if the file is not empty, then set it
+        if (myFile[0] != ""):
+            self.file_name_edit.setText(myFile[0])
+
+    # this function is only called when the user clicks on cancel.
+    # it resets the text for the file chosen, while also unchecking all of the radio buttons
+    # then it hides the window
+    def cancelFunction(self):
+        self.file_name_edit.setText("Please choose a file!")
+
+        # setting them to False does not seem to work, no idea why
+        self.kegg_radio_button.setChecked(False)
+        self.gbff_radio_button.setChecked(False)
+        self.fna_radio_button.setChecked(False)
+        self.hide()
+
+    # this function is only called when the user clicks on submit
+    # it will find all of the sequences for all of the genes in the comboGeneBox in the results window
+    # It will go based on the lengths stored in the comboGeneBox dictionary
+    def submitFunction(self):
+        if not self.kegg_radio_button.isChecked() and (self.file_name_edit.displayText() == "" or self.file_name_edit.displayText() == "Please choose a file!"):
+            print("No file chosen")
+            return
+
+        sequence = ""
+
+        # for each gene selected from the results window
+        for item in GlobalSettings.mainWindow.Results.geneDict:
+            if self.file_type == "kegg":
+                print("use kegg stuff here")
+            if self.file_type == "fna":
+                sequence = self.fna_sequence_finder(GlobalSettings.mainWindow.Results.geneDict[item])
+                GlobalSettings.mainWindow.Results.geneNTDict[item] = sequence
+            if self.file_type == "gbff":
+                sequence = self.gbff_sequence_finder(GlobalSettings.mainWindow.Results.geneDict[item])
+                GlobalSettings.mainWindow.Results.geneNTDict[item] = sequence
+
+
+        GlobalSettings.mainWindow.Results.displayGeneViewer.setEnabled(True)
+        GlobalSettings.mainWindow.Results.lineEditStart.setEnabled(True)
+        GlobalSettings.mainWindow.Results.lineEditEnd.setEnabled(True)
+        self.hide()
+
+    # this function gets the sequence out of the GBFF file
+    # may have indexing issues
+    def gbff_sequence_finder(self, location_data):
+        # start up the function
+        fileStream = open(self.file_name_edit.displayText())
+        buffer = fileStream.readline()
+        index = 0
+        pre_sequence = ""
+
+        # skip all of the data until we are at the chromesome we care about
+        while index != location_data[0]:
+            if "ORIGIN" in buffer:
+                index += 1
+            buffer = fileStream.readline()
+
+        # get the entire chromesome into a string
+        while "//" not in buffer:
+            # replace digits with spaces (if i replace them with nothing the program will crash)
+            for i in range(len(buffer)):
+                if buffer[i].isdigit():
+                    buffer = buffer.replace(buffer[i], " ")
+
+            # replace all of the spaces
+            buffer = buffer.replace(" ", "")
+
+            # append it to the stored version of the entire string
+            if pre_sequence == "":
+                pre_sequence = buffer
+            else:
+                pre_sequence = pre_sequence + buffer
+
+            buffer = fileStream.readline()
+
+        # take out the endlines and uppercase the string
+        pre_sequence = pre_sequence.replace("\n", "")
+        pre_sequence = pre_sequence.upper()
+
+        # get the correct location and return
+        ret_sequence = pre_sequence[location_data[1]:location_data[2]]
+        return ret_sequence
+
+    # this function is the function that actually finds the sequence
+    # May have indexing issues here
+    def fna_sequence_finder(self, location_data):
+        # Open the file and set the index to 0
+        fileStream = open(self.file_name_edit.displayText())
+        index = 0
+
+        # skip the file until we get to the chromesome we want
+        buffer = fileStream.readline()
+        while index != location_data[0]:
+            buffer = fileStream.readline()
+            if buffer.startswith(">"):
+                index += 1
+
+        buffer = fileStream.readline()
+
+        # now go through and get the whole chromesome
+        sequence = buffer
+        while not buffer.startswith(">"):
+            buffer = fileStream.readline()
+            if not buffer.startswith(">"):
+                sequence = sequence + buffer
+
+        # uppercase that chromesome, and change all endlines with spaces
+        sequence = sequence.upper()
+        sequence = sequence.replace("\n", "")
+
+        # now set the return sequence to the substring that we want
+        NTSequence = sequence[location_data[1]:location_data[2]]
+
+        return NTSequence
+
+
+
 
 
 
