@@ -313,6 +313,9 @@
     </property>
    </widget>
    <widget class="QPushButton" name="change_start_end_button">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>1030</x>

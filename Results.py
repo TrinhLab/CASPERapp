@@ -2,6 +2,9 @@ import sys
 
 
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, Qt
+from bs4 import BeautifulSoup
+import requests
+import webbrowser
 from Scoring import OnTargetScore
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
@@ -64,6 +67,7 @@ class Results(QtWidgets.QMainWindow):
         self.checkBoxSelectAll.stateChanged.connect(self.selectAll)
         self.pushButton_Deselect_All.clicked.connect(self.deselectAll)
         self.gene_viewer_settings_button.clicked.connect(self.changeGeneViewerSettings)
+        self.change_start_end_button.clicked.connect(self.change_indicies)
 
         #self.targetTable.itemSelectionChanged.connect(self.item_select)
         self.minScoreLine.setText("0")
@@ -80,6 +84,75 @@ class Results(QtWidgets.QMainWindow):
         self.scoreSlider.valueChanged.connect(self.update_score_filter)
 
         self.first_boot = True
+
+    def change_indicies(self):
+
+        # make sure the gene viewer is on
+        if not self.displayGeneViewer.isChecked():
+            QtWidgets.QMessageBox.question(self, "Gene Viewer Error",
+                                           "Gene Viewer display is off! "
+                                           "Please turn the Gene Viewer on in order to highlight the sequences selected",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+
+        # change the start and end values
+        tempTuple = (self.geneDict[self.comboBoxGene.currentText()][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()))
+        self.geneDict[self.comboBoxGene.currentText()] = tempTuple
+
+        # if the user is using kegg
+        if GlobalSettings.mainWindow.gene_viewer_settings.file_type == "kegg":
+            # build the URL string
+            url = "https://www.genome.jp/dbget-bin/cut_sequence_genes.pl?FROM="
+            url = url + str(self.geneDict[self.comboBoxGene.currentText()][1])
+            url = url + "&TO="
+            url = url + str(self.geneDict[self.comboBoxGene.currentText()][2])
+            url = url + "&VECTOR=1&ORG="
+            url = url + GlobalSettings.mainWindow.Annotations_Organism.currentText().split(" ")[1]
+
+            # soup time
+            source = requests.get(url)
+            plain_text = source.text
+            soup = BeautifulSoup(plain_text, "html.parser")
+
+
+            buffer = ""
+
+            # use the try because if user gives bad input
+            try:
+                for item in soup.find('pre'):
+                    # get the first line
+                    if ">" in item.string:
+                        temp = item.string.replace("\n", "")
+                        temp = temp.replace(" ", "")
+                        newLineIndex = temp.find(")") + 1
+
+                        if buffer == "":
+                            buffer = temp[newLineIndex:]
+                        else:
+                            buffer = buffer + temp[newLineIndex:]
+                    # get every other lie
+                    else:
+                        if buffer == "":
+                            buffer = item.string
+                        else:
+                            buffer = buffer + item.string
+
+                buffer = buffer.replace("\n", "")
+                self.geneNTDict[self.comboBoxGene.currentText()] = buffer
+            except:
+                print("indexing error")
+
+        # if the user is using gbff
+        elif GlobalSettings.mainWindow.gene_viewer_settings.file_type == "gbff":
+            sequence = GlobalSettings.mainWindow.gene_viewer_settings.gbff_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
+            self.geneNTDict[self.comboBoxGene.currentText()] = sequence
+        # if the user is using fna
+        elif GlobalSettings.mainWindow.gene_viewer_settings.file_type == "fna":
+            sequence = GlobalSettings.mainWindow.gene_viewer_settings.fna_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
+            self.geneNTDict[self.comboBoxGene.currentText()] = sequence
+
+        self.checkGeneViewer()
 
     # this function goes through and deselects all of the Off-Target checkboxes
     # also sets the selectAllShown check box to unchecked as well
@@ -534,7 +607,13 @@ class geneViewerSettings(QtWidgets.QDialog):
         # for each gene selected from the results window
         for item in GlobalSettings.mainWindow.Results.geneDict:
             if self.file_type == "kegg":
-                print("use kegg stuff here")
+                k = Kegg()
+                organism = GlobalSettings.mainWindow.Annotations_Organism.currentText().split(" ")[1]
+                nameFull = item.split(" ")
+                name = nameFull[len(nameFull) - 1]
+                # get kegg's ntsequence and store it
+                nt_sequence = k.get_nt_sequence(organism + ":" + name)
+                GlobalSettings.mainWindow.Results.geneNTDict[item] = nt_sequence
             if self.file_type == "fna":
                 sequence = self.fna_sequence_finder(GlobalSettings.mainWindow.Results.geneDict[item])
                 GlobalSettings.mainWindow.Results.geneNTDict[item] = sequence
@@ -546,6 +625,8 @@ class geneViewerSettings(QtWidgets.QDialog):
         GlobalSettings.mainWindow.Results.displayGeneViewer.setEnabled(True)
         GlobalSettings.mainWindow.Results.lineEditStart.setEnabled(True)
         GlobalSettings.mainWindow.Results.lineEditEnd.setEnabled(True)
+        GlobalSettings.mainWindow.Results.change_start_end_button.setEnabled(True)
+        GlobalSettings.mainWindow.Results.checkGeneViewer()
         self.hide()
 
     # this function gets the sequence out of the GBFF file
@@ -554,6 +635,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         # start up the function
         fileStream = open(self.file_name_edit.displayText())
         buffer = fileStream.readline()
+        print(buffer)
         index = 1
         pre_sequence = ""
 

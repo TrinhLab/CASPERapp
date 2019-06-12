@@ -274,29 +274,17 @@ class NewGenome(QtWidgets.QMainWindow):
     def selectFasta(self):
 
         filed = QtWidgets.QFileDialog()
-        documents= os.path.expanduser("~")+"/Documents"
-        self.file = QtWidgets.QFileDialog.getOpenFileName(filed,"Open File",documents)
-        fileName = ""
-        index = 0
-        self.file = self.file[0]
-        while True:
-            if(self.file == ""):
-                break
-            if self.file[len(self.file)-1-index]=="/" or self.file[len(self.file)-1-index]=="\\" :
-                break
-            fileName = self.file[len(self.file)-1-index]+fileName
-            index+=1
+        myFile = QtWidgets.QFileDialog.getOpenFileName(filed, "Choose a File")
+        if (myFile[0] != ""):
 
-        if "genbank" not in fileName or "fasta" not in fileName or "gbff" not in fileName or "fna" not in fileName:
-            QtWidgets.QMessageBox.question(self, "File Selection Error",
-                                           "You have selected an incorrect type of file. "
-                                           "Please choose a genbank, fasta, gbff, or a fna file.",
-                                           QtWidgets.QMessageBox.Ok)
-            return
-        else:
-
-
-            self.nameFile.setText(fileName)
+            if not myFile[0].endswith(".fa") and not myFile[0].endswith(".fna") and not myFile[0].endswith(".gbff") and not myFile[0].endswith(".fasta"):
+                QtWidgets.QMessageBox.question(self, "File Selection Error",
+                                               "You have selected an incorrect type of file. "
+                                               "Please choose a genbank, fasta, gbff, or a fna file.",
+                                               QtWidgets.QMessageBox.Ok)
+                return
+            else:
+                self.nameFile.setText(myFile[0])
         """cdir = self.lineEdit.text()
         os.chdir(mydir)
         self.gdirectory = mydir

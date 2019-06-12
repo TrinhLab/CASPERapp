@@ -437,6 +437,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Results.lineEditStart.setEnabled(False)
         self.Results.lineEditEnd.setEnabled(False)
         self.gene_viewer_settings.kegg_radio_button.setEnabled(False)
+        self.Results.change_start_end_button.setEnabled(False)
         self.Results.displayGeneViewer.setChecked(0)
 
         # make sure an annotation file has been selected
@@ -519,6 +520,8 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.Results.lineEditStart.setEnabled(True)
                 self.Results.lineEditEnd.setEnabled(True)
                 self.gene_viewer_settings.kegg_radio_button.setEnabled(True)
+                self.Results.change_start_end_button.setEnabled(True)
+                self.gene_viewer_settings.file_type = "kegg"
                 list_sVal = self.separate_line(inputstring[0])
                 for sValue in list_sVal:
                     sValue = self.removeWhiteSpace(sValue)
@@ -624,11 +627,12 @@ class CMainWindow(QtWidgets.QMainWindow):
                 nameFull = item[0].split(" ")
                 name  = nameFull[len(nameFull)-1]
                 gene_info = k.gene_locator(organism+":"+name)
+                #print(nameFull)
 
                 # get kegg's ntsequence and store it
                 nt_sequence = k.get_nt_sequence(organism+":"+name)
 
-                print(item[0])
+                #print(item[0])
                 holder = (gene_info[0],gene_info[2],gene_info[3])
                 self.checked_info[item[0]]=holder
                 self.check_ntseq_info[item[0]] = nt_sequence
