@@ -1109,6 +1109,7 @@ class StartupWindow(QtWidgets.QDialog):
 
     def show_window(self):
 
+        self.close()
         self.gdirectory = str(self.lineEdit.text())
         print(self.gdirectory)
         if "Please select a directory that contains .capr files" in self.gdirectory:
@@ -1145,9 +1146,9 @@ if __name__ == '__main__':
     app.setOrganizationName("TrinhLab-UTK")
     app.setApplicationName("CASPER")
 
+    startup = StartupWindow()
+    GlobalSettings.filedir = startup.gdirectory  # used as global constant
     GlobalSettings.mainWindow = CMainWindow(os.getcwd())
     MTwin = multitargeting.Multitargeting()
 
-    startup = StartupWindow()
-    GlobalSettings.filedir = startup.gdirectory #used as global constant
     sys.exit(app.exec_())
