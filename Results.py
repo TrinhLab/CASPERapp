@@ -79,7 +79,7 @@ class Results(QtWidgets.QMainWindow):
 
         self.scoreSlider.valueChanged.connect(self.update_score_filter)
 
-        self.off_tar_win = OffTarget.OffTarget()
+        self.first_boot = True
 
     # this function goes through and deselects all of the Off-Target checkboxes
     # also sets the selectAllShown check box to unchecked as well
@@ -136,44 +136,58 @@ class Results(QtWidgets.QMainWindow):
                 # get the strand and sequence strings
                 locationString = self.targetTable.item(i,0).text()
                 strandString = self.targetTable.item(i, 2).text()
-                sequenceString = self.targetTable.item(i, 1).text()
-                #movementIndex = 0
-                #left_right = ""
+                sequenceString = ""
+                printSequence = ""
+                movementIndex = 0
+                left_right = ""
 
 
-                #location = int(locationString) - self.geneDict[self.comboBoxGene.currentText()][1]
+                location = int(locationString) - self.geneDict[self.comboBoxGene.currentText()][1]
 
-                #location = location + len(self.targetTable.item(i, 3).text())
+                print("Location is: ", location)
 
-                #print("Location is: ", location)
+                # if the endo is Cas12
+                if "Cas12" in self.endonucleaseBox.currentText():
+                    # movement is always 24
+                    movementIndex = 24
+
+                    # if the strand is positive, it moves to the right, if the strand is negative, it moves to the left
+                    if strandString == "-":
+                        left_right = "-"
+                        location = location - len(self.targetTable.item(i, 3).text())
+                    elif strandString == "+":
+                        location = (location + len(self.targetTable.item(i,3).text())) + 1
+                        left_right = "+"
+                # if the endo is Cas9
+                elif "Cas9" in self.endonucleaseBox.currentText():
+                    # movement is always 20
+                    movementIndex = 20
+
+                    # if the strand is negative, it moves to the right if the strand is positive it moves to the left
+                    if strandString == "-":
+                        left_right = "+"
+                    elif strandString == "+":
+                        left_right = "-"
+
+                if left_right == "+":
+                    printSequence = self.geneViewer.toPlainText()[location:location + movementIndex]
+                elif left_right == "-":
+                    for i in range(movementIndex):
+                        if printSequence == "":
+                            printSequence = self.geneViewer.toPlainText()[location + 1]
+                        else:
+                            printSequence = printSequence + self.geneViewer.toPlainText()[(location - i) + 1]
+
+                print(printSequence)
+
+                sequenceString = printSequence
 
                 # check whether to be red or green
                 if strandString == "+":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("green")))
                 elif strandString == "-":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("red")))
-                    sequenceString = k.revcom(sequenceString)
-
-                #if "Cas12" in self.endonucleaseBox.currentText():
-                 #   movementIndex = 24
-                  #  left_right = "+"
-                #elif "Cas9" in self.endonucleaseBox.currentText():
-                 #   movementIndex = 20
-                  #  left_right = "-"
-
-                #mySequence = ""
-
-                #if left_right == "-":
-                 #   mySequence = self.geneViewer.toPlainText()[location:-movementIndex]
-                #elif left_right == "+":
-                 #   for i in range(movementIndex):
-                  #      if mySequence == "":
-                   #         mySequence = self.geneViewer.toPlainText()[location]
-                    #    else:
-                     #       mySequence = mySequence + self.geneViewer.toPlainText()[location + i]
-                    #mySequence = self.geneViewer.toPlainText()[location:movementIndex]
-
-                #print(mySequence)
+                    sequenceString = sequenceString[::-1]
 
                 # go through and highlight if it's in the geneviewer
                 if sequenceString in self.geneViewer.toPlainText():
@@ -351,6 +365,9 @@ class Results(QtWidgets.QMainWindow):
 
     # currently unused, but could be used with the offTargetButton when implemented
     def Off_Target_Analysis(self):
+        if(self.first_boot == True):
+            self.first_boot = False
+            self.off_tar_win = OffTarget.OffTarget()
         self.off_tar_win.show()
 
     # Function for displaying the target in the gene viewer
@@ -537,7 +554,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         # start up the function
         fileStream = open(self.file_name_edit.displayText())
         buffer = fileStream.readline()
-        index = 0
+        index = 1
         pre_sequence = ""
 
         # skip all of the data until we are at the chromesome we care about
@@ -577,7 +594,7 @@ class geneViewerSettings(QtWidgets.QDialog):
     def fna_sequence_finder(self, location_data):
         # Open the file and set the index to 0
         fileStream = open(self.file_name_edit.displayText())
-        index = 0
+        index = 1
 
         # skip the file until we get to the chromesome we want
         buffer = fileStream.readline()

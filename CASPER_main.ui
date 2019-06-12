@@ -668,7 +668,7 @@
    </widget>
    <widget class="QLineEdit" name="ncbi_ret_max_line_edit">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -702,7 +702,7 @@
      <x>0</x>
      <y>0</y>
      <width>942</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -894,7 +894,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="refseq_genbank_buttonGroup"/>
   <buttongroup name="type_of_annotation_file"/>
+  <buttongroup name="refseq_genbank_buttonGroup"/>
  </buttongroups>
 </ui>
