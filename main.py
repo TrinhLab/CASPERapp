@@ -59,6 +59,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.mainWindow.searches.clear()
         self.tableWidget.setColumnCount(0)
         self.mainWindow.show()
+        self.mainWindow.progressBar.setValue(0)
         self.hide()
 
     # this function is very similar to the other fill_table, it just works with the other types of annotation files
@@ -67,7 +68,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.mainWindow = mainWindow
         index = 0
         self.tableWidget.setColumnCount(4)
-        self.mainWindow.progressBar.setValue(25)
+        self.mainWindow.progressBar.setValue(85)
         self.tableWidget.setHorizontalHeaderLabels("Description;Type;Gene ID;Select".split(";"))
         mainWindow.checkBoxes = []
         self.type = "nonkegg"
@@ -126,12 +127,10 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
                                                        QtWidgets.QMessageBox.No)
                 if (error == QtWidgets.QMessageBox.No):
                     return -2
-            self.mainWindow.progressBar.setValue(65)
             for obj in mainWindow.checkBoxes:  # check every match
                 obj[2].setChecked(True)
             self.mainWindow.collect_table_data_nonkegg()
         return 0
-        # TO DO: still need to add code for it to automatically call collect_table_data
 
     def fill_Table(self,mainWindow):
         self.tableWidget.clearContents()
@@ -341,6 +340,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.annotation_parser = Annotation_Parser()
         self.annotation_parser.annotationFileName = fileName
         self.annotation_parser.find_which_file_version()
+        self.progressBar.setValue(60)
 
         # this bit may not be needed here. Just a quick error check to make sure the chromesome numbers match
         full_org = str(self.orgChoice.currentText())
@@ -383,6 +383,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.Annotation_Window.fill_table_nonKegg(self)
             return
 
+        self.progressBar.setValue(75)
         # reset, and search the parallel dictionary now
         self.searches = {}
         for search in searchValues:
@@ -408,6 +409,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.question(self, "No Matches Found",
                                            "No matches found with that search, please try again",
                                            QtWidgets.QMessageBox.Ok)
+            self.progressBar.setValue(0)
             return
 
 
@@ -419,6 +421,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             #    for k in self.searches[i][j]:
              #      print("\t\t", k)
         # if we get to this point, that means that the search yieleded results, so fill the table
+        self.progressBar.setValue(80)
         self.Annotation_Window.fill_table_nonKegg(self)
 
     def run_results(self, inputtype, inputstring):
@@ -460,6 +463,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     QtWidgets.QMessageBox.question(self, "Error",
                                                    "Please select a type of annotation file to download. (Ex: Feature_Table, GFF, GBFF)"
                                                    , QtWidgets.QMessageBox.Ok)
+                    self.progressBar.setValue(0)
                     return
 
                 # check to see which file type they selected, and then make sure the program
@@ -479,6 +483,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 #decompress that file, and then delete the compressed version
                 if compressed_file:
+                    self.progressBar.setValue(25)
                     storeFileName = self.ncbi_searcher.decompress_annotation_file(compressed_file, type_of_annotation_file)
                     file_names = os.listdir(GlobalSettings.CSPR_DB)
                     for file in file_names:
@@ -487,11 +492,13 @@ class CMainWindow(QtWidgets.QMainWindow):
                             os.remove(file)
 
                     # now run results
+                    self.progressBar.setValue(35)
                     self.run_results_own_ncbi_file(inputstring, storeFileName)
                 else:
                     QtWidgets.QMessageBox.question(self, "Error",
                                                    "The database does not have the type of file you have requested. Please try another type of file"
                                                    , QtWidgets.QMessageBox.Ok)
+                    self.progressBar.setValue(0)
                     return
 
             # own annotation file code
@@ -604,7 +611,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                                 self.checked_info[item[0]] = holder
 
         # now call transfer data
-        self.progressBar.setValue(80)
+        self.progressBar.setValue(95)
         self.Results.transfer_data(self.shortHand[full_org], str(self.endoChoice.currentText()), os.getcwd(),
                                    self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)

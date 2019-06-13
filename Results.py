@@ -97,7 +97,20 @@ class Results(QtWidgets.QMainWindow):
 
 
         # change the start and end values
+        prevTuple = self.geneDict[self.comboBoxGene.currentText()]
         tempTuple = (self.geneDict[self.comboBoxGene.currentText()][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()))
+
+        # make sure that the difference between indicies is not too large
+        if abs(tempTuple[1] - tempTuple[2]) > 50000:
+            print(abs(tempTuple[1] - tempTuple[2]))
+            QtWidgets.QMessageBox.question(self, "Sequence Too Long",
+                                           "The sequence is too long! "
+                                           "Please choose indicies that will make the sequence less than 50,000!",
+                                           QtWidgets.QMessageBox.Ok)
+            self.lineEditStart.setText(str(self.geneDict[self.comboBoxGene.currentText()][1]))
+            self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
+            return
+
         self.geneDict[self.comboBoxGene.currentText()] = tempTuple
 
         # if the user is using kegg
@@ -118,7 +131,7 @@ class Results(QtWidgets.QMainWindow):
 
             buffer = ""
 
-            # use the try because if user gives bad input
+            # use the try in case user gives bad input
             try:
                 for item in soup.find('pre'):
                     # get the first line
@@ -142,7 +155,6 @@ class Results(QtWidgets.QMainWindow):
                 self.geneNTDict[self.comboBoxGene.currentText()] = buffer
             except:
                 print("indexing error")
-
         # if the user is using gbff
         elif GlobalSettings.mainWindow.gene_viewer_settings.file_type == "gbff":
             sequence = GlobalSettings.mainWindow.gene_viewer_settings.gbff_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
@@ -152,6 +164,22 @@ class Results(QtWidgets.QMainWindow):
             sequence = GlobalSettings.mainWindow.gene_viewer_settings.fna_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
             self.geneNTDict[self.comboBoxGene.currentText()] = sequence
 
+        # check and see if we need to add lowercase letters
+        changeInStart = tempTuple[1] - prevTuple[1]
+        changeInEnd = tempTuple[2] - prevTuple[2]
+
+        # check and see if the sequence is extended at all
+        # if it is, make the extended part lower-case as opposed to upper case
+        if changeInStart != 0 and changeInStart < 0:
+            tempString = self.geneNTDict[self.comboBoxGene.currentText()][:abs(changeInStart)].lower()
+            tempString = tempString + self.geneNTDict[self.comboBoxGene.currentText()][abs(changeInStart):]
+            self.geneNTDict[self.comboBoxGene.currentText()] = tempString
+        if changeInEnd != 0 and changeInEnd > 0:
+            tempString = self.geneNTDict[self.comboBoxGene.currentText()][len(self.geneNTDict[self.comboBoxGene.currentText()]) - abs(changeInEnd):].lower()
+            tempString = self.geneNTDict[self.comboBoxGene.currentText()][:len(self.geneNTDict[self.comboBoxGene.currentText()]) - abs(changeInEnd)] + tempString
+            self.geneNTDict[self.comboBoxGene.currentText()] = tempString
+
+        # update the gene viewer
         self.checkGeneViewer()
 
     # this function goes through and deselects all of the Off-Target checkboxes
@@ -215,9 +243,8 @@ class Results(QtWidgets.QMainWindow):
                 left_right = ""
 
 
+                # get the location
                 location = int(locationString) - self.geneDict[self.comboBoxGene.currentText()][1]
-
-                print("Location is: ", location)
 
                 # if the endo is Cas12
                 if "Cas12" in self.endonucleaseBox.currentText():
@@ -242,25 +269,34 @@ class Results(QtWidgets.QMainWindow):
                     elif strandString == "+":
                         left_right = "-"
 
-                if left_right == "+":
-                    printSequence = self.geneViewer.toPlainText()[location:location + movementIndex]
-                elif left_right == "-":
-                    for i in range(movementIndex):
-                        if printSequence == "":
-                            printSequence = self.geneViewer.toPlainText()[location + 1]
-                        else:
-                            printSequence = printSequence + self.geneViewer.toPlainText()[(location - i) + 1]
+                # try and build the string
+                # note: indexing issues are occuring. If they do we need to figure out what to do in those cases
+                try:
+                    if left_right == "+":
+                        printSequence = self.geneViewer.toPlainText()[location:location + movementIndex]
+                    elif left_right == "-":
+                        for i in range(movementIndex):
+                            if printSequence == "":
+                                printSequence = self.geneViewer.toPlainText()[location + 1]
+                            else:
+                                printSequence = printSequence + self.geneViewer.toPlainText()[(location - i) + 1]
+                except (IndexError):
+                    print("String indexing error!")
+                    print(left_right)
+                    continue
 
-                print(printSequence)
-
+                # see if the string needs to be flipped or not
                 sequenceString = printSequence
+                if "Cas9" in self.endonucleaseBox.currentText() and strandString == "+":
+                    sequenceString = sequenceString[::-1]
+                if "Cas12" in self.endonucleaseBox.currentText() and strandString == "-":
+                    sequenceString = sequenceString[::-1]
 
                 # check whether to be red or green
                 if strandString == "+":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("green")))
                 elif strandString == "-":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("red")))
-                    sequenceString = sequenceString[::-1]
 
                 # go through and highlight if it's in the geneviewer
                 if sequenceString in self.geneViewer.toPlainText():
@@ -270,7 +306,13 @@ class Results(QtWidgets.QMainWindow):
                     for i in range(len(sequenceString)):
                         cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
                     cursor.mergeCharFormat(format)
-                # catch the error if it is not in gene viewer
+                # check and see if the goes too far to the left
+                elif left_right == "-" and location - movementIndex < 0 and len(sequenceString) > 0:
+                    index = 0
+                    cursor.setPosition(index)
+                    for i in range( location + 2):
+                        cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
+                    cursor.mergeCharFormat(format)
                 else:
                     if noMatchString == "":
                         noMatchString = sequenceString
@@ -521,7 +563,10 @@ class Results(QtWidgets.QMainWindow):
             # change to dialog box
             print('Could not open file')
 
-
+############################################
+# CLASS NAME: geneViewerSettings
+# It's essentially a little window where the user can tell the program which file to use for geneviewer
+############################################
 class geneViewerSettings(QtWidgets.QDialog):
     def __init__(self):
         # Qt init stuff
@@ -635,14 +680,23 @@ class geneViewerSettings(QtWidgets.QDialog):
         # start up the function
         fileStream = open(self.file_name_edit.displayText())
         buffer = fileStream.readline()
-        print(buffer)
         index = 1
         pre_sequence = ""
+
+        # get to the first chromesome's origin
+        while True:
+            if "ORIGIN" in buffer:
+                break
+            buffer = fileStream.readline()
 
         # skip all of the data until we are at the chromesome we care about
         while index != location_data[0]:
             if "ORIGIN" in buffer:
                 index += 1
+            buffer = fileStream.readline()
+
+        # make sure the next part of the code starts with the first line of actual sequences
+        if "ORIGIN" in buffer:
             buffer = fileStream.readline()
 
         # get the entire chromesome into a string
@@ -667,6 +721,8 @@ class geneViewerSettings(QtWidgets.QDialog):
         pre_sequence = pre_sequence.replace("\n", "")
         pre_sequence = pre_sequence.upper()
 
+        # we are having an issue here. Sometimes the length of the pre_sequence string is not large enough
+        # need to talk to brian to see what could be causing that
         # get the correct location and return
         ret_sequence = pre_sequence[location_data[1]:location_data[2]]
         return ret_sequence
@@ -689,10 +745,13 @@ class geneViewerSettings(QtWidgets.QDialog):
 
         # now go through and get the whole chromesome
         sequence = buffer
-        while not buffer.startswith(">"):
+        while ">" not in buffer:
             buffer = fileStream.readline()
             if not buffer.startswith(">"):
                 sequence = sequence + buffer
+                # make sure to break out if the end of file is reached
+            if buffer == "":
+                break
 
         # uppercase that chromesome, and change all endlines with spaces
         sequence = sequence.upper()
