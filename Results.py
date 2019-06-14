@@ -241,10 +241,12 @@ class Results(QtWidgets.QMainWindow):
                 printSequence = ""
                 movementIndex = 0
                 left_right = ""
+                #print("Length of geneViewer: ", len(self.geneViewer.toPlainText()))
 
 
                 # get the location
                 location = int(locationString) - self.geneDict[self.comboBoxGene.currentText()][1]
+                #print("Location: ", location)
 
                 # if the endo is Cas12
                 if "Cas12" in self.endonucleaseBox.currentText():
@@ -283,7 +285,7 @@ class Results(QtWidgets.QMainWindow):
                 except (IndexError):
                     print("String indexing error!")
                     print(left_right)
-                    continue
+
 
                 # see if the string needs to be flipped or not
                 sequenceString = printSequence
@@ -292,13 +294,68 @@ class Results(QtWidgets.QMainWindow):
                 if "Cas12" in self.endonucleaseBox.currentText() and strandString == "-":
                     sequenceString = sequenceString[::-1]
 
+                #print(sequenceString)
+
                 # check whether to be red or green
                 if strandString == "+":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("green")))
                 elif strandString == "-":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("red")))
 
+
+                # if we are moving to the right
+                if left_right == "+":
+                    #check and see what the endpoint is
+                    endPoint = location + movementIndex
+                    # if endpoint is greater than the length of geneviewer, but the location (starting point) is less than the length
+                    if endPoint >= len(self.geneViewer.toPlainText()) and location <= len(self.geneViewer.toPlainText()):
+                        # move the cursor from the location, to the very end
+                        cursor.setPosition(location)
+                        cursor.movePosition(QtGui.QTextCursor.End, 1)
+                    # if the location is too far to the left, but the total movement puts us inside the gene viewer
+                    elif location < 0 and location + movementIndex > 0:
+                        # start at position 0, and move until we get to where it's supposed to end
+                        cursor.setPosition(0)
+                        for i in range(location + movementIndex):
+                            cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
+                    # otherwise we are in the gene viewer
+                    else:
+                        # start at location, and go until movement index
+                        cursor.setPosition(location)
+                        for i in range(movementIndex):
+                            cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
+                    # now merge all the character's that cursor touched with the format set above
+                    cursor.mergeCharFormat(format)
+                # if the are moving to the left
+                elif left_right == "-":
+                    # figure out the start positioning
+                    startPos = (location - movementIndex) + 2
+                    #print("StartPOS: ", startPos)
+
+                    # if the starting position is too far to the left, but the ending position is inside the gene viewer
+                    if startPos < 0 and location >= 0:
+                        # start at 0 for the cursor, and move along until we get to location
+                        cursor.setPosition(0)
+                        for i in range(location):
+                            cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
+                    # if the ending spot (location) is too far to the left, and the starting spot is inside the geneviewer
+                    elif location >= len(self.geneViewer.toPlainText()) and startPos <= len(
+                            self.geneViewer.toPlainText()):
+                        # start at the starting position, and move along until the end of the gene viewer
+                        cursor.setPosition(startPos)
+                        cursor.movePosition(QtGui.QTextCursor.End, 1)
+                    # otherwise we are inside the gene viewer
+                    else:
+                        # start at the starting position, and move the total amount of movement indicies
+                        cursor.setPosition(startPos)
+                        for i in range(movementIndex):
+                            cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
+                    # now merge all the character's that the cursor touched with the format set above
+                    cursor.mergeCharFormat(format)
+
+                # code below was used before, no longer used. Kept in case we need to revert
                 # go through and highlight if it's in the geneviewer
+                """
                 if sequenceString in self.geneViewer.toPlainText():
                     regex = QtCore.QRegExp(sequenceString)
                     index = regex.indexIn(self.geneViewer.toPlainText(), 0)
@@ -318,6 +375,7 @@ class Results(QtWidgets.QMainWindow):
                         noMatchString = sequenceString
                     else:
                         noMatchString = noMatchString + ";;" + sequenceString
+                """
 
         # if any of the sequences return 0 matches, show the user which ones were not found
         if len(noMatchString) >= 5:
@@ -680,7 +738,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         # start up the function
         fileStream = open(self.file_name_edit.displayText())
         buffer = fileStream.readline()
-        index = 1
+        index = 0
         pre_sequence = ""
 
         # get to the first chromesome's origin
@@ -690,9 +748,11 @@ class geneViewerSettings(QtWidgets.QDialog):
             buffer = fileStream.readline()
 
         # skip all of the data until we are at the chromesome we care about
-        while index != location_data[0]:
+        while True:
+            if index == location_data[0]:
+                break
             if "ORIGIN" in buffer:
-                index += 1
+                index = index + 1
             buffer = fileStream.readline()
 
         # make sure the next part of the code starts with the first line of actual sequences
@@ -701,6 +761,8 @@ class geneViewerSettings(QtWidgets.QDialog):
 
         # get the entire chromesome into a string
         while "//" not in buffer:
+            if "LOCUS" in buffer:
+                break
             # replace digits with spaces (if i replace them with nothing the program will crash)
             for i in range(len(buffer)):
                 if buffer[i].isdigit():
@@ -720,6 +782,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         # take out the endlines and uppercase the string
         pre_sequence = pre_sequence.replace("\n", "")
         pre_sequence = pre_sequence.upper()
+        print("Length of the pre-sequence: ", len(pre_sequence))
 
         # we are having an issue here. Sometimes the length of the pre_sequence string is not large enough
         # need to talk to brian to see what could be causing that
@@ -756,7 +819,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         # uppercase that chromesome, and change all endlines with spaces
         sequence = sequence.upper()
         sequence = sequence.replace("\n", "")
-
+        print("Length of the pre-sequence: ", len(sequence))
         # now set the return sequence to the substring that we want
         NTSequence = sequence[location_data[1]:location_data[2]]
 

@@ -725,6 +725,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.gbff_button.hide()
             self.ncbi_ret_max_line_edit.hide()
             self.ncbi_ret_max_label.hide()
+            self.Search_Input.setEnabled(False)
             self.Search_Button.setText("Browse")
             self.Search_Label.setText("Select an annotation file...")
         elif self.Annotation_Kegg.isChecked():
@@ -735,6 +736,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.gbff_button.hide()
             self.ncbi_ret_max_line_edit.hide()
             self.ncbi_ret_max_label.hide()
+            self.Search_Input.setEnabled(False)
             self.Search_Button.setText("Search")
             self.Search_Label.setText("Search KEGG Database for genome annotation")
             self.Search_Input.setText(self.orgChoice.currentText())
@@ -746,6 +748,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.gbff_button.show()
             self.ncbi_ret_max_line_edit.show()
             self.ncbi_ret_max_label.show()
+            self.Search_Input.setEnabled(True)
             self.Search_Button.setText("Search")
             self.Search_Label.setText("Search NCBI Database for genome annotation")
             self.Search_Input.setText(self.orgChoice.currentText())
