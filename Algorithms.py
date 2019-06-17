@@ -84,7 +84,7 @@ class SeqTranslate:
         else:
             return base10seq
 
-    def decompress_csf_tuple(self, locseq, pamlength=3, seqlength=24, bool=False):
+    def decompress_csf_tuple(self, locseq, pamlength=3, seqlength=20, bool=False):
         if(bool == False):
             mytuple = locseq[:-1].split(",")
         else:
@@ -120,7 +120,7 @@ class SeqTranslate:
 
 
 #S = SeqTranslate()
-#print(S.decompress_csf_tuple("c,|LLmmwV/-8,t"))
-#print(S.decompress64("Uv",True))
-#print(S.compress("CCACTAGGACCCGGTGATGC",64))
+#print(S.decompress_csf_tuple("Dx,|S62qFEz+Qy,k"))
+#print(S.decompress64("CQyAAjL",True))
+#print(S.compress(440159,64))
 

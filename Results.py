@@ -746,22 +746,17 @@ class geneViewerSettings(QtWidgets.QDialog):
         index = 0
         pre_sequence = ""
 
-        # get to the first chromesome's origin
+        # get to the first chromosome's origin
         while True:
             if "ORIGIN" in buffer:
+                buffer = fileStream.readline()
                 break
             buffer = fileStream.readline()
 
-        # skip all of the data until we are at the chromesome we care about
-        while True:
-            if index == location_data[0]:
-                break
+        # skip all of the data until we are at the chromosome we care about
+        while index != location_data[0]:
             if "ORIGIN" in buffer:
-                index = index + 1
-            buffer = fileStream.readline()
-
-        # make sure the next part of the code starts with the first line of actual sequences
-        if "ORIGIN" in buffer:
+                index += 1
             buffer = fileStream.readline()
 
         # get the entire chromesome into a string
