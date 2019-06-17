@@ -621,6 +621,11 @@ class Results(QtWidgets.QMainWindow):
             # change to dialog box
             print('Could not open file')
 
+    # this function calls the closingWindow class.
+    def closeEvent(self, event):
+        GlobalSettings.mainWindow.closeFunction()
+        event.accept()
+
 ############################################
 # CLASS NAME: geneViewerSettings
 # It's essentially a little window where the user can tell the program which file to use for geneviewer

@@ -6,6 +6,7 @@ from APIs import Kegg, SeqFromFasta
 from bioservices import KEGG
 from Bio import Entrez
 from CoTargeting import CoTargeting
+from closingWin import closingWindow
 
 from Results import Results, geneViewerSettings
 from NewGenome import NewGenome, NCBI_Search_File
@@ -184,6 +185,11 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             self.mainWindow.collect_table_data() #collect the data
         return 0
 
+    # this function calls the closingWindow class.
+    def closeEvent(self, event):
+        GlobalSettings.mainWindow.closeFunction()
+        event.accept()
+
 
 # =========================================================================================
 # CLASS NAME: CMainWindow
@@ -266,6 +272,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
         self.gene_viewer_settings = geneViewerSettings()
+        self.myClosingWindow = closingWindow()
 
 
 
@@ -653,7 +660,6 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def launch_CoTargeting(self):
         self.CoTargeting.launch(self.data,self.dbpath,self.shortHand)
-        self.hide()
 
 # ------------------------------------------------------------------------------------------------------ #
 
@@ -998,11 +1004,20 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         self.Results.show()
 
-    # this code will be needed when I start working on the closing of the application
-    # - Josh
+    # this function calls the closingWindow class.
     def closeEvent(self, event):
-        print("This program has closed")
+        self.closeFunction()
         event.accept()
+
+    # this if the function that is called when the user closes the program entirely.
+    # so far I only know of 4 spots that can do this
+    #       1. mainWindow
+    #       2. annotationsWindow
+    #       3. Results
+    #       4. Multitargetting
+    def closeFunction(self):
+        self.myClosingWindow.get_files()
+        self.myClosingWindow.show()
 
 
 

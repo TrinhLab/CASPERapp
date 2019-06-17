@@ -621,3 +621,8 @@ class Multitargeting(QtWidgets.QMainWindow):
         }
         return switcher[i]
     # ----------------------------------------------------------#
+
+    # this function calls the closingWindow class.
+    def closeEvent(self, event):
+        GlobalSettings.mainWindow.closeFunction()
+        event.accept()
