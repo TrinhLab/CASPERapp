@@ -1000,7 +1000,13 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         # set Results endo combo box
         self.Results.endonucleaseBox.clear()
-        self.Results.endonucleaseBox.addItems(self.data[str(self.orgChoice.currentText())])
+
+        # set the results window endoChoice box menu
+        # set the mainWindow's endoChoice first, and then loop through and set the rest of them
+        self.Results.endonucleaseBox.addItem(self.endoChoice.currentText())
+        for item in self.data[str(self.orgChoice.currentText())]:
+            if item != self.Results.endonucleaseBox.currentText():
+                self.Results.endonucleaseBox.addItem(item)
 
         self.Results.show()
 
