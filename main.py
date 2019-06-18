@@ -855,7 +855,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 database_type = "GenBank"
 
             # actually search, if nothing is returned, break out
-            self.link_list, self.organismDict = self.ncbi_searcher.getDataBaseURL(self.orgChoice.currentText(), database_type, ret_max)
+            self.link_list, self.organismDict = self.ncbi_searcher.getDataBaseURL(self.Search_Input.displayText(), database_type, ret_max)
             if len(self.link_list) == 0 and len(self.organismDict) == 0:
                 QtWidgets.QMessageBox.question(self, "Error", "Search yielded 0 results. Please try again.",
                                                QtWidgets.QMessageBox.Ok)

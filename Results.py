@@ -743,7 +743,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         # start up the function
         fileStream = open(self.file_name_edit.displayText())
         buffer = fileStream.readline()
-        index = 0
+        index = 1
         pre_sequence = ""
 
         # get to the first chromosome's origin
@@ -761,7 +761,7 @@ class geneViewerSettings(QtWidgets.QDialog):
 
         # get the entire chromesome into a string
         while "//" not in buffer:
-            if "LOCUS" in buffer:
+            if "LOCUS" in buffer or buffer == "":
                 break
             # replace digits with spaces (if i replace them with nothing the program will crash)
             for i in range(len(buffer)):
