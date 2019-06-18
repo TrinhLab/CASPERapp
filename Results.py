@@ -237,7 +237,7 @@ class Results(QtWidgets.QMainWindow):
                 # get the strand and sequence strings
                 locationString = self.targetTable.item(i,0).text()
                 strandString = self.targetTable.item(i, 2).text()
-                sequenceString = ""
+                sequenceString = self.targetTable.item(i, 1).text()
                 printSequence = ""
                 movementIndex = 0
                 left_right = ""
@@ -246,9 +246,8 @@ class Results(QtWidgets.QMainWindow):
 
                 # get the location
                 location = int(locationString) - self.geneDict[self.comboBoxGene.currentText()][1]
-                #print("Location: ", location)
 
-                # if the endo is Cas12
+                # get which way it's moving, and the real location. This is for checking edge cases
                 if "Cas12" in self.endonucleaseBox.currentText():
                     # movement is always 24
                     movementIndex = 24
@@ -256,7 +255,7 @@ class Results(QtWidgets.QMainWindow):
                     # if the strand is positive, it moves to the right, if the strand is negative, it moves to the left
                     if strandString == "-":
                         left_right = "-"
-                        location = location - len(self.targetTable.item(i, 3).text())
+                        location = (location - len(self.targetTable.item(i, 3).text())) + 1
                     elif strandString == "+":
                         location = (location + len(self.targetTable.item(i,3).text())) + 1
                         left_right = "+"
@@ -264,118 +263,77 @@ class Results(QtWidgets.QMainWindow):
                 elif "Cas9" in self.endonucleaseBox.currentText():
                     # movement is always 20
                     movementIndex = 20
+                    location = location + 2
 
                     # if the strand is negative, it moves to the right if the strand is positive it moves to the left
                     if strandString == "-":
                         left_right = "+"
+                        #location = location + len(self.targetTable.item(i, 3).text())
                     elif strandString == "+":
                         left_right = "-"
+                        #location = location - len(self.targetTable.item(i, 3).text())
 
-                # try and build the string
-                # note: indexing issues are occuring. If they do we need to figure out what to do in those cases
-                try:
-                    if left_right == "+":
-                        printSequence = self.geneViewer.toPlainText()[location:location + movementIndex]
-                    elif left_right == "-":
-                        for i in range(movementIndex):
-                            if printSequence == "":
-                                printSequence = self.geneViewer.toPlainText()[location + 1]
-                            else:
-                                printSequence = printSequence + self.geneViewer.toPlainText()[(location - i) + 1]
-                except (IndexError):
-                    print("String indexing error!")
-                    print(left_right)
-
-
-                # see if the string needs to be flipped or not
-                sequenceString = printSequence
-                if "Cas9" in self.endonucleaseBox.currentText() and strandString == "+":
-                    sequenceString = sequenceString[::-1]
-                if "Cas12" in self.endonucleaseBox.currentText() and strandString == "-":
-                    sequenceString = sequenceString[::-1]
-
-                #print(sequenceString)
-
-                # check whether to be red or green
+                # get the right color and the revcom
                 if strandString == "+":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("green")))
                 elif strandString == "-":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("red")))
+                    sequenceString = k.revcom(sequenceString)
 
+                testSequence = sequenceString.lower()
+                testGeneViewer = self.geneViewer.toPlainText().lower()
 
-                # if we are moving to the right
-                if left_right == "+":
-                    #check and see what the endpoint is
-                    endPoint = location + movementIndex
-                    # if endpoint is greater than the length of geneviewer, but the location (starting point) is less than the length
-                    if endPoint >= len(self.geneViewer.toPlainText()) and location <= len(self.geneViewer.toPlainText()):
-                        # move the cursor from the location, to the very end
-                        cursor.setPosition(location)
-                        cursor.movePosition(QtGui.QTextCursor.End, 1)
-                    # if the location is too far to the left, but the total movement puts us inside the gene viewer
-                    elif location < 0 and location + movementIndex > 0:
-                        # start at position 0, and move until we get to where it's supposed to end
-                        cursor.setPosition(0)
-                        for i in range(location + movementIndex):
-                            cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
-                    # otherwise we are in the gene viewer
-                    else:
-                        # start at location, and go until movement index
-                        cursor.setPosition(location)
-                        for i in range(movementIndex):
-                            cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
-                    # now merge all the character's that cursor touched with the format set above
-                    cursor.mergeCharFormat(format)
-                # if the are moving to the left
-                elif left_right == "-":
-                    # figure out the start positioning
-                    startPos = (location - movementIndex) + 2
-                    #print("StartPOS: ", startPos)
+                #print("Location is: ", location)
+                #print("Length of geneome viewer: ", len(self.geneViewer.toPlainText()))
 
-                    # if the starting position is too far to the left, but the ending position is inside the gene viewer
-                    if startPos < 0 and location >= 0:
-                        # start at 0 for the cursor, and move along until we get to location
-                        cursor.setPosition(0)
-                        for i in range(location):
-                            cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
-                    # if the ending spot (location) is too far to the left, and the starting spot is inside the geneviewer
-                    elif location >= len(self.geneViewer.toPlainText()) and startPos <= len(
-                            self.geneViewer.toPlainText()):
-                        # start at the starting position, and move along until the end of the gene viewer
-                        cursor.setPosition(startPos)
-                        cursor.movePosition(QtGui.QTextCursor.End, 1)
-                    # otherwise we are inside the gene viewer
-                    else:
-                        # start at the starting position, and move the total amount of movement indicies
-                        cursor.setPosition(startPos)
-                        for i in range(movementIndex):
-                            cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
-                    # now merge all the character's that the cursor touched with the format set above
-                    cursor.mergeCharFormat(format)
-
-                # code below was used before, no longer used. Kept in case we need to revert
-                # go through and highlight if it's in the geneviewer
-                """
-                if sequenceString in self.geneViewer.toPlainText():
-                    regex = QtCore.QRegExp(sequenceString)
-                    index = regex.indexIn(self.geneViewer.toPlainText(), 0)
-                    cursor.setPosition(index)
+                # check to see if the sequence is in the gene viewer to behind with
+                if testSequence in testGeneViewer:
+                    #print("In the if testSequence in testGeneViewer")
+                    indexInViewer = testGeneViewer.find(testSequence)
+                    cursor.setPosition(indexInViewer)
                     for i in range(len(sequenceString)):
                         cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
                     cursor.mergeCharFormat(format)
-                # check and see if the goes too far to the left
-                elif left_right == "-" and location - movementIndex < 0 and len(sequenceString) > 0:
-                    index = 0
-                    cursor.setPosition(index)
-                    for i in range( location + 2):
+
+                # below elif's are edge cases, in case the sequence is not fully in the gene viewer
+                # if the start is too far to the left, but part of the sequence is in gene viewer
+                # and it's being built right-to-left
+                elif left_right == "-" and location - movementIndex < 0 and location > 0:
+                    #print("in the first elif")
+                    cursor.setPosition(0)
+                    for i in range(location + 1):
                         cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
                     cursor.mergeCharFormat(format)
+                # being built left-to-right
+                # if start is too far to the left, but start + total movement is in the geneviewer
+                elif left_right == "+" and location < 0 and location + movementIndex > 0:
+                    #print("In the second elif")
+                    cursor.setPosition(0)
+                    for i in range(location + movementIndex):
+                        cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
+                    cursor.mergeCharFormat(format)
+                # being build right-to-left
+                # if the location is too far to the right, but location-movement is in the gene viewer
+                elif left_right == "-" and location > len(self.geneViewer.toPlainText()) and location - movementIndex < len(self.geneViewer.toPlainText()):
+                    #print("In the third elif statement")
+                    cursor.setPosition((location - movementIndex) + 1)
+                    cursor.movePosition(QtGui.QTextCursor.End, 1)
+                    cursor.mergeCharFormat(format)
+                # being built left-to-right
+                # if the location + movement is too far to the right, but location is in the geneviewer
+                elif left_right == "+" and location + movementIndex > len(self.geneViewer.toPlainText()) and location < len(self.geneViewer.toPlainText()):
+                    #print("In the fourth elif")
+                    cursor.setPosition(location)
+                    cursor.movePosition(QtGui.QTextCursor.End, 1)
+                    cursor.mergeCharFormat(format)
+
+                # else, it is not able to be found
                 else:
                     if noMatchString == "":
                         noMatchString = sequenceString
                     else:
                         noMatchString = noMatchString + ";;" + sequenceString
-                """
+
 
         # if any of the sequences return 0 matches, show the user which ones were not found
         if len(noMatchString) >= 5:
