@@ -1,6 +1,6 @@
 CASPER Program Information v1.0
 
-DIRECTORY:Please choose a folder with CSPR files in it
+DIRECTORY:/Users/brianmendoza/Dropbox/CrisprDB
 
 
 DOENCH MATRIX
@@ -19,17 +19,15 @@ HSU MATRIX
 0.040034608	0.995399409	1.646620387	1.341048155	0.010174614	0.54281779	2.340127222	0.436699042	0.214279635	0.340470548	0.263954537	0.09350449	0.046215969	0.068822052	0.016462872	0.36587133	0.054631234	0.085714515	0.254333541
 0.034458518	1.047816491	1.050709161	1.407539975	0.054046079	0.639614156	2.080996466	0.458455298	0.155528383	0.136908112	0.10261082	0.041691214	0.010531506	0.045811702	0.009880719	0.211364672	0.055185616	0.025314601	0.059633277
 -----------------------------------------------------------
-
 ENDONUCLEASES
-spCas9	NGG	NAG
-saCas9  NNGRRT
-spCas9-VRER	NGCG
-st1Cas9	NNAGAAW
-nmCas9	NNNNGATT
-AsCpf1	TTTN
-LbCpf1	TTTN	TCTN
+spCas9;NGG,NAG;16,20;Streptococcus pyogenes;II-A
+saCas9;NNGRRT;16,20;Staphylococcus aureus;II-A
+spCas9-VRER;NGCG;16,20;Streptococcus pyogenes engineered variant;II-A
+st1Cas9;NNAGAAW;16,24;Streptococcus thermophilus;II-C
+nmCas9;NNNNGATT;16,24;Neisseria meningitidis;II-C
+AsCpf1;TTTV;16,24;Acidimonaccocus;V-A
+LbCpf1;TTTV,TCTN;16,24;Lachnospiraceae bacterium;V-A
 ------------------------------------------------------------
-
 ORGANISMS
 yli:Yarrowia lipolytica
 tre:Trichoderma reesei QM6a
@@ -39,7 +37,6 @@ ttm:Thermoanaerobacterium thermosaccharolyticum DSM 571
 tto:Thermoanaerobacterium thermosaccharolyticum M0795
 zmm:Zymomonas mobilis
 -----------------------------------------------------------
-
 CRISPRSCAN_DATA
 AA	19	-0.097377097
 TT	18	-0.094424075
