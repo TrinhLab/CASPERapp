@@ -235,7 +235,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Annotation_Ownfile.clicked.connect(self.change_annotation)
         self.NCBI_Select.clicked.connect(self.change_annotation)
         self.actionUpload_New_Genome.triggered.connect(self.launch_newGenome)
-        self.actionCo_Targeting.triggered.connect(self.launch_CoTargeting)
         self.Add_Orgo_Button.clicked.connect(self.add_Orgo)
         self.Remove_Organism_Button.clicked.connect(self.remove_Orgo)
         self.endoChoice.currentIndexChanged.connect(self.endo_Changed)
@@ -657,9 +656,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
 
-
-    def launch_CoTargeting(self):
-        self.CoTargeting.launch(self.data,self.dbpath,self.shortHand)
 
 # ------------------------------------------------------------------------------------------------------ #
 

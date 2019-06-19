@@ -38,6 +38,7 @@ class Results(QtWidgets.QMainWindow):
         self.AllData = {}
         self.highlighted = {}
 
+        self.co_target_endo_list = list()
         self.startpos = 0
         self.endpos = 0
         self.directory = ""
@@ -356,7 +357,20 @@ class Results(QtWidgets.QMainWindow):
     # this function just opens CoTargeting when the user clicks the CoTargeting button
     # opened the same way that main opens it
     def open_cotarget(self):
-        GlobalSettings.mainWindow.CoTargeting.launch(GlobalSettings.mainWindow.data, GlobalSettings.CSPR_DB, GlobalSettings.mainWindow.shortHand)
+        endo_list = list()
+
+        if self.endonucleaseBox.count() <= 1:
+            QtWidgets.QMessageBox.question(self, "Not enough endonucleases",
+                                           "There are not enough endonucleases with this organism. "
+                                           "At least 2 endonucleases are required for this function. "
+                                           "Use Analyze New Genome to create CSPR files with other endonucleases.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+        for i in range(self.endonucleaseBox.count()):
+            endo_list.append(self.endonucleaseBox.itemText(i))
+
+        GlobalSettings.mainWindow.CoTargeting.launch(endo_list, GlobalSettings.mainWindow.orgChoice.currentText())
 
     # this function goes through and calls transfer_data again.
     # Uses data from the mainWindow in Globalsettings, but that's because that info should not change
@@ -391,8 +405,12 @@ class Results(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.show()
         self.hide()
 
+    # called when the user hits 'gene viewer settings'
     def changeGeneViewerSettings(self):
         GlobalSettings.mainWindow.gene_viewer_settings.show()
+
+    #def populate_cotarget_table(self):
+
 
     # Function grabs the information from the .cspr file and adds them to the AllData dictionary
     #changed to now call CSPRparser's function. Same function essentially, just cleaned up here
@@ -692,6 +710,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         GlobalSettings.mainWindow.Results.lineEditStart.setEnabled(True)
         GlobalSettings.mainWindow.Results.lineEditEnd.setEnabled(True)
         GlobalSettings.mainWindow.Results.change_start_end_button.setEnabled(True)
+        GlobalSettings.mainWindow.Results.displayGeneViewer.setChecked(1)
         GlobalSettings.mainWindow.Results.checkGeneViewer()
         self.hide()
 
