@@ -45,12 +45,12 @@ class Results(QtWidgets.QMainWindow):
         self.geneDict = dict() # dictionary passed into transfer_data
         self.geneNTDict = dict() #dictionary passed into transfer_data, same key as geneDict, but hols the NTSEQ
 
-        self.switcher = [1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
+        self.switcher = [1,1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
 
         # Target Table settings #
-        self.targetTable.setColumnCount(7)  # hardcoded because there will always be seven columns
+        self.targetTable.setColumnCount(9)  # hardcoded because there will always be seven columns
         self.targetTable.setShowGrid(False)
-        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Off-Target".split(";"))
+        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Off-Target;Details;Endonuclease(s)".split(";"))
         self.targetTable.horizontalHeader().setSectionsClickable(True)
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -64,6 +64,7 @@ class Results(QtWidgets.QMainWindow):
         self.actionCoTargeting.triggered.connect(self.open_cotarget)
         self.changeEndoButton.clicked.connect(self.changeEndonuclease)
         self.displayGeneViewer.stateChanged.connect(self.checkGeneViewer)
+        self.cotarget_checkbox.stateChanged.connect(self.displayGeneData)
         self.highlight_gene_viewer_button.clicked.connect(self.highlight_gene_viewer)
         self.checkBoxSelectAll.stateChanged.connect(self.selectAll)
         self.pushButton_Deselect_All.clicked.connect(self.deselectAll)
@@ -378,12 +379,24 @@ class Results(QtWidgets.QMainWindow):
     def changeEndonuclease(self):
         full_org = str(GlobalSettings.mainWindow.orgChoice.currentText())
         organism = GlobalSettings.mainWindow.shortHand[full_org]
-        self.transfer_data(organism, str(self.endonucleaseBox.currentText()), GlobalSettings.CSPR_DB, self.geneDict,
+
+        endoChoice = self.endonucleaseBox.currentText().split(",")
+
+        # enable the cotarget checkbox if needed
+        if len(endoChoice) > 1:
+            self.cotarget_checkbox.setEnabled(True)
+            self.cotarget_checkbox.setChecked(0)
+        else:
+            self.cotarget_checkbox.setEnabled(False)
+            self.cotarget_checkbox.setChecked(0)
+
+        self.transfer_data(organism, endoChoice, GlobalSettings.CSPR_DB, self.geneDict,
                            self.geneNTDict, "")
 
-    # Function that is called in main in order to pass along the information the user inputted and the information
-    # from the .cspr files that was discovered
+    # Function that is used to set up the results page.
+    # it calls get_targets, which in turn calls display data
     def transfer_data(self, org, endo, path, geneposdict, geneNTSeqDict, fasta):
+        # set all of the classes variables
         self.org = org
         self.endo = endo
         self.directory = path
@@ -396,7 +409,6 @@ class Results(QtWidgets.QMainWindow):
         self.highlighted.clear()
         for gene in geneposdict:
             self.comboBoxGene.addItem(gene)
-            # print('gene: ' + gene)
             self.get_targets(gene, geneposdict[gene])
 
         # Enable the combobox to be toggled now that the data is in AllData
@@ -409,25 +421,61 @@ class Results(QtWidgets.QMainWindow):
     def changeGeneViewerSettings(self):
         GlobalSettings.mainWindow.gene_viewer_settings.show()
 
-    #def populate_cotarget_table(self):
+    # this is the function that sets up the co-targetting.
+    # it is called from the coTargetting class, when the user hits submit
+    def populate_cotarget_table(self):
+        # make a string of the combinitation, separated by commas's
+        endoBoxString = ""
+        for i in range(len(self.co_target_endo_list)):
+            if endoBoxString == "":
+                endoBoxString = self.co_target_endo_list[i]
+            else:
+                endoBoxString = endoBoxString + "," + self.co_target_endo_list[i]
+
+        # put the new endoChoice at the beginning. THis is the only way i could find to do it
+        # get a list of all endo choices, and put the newest at the front
+        endoBoxList = list()
+        endoBoxList.append(endoBoxString)
+        for i in range(self.endonucleaseBox.count()):
+            endoBoxList.append(self.endonucleaseBox.itemText(i))
+
+        # clear the current endo choices, and append the new order
+        self.endonucleaseBox.clear()
+        for i in range(len(endoBoxList)):
+            self.endonucleaseBox.addItem(endoBoxList[i])
+
+        # enable the cotarget checkbox
+        self.cotarget_checkbox.setEnabled(True)
+        self.cotarget_checkbox.setChecked(0)
+
+        # add it to the endoBox choices, and then call transfer_data
+        self.transfer_data(self.org, self.co_target_endo_list, GlobalSettings.CSPR_DB, self.geneDict, self.geneNTDict, "")
 
 
     # Function grabs the information from the .cspr file and adds them to the AllData dictionary
     #changed to now call CSPRparser's function. Same function essentially, just cleaned up here
     def get_targets(self, genename, pos_tuple):
         #get the right files
-        if self.directory.find("/") != -1:
-            file = (self.directory+"/" + self.org + "_" + self.endo + ".cspr")
-        else:
-            file = (self.directory + "\\" + self.org + "_" + self.endo + ".cspr")
+        for endo in self.endo:
+            if self.directory.find("/") != -1:
+                file = (self.directory+"/" + self.org + "_" + endo + ".cspr")
+            else:
+                file = (self.directory + "\\" + self.org + "_" + endo + ".cspr")
 
-        #create the parser, read the targets store it. then display the GeneData screen
-        parser = CSPRparser(file)
-        # print('postupe: '+str(pos_tuple))
-        temp = parser.read_targets(genename, pos_tuple)
-        self.AllData[genename] = parser.read_targets(genename, pos_tuple)
-        for item in self.AllData[genename]:
-            self.highlighted[item[1]] = False
+            #create the parser, read the targets store it. then display the GeneData screen
+            parser = CSPRparser(file)
+
+            # if genename is not in the dict, make that spot into a list
+            if genename not in self.AllData:
+                self.AllData[genename] = list()
+            # now append parser's data to it
+            self.AllData[genename].append(parser.read_targets(genename, pos_tuple, endo))
+
+            # for each list item
+            for item in self.AllData[genename]:
+                # for each tuple item
+                for i in range(len(item)):
+                    self.highlighted[item[i][1]] = False
         self.displayGeneData()
 
 
@@ -452,15 +500,17 @@ class Results(QtWidgets.QMainWindow):
             self.geneViewer.setText(self.geneNTDict[self.comboBoxGene.currentText()])
 
         # Removing all sequences below minimum score and creating the set:
-
+        # for each list item
         for item in self.AllData[curgene]:
-            if int(item[3]) > int(self.minScoreLine.text()):
-                # Removing all non 5' G sequences:
-                if self.fivegseqCheckBox.isChecked():
-                    if item[1].startswith("G"):
-                        subset_display.add(item)
-                else:
-                    subset_display.add(item)
+            # for each tuple item
+            for i in range(len(item)):
+                if int(item[i][3]) > int(self.minScoreLine.text()):
+                    # Removing all non 5' G sequences:
+                    if self.fivegseqCheckBox.isChecked():
+                        if item[1].startswith("G"):
+                            subset_display.add(item[i])
+                    else:
+                        subset_display.add(item[i])
 
         self.targetTable.setRowCount(len(subset_display))
         index = 0
@@ -472,6 +522,7 @@ class Results(QtWidgets.QMainWindow):
             strand = QtWidgets.QTableWidgetItem(str(item[4]))
             PAM = QtWidgets.QTableWidgetItem(item[2])
             num1 = int(item[3])
+            endonuclease = QtWidgets.QTableWidgetItem(item[5])
             score = QtWidgets.QTableWidgetItem()
             score.setData(QtCore.Qt.EditRole, num1)
             self.targetTable.setItem(index, 0, loc)
@@ -480,6 +531,7 @@ class Results(QtWidgets.QMainWindow):
             self.targetTable.setItem(index, 3, PAM)
             self.targetTable.setItem(index, 4, score)
             self.targetTable.setItem(index, 5, QtWidgets.QTableWidgetItem("--.--"))
+            self.targetTable.setItem(index, 8, endonuclease)
             ckbox = QtWidgets.QCheckBox()
             ckbox.clicked.connect(self.search_gene)
             self.targetTable.setCellWidget(index,6,ckbox)
@@ -487,7 +539,63 @@ class Results(QtWidgets.QMainWindow):
             if(self.highlighted[str(item[1])] == True):
                 ckbox.click()
             index += 1
+        if len(self.endo) > 1:
+            self.combine_coTargets()
+            if self.cotarget_checkbox.isChecked():
+                self.remove_single_endo()
+
         self.targetTable.resizeColumnsToContents()
+
+    # this function is only entered if the user checks the show only cotargeted sequence checkbox
+    def remove_single_endo(self):
+        if self.cotarget_checkbox.isChecked():
+            removeList = list()
+            # go through and find which rows only have 1 endo
+            for i in range(self.targetTable.rowCount()):
+                endoData = self.targetTable.item(i, 8).text()
+                checkList = endoData.split(",")
+                if len(checkList) == 1:
+                    removeList.append(i)
+
+            # go through and remove those rows
+            for i in range(len(removeList)):
+                self.targetTable.removeRow(removeList[i])
+
+    # this function goes through the table and combines the co-targets that need to be combined
+    # it does not go through the dictionary data, although that could also be possible
+    # keeping it separate now, so that the data itself is not messed with. Just what is shown to the user
+    def combine_coTargets(self):
+        # this is a list of which rows need to be removed
+        rowsToRemove = list()
+
+        # print("rowCount: ", self.targetTable.rowCount())
+
+        for i in range(self.targetTable.rowCount()):
+            # get the first spots data
+            locationData1 = self.targetTable.item(i, 0).text()
+            endoData1 = self.targetTable.item(i, 8).text()
+            sequenceData1 = self.targetTable.item(i, 1).text()
+
+            # now go through the rest of the table and check it
+            for j in range(i + 1, self.targetTable.rowCount()):
+                locationData2 = self.targetTable.item(j, 0).text()
+                endoData2 = self.targetTable.item(j, 8).text()
+                sequenceData2 = self.targetTable.item(j, 1).text()
+
+                # only if the locations are the same, and the endo's are different ( endo part will change once globalsettings is right)
+                if locationData1 == locationData2 and endoData1 != endoData2:
+                    # test printing
+                    # print(locationData1, "\t", locationData2)
+                    # print(endoData1, "\t", endoData2)
+                    # print(sequenceData1, "\t", sequenceData2)
+                    # update the list of rows to remove, and update the endo of the original row
+                    inputEndoData = endoData1 + "," + endoData2
+                    self.targetTable.item(i, 8).setText(inputEndoData)
+                    rowsToRemove.append(j)
+
+        # go through and delete all of the rows now
+        for i in range(len(rowsToRemove)):
+            self.targetTable.removeRow(rowsToRemove[i])
 
     ########################################## END UPDATING FUNCTION #############################################
 

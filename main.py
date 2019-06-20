@@ -618,7 +618,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         # now call transfer data
         self.progressBar.setValue(95)
-        self.Results.transfer_data(self.shortHand[full_org], str(self.endoChoice.currentText()), os.getcwd(),
+        self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
                                    self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
@@ -652,7 +652,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
         self.progressBar.setValue(80)
-        self.Results.transfer_data(self.shortHand[full_org],str(self.endoChoice.currentText()),os.getcwd(),self.checked_info, self.check_ntseq_info, "")
+        self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())] ,os.getcwd(),self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
 

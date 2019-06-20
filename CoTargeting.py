@@ -34,13 +34,19 @@ class CoTargeting(QtWidgets.QDialog):
     # it is expecting endo_choices in the form of a list, and the orgName in the form of a string
     # it sets the organism name, and sets the table as well
     def launch(self, endo_choices, orgName):
-        # set the organism name and the rowcount of the table
         self.orgName.setText(orgName)
-        self.endo_table.setRowCount(len(endo_choices))
+        setTableList = list()
 
-        # go through and set each table item
-        loopCount = 0
+        # only get the endo choices that were original
         for item in endo_choices:
+            checkList = item.split(",")
+            if len(checkList) == 1:
+                setTableList.append(item)
+
+        # go through and set each table item, but also set the row count
+        self.endo_table.setRowCount(len(setTableList))
+        loopCount = 0
+        for item in setTableList:
             tabWidget = QtWidgets.QTableWidgetItem(item)
             self.endo_table.setItem(loopCount, 0, tabWidget)
             loopCount += 1
@@ -76,5 +82,6 @@ class CoTargeting(QtWidgets.QDialog):
                 ret_endo_list.append(self.endo_table.item(i, 0).text())
 
         GlobalSettings.mainWindow.Results.co_target_endo_list = ret_endo_list
+        GlobalSettings.mainWindow.Results.populate_cotarget_table()
         self.cancel_function()
 
