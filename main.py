@@ -6,6 +6,7 @@ from APIs import Kegg, SeqFromFasta
 from bioservices import KEGG
 from Bio import Entrez
 from CoTargeting import CoTargeting
+from closingWin import closingWindow
 
 from Results import Results, geneViewerSettings
 from NewGenome import NewGenome, NCBI_Search_File
@@ -59,6 +60,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.mainWindow.searches.clear()
         self.tableWidget.setColumnCount(0)
         self.mainWindow.show()
+        self.mainWindow.progressBar.setValue(0)
         self.hide()
 
     # this function is very similar to the other fill_table, it just works with the other types of annotation files
@@ -67,7 +69,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.mainWindow = mainWindow
         index = 0
         self.tableWidget.setColumnCount(4)
-        self.mainWindow.progressBar.setValue(25)
+        self.mainWindow.progressBar.setValue(85)
         self.tableWidget.setHorizontalHeaderLabels("Description;Type;Gene ID;Select".split(";"))
         mainWindow.checkBoxes = []
         self.type = "nonkegg"
@@ -126,12 +128,10 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
                                                        QtWidgets.QMessageBox.No)
                 if (error == QtWidgets.QMessageBox.No):
                     return -2
-            self.mainWindow.progressBar.setValue(65)
             for obj in mainWindow.checkBoxes:  # check every match
                 obj[2].setChecked(True)
             self.mainWindow.collect_table_data_nonkegg()
         return 0
-        # TO DO: still need to add code for it to automatically call collect_table_data
 
     def fill_Table(self,mainWindow):
         self.tableWidget.clearContents()
@@ -185,6 +185,11 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             self.mainWindow.collect_table_data() #collect the data
         return 0
 
+    # this function calls the closingWindow class.
+    def closeEvent(self, event):
+        GlobalSettings.mainWindow.closeFunction()
+        event.accept()
+
 
 # =========================================================================================
 # CLASS NAME: CMainWindow
@@ -230,7 +235,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Annotation_Ownfile.clicked.connect(self.change_annotation)
         self.NCBI_Select.clicked.connect(self.change_annotation)
         self.actionUpload_New_Genome.triggered.connect(self.launch_newGenome)
-        self.actionCo_Targeting.triggered.connect(self.launch_CoTargeting)
         self.Add_Orgo_Button.clicked.connect(self.add_Orgo)
         self.Remove_Organism_Button.clicked.connect(self.remove_Orgo)
         self.endoChoice.currentIndexChanged.connect(self.endo_Changed)
@@ -267,6 +271,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
         self.gene_viewer_settings = geneViewerSettings()
+        self.myClosingWindow = closingWindow()
 
 
 
@@ -341,6 +346,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.annotation_parser = Annotation_Parser()
         self.annotation_parser.annotationFileName = fileName
         self.annotation_parser.find_which_file_version()
+        self.progressBar.setValue(60)
 
         # this bit may not be needed here. Just a quick error check to make sure the chromesome numbers match
         full_org = str(self.orgChoice.currentText())
@@ -383,6 +389,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.Annotation_Window.fill_table_nonKegg(self)
             return
 
+        self.progressBar.setValue(75)
         # reset, and search the parallel dictionary now
         self.searches = {}
         for search in searchValues:
@@ -408,6 +415,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.question(self, "No Matches Found",
                                            "No matches found with that search, please try again",
                                            QtWidgets.QMessageBox.Ok)
+            self.progressBar.setValue(0)
             return
 
 
@@ -419,6 +427,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             #    for k in self.searches[i][j]:
              #      print("\t\t", k)
         # if we get to this point, that means that the search yieleded results, so fill the table
+        self.progressBar.setValue(80)
         self.Annotation_Window.fill_table_nonKegg(self)
 
     def run_results(self, inputtype, inputstring):
@@ -460,6 +469,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     QtWidgets.QMessageBox.question(self, "Error",
                                                    "Please select a type of annotation file to download. (Ex: Feature_Table, GFF, GBFF)"
                                                    , QtWidgets.QMessageBox.Ok)
+                    self.progressBar.setValue(0)
                     return
 
                 # check to see which file type they selected, and then make sure the program
@@ -479,6 +489,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 #decompress that file, and then delete the compressed version
                 if compressed_file:
+                    self.progressBar.setValue(25)
                     storeFileName = self.ncbi_searcher.decompress_annotation_file(compressed_file, type_of_annotation_file)
                     file_names = os.listdir(GlobalSettings.CSPR_DB)
                     for file in file_names:
@@ -487,11 +498,13 @@ class CMainWindow(QtWidgets.QMainWindow):
                             os.remove(file)
 
                     # now run results
+                    self.progressBar.setValue(35)
                     self.run_results_own_ncbi_file(inputstring, storeFileName)
                 else:
                     QtWidgets.QMessageBox.question(self, "Error",
                                                    "The database does not have the type of file you have requested. Please try another type of file"
                                                    , QtWidgets.QMessageBox.Ok)
+                    self.progressBar.setValue(0)
                     return
 
             # own annotation file code
@@ -604,8 +617,8 @@ class CMainWindow(QtWidgets.QMainWindow):
                                 self.checked_info[item[0]] = holder
 
         # now call transfer data
-        self.progressBar.setValue(80)
-        self.Results.transfer_data(self.shortHand[full_org], str(self.endoChoice.currentText()), os.getcwd(),
+        self.progressBar.setValue(95)
+        self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
                                    self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
@@ -639,14 +652,10 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
         self.progressBar.setValue(80)
-        self.Results.transfer_data(self.shortHand[full_org],str(self.endoChoice.currentText()),os.getcwd(),self.checked_info, self.check_ntseq_info, "")
+        self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())] ,os.getcwd(),self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
 
-
-    def launch_CoTargeting(self):
-        self.CoTargeting.launch(self.data,self.dbpath,self.shortHand)
-        self.hide()
 
 # ------------------------------------------------------------------------------------------------------ #
 
@@ -718,6 +727,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.gbff_button.hide()
             self.ncbi_ret_max_line_edit.hide()
             self.ncbi_ret_max_label.hide()
+            self.Search_Input.setEnabled(False)
             self.Search_Button.setText("Browse")
             self.Search_Label.setText("Select an annotation file...")
         elif self.Annotation_Kegg.isChecked():
@@ -728,6 +738,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.gbff_button.hide()
             self.ncbi_ret_max_line_edit.hide()
             self.ncbi_ret_max_label.hide()
+            self.Search_Input.setEnabled(False)
             self.Search_Button.setText("Search")
             self.Search_Label.setText("Search KEGG Database for genome annotation")
             self.Search_Input.setText(self.orgChoice.currentText())
@@ -739,6 +750,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.gbff_button.show()
             self.ncbi_ret_max_line_edit.show()
             self.ncbi_ret_max_label.show()
+            self.Search_Input.setEnabled(True)
             self.Search_Button.setText("Search")
             self.Search_Label.setText("Search NCBI Database for genome annotation")
             self.Search_Input.setText(self.orgChoice.currentText())
@@ -839,7 +851,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 database_type = "GenBank"
 
             # actually search, if nothing is returned, break out
-            self.link_list, self.organismDict = self.ncbi_searcher.getDataBaseURL(self.orgChoice.currentText(), database_type, ret_max)
+            self.link_list, self.organismDict = self.ncbi_searcher.getDataBaseURL(self.Search_Input.displayText(), database_type, ret_max)
             if len(self.link_list) == 0 and len(self.organismDict) == 0:
                 QtWidgets.QMessageBox.question(self, "Error", "Search yielded 0 results. Please try again.",
                                                QtWidgets.QMessageBox.Ok)
@@ -984,15 +996,30 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         # set Results endo combo box
         self.Results.endonucleaseBox.clear()
-        self.Results.endonucleaseBox.addItems(self.data[str(self.orgChoice.currentText())])
+
+        # set the results window endoChoice box menu
+        # set the mainWindow's endoChoice first, and then loop through and set the rest of them
+        self.Results.endonucleaseBox.addItem(self.endoChoice.currentText())
+        for item in self.data[str(self.orgChoice.currentText())]:
+            if item != self.Results.endonucleaseBox.currentText():
+                self.Results.endonucleaseBox.addItem(item)
 
         self.Results.show()
 
-    # this code will be needed when I start working on the closing of the application
-    # - Josh
+    # this function calls the closingWindow class.
     def closeEvent(self, event):
-        print("This program has closed")
+        self.closeFunction()
         event.accept()
+
+    # this if the function that is called when the user closes the program entirely.
+    # so far I only know of 4 spots that can do this
+    #       1. mainWindow
+    #       2. annotationsWindow
+    #       3. Results
+    #       4. Multitargetting
+    def closeFunction(self):
+        self.myClosingWindow.get_files()
+        self.myClosingWindow.show()
 
 
 

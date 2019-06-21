@@ -241,8 +241,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.output_browser.setText("Waiting for program initiation...")
         self.CompletedJobs.setText(" ")
 
-        self.tot_len_box.setText("20")
-        self.seed_len_box.setText("16")
+        self.comboBoxEndo.currentIndexChanged.connect(self.endo_settings)
 
         self.runButton.clicked.connect(self.run_jobs)
         self.clearButton.clicked.connect(self.clear_job_queue)
@@ -251,7 +250,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
         self.JobIndexInProgress = 0
         self.JobsQueue = []  # holds Job classes.
-        self.Endos = []
+        self.Endos = dict()
         self.file = ""
 
         self.process = QtCore.QProcess()
@@ -283,6 +282,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 return
             else:
                 self.nameFile.setText(myFile[0])
+                self.file = myFile[0]
         """cdir = self.lineEdit.text()
         os.chdir(mydir)
         self.gdirectory = mydir
@@ -335,8 +335,8 @@ class NewGenome(QtWidgets.QMainWindow):
             if hold == QtWidgets.QMessageBox.No:
                 return
 
-        myjob = CasperJob(self.lineEdit_1.text() + self.lineEdit_2.text(),
-                            self.comboBoxEndo.currentText(), self.lineEdit_3.text(), self.file,
+        myjob = CasperJob(self.lineEdit_1.text() + self.lineEdit_2.text(), self.lineEdit_2.text(),
+                          self.Endos[self.comboBoxEndo.currentText()], self.lineEdit_3.text(), self.file,
                           self.tot_len_box.text(), self.seed_len_box.text(), self.pamBox.isChecked())
         self.JobsQueue.append(myjob)
         nxtLine=""
@@ -356,18 +356,24 @@ class NewGenome(QtWidgets.QMainWindow):
                     line = f.readline()
                     if(line[0]=="-"):
                         break
-                    endo = line[:line.find("\t")]
-                    while True:
-                        line = line[line.find("\t")+1:]
-                        index = line.find("\t")
-                        if(index ==-1):
-                            self.Endos.append(endo+" (PAM: " +line[:len(line)-1]+")")
-                            break
-                        self.Endos.append(endo+" "+"(PAM: " +line[:index]+")")
+                    line_tokened = line.split(";")
+                    endo = line_tokened[0]
+                    # Checking to see if there is more than one pam sequence in the list
+                    if line_tokened[1].find(",") != -1:
+                        p_pam = line_tokened[1].split(",")[0]
+                    else:
+                        p_pam = line_tokened[1]
+                    default_seed_length = line_tokened[2].split(",")[0]
+                    default_tot_length = line_tokened[2].split(",")[1]
+                    self.Endos[endo + "PAM: " + p_pam] = (endo, p_pam, default_seed_length, default_tot_length)
 
                 break
         f.close()
-        self.comboBoxEndo.addItems(self.Endos)
+        self.comboBoxEndo.addItems(self.Endos.keys())
+
+    def endo_settings(self):
+        self.tot_len_box.setText(self.Endos[self.comboBoxEndo.currentText()][3])
+        self.seed_len_box.setText(self.Endos[self.comboBoxEndo.currentText()][2])
 
     def findFasta(self):
         choice = QtWidgets.QMessageBox.question(self, "Extract!", "Are you sure you want to Quit?",
@@ -452,12 +458,13 @@ class NewGenome(QtWidgets.QMainWindow):
 
 
 class CasperJob:
-    def __init__(self, org, endo, org_code, ref_file, tot_len, seed_len, pamdir):
-        self.name = endo + " targets in " + org
+    def __init__(self, org, suborg, endo, org_code, ref_file, tot_len, seed_len, pamdir):
+        self.name = endo[0] + " targets in " + org
         self.organism_name = org
+        self.substrain = suborg
         self.organism_code = org_code
-        self.endo_name = endo[:endo.find("(PAM:")-1]
-        self.endo_pam = endo[endo.find("(PAM: ")+6:-1]
+        self.endo_name = endo[0]
+        self.endo_pam = endo[1]
         self.reference_file = ref_file
 
         # These are endonuclease specific settings that should be pulled from CASPERinfo
@@ -476,10 +483,11 @@ class CasperJob:
             ret_array.append(GlobalSettings.CSPR_DB + "\\")
         else:
             ret_array.append(GlobalSettings.CSPR_DB + "/")
-        ret_array.append(GlobalSettings.CASPER_FOLDER_LOCATION + "/CRISPRscan.txt")
+        ret_array.append(GlobalSettings.CASPER_FOLDER_LOCATION + "/CASPERinfo")
         ret_array.append(self.reference_file)
         ret_array.append(self.organism_name)
         ret_array.append(self.sequence_length)
         ret_array.append(self.seed_length)
+        ret_array.append(self.substrain)
         print(ret_array)
         return ret_array

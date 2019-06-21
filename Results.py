@@ -39,18 +39,19 @@ class Results(QtWidgets.QMainWindow):
         self.AllData = {}
         self.highlighted = {}
 
+        self.co_target_endo_list = list()
         self.startpos = 0
         self.endpos = 0
         self.directory = ""
         self.geneDict = dict() # dictionary passed into transfer_data
         self.geneNTDict = dict() #dictionary passed into transfer_data, same key as geneDict, but hols the NTSEQ
 
-        self.switcher = [1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
+        self.switcher = [1,1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
 
         # Target Table settings #
-        self.targetTable.setColumnCount(8)  # hardcoded because there will always be seven columns
+        self.targetTable.setColumnCount(9)  # hardcoded because there will always be nine columns
         self.targetTable.setShowGrid(False)
-        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Off-Target;Details".split(";"))
+        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Off-Target;Details;Endonuclease(s)".split(";"))
         self.targetTable.horizontalHeader().setSectionsClickable(True)
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -64,6 +65,7 @@ class Results(QtWidgets.QMainWindow):
         self.actionCoTargeting.triggered.connect(self.open_cotarget)
         self.changeEndoButton.clicked.connect(self.changeEndonuclease)
         self.displayGeneViewer.stateChanged.connect(self.checkGeneViewer)
+        self.cotarget_checkbox.stateChanged.connect(self.displayGeneData)
         self.highlight_gene_viewer_button.clicked.connect(self.highlight_gene_viewer)
         self.checkBoxSelectAll.stateChanged.connect(self.selectAll)
         self.pushButton_Deselect_All.clicked.connect(self.deselectAll)
@@ -111,7 +113,20 @@ class Results(QtWidgets.QMainWindow):
 
 
         # change the start and end values
+        prevTuple = self.geneDict[self.comboBoxGene.currentText()]
         tempTuple = (self.geneDict[self.comboBoxGene.currentText()][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()))
+
+        # make sure that the difference between indicies is not too large
+        if abs(tempTuple[1] - tempTuple[2]) > 50000:
+            print(abs(tempTuple[1] - tempTuple[2]))
+            QtWidgets.QMessageBox.question(self, "Sequence Too Long",
+                                           "The sequence is too long! "
+                                           "Please choose indicies that will make the sequence less than 50,000!",
+                                           QtWidgets.QMessageBox.Ok)
+            self.lineEditStart.setText(str(self.geneDict[self.comboBoxGene.currentText()][1]))
+            self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
+            return
+
         self.geneDict[self.comboBoxGene.currentText()] = tempTuple
 
         # if the user is using kegg
@@ -132,7 +147,7 @@ class Results(QtWidgets.QMainWindow):
 
             buffer = ""
 
-            # use the try because if user gives bad input
+            # use the try in case user gives bad input
             try:
                 for item in soup.find('pre'):
                     # get the first line
@@ -156,7 +171,6 @@ class Results(QtWidgets.QMainWindow):
                 self.geneNTDict[self.comboBoxGene.currentText()] = buffer
             except:
                 print("indexing error")
-
         # if the user is using gbff
         elif GlobalSettings.mainWindow.gene_viewer_settings.file_type == "gbff":
             sequence = GlobalSettings.mainWindow.gene_viewer_settings.gbff_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
@@ -166,6 +180,22 @@ class Results(QtWidgets.QMainWindow):
             sequence = GlobalSettings.mainWindow.gene_viewer_settings.fna_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
             self.geneNTDict[self.comboBoxGene.currentText()] = sequence
 
+        # check and see if we need to add lowercase letters
+        changeInStart = tempTuple[1] - prevTuple[1]
+        changeInEnd = tempTuple[2] - prevTuple[2]
+
+        # check and see if the sequence is extended at all
+        # if it is, make the extended part lower-case as opposed to upper case
+        if changeInStart != 0 and changeInStart < 0:
+            tempString = self.geneNTDict[self.comboBoxGene.currentText()][:abs(changeInStart)].lower()
+            tempString = tempString + self.geneNTDict[self.comboBoxGene.currentText()][abs(changeInStart):]
+            self.geneNTDict[self.comboBoxGene.currentText()] = tempString
+        if changeInEnd != 0 and changeInEnd > 0:
+            tempString = self.geneNTDict[self.comboBoxGene.currentText()][len(self.geneNTDict[self.comboBoxGene.currentText()]) - abs(changeInEnd):].lower()
+            tempString = self.geneNTDict[self.comboBoxGene.currentText()][:len(self.geneNTDict[self.comboBoxGene.currentText()]) - abs(changeInEnd)] + tempString
+            self.geneNTDict[self.comboBoxGene.currentText()] = tempString
+
+        # update the gene viewer
         self.checkGeneViewer()
 
     # this function goes through and deselects all of the Off-Target checkboxes
@@ -222,17 +252,17 @@ class Results(QtWidgets.QMainWindow):
                 # get the strand and sequence strings
                 locationString = self.targetTable.item(i,0).text()
                 strandString = self.targetTable.item(i, 2).text()
-                sequenceString = ""
+                sequenceString = self.targetTable.item(i, 1).text()
                 printSequence = ""
                 movementIndex = 0
                 left_right = ""
+                #print("Length of geneViewer: ", len(self.geneViewer.toPlainText()))
 
 
+                # get the location
                 location = int(locationString) - self.geneDict[self.comboBoxGene.currentText()][1]
 
-                print("Location is: ", location)
-
-                # if the endo is Cas12
+                # get which way it's moving, and the real location. This is for checking edge cases
                 if "Cas12" in self.endonucleaseBox.currentText():
                     # movement is always 24
                     movementIndex = 24
@@ -240,7 +270,7 @@ class Results(QtWidgets.QMainWindow):
                     # if the strand is positive, it moves to the right, if the strand is negative, it moves to the left
                     if strandString == "-":
                         left_right = "-"
-                        location = location - len(self.targetTable.item(i, 3).text())
+                        location = (location - len(self.targetTable.item(i, 3).text())) + 1
                     elif strandString == "+":
                         location = (location + len(self.targetTable.item(i,3).text())) + 1
                         left_right = "+"
@@ -248,47 +278,77 @@ class Results(QtWidgets.QMainWindow):
                 elif "Cas9" in self.endonucleaseBox.currentText():
                     # movement is always 20
                     movementIndex = 20
+                    location = location + 2
 
                     # if the strand is negative, it moves to the right if the strand is positive it moves to the left
                     if strandString == "-":
                         left_right = "+"
+                        #location = location + len(self.targetTable.item(i, 3).text())
                     elif strandString == "+":
                         left_right = "-"
+                        #location = location - len(self.targetTable.item(i, 3).text())
 
-                if left_right == "+":
-                    printSequence = self.geneViewer.toPlainText()[location:location + movementIndex]
-                elif left_right == "-":
-                    for i in range(movementIndex):
-                        if printSequence == "":
-                            printSequence = self.geneViewer.toPlainText()[location + 1]
-                        else:
-                            printSequence = printSequence + self.geneViewer.toPlainText()[(location - i) + 1]
-
-                print(printSequence)
-
-                sequenceString = printSequence
-
-                # check whether to be red or green
+                # get the right color and the revcom
                 if strandString == "+":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("green")))
                 elif strandString == "-":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("red")))
-                    sequenceString = sequenceString[::-1]
+                    sequenceString = k.revcom(sequenceString)
 
-                # go through and highlight if it's in the geneviewer
-                if sequenceString in self.geneViewer.toPlainText():
-                    regex = QtCore.QRegExp(sequenceString)
-                    index = regex.indexIn(self.geneViewer.toPlainText(), 0)
-                    cursor.setPosition(index)
+                testSequence = sequenceString.lower()
+                testGeneViewer = self.geneViewer.toPlainText().lower()
+
+                #print("Location is: ", location)
+                #print("Length of geneome viewer: ", len(self.geneViewer.toPlainText()))
+
+                # check to see if the sequence is in the gene viewer to behind with
+                if testSequence in testGeneViewer:
+                    #print("In the if testSequence in testGeneViewer")
+                    indexInViewer = testGeneViewer.find(testSequence)
+                    cursor.setPosition(indexInViewer)
                     for i in range(len(sequenceString)):
                         cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
                     cursor.mergeCharFormat(format)
-                # catch the error if it is not in gene viewer
+
+                # below elif's are edge cases, in case the sequence is not fully in the gene viewer
+                # if the start is too far to the left, but part of the sequence is in gene viewer
+                # and it's being built right-to-left
+                elif left_right == "-" and location - movementIndex < 0 and location > 0:
+                    #print("in the first elif")
+                    cursor.setPosition(0)
+                    for i in range(location + 1):
+                        cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
+                    cursor.mergeCharFormat(format)
+                # being built left-to-right
+                # if start is too far to the left, but start + total movement is in the geneviewer
+                elif left_right == "+" and location < 0 and location + movementIndex > 0:
+                    #print("In the second elif")
+                    cursor.setPosition(0)
+                    for i in range(location + movementIndex):
+                        cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
+                    cursor.mergeCharFormat(format)
+                # being build right-to-left
+                # if the location is too far to the right, but location-movement is in the gene viewer
+                elif left_right == "-" and location > len(self.geneViewer.toPlainText()) and location - movementIndex < len(self.geneViewer.toPlainText()):
+                    #print("In the third elif statement")
+                    cursor.setPosition((location - movementIndex) + 1)
+                    cursor.movePosition(QtGui.QTextCursor.End, 1)
+                    cursor.mergeCharFormat(format)
+                # being built left-to-right
+                # if the location + movement is too far to the right, but location is in the geneviewer
+                elif left_right == "+" and location + movementIndex > len(self.geneViewer.toPlainText()) and location < len(self.geneViewer.toPlainText()):
+                    #print("In the fourth elif")
+                    cursor.setPosition(location)
+                    cursor.movePosition(QtGui.QTextCursor.End, 1)
+                    cursor.mergeCharFormat(format)
+
+                # else, it is not able to be found
                 else:
                     if noMatchString == "":
                         noMatchString = sequenceString
                     else:
                         noMatchString = noMatchString + ";;" + sequenceString
+
 
         # if any of the sequences return 0 matches, show the user which ones were not found
         if len(noMatchString) >= 5:
@@ -311,7 +371,20 @@ class Results(QtWidgets.QMainWindow):
     # this function just opens CoTargeting when the user clicks the CoTargeting button
     # opened the same way that main opens it
     def open_cotarget(self):
-        GlobalSettings.mainWindow.CoTargeting.launch(GlobalSettings.mainWindow.data, GlobalSettings.CSPR_DB, GlobalSettings.mainWindow.shortHand)
+        endo_list = list()
+
+        if self.endonucleaseBox.count() <= 1:
+            QtWidgets.QMessageBox.question(self, "Not enough endonucleases",
+                                           "There are not enough endonucleases with this organism. "
+                                           "At least 2 endonucleases are required for this function. "
+                                           "Use Analyze New Genome to create CSPR files with other endonucleases.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+        for i in range(self.endonucleaseBox.count()):
+            endo_list.append(self.endonucleaseBox.itemText(i))
+
+        GlobalSettings.mainWindow.CoTargeting.launch(endo_list, GlobalSettings.mainWindow.orgChoice.currentText())
 
     # this function goes through and calls transfer_data again.
     # Uses data from the mainWindow in Globalsettings, but that's because that info should not change
@@ -319,12 +392,24 @@ class Results(QtWidgets.QMainWindow):
     def changeEndonuclease(self):
         full_org = str(GlobalSettings.mainWindow.orgChoice.currentText())
         organism = GlobalSettings.mainWindow.shortHand[full_org]
-        self.transfer_data(organism, str(self.endonucleaseBox.currentText()), GlobalSettings.CSPR_DB, self.geneDict,
+
+        endoChoice = self.endonucleaseBox.currentText().split(",")
+
+        # enable the cotarget checkbox if needed
+        if len(endoChoice) > 1:
+            self.cotarget_checkbox.setEnabled(True)
+            self.cotarget_checkbox.setChecked(0)
+        else:
+            self.cotarget_checkbox.setEnabled(False)
+            self.cotarget_checkbox.setChecked(0)
+
+        self.transfer_data(organism, endoChoice, GlobalSettings.CSPR_DB, self.geneDict,
                            self.geneNTDict, "")
 
-    # Function that is called in main in order to pass along the information the user inputted and the information
-    # from the .cspr files that was discovered
+    # Function that is used to set up the results page.
+    # it calls get_targets, which in turn calls display data
     def transfer_data(self, org, endo, path, geneposdict, geneNTSeqDict, fasta):
+        # set all of the classes variables
         self.org = org
         self.endo = endo
         self.directory = path
@@ -360,24 +445,65 @@ class Results(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.show()
         self.hide()
 
+    # called when the user hits 'gene viewer settings'
     def changeGeneViewerSettings(self):
         GlobalSettings.mainWindow.gene_viewer_settings.show()
+
+    # this is the function that sets up the co-targetting.
+    # it is called from the coTargetting class, when the user hits submit
+    def populate_cotarget_table(self):
+        # make a string of the combinitation, separated by commas's
+        endoBoxString = ""
+        for i in range(len(self.co_target_endo_list)):
+            if endoBoxString == "":
+                endoBoxString = self.co_target_endo_list[i]
+            else:
+                endoBoxString = endoBoxString + "," + self.co_target_endo_list[i]
+
+        # put the new endoChoice at the beginning. THis is the only way i could find to do it
+        # get a list of all endo choices, and put the newest at the front
+        endoBoxList = list()
+        endoBoxList.append(endoBoxString)
+        for i in range(self.endonucleaseBox.count()):
+            endoBoxList.append(self.endonucleaseBox.itemText(i))
+
+        # clear the current endo choices, and append the new order
+        self.endonucleaseBox.clear()
+        for i in range(len(endoBoxList)):
+            self.endonucleaseBox.addItem(endoBoxList[i])
+
+        # enable the cotarget checkbox
+        self.cotarget_checkbox.setEnabled(True)
+        self.cotarget_checkbox.setChecked(0)
+
+        # add it to the endoBox choices, and then call transfer_data
+        self.transfer_data(self.org, self.co_target_endo_list, GlobalSettings.CSPR_DB, self.geneDict, self.geneNTDict, "")
+
 
     # Function grabs the information from the .cspr file and adds them to the AllData dictionary
     #changed to now call CSPRparser's function. Same function essentially, just cleaned up here
     def get_targets(self, genename, pos_tuple):
         #get the right files
-        if self.directory.find("/") != -1:
-            file = (self.directory+"/" + self.org + "_" + self.endo + ".cspr")
-        else:
-            file = (self.directory + "\\" + self.org + "_" + self.endo + ".cspr")
+        for endo in self.endo:
+            if self.directory.find("/") != -1:
+                file = (self.directory+"/" + self.org + "_" + endo + ".cspr")
+            else:
+                file = (self.directory + "\\" + self.org + "_" + endo + ".cspr")
 
-        #create the parser, read the targets store it. then display the GeneData screen
-        parser = CSPRparser(file)
-        temp = parser.read_targets(genename, pos_tuple)
-        self.AllData[genename] = parser.read_targets(genename, pos_tuple)
-        for item in self.AllData[genename]:
-            self.highlighted[item[1]] = False
+            #create the parser, read the targets store it. then display the GeneData screen
+            parser = CSPRparser(file)
+
+            # if genename is not in the dict, make that spot into a list
+            if genename not in self.AllData:
+                self.AllData[genename] = list()
+            # now append parser's data to it
+            self.AllData[genename].append(parser.read_targets(genename, pos_tuple, endo))
+
+            # for each list item
+            for item in self.AllData[genename]:
+                # for each tuple item
+                for i in range(len(item)):
+                    self.highlighted[item[i][1]] = False
         self.displayGeneData()
 
 
@@ -400,15 +526,17 @@ class Results(QtWidgets.QMainWindow):
             self.geneViewer.setText(self.geneNTDict[self.comboBoxGene.currentText()])
 
         # Removing all sequences below minimum score and creating the set:
-
+        # for each list item
         for item in self.AllData[curgene]:
-            if int(item[3]) > int(self.minScoreLine.text()):
-                # Removing all non 5' G sequences:
-                if self.fivegseqCheckBox.isChecked():
-                    if item[1].startswith("G"):
-                        subset_display.add(item)
-                else:
-                    subset_display.add(item)
+            # for each tuple item
+            for i in range(len(item)):
+                if int(item[i][3]) > int(self.minScoreLine.text()):
+                    # Removing all non 5' G sequences:
+                    if self.fivegseqCheckBox.isChecked():
+                        if item[1].startswith("G"):
+                            subset_display.add(item[i])
+                    else:
+                        subset_display.add(item[i])
 
         self.targetTable.setRowCount(len(subset_display))
 
@@ -423,6 +551,7 @@ class Results(QtWidgets.QMainWindow):
             strand = QtWidgets.QTableWidgetItem(str(item[4]))
             PAM = QtWidgets.QTableWidgetItem(item[2])
             num1 = int(item[3])
+            endonuclease = QtWidgets.QTableWidgetItem(item[5])
             score = QtWidgets.QTableWidgetItem()
             score.setData(QtCore.Qt.EditRole, num1)
             self.targetTable.setItem(index, 0, loc)
@@ -432,6 +561,7 @@ class Results(QtWidgets.QMainWindow):
             self.targetTable.setItem(index, 4, score)
             self.targetTable.setItem(index, 5, QtWidgets.QTableWidgetItem("--.--"))
             self.targetTable.removeCellWidget(index, 7)
+            self.targetTable.setItem(index, 8, endonuclease)
             ckbox = QtWidgets.QCheckBox()
             ckbox.clicked.connect(self.search_gene)
             self.targetTable.setCellWidget(index,6,ckbox)
@@ -447,10 +577,66 @@ class Results(QtWidgets.QMainWindow):
                 details.clicked.connect(self.show_details)
                 self.targetTable.setCellWidget(index, 7, details)
             index += 1
-
-
+            
+        if len(self.endo) > 1:
+            self.combine_coTargets()
+            if self.cotarget_checkbox.isChecked():
+                self.remove_single_endo()
 
         self.targetTable.resizeColumnsToContents()
+
+    # this function is only entered if the user checks the show only cotargeted sequence checkbox
+    def remove_single_endo(self):
+        if self.cotarget_checkbox.isChecked():
+            removeList = list()
+            # go through and find which rows only have 1 endo
+            for i in range(self.targetTable.rowCount()):
+                endoData = self.targetTable.item(i, 8).text()
+                checkList = endoData.split(",")
+                if len(checkList) == 1:
+                    removeList.append(i)
+
+            # go through and remove those rows
+            for i in range(len(removeList)):
+                self.targetTable.removeRow(removeList[i])
+
+    # this function goes through the table and combines the co-targets that need to be combined
+    # it does not go through the dictionary data, although that could also be possible
+    # keeping it separate now, so that the data itself is not messed with. Just what is shown to the user
+    def combine_coTargets(self):
+        # this is a list of which rows need to be removed
+        rowsToRemove = list()
+
+        # print("rowCount: ", self.targetTable.rowCount())
+
+        for i in range(self.targetTable.rowCount()):
+            # get the first spots data
+            locationData1 = self.targetTable.item(i, 0).text()
+            endoData1 = self.targetTable.item(i, 8).text()
+            sequenceData1 = self.targetTable.item(i, 1).text()
+
+            # now go through the rest of the table and check it
+            for j in range(i + 1, self.targetTable.rowCount()):
+                locationData2 = self.targetTable.item(j, 0).text()
+                endoData2 = self.targetTable.item(j, 8).text()
+                sequenceData2 = self.targetTable.item(j, 1).text()
+
+                # only if the locations are the same, and the endo's are different ( endo part will change once globalsettings is right)
+                if locationData1 == locationData2 and endoData1 != endoData2:
+                    # test printing
+                    # print(locationData1, "\t", locationData2)
+                    # print(endoData1, "\t", endoData2)
+                    # print(sequenceData1, "\t", sequenceData2)
+                    # update the list of rows to remove, and update the endo of the original row
+                    inputEndoData = endoData1 + "," + endoData2
+                    self.targetTable.item(i, 8).setText(inputEndoData)
+                    rowsToRemove.append(j)
+
+        # go through and delete all of the rows now
+        for i in range(len(rowsToRemove)):
+            self.targetTable.removeRow(rowsToRemove[i])
+
+    ########################################## END UPDATING FUNCTION #############################################
 
     def search_gene(self):
         search_trms = []
@@ -672,7 +858,15 @@ class Results(QtWidgets.QMainWindow):
             # change to dialog box
             print('Could not open file')
 
+    # this function calls the closingWindow class.
+    def closeEvent(self, event):
+        GlobalSettings.mainWindow.closeFunction()
+        event.accept()
 
+############################################
+# CLASS NAME: geneViewerSettings
+# It's essentially a little window where the user can tell the program which file to use for geneviewer
+############################################
 class geneViewerSettings(QtWidgets.QDialog):
     def __init__(self):
         # Qt init stuff
@@ -777,6 +971,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         GlobalSettings.mainWindow.Results.lineEditStart.setEnabled(True)
         GlobalSettings.mainWindow.Results.lineEditEnd.setEnabled(True)
         GlobalSettings.mainWindow.Results.change_start_end_button.setEnabled(True)
+        GlobalSettings.mainWindow.Results.displayGeneViewer.setChecked(1)
         GlobalSettings.mainWindow.Results.checkGeneViewer()
         self.hide()
 
@@ -786,11 +981,17 @@ class geneViewerSettings(QtWidgets.QDialog):
         # start up the function
         fileStream = open(self.file_name_edit.displayText())
         buffer = fileStream.readline()
-        print(buffer)
         index = 1
         pre_sequence = ""
 
-        # skip all of the data until we are at the chromesome we care about
+        # get to the first chromosome's origin
+        while True:
+            if "ORIGIN" in buffer:
+                buffer = fileStream.readline()
+                break
+            buffer = fileStream.readline()
+
+        # skip all of the data until we are at the chromosome we care about
         while index != location_data[0]:
             if "ORIGIN" in buffer:
                 index += 1
@@ -798,6 +999,8 @@ class geneViewerSettings(QtWidgets.QDialog):
 
         # get the entire chromesome into a string
         while "//" not in buffer:
+            if "LOCUS" in buffer or buffer == "":
+                break
             # replace digits with spaces (if i replace them with nothing the program will crash)
             for i in range(len(buffer)):
                 if buffer[i].isdigit():
@@ -817,7 +1020,10 @@ class geneViewerSettings(QtWidgets.QDialog):
         # take out the endlines and uppercase the string
         pre_sequence = pre_sequence.replace("\n", "")
         pre_sequence = pre_sequence.upper()
+        print("Length of the pre-sequence: ", len(pre_sequence))
 
+        # we are having an issue here. Sometimes the length of the pre_sequence string is not large enough
+        # need to talk to brian to see what could be causing that
         # get the correct location and return
         ret_sequence = pre_sequence[location_data[1]:location_data[2]]
         return ret_sequence
@@ -840,15 +1046,18 @@ class geneViewerSettings(QtWidgets.QDialog):
 
         # now go through and get the whole chromesome
         sequence = buffer
-        while not buffer.startswith(">"):
+        while ">" not in buffer:
             buffer = fileStream.readline()
             if not buffer.startswith(">"):
                 sequence = sequence + buffer
+                # make sure to break out if the end of file is reached
+            if buffer == "":
+                break
 
         # uppercase that chromesome, and change all endlines with spaces
         sequence = sequence.upper()
         sequence = sequence.replace("\n", "")
-
+        print("Length of the pre-sequence: ", len(sequence))
         # now set the return sequence to the substring that we want
         NTSequence = sequence[location_data[1]:location_data[2]]
 

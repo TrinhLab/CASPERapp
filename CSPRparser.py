@@ -177,7 +177,7 @@ class CSPRparser:
         return(fileData)
 
     #this function reads all of the targets in the file. It is essentially a copy of get_targets from the results.py file, written by Brian Mendoza
-    def read_targets(self, genename, pos_tuple):
+    def read_targets(self, genename, pos_tuple, endo):
         #open the file, and store the genome and the misc tags.
         #Note: The KARYSTATS is not stored at all. This should not be hard to implement if it is needed
         fileStream = open(self.fileName)
@@ -201,7 +201,7 @@ class CSPRparser:
                     myline = fileStream.readline()
                     if self.seqTrans.decompress64(myline.split(",")[0]) >= pos_tuple[1]:
                         while self.seqTrans.decompress64(myline.split(",")[0]) < pos_tuple[2]:
-                            self.chromesomeList.append(self.seqTrans.decompress_csf_tuple(myline))
+                            self.chromesomeList.append(self.seqTrans.decompress_csf_tuple(myline, endo=endo))
                             myline = fileStream.readline()
                     else:
                         continue
