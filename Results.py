@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import requests
 import webbrowser
 from Scoring import OnTargetScore
+import Algorithms
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
 import GlobalSettings
@@ -47,9 +48,9 @@ class Results(QtWidgets.QMainWindow):
         self.switcher = [1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
 
         # Target Table settings #
-        self.targetTable.setColumnCount(7)  # hardcoded because there will always be seven columns
+        self.targetTable.setColumnCount(8)  # hardcoded because there will always be seven columns
         self.targetTable.setShowGrid(False)
-        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Off-Target".split(";"))
+        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Off-Target;Details".split(";"))
         self.targetTable.horizontalHeader().setSectionsClickable(True)
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -69,6 +70,7 @@ class Results(QtWidgets.QMainWindow):
         self.gene_viewer_settings_button.clicked.connect(self.changeGeneViewerSettings)
         self.change_start_end_button.clicked.connect(self.change_indicies)
 
+
         #self.targetTable.itemSelectionChanged.connect(self.item_select)
         self.minScoreLine.setText("0")
 
@@ -83,7 +85,19 @@ class Results(QtWidgets.QMainWindow):
 
         self.scoreSlider.valueChanged.connect(self.update_score_filter)
 
+        #bool used to make sure only 1 instance of the OffTarget window is created
         self.first_boot = True
+        #OTA is used to hold the row numbers of the items selected by user for OffTargetAnalysis
+        #using this helps speed up updating the chart
+        self.OTA = []
+
+        self.selectAllButton.clicked.connect(self.selectAll_OffT)
+
+
+        self.detail_output_list = []
+        self.rows_and_seq_list = []
+        self.seq_and_avg_list = []
+        self.files_list = []
 
     def change_indicies(self):
 
@@ -172,7 +186,6 @@ class Results(QtWidgets.QMainWindow):
         elif not self.checkBoxSelectAll.isChecked():
             for i in range(self.targetTable.rowCount()):
                 self.targetTable.cellWidget(i, 6).setCheckState(0)
-
 
     # hightlights the sequences found in the gene viewer
     # highlighting should stay the exact same with fasta and genbank files, as this function only edits what
@@ -322,13 +335,27 @@ class Results(QtWidgets.QMainWindow):
         self.geneNTDict = geneNTSeqDict
 
         self.highlighted.clear()
+        self.detail_output_list.clear()
+        self.seq_and_avg_list.clear()
+        self.rows_and_seq_list.clear()
+        self.OTA.clear()
+
         for gene in geneposdict:
+            detail_output1 = {}
+            rows_and_seq2 = {}
+            seq_and_avg3 = {}
+            self.detail_output_list.append(detail_output1)
+            self.seq_and_avg_list.append(seq_and_avg3)
+            self.rows_and_seq_list.append(rows_and_seq2)
             self.comboBoxGene.addItem(gene)
-            # print('gene: ' + gene)
             self.get_targets(gene, geneposdict[gene])
+
+
 
         # Enable the combobox to be toggled now that the data is in AllData
         self.comboBoxGene.currentTextChanged.connect(self.displayGeneData)
+        self.first_boot = True
+
     def goBack(self):
         GlobalSettings.mainWindow.show()
         self.hide()
@@ -347,7 +374,6 @@ class Results(QtWidgets.QMainWindow):
 
         #create the parser, read the targets store it. then display the GeneData screen
         parser = CSPRparser(file)
-        # print('postupe: '+str(pos_tuple))
         temp = parser.read_targets(genename, pos_tuple)
         self.AllData[genename] = parser.read_targets(genename, pos_tuple)
         for item in self.AllData[genename]:
@@ -359,10 +385,8 @@ class Results(QtWidgets.QMainWindow):
     # Main Function for updating the Table.  Connected to all filter buttons and the Gene toggling of the combobox.
     ###############################################################################################################
     def displayGeneData(self):
+
         curgene = str(self.comboBoxGene.currentText())  # Gets the current gene
-        #temp = list(self.AllData.keys())
-        #curgene = temp[0]
-        #print('curgene: ' + curgene)
         # Creates the set object from the list of the current gene:
         if curgene=='' or len(self.AllData)<1:
             return
@@ -387,7 +411,10 @@ class Results(QtWidgets.QMainWindow):
                     subset_display.add(item)
 
         self.targetTable.setRowCount(len(subset_display))
+
         index = 0
+        #changed the number items to use setData so that sorting will work correctly
+        #because before the numbers were interpretted as strings and not numbers
         for item in subset_display:
             num = int(item[0])
             loc = QtWidgets.QTableWidgetItem()
@@ -404,16 +431,26 @@ class Results(QtWidgets.QMainWindow):
             self.targetTable.setItem(index, 3, PAM)
             self.targetTable.setItem(index, 4, score)
             self.targetTable.setItem(index, 5, QtWidgets.QTableWidgetItem("--.--"))
+            self.targetTable.removeCellWidget(index, 7)
             ckbox = QtWidgets.QCheckBox()
             ckbox.clicked.connect(self.search_gene)
             self.targetTable.setCellWidget(index,6,ckbox)
-            #print(self.highlighted)
             if(self.highlighted[str(item[1])] == True):
                 ckbox.click()
+            if (item[1] in self.seq_and_avg_list[self.comboBoxGene.currentIndex()].keys()):
+                OT = QtWidgets.QTableWidgetItem()
+                OT.setData(QtCore.Qt.EditRole, self.seq_and_avg_list[self.comboBoxGene.currentIndex()][item[1]])
+                self.targetTable.setItem(index, 5, OT)
+            if (item[1] in self.detail_output_list[self.comboBoxGene.currentIndex()].keys()):
+                details = QtWidgets.QPushButton()
+                details.setText("Details")
+                details.clicked.connect(self.show_details)
+                self.targetTable.setCellWidget(index, 7, details)
             index += 1
-        self.targetTable.resizeColumnsToContents()
 
-    ########################################## END UPDATING FUNCTION #############################################
+
+
+        self.targetTable.resizeColumnsToContents()
 
     def search_gene(self):
         search_trms = []
@@ -435,13 +472,128 @@ class Results(QtWidgets.QMainWindow):
         else:
             self.targetTable.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
 
+        #update the OTA list in case user already has stuff selected, because their rows
+        #will most likely change after the sort
+        self.OTA.clear()
+        for row in range(self.targetTable.rowCount()):
+            if (self.targetTable.cellWidget(row, 6).isChecked()):
+                self.OTA.append(row)
 
-    # currently unused, but could be used with the offTargetButton when implemented
+    #linked to when the user pushes tools->off target analysis
     def Off_Target_Analysis(self):
+        #build temp file for offtarget to read from
+        f = open(GlobalSettings.appdir + '\\OffTargetFolder' + '\\temp.txt','w+')
+        self.OTA.clear()
+        for row in range(self.targetTable.rowCount()):
+            if(self.targetTable.cellWidget(row,6).isChecked()):
+                self.OTA.append(row)
+                loc = self.targetTable.item(row, 0).text()
+                seq = self.targetTable.item(row,1).text()
+                strand = self.targetTable.item(row,2).text()
+                pam = self.targetTable.item(row,3).text()
+                score = self.targetTable.item(row,4).text()
+                loc = self.S.compress(int(loc), 64)
+                self.rows_and_seq_list[self.comboBoxGene.currentIndex()][seq] = row
+                seq = self.S.compress(seq, 64)
+                pam = self.S.compress(pam, 64)
+                score = self.S.compress(int(score), 64)
+                output = str(loc) + ',' + str(seq) + str(strand) + str(pam) + ',' + score
+                f.write(output + '\n')
+        f.close()
+        #only make off target object if first time, otherwise just
+        #reshow the object
         if(self.first_boot == True):
             self.first_boot = False
             self.off_tar_win = OffTarget.OffTarget()
+            self.off_tar_win.submitButton.clicked.connect(self.refresh_data)
         self.off_tar_win.show()
+        f.close()
+
+    #refresh data is linked to the submit button on the off target analysis UI
+    def refresh_data(self):
+        self.off_tar_win.hide()
+        #setup filename based on output name given in OffTarget
+        filename = self.off_tar_win.output_path
+        filename = filename[:len(filename)-1]
+        filename = filename[1:]
+        filename = filename.replace(r'\\', '\\')
+        filename = filename.replace('"', '')
+        self.files_list.append(filename)
+        out_file = open(filename, "r")
+        #read the first line : either AVG or DETAILED OUTPUT
+        output_type = out_file.readline()
+        output_type = output_type.strip('\r\n')
+        length = len(self.OTA)
+        #parse based on whether avg or detailed output
+        if(output_type == "AVG OUTPUT"):
+            for i in range(0,length):
+                line = out_file.readline()
+                line = line.strip('\n')
+                if (line != ''):
+                    values = line.split(":")
+                    row = self.rows_and_seq_list[self.comboBoxGene.currentIndex()][values[0]]
+                    OT = QtWidgets.QTableWidgetItem()
+                    OT.setData(QtCore.Qt.EditRole, values[1])
+                    self.targetTable.setItem(row, 5, OT)
+                    self.seq_and_avg_list[self.comboBoxGene.currentIndex()][values[0]] = values[1]
+        else:
+            for i in range(0,length):
+                temp_list = []
+                line = out_file.readline()
+                line = line.strip('\n')
+                if(line != ''):
+                    values = line.split(":")
+                    row = self.rows_and_seq_list[self.comboBoxGene.currentIndex()][values[0]]
+                    OT = QtWidgets.QTableWidgetItem()
+                    OT.setData(QtCore.Qt.EditRole, values[1])
+                    self.targetTable.setItem(row, 5, OT)
+                    line = out_file.readline()
+                    line = line.strip('\n')
+                    if(line != ''):
+                        temp_list.append(line)
+                        details = QtWidgets.QPushButton()
+                        details.setText("Details")
+                        details.clicked.connect(self.show_details)
+                        self.targetTable.setCellWidget(row, 7, details)
+                        while(True):
+                            line = out_file.readline()
+                            line = line.strip('\n')
+                            if(line == ''):
+                                self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
+                                break
+                            temp_list.append(line)
+                    self.seq_and_avg_list[self.comboBoxGene.currentIndex()][values[0]] = values[1]
+        self.targetTable.resizeColumnsToContents()
+        out_file.close()
+
+
+    def show_details(self):
+        #create msg box popup for the details | used html to make it easier to style with bold
+        button = self.sender()
+        index = self.targetTable.indexAt(button.pos())
+        msg = QtWidgets.QMessageBox()
+        msg.setWindowTitle("Details")
+        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        key = str(self.targetTable.item(index.row(),1).text())
+        temp_str = ''
+        for items in self.detail_output_list[self.comboBoxGene.currentIndex()][key]:
+            temp_str += items + "<br>"
+
+        chromo_str = "<html><b>Chromsome: Location, Sequence, Strand, PAM, Score:<br></b></html>"
+        input_str = self.targetTable.item(index.row(),0).text() + ' , ' + key + ' , ' + \
+                    self.targetTable.item(index.row(),2).text() + ' , ' + self.targetTable.item(index.row(),3).text() + \
+                    ' , ' + self.targetTable.item(index.row(),4).text() + "<br><br>"
+        detail_str = "<html><b>Deatailed Output: Score, Chromsome, Location, Sequence:<br></b></html>"
+        msg.setText(chromo_str + input_str + detail_str + temp_str)
+        msg.exec()
+
+    #select all off target checkboxes in results window
+    def selectAll_OffT(self):
+        for row in range(self.targetTable.rowCount()):
+            if(self.targetTable.cellWidget(row,6).isChecked() == False):
+                self.targetTable.cellWidget(row,6).click()
+
+
 
     # Function for displaying the target in the gene viewer
     """def displayGene(self,fastafile=None, Kegg=False, NCBI=False):
@@ -469,7 +621,7 @@ class Results(QtWidgets.QMainWindow):
     def update_score_filter(self):
         self.minScoreLine.setText(str(self.scoreSlider.value()))
 
-
+    #allows user to save what is currently in the table
     def save_data(self):
         filename = QtWidgets.QFileDialog.getSaveFileName(self,
                                       "Enter Text File Name", ".txt",
@@ -484,7 +636,7 @@ class Results(QtWidgets.QMainWindow):
                 f.write("\n")
         f.close()
 
-
+    #open any saved .txt of previous tables opened
     def open_data(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')
         self.AllData.clear()
@@ -494,7 +646,6 @@ class Results(QtWidgets.QMainWindow):
         s = ""
         self.comboBoxGene.clear()
         if (os.path.isfile(str(filename[0]))):
-            print('success')
             f = open(str(filename[0]), "r+")
             for line in f:
                 if(line.startswith("***")):
