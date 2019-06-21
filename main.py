@@ -1081,7 +1081,7 @@ class StartupWindow(QtWidgets.QDialog):
             elif (os.path.isdir(self.gdirectory)):
                 os.chdir(self.gdirectory)
                 #change dir, still load main window, still load MT data, and then open main window and newGenome window
-                filepath = self.gdirectory
+                GlobalSettings.filedir = self.gdirectory
                 self.re_write_dir()
                 GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
                 GlobalSettings.mainWindow.show()
@@ -1154,7 +1154,7 @@ class StartupWindow(QtWidgets.QDialog):
                 QtWidgets.QMessageBox.question(self, "No Cspr files", "Please select a directory that contains cspr files.",
                                                QtWidgets.QMessageBox.Ok)
                 return
-            filepath = self.gdirectory
+            GlobalSettings.filedir = self.gdirectory
             self.re_write_dir()
             GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
             GlobalSettings.mainWindow.show()
@@ -1178,7 +1178,6 @@ if __name__ == '__main__':
     app.setApplicationName("CASPER")
 
     startup = StartupWindow()
-    GlobalSettings.filedir = startup.gdirectory  # used as global constant
     GlobalSettings.mainWindow = CMainWindow(os.getcwd())
     MTwin = multitargeting.Multitargeting()
 

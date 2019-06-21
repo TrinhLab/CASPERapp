@@ -267,8 +267,6 @@ class NewGenome(QtWidgets.QMainWindow):
 
 
 
-
-
     ####---FUNCTIONS TO RUN EACH BUTTON---####
     def selectFasta(self):
 
@@ -428,7 +426,9 @@ class NewGenome(QtWidgets.QMainWindow):
     def run_jobs(self):
         # Top layer for loop to go through all of the jobs in the queue:
         job = self.JobsQueue[self.JobIndexInProgress]
-        program = GlobalSettings.CASPER_FOLDER_LOCATION + "/Casper_Seq_Finder_" + GlobalSettings.OPERATING_SYSTEM_ID
+        #program = GlobalSettings.CASPER_FOLDER_LOCATION + "/Casper_Seq_Finder_" + GlobalSettings.OPERATING_SYSTEM_ID
+        print(GlobalSettings.appdir)
+        program = GlobalSettings.appdir + '\\Casper_Seq_Finder_Windows.exe'
         self.JobInProgress.setText(job.name)
         self.process.start(program, job.get_arguments())
         self.process.readyReadStandardOutput.connect(self.output_stdout)
