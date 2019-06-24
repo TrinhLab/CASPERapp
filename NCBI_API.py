@@ -33,6 +33,7 @@ class Assembly:
     #this function gets a list of GCA's and a list of database URLs for downloading
     def getDataBaseURL(self, organism, database, ncbi_ret_max):
         # search entrez
+        error = False
         print("searching ncbi for: ", organism)
         handle = Entrez.esearch(db="assembly", retmax=ncbi_ret_max, term=organism)
         record = Entrez.read(handle)
@@ -86,23 +87,24 @@ class Assembly:
 
             # check the links and catch errors
             if (database == "RefSeq" and len(refseq_link) < 5):
+                error = True
                 print("Error: No RefSeq file to download!")
             elif (database == "GenBank" and len(genbank_link) < 5):
+                error = True
                 print("Error: No GenBank file to download!")
             elif (len(genbank_link) < 5 and len(refseq_link) < 5):
+                error = True
                 print("Error: No RefSeq or GenBank files to download")
-            self.database_url_list.append(database_url)
-            if orgName:
-                self.orgName_dict[orgName.string + "::" + self.gca_rectList[i]] = self.gca_rectList[i]
             else:
-                self.orgName_dict["No Organism Name Found" + "::" + self.gca_rectList[i]] = self.gca_rectList[i]
+                error = False
+                self.database_url_list.append(database_url)
+            # only set the data if there actually is a link to download with
+            if orgName and error == False:
+                self.orgName_dict[orgName.string + "::" + self.gca_rectList[i]] = self.gca_rectList[i]
 
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(80)
 
-        if len(self.database_url_list) <= 0:
-            return (self.database_url_list, self.orgName_dict)
-        else:
-            return (self.database_url_list, self.orgName_dict)
+        return (self.database_url_list, self.orgName_dict)
 
     # this function downloads the .gz file from the given link, and stores it in the CSPR_DB folder from Global Settings
     # NOTE: this function should only be used to download .gz files, nothing else

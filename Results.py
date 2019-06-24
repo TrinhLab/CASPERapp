@@ -65,7 +65,7 @@ class Results(QtWidgets.QMainWindow):
         self.actionCoTargeting.triggered.connect(self.open_cotarget)
         self.changeEndoButton.clicked.connect(self.changeEndonuclease)
         self.displayGeneViewer.stateChanged.connect(self.checkGeneViewer)
-        self.cotarget_checkbox.stateChanged.connect(self.displayGeneData)
+        self.cotarget_checkbox.stateChanged.connect(self.prep_cotarget_checkbox)
         self.highlight_gene_viewer_button.clicked.connect(self.highlight_gene_viewer)
         self.checkBoxSelectAll.stateChanged.connect(self.selectAll)
         self.pushButton_Deselect_All.clicked.connect(self.deselectAll)
@@ -443,6 +443,7 @@ class Results(QtWidgets.QMainWindow):
 
     def goBack(self):
         GlobalSettings.mainWindow.show()
+        self.cotarget_checkbox.setChecked(0)
         self.hide()
 
     # called when the user hits 'gene viewer settings'
@@ -451,7 +452,8 @@ class Results(QtWidgets.QMainWindow):
 
     # this is the function that sets up the co-targetting.
     # it is called from the coTargetting class, when the user hits submit
-    def populate_cotarget_table(self):
+    # myBool is whether or not to change the endoChoice comboBox
+    def populate_cotarget_table(self, myBool = True):
         # make a string of the combinitation, separated by commas's
         endoBoxString = ""
         for i in range(len(self.co_target_endo_list)):
@@ -468,9 +470,10 @@ class Results(QtWidgets.QMainWindow):
             endoBoxList.append(self.endonucleaseBox.itemText(i))
 
         # clear the current endo choices, and append the new order
-        self.endonucleaseBox.clear()
-        for i in range(len(endoBoxList)):
-            self.endonucleaseBox.addItem(endoBoxList[i])
+        if myBool:
+            self.endonucleaseBox.clear()
+            for i in range(len(endoBoxList)):
+                self.endonucleaseBox.addItem(endoBoxList[i])
 
         # enable the cotarget checkbox
         self.cotarget_checkbox.setEnabled(True)
@@ -478,6 +481,15 @@ class Results(QtWidgets.QMainWindow):
 
         # add it to the endoBox choices, and then call transfer_data
         self.transfer_data(self.org, self.co_target_endo_list, GlobalSettings.CSPR_DB, self.geneDict, self.geneNTDict, "")
+
+    # prep function for the checkbox for cotargeting
+    # if the checkbox is checked, just go ahead and displayGeneData
+    # if not, call populate_cotarget_table, as a reset to get all of the data there
+    def prep_cotarget_checkbox(self):
+        if self.cotarget_checkbox.isChecked():
+            self.displayGeneData()
+        elif not self.cotarget_checkbox.isChecked():
+            self.populate_cotarget_table(myBool=False)
 
 
     # Function grabs the information from the .cspr file and adds them to the AllData dictionary
@@ -524,6 +536,13 @@ class Results(QtWidgets.QMainWindow):
             self.lineEditStart.setText(str(self.geneDict[self.comboBoxGene.currentText()][1]))
             self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
             self.geneViewer.setText(self.geneNTDict[self.comboBoxGene.currentText()])
+
+        # if the length of endo is greater than 1, go through and combine the ones the need combining
+        if len(self.endo) > 1:
+            self.combine_coTargets(curgene)
+        # if the cotarget button is checked, go through and only show the ones that need to be checked
+        if self.cotarget_checkbox.isChecked():
+            self.remove_single_endo(curgene)
 
         # Removing all sequences below minimum score and creating the set:
         # for each list item
@@ -577,65 +596,71 @@ class Results(QtWidgets.QMainWindow):
                 details.clicked.connect(self.show_details)
                 self.targetTable.setCellWidget(index, 7, details)
             index += 1
-            
-        if len(self.endo) > 1:
-            self.combine_coTargets()
-            if self.cotarget_checkbox.isChecked():
-                self.remove_single_endo()
 
         self.targetTable.resizeColumnsToContents()
 
     # this function is only entered if the user checks the show only cotargeted sequence checkbox
-    def remove_single_endo(self):
-        if self.cotarget_checkbox.isChecked():
-            removeList = list()
-            # go through and find which rows only have 1 endo
-            for i in range(self.targetTable.rowCount()):
-                endoData = self.targetTable.item(i, 8).text()
-                checkList = endoData.split(",")
-                if len(checkList) == 1:
-                    removeList.append(i)
+    def remove_single_endo(self, curgene):
+        removalDict = dict()
+        # go through and figure out which ones need to be shown
+        for i in range(len(self.AllData[curgene])):
+            for j in range(len(self.AllData[curgene][i])):
+                endoData = self.AllData[curgene][i][j][5].split(",")
+                if len(endoData) == 1:
+                    if i not in removalDict:
+                        removalDict[i] = list()
 
-            # go through and remove those rows
-            for i in range(len(removeList)):
-                self.targetTable.removeRow(removeList[i])
+                    removalDict[i].append(j)
 
-    # this function goes through the table and combines the co-targets that need to be combined
-    # it does not go through the dictionary data, although that could also be possible
-    # keeping it separate now, so that the data itself is not messed with. Just what is shown to the user
-    def combine_coTargets(self):
-        # this is a list of which rows need to be removed
-        rowsToRemove = list()
+        # now go through and delete them. But you have to go in reverse
+        for item in removalDict:
+            # for the reverse of that list. This is to keep the program from crashing
+            # easier than building a new list honestly
+            for index in reversed(removalDict[item]):
+                self.AllData[curgene][item].pop(index)
 
-        # print("rowCount: ", self.targetTable.rowCount())
+    # this function goes through and combines table rows that have the same location and PAM dir
+    # it edits the dictionary data itself
+    # currently it does not take the PAM direction into account
+    def combine_coTargets(self, curgene):
+        deletingDict = dict()
 
-        for i in range(self.targetTable.rowCount()):
-            # get the first spots data
-            locationData1 = self.targetTable.item(i, 0).text()
-            endoData1 = self.targetTable.item(i, 8).text()
-            sequenceData1 = self.targetTable.item(i, 1).text()
+        # figure out which ones to combine and which ones to delete
+        for i in range(len(self.AllData[curgene][0])):
+            # set the first one's data
+            locationData1 = self.AllData[curgene][0][i][0]
+            sequenceData1 = self.AllData[curgene][0][i][1]
+            pamData1 = self.AllData[curgene][0][i][2]
+            scoreData1 = self.AllData[curgene][0][i][3]
+            strandData1 = self.AllData[curgene][0][i][4]
+            endoData1 = self.AllData[curgene][0][i][5]
+            #print(self.AllData[curgene][0][i])
+            for j in range(1, len(self.AllData[curgene])):
+                for k in range(len(self.AllData[curgene][j])):
+                    # set the second's one data. Currently, all are set, but in the future it could be only location and endo will be needed
+                    locationData2 = self.AllData[curgene][j][k][0]
+                    sequenceData2 = self.AllData[curgene][j][k][1]
+                    pamData2 = self.AllData[curgene][j][k][2]
+                    scoreData2 = self.AllData[curgene][j][k][3]
+                    strandData2 = self.AllData[curgene][j][k][4]
+                    endoData2 = self.AllData[curgene][j][k][5]
 
-            # now go through the rest of the table and check it
-            for j in range(i + 1, self.targetTable.rowCount()):
-                locationData2 = self.targetTable.item(j, 0).text()
-                endoData2 = self.targetTable.item(j, 8).text()
-                sequenceData2 = self.targetTable.item(j, 1).text()
+                    # if they match, combine the two. Keep the first ones data, but append the second's ones endo to the first one
+                    if locationData1 == locationData2 and endoData1 != endoData2 and endoData2 not in endoData1:
+                        endoData1 = endoData1 + "," + endoData2
+                        self.AllData[curgene][0][i] = (locationData1, sequenceData1, pamData1, scoreData1, strandData1, endoData1)
+                        # update the deletion list
+                        if j not in deletingDict:
+                            deletingDict[j] = list()
 
-                # only if the locations are the same, and the endo's are different ( endo part will change once globalsettings is right)
-                if locationData1 == locationData2 and endoData1 != endoData2:
-                    # test printing
-                    # print(locationData1, "\t", locationData2)
-                    # print(endoData1, "\t", endoData2)
-                    # print(sequenceData1, "\t", sequenceData2)
-                    # update the list of rows to remove, and update the endo of the original row
-                    inputEndoData = endoData1 + "," + endoData2
-                    self.targetTable.item(i, 8).setText(inputEndoData)
-                    rowsToRemove.append(j)
+                        deletingDict[j].append(k)
 
-        # go through and delete all of the rows now
-        for i in range(len(rowsToRemove)):
-            self.targetTable.removeRow(rowsToRemove[i])
-
+        # delete the ones that need to be deleted
+        for item in deletingDict:
+            # go in the reverse of that list. This is to keep the program from crashing.
+            # it is easier than building a new list honestly
+            for index in reversed(deletingDict[item]):
+                self.AllData[curgene][item].pop(index)
     ########################################## END UPDATING FUNCTION #############################################
 
     def search_gene(self):

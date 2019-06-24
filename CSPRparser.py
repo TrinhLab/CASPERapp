@@ -188,7 +188,6 @@ class CSPRparser:
         header = fileStream.readline()
 
         # Find the right chromosome:
-        print(pos_tuple)
         while True:
             # quick error check so the loop eventually breaks out if nothing is found
             if header == "":
