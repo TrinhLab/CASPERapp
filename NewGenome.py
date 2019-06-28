@@ -6,7 +6,7 @@ from PyQt5 import QtWidgets, uic, QtGui, QtCore, Qt
 from bioservices import KEGG
 from NCBI_API import Assembly, GBFF_Parse
 import GlobalSettings
-
+from functools import partial
 
 def iter_except(function, exception):
     """Works like builtin 2-argument `iter()`, but stops on `exception`."""
@@ -248,7 +248,6 @@ class NewGenome(QtWidgets.QMainWindow):
 
         self.viewStatButton.setEnabled(False)
 
-        self.JobIndexInProgress = 0
         self.JobsQueue = []  # holds Job classes.
         self.Endos = dict()
         self.file = ""
@@ -259,12 +258,12 @@ class NewGenome(QtWidgets.QMainWindow):
 
 
 
-
+        self.first = False
         #show functionalities on window
         self.fillEndo()
         #self.show()
 
-
+        self.num_chromo_next = False
 
 
     ####---FUNCTIONS TO RUN EACH BUTTON---####
@@ -425,37 +424,97 @@ class NewGenome(QtWidgets.QMainWindow):
 
     def run_jobs(self):
         # Top layer for loop to go through all of the jobs in the queue:
-        job = self.JobsQueue[self.JobIndexInProgress]
-        #program = GlobalSettings.CASPER_FOLDER_LOCATION + "/Casper_Seq_Finder_" + GlobalSettings.OPERATING_SYSTEM_ID
-        print(GlobalSettings.appdir)
-        program = GlobalSettings.appdir + '\\Casper_Seq_Finder_Windows.exe'
+        job = self.JobsQueue[0]
+        program = '"' + GlobalSettings.appdir + '\\Casper_Seq_Finder_Windows" '
         self.JobInProgress.setText(job.name)
-        self.process.start(program, job.get_arguments())
         self.process.readyReadStandardOutput.connect(self.output_stdout)
+        self.process.start(program, job.get_arguments())
+        self.JobsQueueBox.clear()
+        for jobs in self.JobsQueue:
+            if(job.name != jobs.name):
+                self.JobsQueueBox.append(jobs.name)
+
 
     def output_stdout(self):
-        outputBytes = self.process.readAllStandardOutput().data()
-        outputUnicode = outputBytes.decode('utf-8')
-        self.output_browser.append(outputUnicode)
+        line = str(self.process.readAllStandardOutput())
+        line = line[2:]
+        line = line[:len(line) - 1]
+        for lines in filter(None, line.split(r'\r\n')):
+            if(lines == 'Finished reading in the genome file.'):
+                self.num_chromo_next = True
+            elif(self.num_chromo_next == True):
+                self.num_chromo_next = False
+                self.num_chromo = int(lines)
+            elif(lines.find('Chromosome') != -1 and lines.find('complete.') != -1):
+                temp = lines
+                temp = temp.replace('Chromosome ', '')
+                temp = temp.replace(' complete.','')
+                if(int(temp) == self.num_chromo):
+                    self.progressBar.setValue(99)
+                else:
+                    self.progressBar.setValue(int(temp)/self.num_chromo * 100)
+            elif(lines == 'Finished Creating File.'):
+                    self.progressBar.setValue(100)
+
+            self.output_browser.append(lines)
+
 
     def upon_process_finishing(self):
-        self.CompletedJobs.append(self.JobsQueue[self.JobIndexInProgress].name)
+        self.CompletedJobs.append(self.JobsQueue[0].name)
+        self.JobsQueue.pop(0)
         self.process.close()
-        if self.JobIndexInProgress < len(self.JobsQueue)-1:
-            self.JobIndexInProgress += 1
+        self.num_chromo = 0
+        if len(self.JobsQueue) != 0:
+            self.progressBar.setValue(0)
             self.run_jobs()
+        else:
+            self.JobInProgress.clear()
+            self.JobsQueue = []
+            self.JobsQueueBox.clear()
+            self.output_browser.clear()
 
     def clear_job_queue(self):
+        self.process.kill()
         self.JobsQueue = []
-        self.JobsQueueBox.setPlainText("")
+        self.JobsQueueBox.clear()
+        self.lineEdit_1.clear()
+        self.lineEdit_2.clear()
+        self.lineEdit_3.clear()
+        self.keggSuggested.setRowCount(0)
+        self.output_browser.clear()
+        self.JobInProgress.clear()
+        self.CompletedJobs.clear()
+        self.nameFile.setText("Name Of File")
+        self.genbank_box.setChecked(False)
+        self.ref_seq_box.setChecked(False)
+        self.progressBar.setValue(0)
+        self.first = False
 
     def reset(self):
         self.lineEdit_1.clear()
         self.lineEdit_2.clear()
         self.lineEdit_3.clear()
         self.keggSuggested.clear()
+        self.first = False
         self.nameFile.setText("Name Of File")
 
+    def closeEvent(self, event):
+        self.process.kill()
+        self.JobsQueue = []
+        self.JobsQueueBox.clear()
+        self.lineEdit_1.clear()
+        self.lineEdit_2.clear()
+        self.lineEdit_3.clear()
+        self.keggSuggested.setRowCount(0)
+        self.output_browser.clear()
+        self.JobInProgress.clear()
+        self.CompletedJobs.clear()
+        self.nameFile.setText("Name Of File")
+        self.genbank_box.setChecked(False)
+        self.ref_seq_box.setChecked(False)
+        self.progressBar.setValue(0)
+        self.first = False
+        event.accept()
 
 class CasperJob:
     def __init__(self, org, suborg, endo, org_code, ref_file, tot_len, seed_len, pamdir):
@@ -480,11 +539,14 @@ class CasperJob:
         else:
             ret_array.append("FALSE")
         if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
-            ret_array.append(GlobalSettings.CSPR_DB + "\\")
+            ret_array.append(GlobalSettings.CSPR_DB+'\\')
+            #ret_array.append("C:\\Users\\Tfry\\Desktop\\FILES\\")
         else:
-            ret_array.append(GlobalSettings.CSPR_DB + "/")
-        ret_array.append(GlobalSettings.CASPER_FOLDER_LOCATION + "/CASPERinfo")
+            ret_array.append(GlobalSettings.CSPR_DB + "\\")
+        ret_array.append(GlobalSettings.CASPER_FOLDER_LOCATION + "\\CASPERinfo")
+        #ret_array.append("C:\\Users\\Tfry\\CASPERapp\\CASPERinfo")
         ret_array.append(self.reference_file)
+        #ret_array.append("C:\\Users\\Tfry\\Desktop\\FILES\\GCA_000765375.1_ASM76537v1_genomic.fna")
         ret_array.append(self.organism_name)
         ret_array.append(self.sequence_length)
         ret_array.append(self.seed_length)
