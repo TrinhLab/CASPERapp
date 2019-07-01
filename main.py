@@ -1092,6 +1092,7 @@ class StartupWindow(QtWidgets.QDialog):
                 GlobalSettings.mainWindow.getData()
                 GlobalSettings.mainWindow.launch_newGenome()
                 MTwin.launch(self.gdirectory)
+                pop_Analysis.launch(self.gdirectory)
                 self.close()
             else:
                 QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
@@ -1164,6 +1165,7 @@ class StartupWindow(QtWidgets.QDialog):
             GlobalSettings.mainWindow.show()
             #Tanner - still setup data for MT
             MTwin.launch(self.gdirectory)
+            pop_Analysis.launch(self.gdirectory)
             self.close()
         else:
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
