@@ -115,7 +115,7 @@
      <string>Analyze Organism(s)</string>
     </property>
    </widget>
-   <widget class="QTableWidget" name="tableWidget">
+   <widget class="QTableWidget" name="table2">
     <property name="geometry">
      <rect>
       <x>520</x>
@@ -140,7 +140,7 @@
      <rect>
       <x>230</x>
       <y>140</y>
-      <width>91</width>
+      <width>181</width>
       <height>21</height>
      </rect>
     </property>
@@ -150,15 +150,18 @@
      </font>
     </property>
     <property name="text">
-     <string>Endonuclease:</string>
+     <string>Endonuclease</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QComboBox" name="endoBox">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>140</y>
-      <width>81</width>
+      <x>230</x>
+      <y>160</y>
+      <width>181</width>
       <height>22</height>
      </rect>
     </property>
@@ -229,7 +232,7 @@
      <x>0</x>
      <y>0</y>
      <width>1221</width>
-     <height>19</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
