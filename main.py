@@ -343,7 +343,6 @@ class CMainWindow(QtWidgets.QMainWindow):
     # this assumes that the parsers all store the data the same way, which gff and feature table do
     # please make sure the gbff parser stores the data in the same way
     # so far the gff files seems to all be different. Need to think about how we want to parse it
-    # TODO: also need to set the progress value correctly through all this
     def run_results_own_ncbi_file(self, inputstring, fileName):
         self.annotation_parser = Annotation_Parser()
         self.annotation_parser.annotationFileName = fileName
@@ -356,12 +355,10 @@ class CMainWindow(QtWidgets.QMainWindow):
         own_cspr_parser = CSPRparser(cspr_file)
         own_cspr_parser.read_first_lines()
 
-        #print("Karystats: ",len(own_cspr_parser.karystatsList))
-        #print(self.annotation_parser.max_chrom)
-
-        if len(own_cspr_parser.karystatsList) != self.annotation_parser.max_chrom:
-            print("Error: the number of chromesomes in the CSPR file and the Annotation File do not match. This could"
-                  "result in targets not being found. Please check the files selected")
+        if len(own_cspr_parser.karystatsList) - 1 != self.annotation_parser.max_chrom:
+            QtWidgets.QMessageBox.question(self, "Warning:",
+                                           "The number of chromesomes do not match. This could cause errors."
+                                           , QtWidgets.QMessageBox.Ok)
 
         ##may need to open a message window here
         ###################
