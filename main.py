@@ -23,6 +23,7 @@ import pyqtgraph as pg
 from PyQt5.QtChart import (QBarCategoryAxis,QBarSet, QChartView, QBarSeries,QChart,QLineSeries)
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
+import populationAnalysis
 ############################## MT Libraries #####################
 
 
@@ -256,6 +257,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         # --- Menubar commands --- #
         self.actionChange_Directory.triggered.connect(self.change_directory)
         self.actionMultitargeting.triggered.connect(self.changeto_multitargeting)
+        self.actionPopulation_Analysis.triggered.connect(self.changeto_population_Analysis)
         # --- Setup for Gene Entry Field --- #
         self.geneEntryField.setPlainText("Example Inputs: \n"
                                                "Gene (LocusID): YOL086C  *for Saccharomyces Cerevisiae ADH1 gene* \n"
@@ -273,7 +275,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.gene_viewer_settings = geneViewerSettings()
         self.myClosingWindow = closingWindow()
 
-
+        self.newGenome.process.finished.connect(self.update_dropdowns)
 
     def endo_Changed(self):
         i=3
@@ -927,11 +929,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             if (self.endoChoice.currentText() in self.data[item]) and (item != str(self.orgChoice.currentText())):
                 self.Add_Orgo_Combo.addItem(item)
 
-    def addOrgoCombo(self):
-        self.Add_Orgo_Combo.addItem("Select Organism")
-        for item in self.data:
-            if (self.endoChoice.currentText() in self.data[item]) and (item != str(self.orgChoice.currentText())):
-                self.Add_Orgo_Combo.addItem(item)
 
     # ----- CALLED IN STARTUP WINDOW ------ #
     def getData(self):
@@ -955,18 +952,18 @@ class CMainWindow(QtWidgets.QMainWindow):
                 if species in orgsandendos:
                     orgsandendos[species].append(endo)
                 else:
-                    orgsandendos[species] =[endo]
+                    orgsandendos[species] = [endo]
                     self.orgChoice.addItem(species)
 
         #auto fill the kegg search bar with the first choice in orgChoice
         self.Search_Input.setText(self.orgChoice.currentText())
-
         if found==False:
             return False
         self.data = orgsandendos
         self.shortHand= shortName
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
         self.orgChoice.currentIndexChanged.connect(self.changeEndos)
+
 
     def changeEndos(self):
 
@@ -988,6 +985,11 @@ class CMainWindow(QtWidgets.QMainWindow):
     def changeto_multitargeting(self):
         os.chdir(os.getcwd())
         MTwin.show()
+        GlobalSettings.mainWindow.hide()
+
+    def changeto_population_Analysis(self):
+        os.chdir(os.getcwd())
+        pop_Analysis.show()
         GlobalSettings.mainWindow.hide()
 
     @QtCore.pyqtSlot()
@@ -1021,6 +1023,11 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.myClosingWindow.get_files()
         self.myClosingWindow.show()
 
+    def update_dropdowns(self):
+        self.orgChoice.currentIndexChanged.disconnect()
+        self.orgChoice.clear()
+        self.endoChoice.clear()
+        self.getData()
 
 
 # ----------------------------------------------------------------------------------------------------- #
@@ -1180,5 +1187,6 @@ if __name__ == '__main__':
     startup = StartupWindow()
     GlobalSettings.mainWindow = CMainWindow(os.getcwd())
     MTwin = multitargeting.Multitargeting()
+    pop_Analysis = populationAnalysis.Pop_Analysis()
 
     sys.exit(app.exec_())
