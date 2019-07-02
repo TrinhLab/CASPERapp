@@ -26,9 +26,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.org_Table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
 
         #top right table
-        self.table2.setColumnCount(6)
+        self.table2.setColumnCount(7)
         self.table2.setShowGrid(False)
-        self.table2.setHorizontalHeaderLabels(["Sequence","Strand","PAM","% Conserved","Total Repeats","Repeats/Organism"])
+        self.table2.setHorizontalHeaderLabels(["Sequence","Strand","PAM", "Score","% Conserved","Total Repeats","Repeats/Organism"])
         self.table2.horizontalHeader().setSectionsClickable(True)
         self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -121,9 +121,13 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         seq = QtWidgets.QTableWidgetItem(data[1])
                         strand = QtWidgets.QTableWidgetItem(str(data[4]))
                         PAM = QtWidgets.QTableWidgetItem(data[2])
+                        num1 = int(data[3])
+                        score = QtWidgets.QTableWidgetItem()
+                        score.setData(QtCore.Qt.EditRole, num1)
                         self.table2.setItem(index, 0, seq)
                         self.table2.setItem(index, 1, strand)
                         self.table2.setItem(index, 2, PAM)
+                        self.table2.setItem(index, 3, score)
                         index += 1
             self.table2.resizeColumnsToContents()
             #print(self.parser.repeats)
