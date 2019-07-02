@@ -66,6 +66,7 @@ class CSPRparser:
 #this function reads all of the chromosomes in the file
 #stores the data into a list of lists. So the line starting with '>' is the first index of each sub list
     def read_chromesome(self):
+        self.chromesomeList.clear()
         tempList = list()
         fileStream = open(self.fileName, 'r')
 

@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 import GlobalSettings
 import os
+from CSPRparser import CSPRparser
 
 class Pop_Analysis(QtWidgets.QMainWindow):
     def __init__(self):
@@ -8,7 +9,11 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         uic.loadUi('populationanalysis.ui', self)
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
         self.goBackButton.clicked.connect(self.go_back)
+        self.analyze_button.clicked.connect(self.fill_data)
+        self.clear_Button.clicked.connect(self.clear)
+        self.parser = CSPRparser("")
         self.Endos = dict()
+        self.cspr_files = {}
 
         #orgonaism table
         self.org_Table.setColumnCount(1)
@@ -65,6 +70,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     orgsandendos[species] =[endo]
                     name = QtWidgets.QTableWidgetItem(str(species))
                     self.org_Table.setItem(index, 0, name)
+                    self.cspr_files[str(species)] = file
                     index+=1
         self.org_Table.resizeColumnsToContents()
         self.data = orgsandendos
@@ -97,6 +103,96 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 break
         f.close()
         self.endoBox.addItems(self.Endos.keys())
+
+    def fill_data(self):
+        selected_files = self.org_Table.selectedItems()
+        self.table2.setRowCount(0)
+        index = 0
+        for files in selected_files:
+            self.parser.fileName = self.cspr_files[files.text()]
+            self.parser.read_chromesome()
+            for items in self.parser.chromesomeList:
+                first = True
+                for data in items:
+                    if first == True:
+                        first = False
+                    else:
+                        self.table2.setRowCount(index + 1)
+                        seq = QtWidgets.QTableWidgetItem(data[1])
+                        strand = QtWidgets.QTableWidgetItem(str(data[4]))
+                        PAM = QtWidgets.QTableWidgetItem(data[2])
+                        self.table2.setItem(index, 0, seq)
+                        self.table2.setItem(index, 1, strand)
+                        self.table2.setItem(index, 2, PAM)
+                        index += 1
+            self.table2.resizeColumnsToContents()
+            #print(self.parser.repeats)
+        self.plot_repeats_vs_seeds()
+
+    def clear(self):
+        self.table2.setRowCount(0)
+
+    def plot_repeats_vs_seeds(self):
+        selected_files = self.org_Table.selectedItems()
+        first = True
+        for files in selected_files:
+            self.parser.fileName = self.cspr_files[files.text()]
+            self.parser.read_repeats()
+            index = 0
+            data = {}
+            max = 0
+            y1 = []
+            x1 = []
+            for seed in self.parser.repeats:
+                number = self.parser.repeats[seed]
+                if number in data:
+                    data[number]+=1
+                else:
+                    data[number] =1
+
+            for number in self.order(data):
+
+                if int(data[number]) >max:
+                    max = int(data[number])
+                    self.mode = number
+
+                hold = 0
+                while hold < data[number]:
+                    if index == int(round(len(self.parser.repeats) / 2)):
+                        self.median = number
+                    x1.append(index)
+                    y1.append(number)
+                    index= index+1
+                    hold +=1
+
+            if(first == True):
+                first = False
+                #clear axes
+                self.pop_analysis_repeats_graph.canvas.axes.clear()
+                #the following are for plotting / formatting
+                self.pop_analysis_repeats_graph.canvas.axes.plot(x1,y1)
+                self.pop_analysis_repeats_graph.canvas.axes.set_xlabel('Seed Id Number')
+                self.pop_analysis_repeats_graph.canvas.axes.set_ylabel('Number of Repeats')
+                self.pop_analysis_repeats_graph.canvas.axes.set_title('Number of Repeats per Seed Id Number')
+                #always redraw at the end
+                self.pop_analysis_repeats_graph.canvas.draw()
+            else:
+                self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1)
+                self.pop_analysis_repeats_graph.canvas.draw()
+
+    def order(self,data_par):
+        data = dict(data_par)
+        data2  = []
+        while len(data)>0:
+            max=0
+            for item in data:
+                if item>max:
+                    max=item
+            data2.append(max)
+            if len(data2) ==1:
+                self.max_repeats =max
+            del data[max]
+        return data2
 
     def go_back(self):
         GlobalSettings.mainWindow.show()

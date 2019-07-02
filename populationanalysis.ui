@@ -102,7 +102,7 @@
      <string>Search Settings</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_5">
+   <widget class="QPushButton" name="analyze_button">
     <property name="geometry">
      <rect>
       <x>230</x>
@@ -178,7 +178,7 @@
     <property name="currentIndex">
      <number>0</number>
     </property>
-    <widget class="QWidget" name="tab">
+    <widget class="pop_analysis_repeats_graph" name="pop_analysis_repeats_graph">
      <attribute name="title">
       <string>Repeats per Seed ID</string>
      </attribute>
@@ -225,6 +225,19 @@
      </rect>
     </property>
    </widget>
+   <widget class="QPushButton" name="clear_Button">
+    <property name="geometry">
+     <rect>
+      <x>440</x>
+      <y>10</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Clear</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -250,6 +263,14 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>pop_analysis_repeats_graph</class>
+   <extends>QWidget</extends>
+   <header>pop_analysis_repeats_graph.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
