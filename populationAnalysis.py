@@ -28,7 +28,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         #top right table
         self.table2.setColumnCount(7)
         self.table2.setShowGrid(False)
-        self.table2.setHorizontalHeaderLabels(["Sequence","Strand","PAM", "Score","% Conserved","Total Repeats","Repeats/Organism"])
+        self.table2.setHorizontalHeaderLabels(["Sequence","Strand","PAM", "Score","% Conserved","Total Repeats","Avg. Repeats/Organism"])
         self.table2.horizontalHeader().setSectionsClickable(True)
         self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -98,40 +98,58 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         p_pam = line_tokened[1]
                     default_seed_length = line_tokened[2].split(",")[0]
                     default_tot_length = line_tokened[2].split(",")[1]
-                    self.Endos[endo + "PAM: " + p_pam] = (endo, p_pam, default_seed_length, default_tot_length)
+                    self.Endos[endo + " PAM: " + p_pam] = (endo, p_pam, default_seed_length, default_tot_length)
 
                 break
         f.close()
         self.endoBox.addItems(self.Endos.keys())
 
     def fill_data(self):
+
         selected_files = self.org_Table.selectedItems()
-        self.table2.setRowCount(0)
-        index = 0
+        error = False
         for files in selected_files:
-            self.parser.fileName = self.cspr_files[files.text()]
-            self.parser.read_chromesome()
-            for items in self.parser.chromesomeList:
-                first = True
-                for data in items:
-                    if first == True:
-                        first = False
-                    else:
-                        self.table2.setRowCount(index + 1)
-                        seq = QtWidgets.QTableWidgetItem(data[1])
-                        strand = QtWidgets.QTableWidgetItem(str(data[4]))
-                        PAM = QtWidgets.QTableWidgetItem(data[2])
-                        num1 = int(data[3])
-                        score = QtWidgets.QTableWidgetItem()
-                        score.setData(QtCore.Qt.EditRole, num1)
-                        self.table2.setItem(index, 0, seq)
-                        self.table2.setItem(index, 1, strand)
-                        self.table2.setItem(index, 2, PAM)
-                        self.table2.setItem(index, 3, score)
-                        index += 1
-            self.table2.resizeColumnsToContents()
-            #print(self.parser.repeats)
-        self.plot_repeats_vs_seeds()
+            cspr_name = self.cspr_files[files.text()]
+            cspr_name = str(cspr_name)
+            cspr_name = cspr_name[cspr_name.find('_')+1:]
+            cspr_name = cspr_name[:cspr_name.find('.')]
+            current_endo = str(self.endoBox.currentText())
+            if(cspr_name !=  current_endo[:current_endo.find(" ")]):
+                error = True
+
+        if(error != True):
+            self.table2.setRowCount(0)
+            index = 0
+            for files in selected_files:
+                self.parser.fileName = self.cspr_files[files.text()]
+                self.parser.read_chromesome()
+                for items in self.parser.chromesomeList:
+                    first = True
+                    for data in items:
+                        if first == True:
+                            first = False
+                        else:
+                            self.table2.setRowCount(index + 1)
+                            seq = QtWidgets.QTableWidgetItem(data[1])
+                            strand = QtWidgets.QTableWidgetItem(str(data[4]))
+                            PAM = QtWidgets.QTableWidgetItem(data[2])
+                            num1 = int(data[3])
+                            score = QtWidgets.QTableWidgetItem()
+                            score.setData(QtCore.Qt.EditRole, num1)
+                            self.table2.setItem(index, 0, seq)
+                            self.table2.setItem(index, 1, strand)
+                            self.table2.setItem(index, 2, PAM)
+                            self.table2.setItem(index, 3, score)
+                            index += 1
+                self.table2.resizeColumnsToContents()
+            self.plot_repeats_vs_seeds()
+        else:
+            msg = QtWidgets.QMessageBox()
+            msg.setWindowTitle("Error")
+            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msg.setIcon(QtWidgets.QMessageBox.Critical)
+            msg.setText("<font size=4>" + "Endo does not match." + "</font>")
+            msg.exec()
 
     def clear(self):
         self.table2.setRowCount(0)
