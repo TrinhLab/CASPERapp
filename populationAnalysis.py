@@ -139,8 +139,12 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     def plot_repeats_vs_seeds(self):
         selected_files = self.org_Table.selectedItems()
         first = True
+        cspr_filenames = []
+        plots = []
+        i = 0
         for files in selected_files:
             self.parser.fileName = self.cspr_files[files.text()]
+            cspr_filenames.append(files.text())
             self.parser.read_repeats()
             index = 0
             data = {}
@@ -174,15 +178,20 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 #clear axes
                 self.pop_analysis_repeats_graph.canvas.axes.clear()
                 #the following are for plotting / formatting
-                self.pop_analysis_repeats_graph.canvas.axes.plot(x1,y1)
+                self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1, label=cspr_filenames[i])
                 self.pop_analysis_repeats_graph.canvas.axes.set_xlabel('Seed Id Number')
                 self.pop_analysis_repeats_graph.canvas.axes.set_ylabel('Number of Repeats')
                 self.pop_analysis_repeats_graph.canvas.axes.set_title('Number of Repeats per Seed Id Number')
                 #always redraw at the end
                 self.pop_analysis_repeats_graph.canvas.draw()
+                i += 1
             else:
-                self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1)
+                self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1, label=cspr_filenames[i])
                 self.pop_analysis_repeats_graph.canvas.draw()
+                i += 1
+
+        self.pop_analysis_repeats_graph.canvas.axes.legend(loc=0)
+        self.pop_analysis_repeats_graph.canvas.draw()
 
     def order(self,data_par):
         data = dict(data_par)
