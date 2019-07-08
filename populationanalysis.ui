@@ -57,7 +57,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Select orgranism(s) and endonuclease(s):</string>
+     <string>Select organism(s) and endonuclease:</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
