@@ -35,7 +35,12 @@ class Assembly:
         # search entrez
         error = False
         print("searching ncbi for: ", organism)
+
+        # this searches entrez searcher. We always search the assembly data base
+        # ret-max is taken from the user, my code defaults it to 20 elsewhere
+        # and the term is the search organism
         handle = Entrez.esearch(db="assembly", retmax=ncbi_ret_max, term=organism)
+        # this parses the data from the search
         record = Entrez.read(handle)
         self.database = database
 
@@ -46,6 +51,7 @@ class Assembly:
         myidlist = list()
 
         # get the internal ID's
+        # record is a big dictionary. 'IdList' is a key in that
         for id in record["IdList"]:
             myidlist.append(id)
 
@@ -56,14 +62,18 @@ class Assembly:
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(30)
         # go through and get the GCA/GCF ID's
         for ret in myidlist:
+            # this calls Entrez function
             handle = Entrez.esummary(db="assembly", id=ret)
+            # another Entrez function, but handle is a dictionary. These are keys and stuff for it. You can print it to see the dictionary
             gca_rec = Entrez.read(handle)["DocumentSummarySet"]["DocumentSummary"][0]["AssemblyAccession"]
             self.gca_rectList.append(gca_rec)
             handle.close()
+            # sleep so NCBI doesn't kick us out
             time.sleep(0.35)
 
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(50)
         # for each GCA_ID, go through and get the refseq/genbank link, and the organism name
+        # this is the beautiful soup part
         for i in range(len(self.gca_rectList)):
             url = "https://www.ncbi.nlm.nih.gov/assembly/" + self.gca_rectList[i] + "/"
             source = requests.get(url)
