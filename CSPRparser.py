@@ -22,6 +22,12 @@ class CSPRparser:
         self.repeats = {}  #dictionary of the number of repeats. See the read_repeats function for more info
         self.seeds = {} #dictionary of which chromesomes are repeats. See the read_repeats function for more info
         self.dec_tup_data = {}
+        # data for population analysis
+        # dict:
+        #   key 1 = orgName
+        #       key2 = sequence
+        #           list = the number of repeats for each sequence in each file. It is always the length of organisms passed to the populationParser
+        self.popData = {}
 
         #file path variable
         self.fileName = inputFileName
@@ -161,6 +167,80 @@ class CSPRparser:
 
             index = index + 2
 
+    # this function takes a list of all the file names
+    # it finds the repeats for each file, and also checks to see if those repeats are in each file, not just the first
+    # stores the data in a class object
+    def popParser(self, file_list):
+        self.popData.clear()
+        orgName = ''
+        # for each cspr file
+        for count in range(len(file_list)):
+            print('going around', file_list[count])
+            # open the file and read it all in
+            fileStream = open(file_list[count])
+            fileData = fileStream.read()
+            fileStream.close()
+            split_info = fileData.split('\n')
+
+            index = 0
+
+            # make sure to store the orgname
+            colonIndex = split_info[index].find(':')
+            self.popData[split_info[index][colonIndex + 1:]] = {}
+            orgName = split_info[index][colonIndex + 1:]
+
+            # now skip to the repeats part
+            index = split_info.index("REPEATS")
+            index += 1
+
+            # for each repeats
+            while(index + 1 < len(split_info)):
+                # get the seed, uncompressed seed, and repeats
+                seed = self.seqTrans.decompress64(split_info[index])
+                unCompSeed = split_info[index]
+                repeat = split_info[index + 1].split("\t")
+
+                # if its not in there, add it in
+                if seed not in self.popData[orgName]:
+                    self.popData[orgName][seed] = list()
+                    # go through and add an index for each file name
+                    for i in range(len(file_list)):
+                        self.popData[orgName][seed].append(0)
+                    # go through and incrememnt the current one's repeats
+                    for repeat in repeat:
+                        if repeat != "":
+                            self.popData[orgName][seed][count] += 1
+
+                    # now go through and check the other files
+                    for i in range(len(file_list)):
+                        # get the orgName and other data
+                        otherFile = open(file_list[i])
+                        fileData2 = otherFile.read()
+                        otherFile.close()
+                        split_info2 = fileData2.split('\n')
+                        colonIndex2 = split_info2[0].find(':')
+                        secondOrgName = split_info2[0][colonIndex2 + 1:]
+
+                        # if the orgName is the same, and file is the same, skip that file. don't want it
+                        if secondOrgName == orgName and file_list[i] == file_list[count]:
+                            continue
+                        else:
+                            # check and see if the uncompressed seed is in the second file
+                            if unCompSeed in split_info2:
+                                print(unCompSeed)
+                                # get to that index
+                                tempIndex = split_info2.index(unCompSeed)
+
+                                # split those repeats and increment them
+                                repeat2 = split_info2[tempIndex + 1].split('\t')
+                                for repeat in repeat2:
+                                    if repeat != "":
+                                        self.popData[orgName][seed][i] += 1
+                            else:
+                                continue
+                # incrememnt index by 2
+                index = index + 2
+
     #this function just reads the whole file
     def read_all(self):
         print("Reading First Lines.")
@@ -213,40 +293,12 @@ class CSPRparser:
         return self.chromesomeList
 
 
-#below is testing code
+# this is testing code. show's how popParser function works
 """
 if __name__ == '__main__':
-    parser = CSPRparser("../NewCSPRFile.cspr")
-    parser.read_first_lines()
+    files = ['pant_saCas9.cspr', 'bsu_asCas12.cspr', 'sce_asCas12.cspr']
 
-    print(sum(parser.karystatsList))
-    
-    print("Filename: " + parser.fileName)
-    print("genome: " + parser.genome)
-    print("Misc: " + parser.misc)
-    print("KaryStats: \n\t" + str(parser.karystatsList))
+    parser = CSPRparser("")
 
-    chromesomeFile = open("../ChromesomeList.txt", 'w')
-    repeatsNumFile = open("../RepeatsNum.txt", 'w')
-    seedsFile = open("../SeedsFile.txt", 'w')
-
-    print('Writing chromesomes')
-    for i in range(len(parser.chromesomeList)):
-        chromesomeFile.write("List: " + str(i) + "\n")
-        for j in range(len(parser.chromesomeList[i])):
-            chromesomeFile.write("\t" + str(parser.chromesomeList[i][j]) + "\n")
-
-    print('Writing Repeats')
-    for repeat in parser.repeats:
-        repeatsNumFile.write("Seed Number: " + str(repeat) + "\n")
-        repeatsNumFile.write("\t Number of repeats: " + str(parser.repeats[repeat]) + "\n")
-
-    print('Writing Seeds')
-    for seed in parser.seeds:
-        seedsFile.write("Seed Number: " + str(seed) + "\n")
-        seedsFile.write("\t Repeat Sequences: " + str(parser.seeds[seed]) + "\n")
-
-    chromesomeFile.close()
-    repeatsNumFile.close()
-    seedsFile.close()
+    parser.popParser(files)
 """
