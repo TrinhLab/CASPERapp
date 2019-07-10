@@ -99,7 +99,6 @@ class CSPRparser:
                     tempList = []
                     break
                 else: #else decompress the data, and append it to the list
-                    #print(bufferString)
                     bufferString = self.seqTrans.decompress_csf_tuple(bufferString)
                     tempList.append(bufferString)
                     #print(bufferString)
@@ -175,7 +174,7 @@ class CSPRparser:
         orgName = ''
         # for each cspr file
         for count in range(len(file_list)):
-            print('going around', file_list[count])
+            #print('going around', file_list[count])
             # open the file and read it all in
             fileStream = open(file_list[count])
             fileData = fileStream.read()
@@ -186,8 +185,8 @@ class CSPRparser:
 
             # make sure to store the orgname
             colonIndex = split_info[index].find(':')
-            self.popData[split_info[index][colonIndex + 1:]] = {}
-            orgName = split_info[index][colonIndex + 1:]
+            self.popData[split_info[index][colonIndex + 2:]] = {}
+            orgName = split_info[index][colonIndex + 2:]
 
             # now skip to the repeats part
             index = split_info.index("REPEATS")
@@ -196,7 +195,7 @@ class CSPRparser:
             # for each repeats
             while(index + 1 < len(split_info)):
                 # get the seed, uncompressed seed, and repeats
-                seed = self.seqTrans.decompress64(split_info[index])
+                seed = self.seqTrans.decompress64(split_info[index],True)
                 unCompSeed = split_info[index]
                 repeat = split_info[index + 1].split("\t")
 
@@ -227,7 +226,7 @@ class CSPRparser:
                         else:
                             # check and see if the uncompressed seed is in the second file
                             if unCompSeed in split_info2:
-                                print(unCompSeed)
+                                #print(seed)
                                 # get to that index
                                 tempIndex = split_info2.index(unCompSeed)
 

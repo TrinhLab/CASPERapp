@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 import GlobalSettings
 import os
 from CSPRparser import CSPRparser
+import Algorithms
 
 class Pop_Analysis(QtWidgets.QMainWindow):
     def __init__(self):
@@ -14,6 +15,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.parser = CSPRparser("")
         self.Endos = dict()
         self.cspr_files = {}
+        self.sq=Algorithms.SeqTranslate()
 
         #orgonaism table
         self.org_Table.setColumnCount(1)
@@ -108,6 +110,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         selected_files = self.org_Table.selectedItems()
         error = False
+        filenames = []
         for files in selected_files:
             cspr_name = self.cspr_files[files.text()]
             cspr_name = str(cspr_name)
@@ -116,8 +119,13 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             current_endo = str(self.endoBox.currentText())
             if(cspr_name !=  current_endo[:current_endo.find(" ")]):
                 error = True
+            filenames.append(self.cspr_files[files.text()])
+
+
 
         if(error != True):
+            self.parser.popParser(filenames)
+            #print(self.parser.popData.keys())
             self.table2.setRowCount(0)
             index = 0
             for files in selected_files:
@@ -136,10 +144,16 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                             num1 = int(data[3])
                             score = QtWidgets.QTableWidgetItem()
                             score.setData(QtCore.Qt.EditRole, num1)
+
+                            if data[1] in self.parser.popData[files.text()]:
+                                print(self.parser.popData[files.text()][data[1]])
+
+
                             self.table2.setItem(index, 0, seq)
                             self.table2.setItem(index, 1, strand)
                             self.table2.setItem(index, 2, PAM)
                             self.table2.setItem(index, 3, score)
+
                             index += 1
                 self.table2.resizeColumnsToContents()
             self.plot_repeats_vs_seeds()
