@@ -346,7 +346,17 @@ class CMainWindow(QtWidgets.QMainWindow):
     def run_results_own_ncbi_file(self, inputstring, fileName):
         self.annotation_parser = Annotation_Parser()
         self.annotation_parser.annotationFileName = fileName
-        self.annotation_parser.find_which_file_version()
+        fileType = self.annotation_parser.find_which_file_version()
+
+        # if the parser retuns the 'wrong file type' error
+        if fileType == -1:
+            QtWidgets.QMessageBox.question(self, "Error:",
+                                           "We cannot parse the file type given. Please make sure to choose a GBFF, GFF, or Feature Table file."
+                                           , QtWidgets.QMessageBox.Ok)
+            self.progressBar.setValue(0)
+            return
+
+
         self.progressBar.setValue(60)
 
         # this bit may not be needed here. Just a quick error check to make sure the chromesome numbers match
@@ -1079,9 +1089,10 @@ class StartupWindow(QtWidgets.QDialog):
     def errormsgmulti(self):
             self.gdirectory = str(self.lineEdit.text())
             print(self.gdirectory)
-            if "Please select a directory that contains .capr files" in self.gdirectory:
+            if "Please select a directory that contains .cspr files" in self.gdirectory:
                 QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory",
                                                QtWidgets.QMessageBox.Ok)
+
             elif (os.path.isdir(self.gdirectory)):
                 os.chdir(self.gdirectory)
                 #change dir, still load main window, still load MT data, and then open main window and newGenome window
@@ -1145,7 +1156,6 @@ class StartupWindow(QtWidgets.QDialog):
 
     def show_window(self):
 
-        self.close()
         self.gdirectory = str(self.lineEdit.text())
         print(self.gdirectory)
         if "Please select a directory that contains .capr files" in self.gdirectory:

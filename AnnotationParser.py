@@ -323,7 +323,8 @@ class Annotation_Parser:
             self.txt_parse()
         elif "gbff" in self.annotationFileName:
             self.gbff_parse()
+        # return -1 to throw the error window in main
         else:
-            print("Error: We cannot parse the file you have given")
+            return -1
 
 ####################END OF find_which_file_version
