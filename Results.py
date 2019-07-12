@@ -722,9 +722,14 @@ class Results(QtWidgets.QMainWindow):
 
     #refresh data is linked to the submit button on the off target analysis UI
     def refresh_data(self):
-        self.off_tar_win.hide()
         #setup filename based on output name given in OffTarget
         filename = self.off_tar_win.output_path
+
+        # if the user hits submit without running thr program, do nothing
+        if filename == '':
+            return
+        
+        self.off_tar_win.hide()
         filename = filename[:len(filename)-1]
         filename = filename[1:]
         filename = filename.replace(r'\\', '\\')

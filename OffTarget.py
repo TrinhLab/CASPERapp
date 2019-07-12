@@ -36,6 +36,9 @@ class OffTarget(QtWidgets.QDialog):
         self.running = False
         self.process = QtCore.QProcess()
 
+        # make sure to intialize the class variable in init. That way elsewhere and other classes can access it
+        self.output_path = ''
+
     #copied from MT to fill in the chromo and endo dropdowns based on CSPR files user provided at the startup
     def fill_data_dropdown(self):
         #fill in chromosome and endo dropdowns
