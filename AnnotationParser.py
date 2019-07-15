@@ -22,7 +22,7 @@ class Annotation_Parser:
         #value: List of lists
         #   essentially its all based on locus tag. So the key is the locus tag, and its data is:
         #       [genomic accession, int, start, end, +\-]
-        self.dict = dict()
+        self.reg_dict = dict()
 
         #parallel dictionary used for the txt annotaion file
         #key: name + symbol (space in between each word)
@@ -38,7 +38,7 @@ class Annotation_Parser:
     ########################################
     def gbff_parse(self):
         # variables used
-        self.dict.clear()
+        self.reg_dict.clear()
         self.para_dict.clear()
         prevFirstIndex = ""
         indexNumber = 0
@@ -80,11 +80,11 @@ class Annotation_Parser:
                               int(feature.location.end), strandChar]
 
                     # insert
-                    if currentLocusTag not in self.dict:
-                        self.dict[currentLocusTag] = list()
-                        self.dict[currentLocusTag].append(values)
+                    if currentLocusTag not in self.reg_dict:
+                        self.reg_dict[currentLocusTag] = list()
+                        self.reg_dict[currentLocusTag].append(values)
                     else:
-                        self.dict[currentLocusTag].append(values)
+                        self.reg_dict[currentLocusTag].append(values)
 
                 # if it's not a gene, skip rep_orgin, telomere, and source
                 elif feature.type != "rep_origin" and feature.type != "telomere" and feature.type != "source":
@@ -96,8 +96,8 @@ class Annotation_Parser:
                     values = [record.id, indexNumber, feature.type, int(feature.location.start) - 1,
                               int(feature.location.end), strandChar]
                     # make sure it isn't a duplicate
-                    if values not in self.dict[currentLocusTag]:
-                        self.dict[currentLocusTag].append(values)
+                    if values not in self.reg_dict[currentLocusTag]:
+                        self.reg_dict[currentLocusTag].append(values)
                     # now get the para_dict's data
 
                     # check for the note section
@@ -122,7 +122,7 @@ class Annotation_Parser:
     # Precondition: ONLY TO BE USED WITH GFF FILES
     ############################################
     def gff_parse(self):
-        self.dict.clear()
+        self.reg_dict.clear()
         self.para_dict.clear()
         prevFirstIndex = ""
         indexNumber = 1
@@ -173,11 +173,11 @@ class Annotation_Parser:
                             feature.strand]
 
                 # insert that locus tag/name into the dictionary
-                if currentLocusTag not in self.dict:
-                    self.dict[currentLocusTag] = []
-                    self.dict[currentLocusTag].append(tempList)
-                elif currentLocusTag in self.dict:
-                    self.dict[currentLocusTag].append(tempList)
+                if currentLocusTag not in self.reg_dict:
+                    self.reg_dict[currentLocusTag] = []
+                    self.reg_dict[currentLocusTag].append(tempList)
+                elif currentLocusTag in self.reg_dict:
+                    self.reg_dict[currentLocusTag].append(tempList)
 
                 # go through each of this child's children
                 for child in db.children(feature.id, level=None, featuretype=None, order_by=None, reverse=False,
@@ -185,8 +185,8 @@ class Annotation_Parser:
                     tempList = [child.seqid, indexNumber, child.featuretype, child.start - 1, child.end, child.strand]
 
                     # only insert it if it hasn't been inserted before
-                    if tempList not in self.dict[currentLocusTag]:
-                        self.dict[currentLocusTag].append(tempList)
+                    if tempList not in self.reg_dict[currentLocusTag]:
+                        self.reg_dict[currentLocusTag].append(tempList)
 
             # now go through the other ones which are not region
             elif feature.featuretype != "region" and feature.featuretype != "telomere" and feature.featuretype != "origin_of_replication":
@@ -194,8 +194,8 @@ class Annotation_Parser:
                             feature.strand]
 
                 # only insert if it hasn't been inserted before
-                if tempList not in self.dict[currentLocusTag]:
-                    self.dict[currentLocusTag].append(tempList)
+                if tempList not in self.reg_dict[currentLocusTag]:
+                    self.reg_dict[currentLocusTag].append(tempList)
 
                     # now same as above, go through the children again
                     for child in db.children(feature.id, level=None, featuretype=None, order_by=None, reverse=False,
@@ -203,8 +203,8 @@ class Annotation_Parser:
                         tempList = [child.seqid, indexNumber, child.featuretype, child.start - 1, child.end,
                                     child.strand]
 
-                        if tempList not in self.dict[currentLocusTag]:
-                            self.dict[currentLocusTag].append(tempList)
+                        if tempList not in self.reg_dict[currentLocusTag]:
+                            self.reg_dict[currentLocusTag].append(tempList)
 
             # now we need to get the para_dict up and running
             # get the stuff out of the product part
@@ -230,7 +230,7 @@ class Annotation_Parser:
     # Precondition: ONLY TO BE USED WITH TXT FILES
     ############################################
     def txt_parse(self):
-        self.dict.clear()
+        self.reg_dict.clear()
         prevGenAccession = ""
         indexNumber = 1
         fileStream = open(self.annotationFileName)
@@ -258,20 +258,20 @@ class Annotation_Parser:
                     currentLocusTag = splitLine[16]
                     values = [splitLine[6], indexNumber, splitLine[0], int(splitLine[7]) - 1, int(splitLine[8]), splitLine[9]]
 
-                    if currentLocusTag not in self.dict:
-                        self.dict[currentLocusTag] = [values]
-                    elif currentLocusTag in self.dict:
-                        self.dict[currentLocusTag].append(values)
+                    if currentLocusTag not in self.reg_dict:
+                        self.reg_dict[currentLocusTag] = [values]
+                    elif currentLocusTag in self.reg_dict:
+                        self.reg_dict[currentLocusTag].append(values)
 
                 # if no locus_tag, parse on product_accession, use the product_accession as the key for the dict
                 elif not self.txtLocusTag:
                     currentLocusTag = splitLine[10]
                     values = [splitLine[6], indexNumber, splitLine[0], int(splitLine[7]) - 1, int(splitLine[8]), splitLine[9]]
 
-                    if currentLocusTag not in self.dict:
-                        self.dict[currentLocusTag] = [values]
-                    elif currentLocusTag in self.dict:
-                        self.dict[currentLocusTag].append(values)
+                    if currentLocusTag not in self.reg_dict:
+                        self.reg_dict[currentLocusTag] = [values]
+                    elif currentLocusTag in self.reg_dict:
+                        self.reg_dict[currentLocusTag].append(values)
 
                 # set the parallel dictionary's key string
                 para_dict_key_string = para_dict_key_string + " " + splitLine[13] + " " + splitLine[12] + " " + splitLine[14]

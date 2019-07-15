@@ -386,13 +386,13 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             # upper case it, because the files seem to be all uppercase for this part
             checkNormalDict = search.upper()
-            if checkNormalDict in self.annotation_parser.dict:  # if it is in the normal dictionary
-                for item in self.annotation_parser.dict[checkNormalDict]:  # for each list item in that position
+            if checkNormalDict in self.annotation_parser.reg_dict:  # if it is in the normal dictionary
+                for item in self.annotation_parser.reg_dict[checkNormalDict]:  # for each list item in that position
                     if item[0] not in self.searches[search]:  # if its not in the search's position yet
-                        self.searches[search][item[0]] = self.annotation_parser.dict[checkNormalDict]
+                        self.searches[search][item[0]] = self.annotation_parser.reg_dict[checkNormalDict]
                     elif item not in self.searches[search][
                         item[0]]:  # assume it is in the searches position, but do not store duplicates
-                        self.searches[search][item[0]].append(self.annotation_parser.dict[checkNormalDict])
+                        self.searches[search][item[0]].append(self.annotation_parser.reg_dict[checkNormalDict])
         if len(self.searches[searchValues[0]]) >= 1:  # if the previous search yielded results, do not continue
             # now call fill_table
             self.Annotation_Window.fill_table_nonKegg(self)
@@ -414,7 +414,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     # loop through each list item now
                     for i in range(len(self.annotation_parser.para_dict[item])):
                         # now loop through the regular dict's position and store the ones we want
-                        for match in self.annotation_parser.dict[self.annotation_parser.para_dict[item][i]]:
+                        for match in self.annotation_parser.reg_dict[self.annotation_parser.para_dict[item][i]]:
                             if item not in self.searches[search]:
                                 self.searches[search][item] = [match]
                             elif item not in self.searches[search][item]:
@@ -609,9 +609,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         for item in self.checkBoxes:
             if item[2].isChecked():
                 # if they searched base on Locus Tag
-                if item[0] in self.annotation_parser.dict:
+                if item[0] in self.annotation_parser.reg_dict:
                     # go through the dictionary, and if they match, store the item in holder
-                    for match in self.annotation_parser.dict[item[0]]:
+                    for match in self.annotation_parser.reg_dict[item[0]]:
                         if item[1] == match:
                             holder = (match[1], match[3], match[4])
                             self.checked_info[item[0]] = holder
@@ -619,7 +619,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     # now we need to go through the para_dict
                     for i in range(len(self.annotation_parser.para_dict[item[0]])):
                         # now go through the matches in the normal dict's data
-                        for match in self.annotation_parser.dict[self.annotation_parser.para_dict[item[0]][i]]:
+                        for match in self.annotation_parser.reg_dict[self.annotation_parser.para_dict[item[0]][i]]:
                             # if they match, store it in holder
                             if item[1] == match:
                                 holder = (match[1], match[3], match[4])
