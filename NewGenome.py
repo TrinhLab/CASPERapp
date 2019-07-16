@@ -6,6 +6,8 @@ from PyQt5 import QtWidgets, uic, QtGui, QtCore, Qt
 from bioservices import KEGG
 from NCBI_API import Assembly, GBFF_Parse
 import GlobalSettings
+import multitargeting
+import populationAnalysis
 from functools import partial
 
 def iter_except(function, exception):
@@ -334,7 +336,7 @@ class NewGenome(QtWidgets.QMainWindow):
             if hold == QtWidgets.QMessageBox.No:
                 return
 
-        myjob = CasperJob(self.lineEdit_1.text() + self.lineEdit_2.text(), self.lineEdit_2.text(),
+        myjob = CasperJob(self.lineEdit_1.text() + " " + self.lineEdit_2.text(), self.lineEdit_2.text(),
                           self.Endos[self.comboBoxEndo.currentText()], self.lineEdit_3.text(), self.file,
                           self.tot_len_box.text(), self.seed_len_box.text(), self.pamBox.isChecked())
         self.JobsQueue.append(myjob)
@@ -499,22 +501,47 @@ class NewGenome(QtWidgets.QMainWindow):
         self.nameFile.setText("Name Of File")
 
     def closeEvent(self, event):
-        self.process.kill()
-        self.JobsQueue = []
-        self.JobsQueueBox.clear()
-        self.lineEdit_1.clear()
-        self.lineEdit_2.clear()
-        self.lineEdit_3.clear()
-        self.keggSuggested.setRowCount(0)
-        self.output_browser.clear()
-        self.JobInProgress.clear()
-        self.CompletedJobs.clear()
-        self.nameFile.setText("Name Of File")
-        self.genbank_box.setChecked(False)
-        self.ref_seq_box.setChecked(False)
-        self.progressBar.setValue(0)
-        self.first = False
-        event.accept()
+        # make sure that there are cspr files in the DB
+        file_names = os.listdir(GlobalSettings.CSPR_DB)
+        noCSPRFiles = True
+        for file in file_names:
+            if 'cspr' in file:
+                noCSPRFiles = False
+                break
+        if noCSPRFiles == True:
+            error = QtWidgets.QMessageBox.question(self, "No CSPR File generated",
+                                                    "No CSPR file has been generate, thus the main program cannot run. Please create a CSPR file."
+                                                    "Alternatively, you could quit the program. Would you like to quit?",
+                                                    QtWidgets.QMessageBox.Yes |
+                                                    QtWidgets.QMessageBox.No,
+                                                    QtWidgets.QMessageBox.No)
+            if (error == QtWidgets.QMessageBox.No):
+                event.ignore()
+                return
+            else:
+                self.close()
+        else:
+            self.process.kill()
+            self.JobsQueue = []
+            self.JobsQueueBox.clear()
+            self.lineEdit_1.clear()
+            self.lineEdit_2.clear()
+            self.lineEdit_3.clear()
+            self.keggSuggested.setRowCount(0)
+            self.output_browser.clear()
+            self.JobInProgress.clear()
+            self.CompletedJobs.clear()
+            self.nameFile.setText("Name Of File")
+            self.genbank_box.setChecked(False)
+            self.ref_seq_box.setChecked(False)
+            self.progressBar.setValue(0)
+            self.first = False
+            GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
+            GlobalSettings.mainWindow.show()
+            GlobalSettings.mainWindow.getData()
+            GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
+            GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
+            event.accept()
 
 class CasperJob:
     def __init__(self, org, suborg, endo, org_code, ref_file, tot_len, seed_len, pamdir):

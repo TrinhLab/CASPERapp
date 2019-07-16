@@ -960,7 +960,8 @@ class CMainWindow(QtWidgets.QMainWindow):
                     orgsandendos[species].append(endo)
                 else:
                     orgsandendos[species] = [endo]
-                    self.orgChoice.addItem(species)
+                    if self.orgChoice.findText(species) == -1:
+                        self.orgChoice.addItem(species)
 
         #auto fill the kegg search bar with the first choice in orgChoice
         self.Search_Input.setText(self.orgChoice.currentText())
@@ -968,6 +969,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             return False
         self.data = orgsandendos
         self.shortHand= shortName
+        self.endoChoice.clear()
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
         self.orgChoice.currentIndexChanged.connect(self.changeEndos)
 
@@ -991,12 +993,12 @@ class CMainWindow(QtWidgets.QMainWindow):
     #Function launches the multitargeting window and closing the current one
     def changeto_multitargeting(self):
         os.chdir(os.getcwd())
-        MTwin.show()
+        GlobalSettings.MTWin.show()
         GlobalSettings.mainWindow.hide()
 
     def changeto_population_Analysis(self):
         os.chdir(os.getcwd())
-        pop_Analysis.show()
+        GlobalSettings.pop_Analysis.show()
         GlobalSettings.mainWindow.hide()
 
     @QtCore.pyqtSlot()
@@ -1035,6 +1037,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.orgChoice.clear()
         self.endoChoice.clear()
         self.getData()
+
+
 
 
 # ----------------------------------------------------------------------------------------------------- #
@@ -1098,12 +1102,7 @@ class StartupWindow(QtWidgets.QDialog):
                 #change dir, still load main window, still load MT data, and then open main window and newGenome window
                 GlobalSettings.filedir = self.gdirectory
                 self.re_write_dir()
-                GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
-                GlobalSettings.mainWindow.show()
-                GlobalSettings.mainWindow.getData()
                 GlobalSettings.mainWindow.launch_newGenome()
-                MTwin.launch(self.gdirectory)
-                pop_Analysis.launch(self.gdirectory)
                 self.close()
             else:
                 QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
@@ -1174,8 +1173,8 @@ class StartupWindow(QtWidgets.QDialog):
             GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
             GlobalSettings.mainWindow.show()
             #Tanner - still setup data for MT
-            MTwin.launch(self.gdirectory)
-            pop_Analysis.launch(self.gdirectory)
+            GlobalSettings.MTWin.launch(self.gdirectory)
+            GlobalSettings.pop_Analysis.launch(self.gdirectory)
             self.close()
         else:
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
@@ -1195,7 +1194,7 @@ if __name__ == '__main__':
 
     startup = StartupWindow()
     GlobalSettings.mainWindow = CMainWindow(os.getcwd())
-    MTwin = multitargeting.Multitargeting()
-    pop_Analysis = populationAnalysis.Pop_Analysis()
+    GlobalSettings.MTWin = multitargeting.Multitargeting()
+    GlobalSettings.pop_Analysis = populationAnalysis.Pop_Analysis()
 
     sys.exit(app.exec_())
