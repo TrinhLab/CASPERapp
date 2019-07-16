@@ -129,6 +129,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         print(onlyfiles)
         orgsandendos = {}
         shortName = {}
+        self.endo_drop.clear()
         for file in onlyfiles:
             if file.find('.cspr')!=-1:
                 newname = file[0:-4]
@@ -143,7 +144,8 @@ class Multitargeting(QtWidgets.QMainWindow):
                     orgsandendos[species].append(endo)
                 else:
                     orgsandendos[species] =[endo]
-                    self.organism_drop.addItem(species)
+                    if self.organism_drop.findText(species) == -1:
+                        self.organism_drop.addItem(species)
         self.data = orgsandendos
         self.shortHand = shortName
         temp = self.data[str(self.organism_drop.currentText())]
