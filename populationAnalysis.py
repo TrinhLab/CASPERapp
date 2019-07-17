@@ -109,6 +109,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
                 break
         f.close()
+        self.endoBox.addItem("None Selected")
         self.endoBox.addItems(self.Endos.keys())
         self.endoBox.currentIndexChanged.connect(self.changeEndos)
 
@@ -121,7 +122,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             filename = str(self.cspr_files[keys])
             endo = filename[filename.find("_")+1:]
             endo = endo.replace(".cspr","")
-            if(endo == endo_box):
+            if(endo == endo_box or endo_box == "None"):
                 self.org_Table.setRowCount(index + 1)
                 name = QtWidgets.QTableWidgetItem(str(keys))
                 self.org_Table.setItem(index, 0, name)
