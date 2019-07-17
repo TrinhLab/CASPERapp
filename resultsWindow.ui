@@ -381,7 +381,7 @@
      <x>0</x>
      <y>0</y>
      <width>1129</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -408,10 +408,17 @@
     <property name="title">
      <string>Tools</string>
     </property>
+    <widget class="QMenu" name="menuExport">
+     <property name="title">
+      <string>Export</string>
+     </property>
+     <addaction name="actionTo_CSV"/>
+    </widget>
     <addaction name="actionScore_Settings"/>
     <addaction name="actionDesign_Repair_Oligos"/>
     <addaction name="actionOff_Target_Analysis"/>
     <addaction name="actionCoTargeting"/>
+    <addaction name="menuExport"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -485,6 +492,11 @@
   <action name="actionCoTargeting">
    <property name="text">
     <string>CoTargeting</string>
+   </property>
+  </action>
+  <action name="actionTo_CSV">
+   <property name="text">
+    <string>To CSV</string>
    </property>
   </action>
  </widget>

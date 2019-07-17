@@ -13,7 +13,6 @@ import GlobalSettings
 import os
 from APIs import Kegg
 import OffTarget
-
 # =========================================================================================
 # CLASS NAME: Results
 # Inputs: Takes information from the main application window and displays the gRNA results
@@ -71,6 +70,7 @@ class Results(QtWidgets.QMainWindow):
         self.pushButton_Deselect_All.clicked.connect(self.deselectAll)
         self.gene_viewer_settings_button.clicked.connect(self.changeGeneViewerSettings)
         self.change_start_end_button.clicked.connect(self.change_indicies)
+        self.actionTo_CSV.triggered.connect(self.open_export_to_csv)
 
 
         #self.targetTable.itemSelectionChanged.connect(self.item_select)
@@ -100,6 +100,19 @@ class Results(QtWidgets.QMainWindow):
         self.rows_and_seq_list = []
         self.seq_and_avg_list = []
         self.files_list = []
+
+    # this function opens the export_to_csv window
+    # first it makes sure that the user actually has some highlighted targets that they want exported
+    def open_export_to_csv(self):
+        select_items = self.targetTable.selectedItems()
+        if len(select_items) <= 0:
+            QtWidgets.QMessageBox.question(self, "Nothing Selected",
+                                           "No targets were highlighted "
+                                           "Please highlight the targets you want to be exported to a CSV File!",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+        # now launch the window
+        GlobalSettings.mainWindow.export_csv_window.launch(select_items)
 
     def change_indicies(self):
 
@@ -368,7 +381,7 @@ class Results(QtWidgets.QMainWindow):
             self.lineEditEnd.clear()
             self.geneViewer.clear()
 
-    # this function just opens CoTargeting when the user clicks the CoTargeting button
+    # this function just opens ing when the user clicks the CoTargeting button
     # opened the same way that main opens it
     def open_cotarget(self):
         endo_list = list()
@@ -460,7 +473,7 @@ class Results(QtWidgets.QMainWindow):
             if endoBoxString == "":
                 endoBoxString = self.co_target_endo_list[i]
             else:
-                endoBoxString = endoBoxString + "," + self.co_target_endo_list[i]
+                endoBoxString = endoBoxString + '|' + self.co_target_endo_list[i]
 
         # put the new endoChoice at the beginning. THis is the only way i could find to do it
         # get a list of all endo choices, and put the newest at the front
@@ -622,6 +635,7 @@ class Results(QtWidgets.QMainWindow):
     # this function goes through and combines table rows that have the same location and PAM dir
     # it edits the dictionary data itself
     # currently it does not take the PAM direction into account
+    # parameter curgene:  the key to which part in the dictionary to look at
     def combine_coTargets(self, curgene):
         deletingDict = dict()
 
@@ -647,7 +661,7 @@ class Results(QtWidgets.QMainWindow):
 
                     # if they match, combine the two. Keep the first ones data, but append the second's ones endo to the first one
                     if locationData1 == locationData2 and endoData1 != endoData2 and endoData2 not in endoData1:
-                        endoData1 = endoData1 + "," + endoData2
+                        endoData1 = endoData1 + "|" + endoData2
                         self.AllData[curgene][0][i] = (locationData1, sequenceData1, pamData1, scoreData1, strandData1, endoData1)
                         # update the deletion list
                         if j not in deletingDict:

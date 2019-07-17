@@ -17,6 +17,7 @@ from bs4 import BeautifulSoup
 import multitargeting
 from AnnotationParser import Annotation_Parser
 from NCBI_API import Assembly
+from export_to_csv import export_csv_window
 ############################## MT Libraries #####################
 import operator
 import pyqtgraph as pg
@@ -273,6 +274,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
         self.gene_viewer_settings = geneViewerSettings()
+        self.export_csv_window = export_csv_window()
+
         self.myClosingWindow = closingWindow()
 
         self.newGenome.process.finished.connect(self.update_dropdowns)
