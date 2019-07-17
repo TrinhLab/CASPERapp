@@ -17,6 +17,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.cspr_files = {}
         self.sq=Algorithms.SeqTranslate()
 
+
         #orgonaism table
         self.org_Table.setColumnCount(1)
         self.org_Table.setShowGrid(False)
@@ -75,16 +76,13 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 if species in orgsandendos:
                     orgsandendos[species].append(endo)
                 else:
-                    self.org_Table.setRowCount(index + 1)
                     orgsandendos[species] =[endo]
-                    name = QtWidgets.QTableWidgetItem(str(species))
-                    self.org_Table.setItem(index, 0, name)
                     self.cspr_files[str(species)] = file
                     index+=1
-        self.org_Table.resizeColumnsToContents()
         self.data = orgsandendos
         self.shortHand = shortName
         self.fillEndo()
+        self.changeEndos()
 
     def fillEndo(self):
         if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
@@ -112,6 +110,26 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 break
         f.close()
         self.endoBox.addItems(self.Endos.keys())
+        self.endoBox.currentIndexChanged.connect(self.changeEndos)
+
+    def changeEndos(self):
+        endo_box = str(self.endoBox.currentText())
+        endo_box = endo_box[:endo_box.find(" ")]
+        self.org_Table.setRowCount(0)
+        index = 0
+        for keys in self.cspr_files.keys():
+            filename = str(self.cspr_files[keys])
+            endo = filename[filename.find("_")+1:]
+            endo = endo.replace(".cspr","")
+            if(endo == endo_box):
+                self.org_Table.setRowCount(index + 1)
+                name = QtWidgets.QTableWidgetItem(str(keys))
+                self.org_Table.setItem(index, 0, name)
+                index += 1
+        self.org_Table.resizeColumnsToContents()
+
+
+
 
     def fill_data(self):
 
