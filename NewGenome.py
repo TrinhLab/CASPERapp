@@ -438,7 +438,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
 
     def output_stdout(self):
-        line = str(self.process.readAllStandardOutput())
+        line = str(self.process.readAll())
         line = line[2:]
         line = line[:len(line) - 1]
         for lines in filter(None, line.split(r'\r\n')):
