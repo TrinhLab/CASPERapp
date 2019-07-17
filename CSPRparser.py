@@ -22,6 +22,7 @@ class CSPRparser:
         self.repeats = {}  #dictionary of the number of repeats. See the read_repeats function for more info
         self.seeds = {} #dictionary of which chromesomes are repeats. See the read_repeats function for more info
         self.dec_tup_data = {}
+        self.chromesomesSelectedList = list()
         # data for population analysis
         # dict:
         #   key 1 = orgName
@@ -68,6 +69,29 @@ class CSPRparser:
         fileStream.close()
         #print(self.karystatsList)
 
+    # this function gets the chromesome names out of the CSPR file provided
+    # returns the gene line, and the misc line as well
+    # also stores the Karystats
+    def get_chromesome_names(self):
+        self.read_first_lines()
+        self.chromesomesSelectedList.clear()
+
+        fileStream = open(self.fileName, 'r')
+
+        retGen = fileStream.readline()
+        junk = fileStream.readline()
+        retMisc = fileStream.readline()
+
+        buffer = fileStream.readline()
+
+        while True:  # breaks out when the buffer line = REPEATS
+            if buffer == 'REPEATS\n':
+                break
+            elif '>' in buffer:
+                self.chromesomesSelectedList.append(buffer)
+            buffer = fileStream.readline()
+
+        return retGen, retMisc
 
 #this function reads all of the chromosomes in the file
 #stores the data into a list of lists. So the line starting with '>' is the first index of each sub list

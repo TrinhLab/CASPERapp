@@ -245,7 +245,7 @@
      <x>0</x>
      <y>0</y>
      <width>1221</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -258,10 +258,22 @@
      <string>View</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionMetaGenome_Parser"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
+   <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionMetaGenome_Parser">
+   <property name="text">
+    <string>MetaGenome Parser</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

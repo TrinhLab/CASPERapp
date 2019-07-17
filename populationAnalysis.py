@@ -45,6 +45,13 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loc_finder_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.loc_finder_table.resizeColumnsToContents()
 
+        # action buttons
+        self.actionMetaGenome_Parser.triggered.connect(self.launch_chrom_selector)
+
+    # launches the chromesome selector window
+    def launch_chrom_selector(self):
+        GlobalSettings.mainWindow.cspr_selector.launch(self.cspr_files)
+
     def launch(self,path):
         os.chdir(path)
         self.directory = path

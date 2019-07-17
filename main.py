@@ -18,6 +18,7 @@ import multitargeting
 from AnnotationParser import Annotation_Parser
 from NCBI_API import Assembly
 from export_to_csv import export_csv_window
+from cspr_chromesome_selection import cspr_chromesome_selection
 ############################## MT Libraries #####################
 import operator
 import pyqtgraph as pg
@@ -275,6 +276,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Results = Results()
         self.gene_viewer_settings = geneViewerSettings()
         self.export_csv_window = export_csv_window()
+        self.cspr_selector = cspr_chromesome_selection()
 
         self.myClosingWindow = closingWindow()
 
