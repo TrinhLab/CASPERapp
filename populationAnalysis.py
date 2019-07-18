@@ -129,9 +129,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 index += 1
         self.org_Table.resizeColumnsToContents()
 
-
-
-
     def fill_data(self):
 
         selected_files = self.org_Table.selectedItems()

@@ -17,7 +17,7 @@ class pop_analysis_venn_diagram(QWidget):
         set3 = set(['C', 'D', ' E', 'F', 'G'])
 
 
-        self.canvas = FigureCanvas(plt.figure(figsize=(7.5,7.5), dpi=100))
+        self.canvas = FigureCanvas(plt.figure(figsize=(7.5,7.5)))
         vertical_layout = QVBoxLayout()
         vertical_layout.addWidget(self.canvas)
         venn3(subsets=(1, 1, 1, 1, 1, 1, 1), set_labels=('A', 'B', 'C'))
