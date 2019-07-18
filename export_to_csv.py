@@ -22,10 +22,6 @@ class export_csv_window(QtWidgets.QDialog):
         self.cancel_button.clicked.connect(self.cancel_function)
         self.export_button.clicked.connect(self.export_function)
 
-        # line_edit stuff
-        self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
-        self.filename_line_edit.setText("Choose_a_name")
-
         # variables
         self.location = self.fileLocation_line_edit.text()
         self.selected_table_items = []
@@ -33,6 +29,9 @@ class export_csv_window(QtWidgets.QDialog):
     # launch function. Called in Results.
     # parameter expect: a list of the items selected from the window.
     def launch(self, select_items):
+        self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
+        self.filename_line_edit.setText("Choose_a_name")
+
         self.selected_table_items = select_items
         self.show()
 
