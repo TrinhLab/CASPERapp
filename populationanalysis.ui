@@ -176,7 +176,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>2</number>
     </property>
     <widget class="pop_analysis_repeats_graph" name="pop_analysis_repeats_graph">
      <attribute name="title">
@@ -188,7 +188,7 @@
       <string>Venn Diagram</string>
      </attribute>
     </widget>
-    <widget class="QWidget" name="tab_3">
+    <widget class="pop_analysis_3dgraph" name="pop_analysis_3dgraph">
      <attribute name="title">
       <string>3-D Figure</string>
      </attribute>
@@ -245,7 +245,7 @@
      <x>0</x>
      <y>0</y>
      <width>1221</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -286,6 +286,12 @@
    <class>pop_analysis_venn_diagram</class>
    <extends>QWidget</extends>
    <header>pop_analysis_venn_diagram.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>pop_analysis_3dgraph</class>
+   <extends>QWidget</extends>
+   <header>pop_analysis_3dgraph.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

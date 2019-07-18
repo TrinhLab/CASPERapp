@@ -101,14 +101,20 @@ class Multitargeting(QtWidgets.QMainWindow):
                     self.graphicsView_2.setScene(self.scene2)
                     #self.graphicsView_2.hide()
                     output = str()
+                    i = 1
                     for item in listtemp:
                         ind = item[0]
                         seq = str(self.seq_data[ind])
                         seed_id = self.seed_id_seq_pair[seq]
                         temp = self.parser.dec_tup_data[seed_id]
                         temp = temp[ind]
-                        output += 'Location: ' + str(temp[0]) + ' | Seq: ' + str(temp[1]) + ' | PAM: ' + str(
-                                temp[2]) + ' | SCR: ' + str(temp[3]) + ' | DIRA: ' + str(temp[4]) + '\n'
+                        if len(listtemp) > 1 and i < len(listtemp):
+                            output += 'Location: ' + str(temp[0]) + ' | Seq: ' + str(temp[1]) + ' | PAM: ' + str(
+                                    temp[2]) + ' | SCR: ' + str(temp[3]) + ' | DIRA: ' + str(temp[4]) + '\n'
+                        else:
+                            output += 'Location: ' + str(temp[0]) + ' | Seq: ' + str(temp[1]) + ' | PAM: ' + str(
+                                temp[2]) + ' | SCR: ' + str(temp[3]) + ' | DIRA: ' + str(temp[4])
+                        i += 1
                     text = self.scene2.addText(output)
                     #self.graphicsView_2.adjustSize()
                     font = QtGui.QFont()
