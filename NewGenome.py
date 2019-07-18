@@ -242,6 +242,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.JobsQueueBox.setReadOnly(True)
         self.output_browser.setText("Waiting for program initiation...")
         self.CompletedJobs.setText(" ")
+        self.contButton.clicked.connect(self.continue_to_main)
 
         self.comboBoxEndo.currentIndexChanged.connect(self.endo_settings)
 
@@ -542,6 +543,49 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
             GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
             event.accept()
+
+    def continue_to_main(self):
+        # make sure that there are cspr files in the DB
+        file_names = os.listdir(GlobalSettings.CSPR_DB)
+        noCSPRFiles = True
+        for file in file_names:
+            if 'cspr' in file:
+                noCSPRFiles = False
+                break
+        if noCSPRFiles == True:
+            error = QtWidgets.QMessageBox.question(self, "No CSPR File generated",
+                                                   "No CSPR file has been generate, thus the main program cannot run. Please create a CSPR file."
+                                                   "Alternatively, you could quit the program. Would you like to quit?",
+                                                   QtWidgets.QMessageBox.Yes |
+                                                   QtWidgets.QMessageBox.No,
+                                                   QtWidgets.QMessageBox.No)
+            if (error == QtWidgets.QMessageBox.No):
+                return
+            else:
+                self.close()
+        else:
+            self.process.kill()
+            self.JobsQueue = []
+            self.JobsQueueBox.clear()
+            self.lineEdit_1.clear()
+            self.lineEdit_2.clear()
+            self.lineEdit_3.clear()
+            self.keggSuggested.setRowCount(0)
+            self.output_browser.clear()
+            self.JobInProgress.clear()
+            self.CompletedJobs.clear()
+            self.nameFile.setText("Name Of File")
+            self.genbank_box.setChecked(False)
+            self.ref_seq_box.setChecked(False)
+            self.progressBar.setValue(0)
+            self.first = False
+            GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
+            GlobalSettings.mainWindow.show()
+            GlobalSettings.mainWindow.getData()
+            GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
+            GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
+            self.close()
+
 
 class CasperJob:
     def __init__(self, org, suborg, endo, org_code, ref_file, tot_len, seed_len, pamdir):
