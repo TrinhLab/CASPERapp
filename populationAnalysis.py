@@ -265,3 +265,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     def go_back(self):
         GlobalSettings.mainWindow.show()
         self.hide()
+
+    # this function calls the close window class. Allows the user to choose what files they want to keep/delete
+    def closeEvent(self, event):
+        GlobalSettings.mainWindow.closeFunction()
+        event.accept()
