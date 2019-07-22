@@ -19,6 +19,7 @@ from AnnotationParser import Annotation_Parser
 from NCBI_API import Assembly
 from export_to_csv import export_csv_window
 from cspr_chromesome_selection import cspr_chromesome_selection
+from generateLib import genLibrary
 ############################## MT Libraries #####################
 import operator
 import pyqtgraph as pg
@@ -210,11 +211,11 @@ class CMainWindow(QtWidgets.QMainWindow):
         uic.loadUi('CASPER_main.ui', self)
         self.dbpath = ""
         self.info_path = info_path
-        self.data = {}
-        self.TNumbers = {}
-        self.shortHand ={}
+        self.data = {} # each org genome name and the endonucleases along with it
+        self.TNumbers = {} # the T numbers from a kegg search
+        self.shortHand ={} #  each org's short name IE bacillus subtillis is bsu
         self.orgcodes = {}  # Stores the Kegg organism code by the format {full name : organism code}
-        self.gene_list = {}
+        self.gene_list = {} # list of genes (no ides what they pertain to
         self.searches = {}
         self.checkBoxes = []
         self.add_orgo = []
@@ -241,6 +242,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Add_Orgo_Button.clicked.connect(self.add_Orgo)
         self.Remove_Organism_Button.clicked.connect(self.remove_Orgo)
         self.endoChoice.currentIndexChanged.connect(self.endo_Changed)
+        self.GenerateLibrary.clicked.connect(self.prep_genlib)
 
         self.Search_Input.setEnabled(False)
 
@@ -277,7 +279,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.gene_viewer_settings = geneViewerSettings()
         self.export_csv_window = export_csv_window()
         self.cspr_selector = cspr_chromesome_selection()
-
+        self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
 
         self.newGenome.process.finished.connect(self.update_dropdowns)
@@ -316,6 +318,55 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Added_Org_Label.show()
         self.Remove_Organism_Button.show()
 
+
+    # this function prepares everything for the generate library function
+    # it is very similar to the gather settings, how ever it stores the data instead of calling the Annotation Window class
+    # it moves the data onto the generateLib function, and then opens that window
+    def prep_genlib(self):
+        # make sure the user actually inputs something
+        inputstring = str(self.geneEntryField.toPlainText())
+        if (inputstring.startswith("Example Inputs:") or inputstring == ""):
+            QtWidgets.QMessageBox.question(self, "Error",
+                                           "No Gene has been entered. Please enter a gene.",
+                                           QtWidgets.QMessageBox.Ok)
+        else:
+            # standardize the input
+            inputstring = inputstring.lower()
+            found_matches_bool = True
+
+            # call the respective function
+            self.progressBar.setValue(10)
+            if self.radioButton_Gene.isChecked():
+                ginput = inputstring.split(',')
+                found_matches_bool = self.run_results("gene", ginput, openAnnoWindow=False)
+            elif self.radioButton_Position.isChecked():
+                pinput = inputstring.split(';')
+                found_matches_bool = self.run_results("position", pinput,openAnnoWindow=False)
+            elif self.radioButton_Sequence.isChecked():
+                sinput = inputstring
+                found_matches_bool = self.run_results("sequence", sinput, openAnnoWindow=False)
+
+            # if matches are found
+            if found_matches_bool == True:
+                # get the cspr file name
+                fileName = self.shortHand[self.orgChoice.currentText()]
+                fileName = fileName + '_' + self.endoChoice.currentText() + '.cspr'
+
+                # get whether its Kegg or not
+                kegg_non = ''
+                if self.Annotation_Kegg.isChecked():
+                    kegg_non = 'kegg'
+                else:
+                    kegg_non = 'non_kegg'
+
+
+                # launch generateLib
+                self.progressBar.setValue(100)
+                self.genLib.launch(self.searches, fileName, kegg_non)
+            else:
+                self.progressBar.setValue(0)
+
+
     # Function for collecting the settings from the input field and transferring them to run_results
     def gather_settings(self):
         inputstring = str(self.geneEntryField.toPlainText())
@@ -348,7 +399,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     # this assumes that the parsers all store the data the same way, which gff and feature table do
     # please make sure the gbff parser stores the data in the same way
     # so far the gff files seems to all be different. Need to think about how we want to parse it
-    def run_results_own_ncbi_file(self, inputstring, fileName):
+    def run_results_own_ncbi_file(self, inputstring, fileName, openAnnoWindow=True):
         self.annotation_parser = Annotation_Parser()
         self.annotation_parser.annotationFileName = fileName
         fileType = self.annotation_parser.find_which_file_version()
@@ -430,7 +481,10 @@ class CMainWindow(QtWidgets.QMainWindow):
                                            "No matches found with that search, please try again",
                                            QtWidgets.QMessageBox.Ok)
             self.progressBar.setValue(0)
-            return
+            if openAnnoWindow:
+                return
+            else:
+                return False
 
 
         # jsut testing as of now
@@ -442,9 +496,12 @@ class CMainWindow(QtWidgets.QMainWindow):
              #      print("\t\t", k)
         # if we get to this point, that means that the search yieleded results, so fill the table
         self.progressBar.setValue(80)
-        self.Annotation_Window.fill_table_nonKegg(self)
-
-    def run_results(self, inputtype, inputstring):
+        # check whether this function call is for Annotation Window, or for generate Lib
+        if openAnnoWindow:
+            self.Annotation_Window.fill_table_nonKegg(self)
+        else:
+            return True
+    def run_results(self, inputtype, inputstring, openAnnoWindow=True):
         kegginfo = Kegg()
         org = str(self.orgChoice.currentText())
         endo = str(self.endoChoice.currentText())
@@ -513,7 +570,9 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                     # now run results
                     self.progressBar.setValue(35)
-                    self.run_results_own_ncbi_file(inputstring, storeFileName)
+                    myBool = self.run_results_own_ncbi_file(inputstring, storeFileName, openAnnoWindow=openAnnoWindow)
+                    if not openAnnoWindow:
+                        return myBool
                 else:
                     QtWidgets.QMessageBox.question(self, "Error",
                                                    "The database does not have the type of file you have requested. Please try another type of file"
@@ -524,7 +583,9 @@ class CMainWindow(QtWidgets.QMainWindow):
             # own annotation file code
             if self.Annotation_Ownfile.isChecked():
                 # this now just goes onto the other version of run_results
-                self.run_results_own_ncbi_file(inputstring, self.Annotations_Organism.currentText())
+                myBool = self.run_results_own_ncbi_file(inputstring, self.Annotations_Organism.currentText(), openAnnoWindow=openAnnoWindow)
+                if not openAnnoWindow:
+                    return myBool
             # KEGG's code
             elif self.Annotation_Kegg.isChecked():
                 #check to make sure that both the annotation file and the cspr files have the same version
@@ -565,18 +626,34 @@ class CMainWindow(QtWidgets.QMainWindow):
                             else:
                                 self.searches[sValue][defin] = self.gene_list[defin]
                             #print(self.searches[sValue][defin][0])
+                if openAnnoWindow:
+                    did_work = self.Annotation_Window.fill_Table(self)
+                    if did_work == -1:
+                        QtWidgets.QMessageBox.question(self, "Gene Database Error",
+                                                       "The Gene you entered could not be found in the Kegg database. "
+                                                       "Please make sure you entered everything correctly and try again.",
+                                                       QtWidgets.QMessageBox.Ok)
+                        self.progressBar.setValue(0)
+                    elif did_work == -2: #if the user selects 'no' from the warning of a large file
+                        self.progressBar.setValue(0)
+                    else:
+                        self.progressBar.setValue(100)
+                else:
+                    # if this function call is for generateLib and not for Annotation Window
 
-                did_work = self.Annotation_Window.fill_Table(self)
-                if did_work == -1:
-                    QtWidgets.QMessageBox.question(self, "Gene Database Error",
+                    # get the start/end/chrom data
+                    self.searches = self.getKeggDataForGenLib()
+                    # see if there's matches
+                    if len(self.searches) == 0:
+                        QtWidgets.QMessageBox.question(self, "Gene Database Error",
                                                    "The Gene you entered could not be found in the Kegg database. "
                                                    "Please make sure you entered everything correctly and try again.",
                                                    QtWidgets.QMessageBox.Ok)
-                    self.progressBar.setValue(0)
-                elif did_work == -2: #if the user selects 'no' from the warning of a large file
-                    self.progressBar.setValue(0)
-                else:
-                    self.progressBar.setValue(100)
+                        self.progressBar.setValue(0)
+                        return False
+                    else:
+                        return True
+                        self.progressBar.setValue(100)
             else:
                 self.progressBar.setValue(0)
                 return
@@ -611,6 +688,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         full_org = str(self.orgChoice.currentText())
         holder = ()
 
+
         for item in self.checkBoxes:
             if item[2].isChecked():
                 # if they searched base on Locus Tag
@@ -637,6 +715,42 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
 
+    # this function is very similar for the Kegg version of collect_table_data
+    # difference is that it doesn't use the checkboxes from Annotation Window, just the search values
+    def getKeggDataForGenLib(self):
+        # variables
+        k = Kegg()
+        full_org = self.orgChoice.currentText()
+        organism = self.Annotations_Organism.currentText().split(" ")[1]
+        nameFull = ""
+        holder = ()
+        temp_dict = dict()
+
+        # for each search value
+        for item in self.searches:
+            # for each gene in the search results
+            for gene in self.searches[item]:
+                # name is the ID tag from KEGG
+                name = self.searches[item][gene][0]
+
+                gene_info = k.gene_locator(organism+":"+name)
+
+                if gene_info[1] == False:
+                    holder = (gene_info[0],'-',gene_info[2],gene_info[3])
+                elif gene_info[1] == True:
+                    holder = (gene_info[0],'+',gene_info[2],gene_info[3])
+                # append the data
+                if item not in temp_dict:
+                    temp_dict[item] = dict()
+                    if gene not in temp_dict[item]:
+                        temp_dict[item][gene] = [holder]
+                    else:
+                        temp_dict[item][gene].append(holder)
+                else:
+                    temp_dict[item][gene] = [holder]
+
+        # return this new dict
+        return temp_dict
 
 
     def collect_table_data(self):
