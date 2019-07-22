@@ -114,7 +114,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
                     self.tableWidget.setItem(index, 2, gene_id_obj)
 
                     index += 1
-            index = 0
+        index = 0
         self.tableWidget.resizeColumnsToContents()
 
         # if show all is checked, show the window so the user can select the genes they want
