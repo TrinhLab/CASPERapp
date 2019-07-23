@@ -7,7 +7,6 @@ from matplotlib.backends.backend_qt5agg import FigureCanvas
 
 from matplotlib.figure import Figure
 
-
 class repeats_vs_seeds_line(QWidget):
 
     def __init__(self, parent=None):

@@ -147,7 +147,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
 
         if(error != True):
-            self.parser.popParser(filenames)
+            #self.parser.popParser(filenames)
             #print(self.parser.popData.keys())
             self.table2.setRowCount(0)
             index = 0
@@ -168,8 +168,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                             score = QtWidgets.QTableWidgetItem()
                             score.setData(QtCore.Qt.EditRole, num1)
 
-                            if data[1] in self.parser.popData[files.text()]:
-                                print(self.parser.popData[files.text()][data[1]])
+                            #if data[1] in self.parser.popData[files.text()]:
+                             #   print(self.parser.popData[files.text()][data[1]])
 
 
                             self.table2.setItem(index, 0, seq)

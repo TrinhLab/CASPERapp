@@ -282,7 +282,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
 
-        self.newGenome.process.finished.connect(self.update_dropdowns)
+        #self.newGenome.process.finished.connect(self.update_dropdowns)
+        self.newGenome.contButton.clicked.connect(self.update_dropdowns)
 
     def endo_Changed(self):
         i=3
@@ -1220,6 +1221,7 @@ class StartupWindow(QtWidgets.QDialog):
                 os.chdir(self.gdirectory)
                 #change dir, still load main window, still load MT data, and then open main window and newGenome window
                 GlobalSettings.filedir = self.gdirectory
+                GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
                 self.re_write_dir()
                 GlobalSettings.mainWindow.launch_newGenome()
                 self.close()
@@ -1310,6 +1312,13 @@ if __name__ == '__main__':
     app = Qt.QApplication(sys.argv)
     app.setOrganizationName("TrinhLab-UTK")
     app.setApplicationName("CASPER")
+
+
+
+    parser = CSPRparser("")
+    parser.fileName = "C:\\Users\\Tfry\\Desktop\\FILES\\pde_spCas9.cspr"
+    parser.read_repeats()
+
 
     startup = StartupWindow()
     GlobalSettings.mainWindow = CMainWindow(os.getcwd())

@@ -426,11 +426,36 @@ class NewGenome(QtWidgets.QMainWindow):
         self.keggSuggested.resizeColumnsToContents()
 
     def run_jobs(self):
+
+        def output_stdout(p):
+            line = str(p.readAll())
+            line = line[2:]
+            line = line[:len(line) - 1]
+            for lines in filter(None, line.split(r'\r\n')):
+                if (lines == 'Finished reading in the genome file.'):
+                    self.num_chromo_next = True
+                elif (self.num_chromo_next == True):
+                    self.num_chromo_next = False
+                    self.num_chromo = int(lines)
+                elif (lines.find('Chromosome') != -1 and lines.find('complete.') != -1):
+                    temp = lines
+                    temp = temp.replace('Chromosome ', '')
+                    temp = temp.replace(' complete.', '')
+                    if (int(temp) == self.num_chromo):
+                        self.progressBar.setValue(99)
+                    else:
+                        self.progressBar.setValue(int(temp) / self.num_chromo * 100)
+                elif (lines == 'Finished Creating File.'):
+                    self.progressBar.setValue(100)
+
+                self.output_browser.append(lines)
+
+
         # Top layer for loop to go through all of the jobs in the queue:
         job = self.JobsQueue[0]
         program = '"' + GlobalSettings.appdir + '\\Casper_Seq_Finder_Windows" '
         self.JobInProgress.setText(job.name)
-        self.process.readyReadStandardOutput.connect(self.output_stdout)
+        self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
         self.process.start(program, job.get_arguments())
         self.JobsQueueBox.clear()
         for jobs in self.JobsQueue:
@@ -438,28 +463,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.JobsQueueBox.append(jobs.name)
 
 
-    def output_stdout(self):
-        line = str(self.process.readAll())
-        line = line[2:]
-        line = line[:len(line) - 1]
-        for lines in filter(None, line.split(r'\r\n')):
-            if(lines == 'Finished reading in the genome file.'):
-                self.num_chromo_next = True
-            elif(self.num_chromo_next == True):
-                self.num_chromo_next = False
-                self.num_chromo = int(lines)
-            elif(lines.find('Chromosome') != -1 and lines.find('complete.') != -1):
-                temp = lines
-                temp = temp.replace('Chromosome ', '')
-                temp = temp.replace(' complete.','')
-                if(int(temp) == self.num_chromo):
-                    self.progressBar.setValue(99)
-                else:
-                    self.progressBar.setValue(int(temp)/self.num_chromo * 100)
-            elif(lines == 'Finished Creating File.'):
-                    self.progressBar.setValue(100)
 
-            self.output_browser.append(lines)
 
 
     def upon_process_finishing(self):
@@ -603,6 +607,45 @@ class CasperJob:
         self.seed_length = seed_len
 
     def get_arguments(self):
+        db_location = GlobalSettings.CSPR_DB
+        if(GlobalSettings.OPERATING_SYSTEM_ID == "Windows"):
+            db_location = db_location.replace('/','\\')
+            ref = str(self.reference_file).replace('/','\\')
+        cmd = str()
+        cmd += '"' + str(self.endo_name) + '" '
+        cmd += '"' + str(self.endo_pam) + '" '
+        if(self.organism_code == ""):
+            cmd += '""'
+        else:
+            cmd += '"' + str(self.organism_code) + '" '
+
+        if self.anti:
+            cmd += '"' + "TRUE" + '" '
+        else:
+            cmd += '"' + "FALSE" + '" '
+
+        if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
+           cmd += '"' + db_location + '" '
+           cmd += '"' + GlobalSettings.CASPER_FOLDER_LOCATION + "\\CASPERinfo" + '" '
+        else:
+            cmd += '"' + db_location + "\\" + '" '
+            cmd += '"' + GlobalSettings.CASPER_FOLDER_LOCATION + "/CASPERinfo" + '" '
+
+        cmd += '"' + ref + '" '
+        cmd += '"' + self.organism_name + '" '
+        cmd += '"' + self.sequence_length + '" '
+        cmd += '"' + self.seed_length + '" '
+        if(self.substrain == ""):
+            cmd += '" "'
+        else:
+            cmd += '"' + self.substrain + '"'
+
+
+
+
+        if (GlobalSettings.OPERATING_SYSTEM_ID == "Windows"):
+            db_location = db_location.replace('/', '\\')
+            ref = str(self.reference_file).replace('/', '\\')
         ret_array = [self.endo_name, self.endo_pam, self.organism_code]
         # attach the 5' or 3' direction
         if self.anti:
@@ -610,17 +653,19 @@ class CasperJob:
         else:
             ret_array.append("FALSE")
         if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
-            ret_array.append(GlobalSettings.CSPR_DB+'\\')
-            #ret_array.append("C:\\Users\\Tfry\\Desktop\\FILES\\")
+           ret_array.append(db_location)
+           ret_array.append(GlobalSettings.CASPER_FOLDER_LOCATION + "\\CASPERinfo")
+           ret_array.append(ref)
+
         else:
-            ret_array.append(GlobalSettings.CSPR_DB + "\\")
-        ret_array.append(GlobalSettings.CASPER_FOLDER_LOCATION + "\\CASPERinfo")
-        #ret_array.append("C:\\Users\\Tfry\\CASPERapp\\CASPERinfo")
-        ret_array.append(self.reference_file)
-        #ret_array.append("C:\\Users\\Tfry\\Desktop\\FILES\\GCA_000765375.1_ASM76537v1_genomic.fna")
+            ret_array.append(GlobalSettings.CSPR_DB + "/")
+            ret_array.append(GlobalSettings.CASPER_FOLDER_LOCATION + "/CASPERinfo")
+            ret_array.append(self.reference_file)
+
         ret_array.append(self.organism_name)
         ret_array.append(self.sequence_length)
         ret_array.append(self.seed_length)
         ret_array.append(self.substrain)
         print(ret_array)
+
         return ret_array
