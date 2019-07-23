@@ -105,13 +105,13 @@ class Annotation_Parser:
                         if para_dict_key_string == "":
                             para_dict_key_string = feature.qualifiers['note'][0]
                         else:
-                            para_dict_key_string = para_dict_key_string + " " + feature.qualifiers['note'][0]
+                            para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['note'][0]
                     # check for the product section
                     if 'product' in feature.qualifiers:
                         if para_dict_key_string == "":
                             para_dict_key_string = feature.qualifiers['product'][0]
                         else:
-                            para_dict_key_string = para_dict_key_string + " " + feature.qualifiers['product'][0]
+                            para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['product'][0]
 
         # not sure if this number is correct, yet
         self.max_chrom = indexNumber
@@ -212,13 +212,13 @@ class Annotation_Parser:
                 if para_dict_key_string == "":
                     para_dict_key_string = feature.attributes['product'][0]
                 else:
-                    para_dict_key_string = para_dict_key_string + " " + feature.attributes['product'][0]
+                    para_dict_key_string = para_dict_key_string + ";" + feature.attributes['product'][0]
             # get the stuff out of the Note part
             if 'Note' in feature.attributes:
                 if para_dict_key_string == "":
                     para_dict_key_string = feature.attributes['Note'][0]
                 else:
-                    para_dict_key_string = para_dict_key_string + " " + feature.attributes['Note'][0]
+                    para_dict_key_string = para_dict_key_string + ";" + feature.attributes['Note'][0]
 
             prevFirstIndex = feature.seqid
         self.max_chrom = indexNumber
@@ -274,7 +274,7 @@ class Annotation_Parser:
                         self.reg_dict[currentLocusTag].append(values)
 
                 # set the parallel dictionary's key string
-                para_dict_key_string = para_dict_key_string + " " + splitLine[13] + " " + splitLine[12] + " " + splitLine[14]
+                para_dict_key_string = splitLine[13] + ";" + splitLine[12] + ";" + splitLine[14]
 
                 # if the current line we're on has the data we want for the parellel dictionary, store it
                 if len(para_dict_key_string) > 3:
