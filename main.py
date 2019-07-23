@@ -1313,13 +1313,6 @@ if __name__ == '__main__':
     app.setOrganizationName("TrinhLab-UTK")
     app.setApplicationName("CASPER")
 
-
-
-    parser = CSPRparser("")
-    parser.fileName = "C:\\Users\\Tfry\\Desktop\\FILES\\pde_spCas9.cspr"
-    parser.read_repeats()
-
-
     startup = StartupWindow()
     GlobalSettings.mainWindow = CMainWindow(os.getcwd())
     GlobalSettings.MTWin = multitargeting.Multitargeting()
