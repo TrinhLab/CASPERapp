@@ -35,32 +35,19 @@ class CSPRparser:
 
     # this is the parser that is used for the gen_lib window
     # it returns a list of lists, essentially all of the chromosomes in the file, and their data
-    def gen_lib_parser(self):
-        i = -1  # keeps track of chromosome
-        retList = list()
-        f = open(self.fileName)
-        self.read_first_lines()
-        for j in range(len(self.karystatsList)):
-            retList.append(list())
-        f.close()
+    # to make it faster, this now uses read_targets
+    def gen_lib_parser(self, genDict, endo):
+        retDict = dict()
 
-        f = open(self.fileName)
-        f.readline()  # skips genome name
-        f.readline() # skips the karystats line
-        f.readline()  # skips miscellaneous
 
-        while True:
-            line = f.readline()
-            if line.startswith("REPEATS"):
-                break
-            if line.startswith(">"):
-                i += 1
-            else:
-                mytuple = self.seqTrans.decompress_csf_tuple(line)
-                retList[i].append(mytuple)
+        #for item in genDict:
+         #   retList.append((list()))
 
-        f.close()
-        return retList
+
+        for gene in genDict:
+            retDict[gene] = list()
+            retDict[gene] = self.read_targets('', (genDict[gene][0], genDict[gene][1], genDict[gene][2]), endo)
+        return retDict
     #this function reads the first 3 lines of the file: also stores the karyStats in a list of ints
     def read_first_lines(self):
         fileStream = open(self.fileName, 'r')
@@ -315,9 +302,11 @@ class CSPRparser:
         fileStream = open(self.fileName)
         self.genome = fileStream.readline()
         fileStream.readline()
+        retList = list()
         self.misc = fileStream.readline()
 
         header = fileStream.readline()
+
 
         # Find the right chromosome:
         while True:
@@ -332,7 +321,7 @@ class CSPRparser:
                     myline = fileStream.readline()
                     if self.seqTrans.decompress64(myline.split(",")[0]) >= pos_tuple[1]:
                         while self.seqTrans.decompress64(myline.split(",")[0]) < pos_tuple[2]:
-                            self.chromesomeList.append(self.seqTrans.decompress_csf_tuple(myline, endo=endo))
+                            retList.append(self.seqTrans.decompress_csf_tuple(myline, endo=endo))
                             myline = fileStream.readline()
                     else:
                         continue
@@ -341,7 +330,10 @@ class CSPRparser:
             else:
                 header = fileStream.readline()
         fileStream.close()
-        return self.chromesomeList
+
+        return retList
+
+
 
 
 # this is testing code. show's how popParser function works

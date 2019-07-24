@@ -351,7 +351,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             if found_matches_bool == True:
                 # get the cspr file name
                 fileName = self.shortHand[self.orgChoice.currentText()]
-                fileName = fileName + '_' + self.endoChoice.currentText() + '.cspr'
+                fileName = GlobalSettings.CSPR_DB + '/' + fileName + '_' + self.endoChoice.currentText() + '.cspr'
 
                 # get whether its Kegg or not
                 kegg_non = ''

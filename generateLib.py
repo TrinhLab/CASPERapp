@@ -2,6 +2,7 @@ import GlobalSettings
 import os
 from PyQt5 import QtWidgets, Qt, uic, QtCore
 from Algorithms import SeqTranslate
+from functools import partial
 from CSPRparser import CSPRparser
 import re
 
@@ -34,15 +35,19 @@ class genLibrary(QtWidgets.QDialog):
         self.kegg_nonKegg = ''
         self.gen_lib_dict = dict()
         self.S = SeqTranslate()
-        self.cspr_data = list()
+        self.cspr_data = dict()
         self.Output = dict()
+        self.off_tol = .05
+        self.off_max_misMatch = 4
+        self.process = QtCore.QProcess()
+
 
         # set the numbers for the num genes combo box item
         for i in range(10):
             self.numGenescomboBox.addItem(str(i + 1))
 
         # set the numbers for the minOn combo box
-        for i in range(19, 50):
+        for i in range(19, 70):
             self.minON_comboBox.addItem(str(i + 1))
 
     # this function launches the window
@@ -59,9 +64,11 @@ class genLibrary(QtWidgets.QDialog):
         self.parser.fileName = self.cspr_file
 
 
+
         # setting the path and file name fields
-        index = self.cspr_file.find('.')
-        self.filename_input.setText(self.cspr_file[:index] + '_lib.txt')
+        index1 = self.cspr_file.find('.')
+        index2 = self.cspr_file.rfind('/')
+        self.filename_input.setText(self.cspr_file[index2 + 1:index1] + '_lib.txt')
         self.output_path.setText(GlobalSettings.CSPR_DB + "/")
 
         # testing:
@@ -80,8 +87,13 @@ class genLibrary(QtWidgets.QDialog):
             self.build_dict_non_kegg()
 
         # get the data from the cspr file
-        self.cspr_data = self.parser.gen_lib_parser()
+        self.cspr_data = self.parser.gen_lib_parser(self.gen_lib_dict, GlobalSettings.mainWindow.endoChoice.currentText())
         #self.generate(5, 200000000000, 15, "mybsulibrary2.txt")
+
+        #for i in range(len(self.cspr_data)):
+         #   for j in range(len(self.cspr_data[i])):
+          #      print(self.cspr_data[i][j])
+           # print('\n\n')
 
         self.show()
 
@@ -91,6 +103,52 @@ class genLibrary(QtWidgets.QDialog):
         self.cancel_function()
         event.accept()
 
+
+    # code that is block commented out will be used for the Off_target
+    """
+    def compress_file_off(self):
+        f = open(GlobalSettings.appdir + "/off_compressed.txt", 'w')
+
+        for i in range(len(self.cspr_data)):
+            for j in range(len(self.cspr_data[i])):
+                loc = self.S.compress(self.cspr_data[i][j][0], 64)
+                seq = self.S.compress(self.cspr_data[i][j][1], 64)
+                pam = self.S.compress(self.cspr_data[i][j][2], 64)
+                score = self.S.compress(self.cspr_data[i][j][3], 64)
+                strand = self.S.compress(self.cspr_data[i][j][4], 64)
+
+                output = str(loc) + ',' + str(seq) + str(strand) + str(pam) + ',' + score
+                f.write(output + '\n')
+        f.close()
+    """
+    """
+    def get_offTarget_data(self):
+        def parse_off_data():
+        app_path = GlobalSettings.appdir
+        exe_path = app_path + '/OffTargetFolder/CasperOffTargetWindows'
+        exe_path = '"' + exe_path + '" '
+        data_path = '"' + GlobalSettings.appdir + "/off_compressed.txt" + '" '
+        compressed = r' True '  ##
+        cspr_path = '"' + self.cspr_file + '" '
+        output_path = '"' + GlobalSettings.appdir + '/temp_off.txt" '
+        filename = output_path
+        filename = filename[:len(filename) - 1]
+        filename = filename[1:]
+        filename = filename.replace('"', '')
+        CASPER_info_path = r' "' + app_path + '\\CASPERinfo' + '" '
+        num_of_mismathes = self.off_max_misMatch
+        tolerance = self.off_tol  # create command string
+
+        detailed_output = " False "
+        avg_output = "True"
+
+        cmd = exe_path + data_path + compressed + cspr_path + output_path + CASPER_info_path + str(
+            num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
+
+        print(cmd)
+        QtCore.QTimer.singleShot(100, partial(self.process.start, cmd))
+        self.process.finished.connect(parse_off_data)
+    """
 
     # submit function
     # this function takes all of the input from the window, and calls the generate function
@@ -111,7 +169,16 @@ class genLibrary(QtWidgets.QDialog):
                                            QtWidgets.QMessageBox.Ok)
             return
 
-
+        """
+        if self.find_off_Checkbox.isChecked():
+            if self.maxOFF_comboBox.text() == '' or not self.maxOFF_comboBox.text().isdigit():
+                QtWidgets.QMessageBox.question(self, "Error", "Please enter only numbers for Maximum Off-Target Score. It cannot be left blank",
+                                               QtWidgets.QMessageBox.Ok)
+                return
+            else:
+                self.compress_file_off()
+                self.get_offTarget_data()
+        """
 
         ###
         # need to check that Max off target is numbers only and that space value is numbers only
@@ -129,6 +196,10 @@ class genLibrary(QtWidgets.QDialog):
         # get the fiveprimseq data
         if self.fiveprimeseq.text() != '' and self.fiveprimeseq.text().isalpha():
             fiveseq = self.fiveprimeseq.text()
+        elif self.fiveprimeseq.text() != '' and not self.fiveprimeseq.text().isalpha():
+            QtWidgets.QMessageBox.question(self, "Error", "Please make sure only the letters A, T, G, or C are added into 5' End specificity box.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
 
         self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
 
@@ -189,7 +260,6 @@ class genLibrary(QtWidgets.QDialog):
     def build_dict_non_kegg(self):
         for search in self.anno_data:
             for gene in self.anno_data[search]:
-
                 descript = gene.split(';')
                 temp_descript = descript[0]
                 if temp_descript == 'hypothetical protein':
@@ -200,35 +270,56 @@ class genLibrary(QtWidgets.QDialog):
 
     # generate function taken from Brian's code
     def generate(self,num_targets_per_gene, score_limit, space, output_file, fiveseq):
+        deletedDict = dict()
+
+        index = 0
         for gene in self.gen_lib_dict:
-            chrom_list = self.cspr_data[self.gen_lib_dict[gene][0] - 1]  # Gets the chromosome the gene is on
-            j = 0
+            target_list = self.cspr_data[gene]  # Gets the chromosome the gene is on
+
+            index += 1
+
+            """
+            j = 0 # j is the location
             k = 0 #  This keeps track of the index of the chrom list to start at
             l = 0 # This keeps track of the index of the chrom list to end at
             # this loop sets j and k to the be indeces of the start and stop targets
+            print(self.gen_lib_dict[gene])
             while j < self.gen_lib_dict[gene][1]:
                 j = chrom_list[k][0]  # k is the index of the item, 0 is the location
                 k += 1
                 l = k
-            while j < self.gen_lib_dict[gene][2]:
+            while j < self.gen_lib_dict[gene][2] and l != len(chrom_list) - 1:
+                print('in second while loop')
                 j = chrom_list[l][0]
                 l += 1
-            target_list = chrom_list[k:l+1]
+            """
+            #target_list = chrom_list[k:l+1]
             # Reverse the target list if the gene is on negative strand:
             if self.gen_lib_dict[gene][3] == "-":
                 target_list.reverse()
-            # Filter out the guides with low scores and long strings of T's
 
+
+            # Filter out the guides with low scores and long strings of T's
+            # Also check for the fiveseq if selected
+            # also store the ones deleted if the user selects 'modify search parameters'
+            if self.modifyParamscheckBox.isChecked():
+                deletedDict[gene] = list()
             for i in range(len(target_list) - 1, -1, -1):
 
                 # check for the fiveseq one here
                 if fiveseq != '':
                     if not target_list[i][1].startswith(fiveseq.upper()):
+                        if self.modifyParamscheckBox.isChecked():
+                            deletedDict[gene].append(target_list[i])
                         target_list.pop(i)
                 elif target_list[i][3] < score_limit:
+                    if self.modifyParamscheckBox.isChecked():
+                        deletedDict[gene].append(target_list[i])
                     target_list.pop(i)
                     # del target_list[target_list[i]]
                 elif re.search("T{5,10}", target_list[i][1]) is not None:
+                    if self.modifyParamscheckBox.isChecked():
+                        deletedDict[gene].append(target_list[i])
                     target_list.pop(i)
                     # del target_list[target_list[i]]
                 # Now generating the targets
@@ -252,15 +343,37 @@ class genLibrary(QtWidgets.QDialog):
                 prev_target = target_list[vec_index]
                 i += 1
                 vec_index += 1
+
+        # if the user selects modify search parameters, go through and check to see if each one has the number of targets that the user wanted
+        # if not, append from the deletedDict until they do
+        if self.modifyParamscheckBox.isChecked():
+            for gene in self.Output:
+                if len(self.Output[gene]) < num_targets_per_gene:
+                    for i in range(len(deletedDict[gene])):
+                        if len(self.Output[gene]) == num_targets_per_gene:
+                            break
+                        else:
+                            loc = deletedDict[gene][i][0]
+                            seq = deletedDict[gene][i][1]
+                            pam = deletedDict[gene][i][2]
+                            score = deletedDict[gene][i][3]
+                            strand = deletedDict[gene][i][4]
+                            endo = deletedDict[gene][i][5] + '*'
+                            self.Output[gene].append((loc, seq, pam, score, strand, endo))
+
         # Now output to the file
         f = open(output_file, 'w')
         for essential in self.Output:
             i = 0
             for target in self.Output[essential]:
-                tag_id = essential + "-" + str(i + 1)
+                if '*' in target[5]:
+                    tag_id = "**" + essential + "-" + str(i + 1)
+                else:
+                    tag_id = essential + "-" + str(i + 1)
                 i += 1
                 f.write(tag_id + "," + target[1] + "\n")
         f.close()
+
 
 
 
