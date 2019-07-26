@@ -104,23 +104,21 @@ class genLibrary(QtWidgets.QDialog):
         event.accept()
 
 
-    # code that is block commented out will be used for the Off_target
-    """
+    # this function takes all of the cspr data and compresses it again for off-target usage
     def compress_file_off(self):
         f = open(GlobalSettings.appdir + "/off_compressed.txt", 'w')
 
-        for i in range(len(self.cspr_data)):
-            for j in range(len(self.cspr_data[i])):
-                loc = self.S.compress(self.cspr_data[i][j][0], 64)
-                seq = self.S.compress(self.cspr_data[i][j][1], 64)
-                pam = self.S.compress(self.cspr_data[i][j][2], 64)
-                score = self.S.compress(self.cspr_data[i][j][3], 64)
-                strand = self.S.compress(self.cspr_data[i][j][4], 64)
+        for gene in self.cspr_data:
+            for j in range(len(self.cspr_data[gene])):
+                loc = self.S.compress(self.cspr_data[gene][j][0], 64)
+                seq = self.S.compress(self.cspr_data[gene][j][1], 64)
+                pam = self.S.compress(self.cspr_data[gene][j][2], 64)
+                score = self.S.compress(self.cspr_data[gene][j][3], 64)
+                strand = self.cspr_data[gene][j][4]
 
                 output = str(loc) + ',' + str(seq) + str(strand) + str(pam) + ',' + score
                 f.write(output + '\n')
         f.close()
-    """
     """
     def get_offTarget_data(self):
         def parse_off_data():
@@ -159,6 +157,11 @@ class genLibrary(QtWidgets.QDialog):
         num_targets = int(self.numGenescomboBox.currentText())
         fiveseq = ''
 
+        # make sure to add the .txt to the file name
+        if not output_file.endswith('.txt'):
+            output_file = output_file + '.txt'
+
+        # error checking for the space value
         # if they enter nothing, default to 15 and also make sure it's actually a digit
         if self.space_line_edit.text() == '':
             spaceValue = 15
@@ -168,6 +171,16 @@ class genLibrary(QtWidgets.QDialog):
             QtWidgets.QMessageBox.question(self, "Error", "Please enter integers only for space between guides.",
                                            QtWidgets.QMessageBox.Ok)
             return
+        # if space value is more than 200, default to 200
+        if spaceValue > 200:
+            spaceValue = 200
+        elif spaceValue < 0:
+            QtWidgets.QMessageBox.question(self, "Error", "Please enter a space-value that is 0 or greater.",
+                                            QtWidgets.QMessageBox.Ok)
+            return
+
+        if self.find_off_Checkbox.isChecked():
+            self.compress_file_off()
 
         """
         if self.find_off_Checkbox.isChecked():
@@ -180,20 +193,7 @@ class genLibrary(QtWidgets.QDialog):
                 self.get_offTarget_data()
         """
 
-        ###
-        # need to check that Max off target is numbers only and that space value is numbers only
-        # also need to check that targeting range are numbers only, and that the values match the rules
-        ###
-
-        # if space value is more than 200, default to 200
-        if spaceValue > 200:
-            spaceValue = 200
-        elif spaceValue < 0:
-            QtWidgets.QMessageBox.question(self, "Error", "Please enter a space-value that is 0 or greater.",
-                                           QtWidgets.QMessageBox.Ok)
-            return
-
-        # get the fiveprimseq data
+        # get the fiveprimseq data and error check it
         if self.fiveprimeseq.text() != '' and self.fiveprimeseq.text().isalpha():
             fiveseq = self.fiveprimeseq.text()
         elif self.fiveprimeseq.text() != '' and not self.fiveprimeseq.text().isalpha():
@@ -201,6 +201,22 @@ class genLibrary(QtWidgets.QDialog):
                                            QtWidgets.QMessageBox.Ok)
             return
 
+
+        # get the targeting range data, and error check it here
+        if not self.start_target_range.text().isdigit() or not self.end_target_range.text().isdigit():
+            QtWidgets.QMessageBox.question(self, "Error",
+                                           "Error: Please make sure that the start and end target ranges are numbers only."
+                                           " Please make sure that start is 0 or greater, and end is 100 or less. ",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+        elif int(self.start_target_range.text()) >= int(self.end_target_range.text()):
+            QtWidgets.QMessageBox.question(self, "Error",
+                                           "Please make sure that the start number is always less than the end number",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+
+        # actually call the
         self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
 
         self.cancel_function()
@@ -272,27 +288,21 @@ class genLibrary(QtWidgets.QDialog):
     def generate(self,num_targets_per_gene, score_limit, space, output_file, fiveseq):
         deletedDict = dict()
 
-        index = 0
+        # check and see if we need to search based on target_range
+        startNum = float(self.start_target_range.text())
+        endNum = float(self.end_target_range.text())
+        checkStartandEndBool = False
+        if startNum != 0.0 or endNum != 100.0:
+            startNum = startNum / 100
+            endNum = endNum / 100
+            checkStartandEndBool = True
+
+        #index = 0
         for gene in self.gen_lib_dict:
-            target_list = self.cspr_data[gene]  # Gets the chromosome the gene is on
-
-            index += 1
-
-            """
-            j = 0 # j is the location
-            k = 0 #  This keeps track of the index of the chrom list to start at
-            l = 0 # This keeps track of the index of the chrom list to end at
-            # this loop sets j and k to the be indeces of the start and stop targets
             print(self.gen_lib_dict[gene])
-            while j < self.gen_lib_dict[gene][1]:
-                j = chrom_list[k][0]  # k is the index of the item, 0 is the location
-                k += 1
-                l = k
-            while j < self.gen_lib_dict[gene][2] and l != len(chrom_list) - 1:
-                print('in second while loop')
-                j = chrom_list[l][0]
-                l += 1
-            """
+            target_list = self.cspr_data[gene]  # Gets the chromosome the gene is on
+            #index += 1
+
             #target_list = chrom_list[k:l+1]
             # Reverse the target list if the gene is on negative strand:
             if self.gen_lib_dict[gene][3] == "-":
@@ -300,30 +310,42 @@ class genLibrary(QtWidgets.QDialog):
 
 
             # Filter out the guides with low scores and long strings of T's
-            # Also check for the fiveseq if selected
             # also store the ones deleted if the user selects 'modify search parameters'
             if self.modifyParamscheckBox.isChecked():
                 deletedDict[gene] = list()
             for i in range(len(target_list) - 1, -1, -1):
-
-                # check for the fiveseq one here
-                if fiveseq != '':
-                    if not target_list[i][1].startswith(fiveseq.upper()):
-                        if self.modifyParamscheckBox.isChecked():
-                            deletedDict[gene].append(target_list[i])
-                        target_list.pop(i)
-                elif target_list[i][3] < score_limit:
+                # check the target_range here
+                if target_list[i][3] < score_limit:
                     if self.modifyParamscheckBox.isChecked():
                         deletedDict[gene].append(target_list[i])
                     target_list.pop(i)
-                    # del target_list[target_list[i]]
+                # check for T's here
+                # what is this??? and shouldn't it be pulled out into its own loop?
                 elif re.search("T{5,10}", target_list[i][1]) is not None:
                     if self.modifyParamscheckBox.isChecked():
                         deletedDict[gene].append(target_list[i])
                     target_list.pop(i)
-                    # del target_list[target_list[i]]
-                # Now generating the targets
 
+            # check for the fiveseq
+            if fiveseq != '':
+                for i in range(len(target_list) - 1, -1, -1):
+                    if not target_list[i][1].startswith(fiveseq.upper()):
+                        if self.modifyParamscheckBox.isChecked():
+                            deletedDict[gene].append(target_list[i])
+                        target_list.pop(i)
+            # check the target range here
+            if checkStartandEndBool:
+                for i in range(len(target_list) - 1, -1, -1):
+                    totalDistance = self.gen_lib_dict[gene][2] - self.gen_lib_dict[gene][1]
+                    target_loc = target_list[i][0] - self.gen_lib_dict[gene][1]
+
+                    myRatio = target_loc / totalDistance
+
+                    if not (startNum <= myRatio <= endNum):
+                        if self.modifyParamscheckBox.isChecked():
+                            deletedDict[gene].append(target_list[i])
+                        target_list.pop(i)
+            # Now generating the targets
             self.Output[gene] = list()
             i = 0
             vec_index = 0
@@ -338,6 +360,10 @@ class genLibrary(QtWidgets.QDialog):
                         self.Output[gene].append(target_list[vec_index])
                         prev_target = target_list[vec_index]
                     vec_index += 1
+                    # check and see if there will be a indexing error
+                    if vec_index >= len(target_list) - 1:
+                        vec_index = vec_index - 1
+                        break
                 # Add the new target to the output and add another to i
                 self.Output[gene].append(target_list[vec_index])
                 prev_target = target_list[vec_index]
@@ -361,11 +387,18 @@ class genLibrary(QtWidgets.QDialog):
                             endo = deletedDict[gene][i][5] + '*'
                             self.Output[gene].append((loc, seq, pam, score, strand, endo))
 
+        for essential in self.Output:
+            print(essential)
+            for i in range(len(self.Output[essential])):
+                print('\t', self.Output[essential][i])
+
+        print('***********************')
         # Now output to the file
         f = open(output_file, 'w')
         for essential in self.Output:
             i = 0
             for target in self.Output[essential]:
+                # check to see if the target did not match the user's parameters and they selected 'modify'
                 if '*' in target[5]:
                     tag_id = "**" + essential + "-" + str(i + 1)
                 else:

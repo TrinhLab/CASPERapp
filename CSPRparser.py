@@ -307,7 +307,8 @@ class CSPRparser:
 
         header = fileStream.readline()
 
-
+        # get the sequence length for the decompressor
+        seqLength = self.seqTrans.endo_info[endo][2]
         # Find the right chromosome:
         while True:
             # quick error check so the loop eventually breaks out if nothing is found
@@ -319,8 +320,8 @@ class CSPRparser:
                 while True:
                     # Find the appropriate location by quickly decompressing the location at the front of the line
                     myline = fileStream.readline()
-                    if self.seqTrans.decompress64(myline.split(",")[0]) >= pos_tuple[1]:
-                        while self.seqTrans.decompress64(myline.split(",")[0]) < pos_tuple[2]:
+                    if self.seqTrans.decompress64(myline.split(",")[0],slength=seqLength) >= pos_tuple[1]:
+                        while self.seqTrans.decompress64(myline.split(",")[0],slength=seqLength) < pos_tuple[2]:
                             retList.append(self.seqTrans.decompress_csf_tuple(myline, endo=endo))
                             myline = fileStream.readline()
                     else:

@@ -300,12 +300,12 @@
     <rect>
      <x>20</x>
      <y>190</y>
-     <width>141</width>
+     <width>291</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>(Start = 0, End = 100)</string>
+    <string>(Start = 0, End = 100), pulls from the beginning</string>
    </property>
   </widget>
   <widget class="QPushButton" name="submit_button">
