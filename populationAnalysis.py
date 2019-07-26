@@ -103,8 +103,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         p_pam = line_tokened[1].split(",")[0]
                     else:
                         p_pam = line_tokened[1]
-                    default_seed_length = line_tokened[2].split(",")[0]
-                    default_tot_length = line_tokened[2].split(",")[1]
+                    default_seed_length = line_tokened[2]
+                    default_tot_length = line_tokened[3]
                     self.Endos[endo + " PAM: " + p_pam] = (endo, p_pam, default_seed_length, default_tot_length)
 
                 break

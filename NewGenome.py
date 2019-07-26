@@ -268,7 +268,6 @@ class NewGenome(QtWidgets.QMainWindow):
 
         self.num_chromo_next = False
 
-
     ####---FUNCTIONS TO RUN EACH BUTTON---####
     def selectFasta(self):
 
@@ -312,7 +311,6 @@ class NewGenome(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.ncbi_search_dialog.searchType = fileSearchType
         GlobalSettings.mainWindow.ncbi_search_dialog.organismLineEdit.setText(self.lineEdit_1.displayText())
         GlobalSettings.mainWindow.ncbi_search_dialog.show()
-
 
     def submit(self):
         warning = ""
@@ -365,8 +363,8 @@ class NewGenome(QtWidgets.QMainWindow):
                         p_pam = line_tokened[1].split(",")[0]
                     else:
                         p_pam = line_tokened[1]
-                    default_seed_length = line_tokened[2].split(",")[0]
-                    default_tot_length = line_tokened[2].split(",")[1]
+                    default_seed_length = line_tokened[2]
+                    default_tot_length = line_tokened[3]
                     self.Endos[endo + "PAM: " + p_pam] = (endo, p_pam, default_seed_length, default_tot_length)
 
                 break
@@ -461,10 +459,6 @@ class NewGenome(QtWidgets.QMainWindow):
         for jobs in self.JobsQueue:
             if(job.name != jobs.name):
                 self.JobsQueueBox.append(jobs.name)
-
-
-
-
 
     def upon_process_finishing(self):
         self.CompletedJobs.append(self.JobsQueue[0].name)

@@ -3,12 +3,15 @@
     To interpret these run the class instance at the bottom of the file with the desired base64 representation into the
     decompress_tuple function."""
 
-
+import GlobalSettings
 class SeqTranslate:
 
     def __init__(self):
         # Modification of MIME base64 coding so that +- can be used for strand direction
         self.base_array_64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=/"
+
+        self.endo_info = dict()
+        self.endo_import()
 
 
     # used to convert numbers in base4 back to nucleotides
@@ -65,7 +68,7 @@ class SeqTranslate:
         return gencomp
 
     # Decompresses the base64 representation into base10.  If toseq is true it returns the sequence itself (nucleotides)
-    def decompress64(self, base64seq, toseq=False):
+    def decompress64(self, base64seq, slength=0, toseq=False):
         base10seq = int()
         for i in range(len(base64seq)):
             power = len(base64seq) - (i+1)
@@ -80,12 +83,14 @@ class SeqTranslate:
                 number = int(number/4)
                 seq += self.int2nt(rem)
             seq += self.int2nt(number)
+            for i in range(len(seq), slength):
+                seq += 'A'
             return seq
         else:
             return base10seq
 
-
-    def decompress_csf_tuple(self, locseq, pamlength=3, seqlength=16, bool=False, endo="spCas9"):
+    def decompress_csf_tuple(self, locseq, bool=False, endo="spCas9"):
+        # Lookup endonuclease sequence lengths for parsing
         if(bool == False):
             mytuple = locseq[:-1].split(",")
         else:
@@ -105,23 +110,35 @@ class SeqTranslate:
             sequence = seq[0]
             pam = seq[1]
             dira = "-"
-        sequence = self.decompress64(sequence, True)
-        pam = self.decompress64(pam, True)
+        seqlength = int(self.endo_info[endo][2])  # gets the total sequence length
+        pamlength = len(self.endo_info[endo][0].split(",")[0])  # gets the length of the primary PAM
+        #print(seqlength,pamlength)
+        sequence = self.decompress64(sequence, seqlength, True)
+        pam = self.decompress64(pam, pamlength, True)
         # The for loops fixes the problem of A's not being added to the end because they are removed on compression
         if(bool == True):
             sequence = front_seq + sequence
-        for i in range(len(sequence), seqlength):
-            sequence += 'A'
-        for j in range(len(pam), pamlength):
-            pam += 'A'
         return int(loc), str(sequence), pam, int(scr), dira, endo
-        #print("Location: " + str(myloc))
-        #print("Sequence: " + myseq)
+
+    def endo_import(self):
+        f = open(GlobalSettings.appdir + "/CASPERinfo")
+        while True:
+            line = f.readline()
+            if line.startswith("ENDONUCLEASES"):
+                break
+        while True:
+            line = f.readline()
+            if line.startswith("-"):
+                break
+            else:
+                myinfo = line.split(";")
+                self.endo_info[myinfo[0]] = myinfo[1:]  # first is PAM list, second is seed length, third is tot length
+
 
 
 
 #S = SeqTranslate()
-#print(S.decompress_csf_tuple("Dx,|S62qFEz+Qy,k"))
+#print(S.decompress_csf_tuple("Dx,|S62qFEz+Qy,k", endo='asCas12'))
 #print(S.decompress64("C86",False))
 #print(S.compress(440159,64))
 
