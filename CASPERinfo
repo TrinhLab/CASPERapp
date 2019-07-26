@@ -1,6 +1,6 @@
 CASPER Program Information v1.0
 
-DIRECTORY:Please choose a directory.
+DIRECTORY:"Enter Path"
 
 
 DOENCH MATRIX
@@ -20,13 +20,13 @@ HSU MATRIX
 0.034458518	1.047816491	1.050709161	1.407539975	0.054046079	0.639614156	2.080996466	0.458455298	0.155528383	0.136908112	0.10261082	0.041691214	0.010531506	0.045811702	0.009880719	0.211364672	0.055185616	0.025314601	0.059633277
 -----------------------------------------------------------
 ENDONUCLEASES
-spCas9;NGG,NAG;16,20;Streptococcus pyogenes;II-A
-saCas9;NNGRRT;16,20;Staphylococcus aureus;II-A
-spCas9-VRER;NGCG;16,20;Streptococcus pyogenes engineered variant;II-A
-st1Cas9;NNAGAAW;16,24;Streptococcus thermophilus;II-C
-nmCas9;NNNNGATT;16,24;Neisseria meningitidis;II-C
-AsCpf1;TTTV;16,24;Acidimonaccocus;V-A
-LbCpf1;TTTV,TCTN;16,24;Lachnospiraceae bacterium;V-A
+spCas9;NGG,NAG;16;20;3;Streptococcus pyogenes;II-A
+saCas9;NNGRRT;16;20;3;Staphylococcus aureus;II-A
+spCas9-VRER;NGCG;16;20;3;Streptococcus pyogenes engineered variant;II-A
+st1Cas9;NNAGAAW;16;24;3;Streptococcus thermophilus;II-C
+nmeCas9;NNNNGATT;16;24;3;Neisseria meningitidis;II-C
+asCas12;TTTV;16;24;5;Acidimonaccocus;V-A
+lbCas12;TTTV,TCTN;16;24;5;Lachnospiraceae bacterium;V-A
 ------------------------------------------------------------
 ORGANISMS
 yli:Yarrowia lipolytica
