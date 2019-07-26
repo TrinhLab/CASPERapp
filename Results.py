@@ -618,7 +618,7 @@ class Results(QtWidgets.QMainWindow):
         # go through and figure out which ones need to be shown
         for i in range(len(self.AllData[curgene])):
             for j in range(len(self.AllData[curgene][i])):
-                endoData = self.AllData[curgene][i][j][5].split(",")
+                endoData = self.AllData[curgene][i][j][5].split("|")
                 if len(endoData) == 1:
                     if i not in removalDict:
                         removalDict[i] = list()
