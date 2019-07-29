@@ -154,12 +154,14 @@ class CSPRparser:
 #    this function also stores the sum and count in the class itself as well
 #    this function is very similar to what make_graphs in Multitargeting.py was doing before
 ########################################################################################################
-    def read_repeats(self):
+    def read_repeats(self, endoChoice):
         #get all of the data and split it
         file_info = self.get_whole_file()
         split_info = file_info.split('\n')
 
         index = 0
+
+        seqLength = self.seqTrans.endo_info[endoChoice][2]
 
         #skip first part of the file until it reaches the repeats part
         while True:
@@ -176,7 +178,7 @@ class CSPRparser:
         #parse the info now and store it in the correct dictionaries
         #this essentially copies what is happening in Multitargeting.py
         while(index + 1 < len(split_info)):
-            seed = self.seqTrans.decompress64(split_info[index])
+            seed = self.seqTrans.decompress64(split_info[index], slength=seqLength)
             repeat =split_info[index + 1].split("\t")
 
             self.repeats[seed] = 0
@@ -196,11 +198,11 @@ class CSPRparser:
                     #temp[1] = str(self.seqTrans.compress(seed,64)) + str(temp[1])
                     #print(temp)
 
-                    temp.append(str(self.seqTrans.decompress64(str(self.seqTrans.compress(seed,64)),True)))
+                    temp.append(str(self.seqTrans.decompress64(str(self.seqTrans.compress(seed,64)), True,slength=seqLength)))
                     #print(temp)
                     string = ",".join(temp)
-                    self.dec_tup_data[seed].append(self.seqTrans.decompress_csf_tuple(string, bool=True))
-                    self.multiSum += self.seqTrans.decompress64(sequence[3])
+                    self.dec_tup_data[seed].append(self.seqTrans.decompress_csf_tuple(string, bool=True, endo=endoChoice))
+                    self.multiSum += self.seqTrans.decompress64(sequence[3], slength=seqLength)
                     self.multiCount += 1
 
             index = index + 2
