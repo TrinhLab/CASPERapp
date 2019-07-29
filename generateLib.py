@@ -27,6 +27,7 @@ class genLibrary(QtWidgets.QDialog):
         self.cancel_button.clicked.connect(self.cancel_function)
         self.BrowseButton.clicked.connect(self.browse_function)
         self.submit_button.clicked.connect(self.submit_data)
+        self.progressBar.setValue(0)
 
         # variables
         self.anno_data = dict()
@@ -39,7 +40,7 @@ class genLibrary(QtWidgets.QDialog):
         self.Output = dict()
         self.off_tol = .05
         self.off_max_misMatch = 4
-        self.process = QtCore.QProcess()
+        self.off_target_running = False
 
 
         # set the numbers for the num genes combo box item
@@ -100,13 +101,17 @@ class genLibrary(QtWidgets.QDialog):
 
     # this is here in case the user clicks 'x' instead of cancel. Just calls the cancel function
     def closeEvent(self, event):
-        self.cancel_function()
-        event.accept()
+        if self.off_target_running:
+            event.ignore()
+            return
+        else:
+            self.cancel_function()
+            event.accept()
 
 
     # this function takes all of the cspr data and compresses it again for off-target usage
     def compress_file_off(self):
-        f = open(GlobalSettings.appdir + "/off_compressed.txt", 'w')
+        f = open(GlobalSettings.CSPR_DB + "/off_compressed.txt", 'w')
 
         for gene in self.cspr_data:
             for j in range(len(self.cspr_data[gene])):
@@ -119,16 +124,70 @@ class genLibrary(QtWidgets.QDialog):
                 output = str(loc) + ',' + str(seq) + str(strand) + str(pam) + ',' + score
                 f.write(output + '\n')
         f.close()
-    """
-    def get_offTarget_data(self):
-        def parse_off_data():
+
+    # this function parses the temp_off file, which holds the off-target analysis results
+    # it also updates each target in the cspr_data dictionary to replace the endo with the target's results in off-target
+    def parse_off_file(self):
+        f = open(GlobalSettings.CSPR_DB + '/temp_off.txt')
+        file_data = f.read().split('\n')
+        f.close()
+        scoreDict = dict()
+
+        # get the data from the file
+        for i in range(len(file_data)):
+            if file_data[i] == 'AVG OUTPUT':
+                continue
+            elif file_data[i] != '':
+                buffer = file_data[i].split(':')
+                scoreDict[buffer[0]] = buffer[1]
+
+        # update cspr_Data
+        for gene in self.cspr_data:
+            for i in range(len(self.cspr_data[gene])):
+                tempTuple = (self.cspr_data[gene][i][0], self.cspr_data[gene][i][1], self.cspr_data[gene][i][2], self.cspr_data[gene][i][3], self.cspr_data[gene][i][4], scoreDict[self.cspr_data[gene][i][1]])
+                self.cspr_data[gene][i] = tempTuple
+
+    # this function runs the off_target command
+    # NOTE: some changes may be needed to get it to work with other OS besides windows
+    def get_offTarget_data(self, num_targets, minScore, spaceValue, output_file, fiveseq):
+        self.perc = False
+        self.bool_temp = False
+        self.running = False
+        process = QtCore.QProcess()
+
+        # when finished, parse the off file, and then generate the lib
+        def finished():
+            self.progressBar.setValue(100)
+            self.parse_off_file()
+            self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
+            self.off_target_running = False
+            self.cancel_function()
+
+        # as off-targeting outputs things, update the off-target progress bar
+        def progUpdate(p):
+            line = str(p.readAllStandardOutput())
+            line = line[2:]
+            line = line[:len(line) - 1]
+            for lines in filter(None, line.split(r'\r\n')):
+                if (lines.find("Running Off Target Algorithm for") != -1 and self.perc == False):
+                    self.perc = True
+                if (self.perc == True and self.bool_temp == False and lines.find(
+                        "Running Off Target Algorithm for") == -1):
+                    lines = lines[32:]
+                    lines = lines.replace("%", "")
+                    if (float(lines) <= 99.5):
+                        num = float(lines)
+                        self.progressBar.setValue(num)
+                    else:
+                        self.bool_temp = True
+
         app_path = GlobalSettings.appdir
         exe_path = app_path + '/OffTargetFolder/CasperOffTargetWindows'
         exe_path = '"' + exe_path + '" '
-        data_path = '"' + GlobalSettings.appdir + "/off_compressed.txt" + '" '
+        data_path = '"' + GlobalSettings.CSPR_DB + "/off_compressed.txt" + '" '
         compressed = r' True '  ##
         cspr_path = '"' + self.cspr_file + '" '
-        output_path = '"' + GlobalSettings.appdir + '/temp_off.txt" '
+        output_path = '"' + GlobalSettings.CSPR_DB + '/temp_off.txt" '
         filename = output_path
         filename = filename[:len(filename) - 1]
         filename = filename[1:]
@@ -139,19 +198,22 @@ class genLibrary(QtWidgets.QDialog):
 
         detailed_output = " False "
         avg_output = "True"
-
+        # set the off_target_running to true, to keep the user from closing the window while it is running
+        self.off_target_running = True
         cmd = exe_path + data_path + compressed + cspr_path + output_path + CASPER_info_path + str(
             num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
 
-        print(cmd)
-        QtCore.QTimer.singleShot(100, partial(self.process.start, cmd))
-        self.process.finished.connect(parse_off_data)
-    """
+        process.readyReadStandardOutput.connect(partial(progUpdate, process))
+        self.progressBar.setValue(0)
+        QtCore.QTimer.singleShot(100, partial(process.start, cmd))
+        process.finished.connect(finished)
 
     # submit function
     # this function takes all of the input from the window, and calls the generate function
     # Still need to add the checks for 5' seq, and the percentage thing
     def submit_data(self):
+        if self.off_target_running:
+            return
         output_file = self.output_path.text() + self.filename_input.text()
         minScore = int(self.minON_comboBox.currentText())
         num_targets = int(self.numGenescomboBox.currentText())
@@ -182,16 +244,7 @@ class genLibrary(QtWidgets.QDialog):
         if self.find_off_Checkbox.isChecked():
             self.compress_file_off()
 
-        """
-        if self.find_off_Checkbox.isChecked():
-            if self.maxOFF_comboBox.text() == '' or not self.maxOFF_comboBox.text().isdigit():
-                QtWidgets.QMessageBox.question(self, "Error", "Please enter only numbers for Maximum Off-Target Score. It cannot be left blank",
-                                               QtWidgets.QMessageBox.Ok)
-                return
-            else:
-                self.compress_file_off()
-                self.get_offTarget_data()
-        """
+
 
         # get the fiveprimseq data and error check it
         if self.fiveprimeseq.text() != '' and self.fiveprimeseq.text().isalpha():
@@ -216,14 +269,33 @@ class genLibrary(QtWidgets.QDialog):
             return
 
 
-        # actually call the
-        self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
-
-        self.cancel_function()
+        # if they check Off-Targeting
+        if self.find_off_Checkbox.isChecked():
+            # make sure its a digit
+            if self.maxOFF_comboBox.text() == '' or not self.maxOFF_comboBox.text().isdigit() and '.' not in self.maxOFF_comboBox.text():
+                QtWidgets.QMessageBox.question(self, "Error", "Please enter only numbers for Maximum Off-Target Score. It cannot be left blank",
+                                               QtWidgets.QMessageBox.Ok)
+                return
+            else:
+                # make sure it between 0 and .5
+                if not 0.0 < float(self.maxOFF_comboBox.text()) < .5:
+                    QtWidgets.QMessageBox.question(self, "Error",
+                                                   "Please enter a max off target score between 0 and .5!",
+                                                   QtWidgets.QMessageBox.Ok)
+                    return
+                # compress the data, and then run off-targeting
+                self.compress_file_off()
+                self.get_offTarget_data(num_targets, minScore, spaceValue, output_file, fiveseq)
+        else:
+        # actually call the generaete function
+            self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
+            self.cancel_function()
 
     # cancel function
     # clears everything and hides the window
     def cancel_function(self):
+        if self.off_target_running:
+            return
         self.cspr_file = ''
         self.anno_data = dict()
         self.kegg_nonKegg = ''
@@ -242,6 +314,8 @@ class genLibrary(QtWidgets.QDialog):
         self.modifyParamscheckBox.setChecked(False)
         self.maxOFF_comboBox.setText('')
         self.fiveprimeseq.setText('')
+        self.off_target_running = False
+        self.progressBar.setValue(0)
 
         self.hide()
 
@@ -250,6 +324,8 @@ class genLibrary(QtWidgets.QDialog):
     # allows the user to browse for a folder
     # stores their selection in the output_path line edit
     def browse_function(self):
+        if self.off_target_running:
+            return
         # get the folder
         filed = QtWidgets.QFileDialog()
         mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a Folder",
@@ -297,11 +373,9 @@ class genLibrary(QtWidgets.QDialog):
             endNum = endNum / 100
             checkStartandEndBool = True
 
-        #index = 0
         for gene in self.gen_lib_dict:
-            print(self.gen_lib_dict[gene])
+            #print(self.gen_lib_dict[gene])
             target_list = self.cspr_data[gene]  # Gets the chromosome the gene is on
-            #index += 1
 
             #target_list = chrom_list[k:l+1]
             # Reverse the target list if the gene is on negative strand:
@@ -345,6 +419,14 @@ class genLibrary(QtWidgets.QDialog):
                         if self.modifyParamscheckBox.isChecked():
                             deletedDict[gene].append(target_list[i])
                         target_list.pop(i)
+            # if the user selected off-targetting, check to see that the targets do not exceed the selected max score
+            if self.find_off_Checkbox.isChecked():
+                maxScore = float(self.maxOFF_comboBox.text())
+                for i in range(len(target_list) - 1, -1, -1):
+                    if maxScore < float(target_list[i][5]):
+                        if self.modifyParamscheckBox.isChecked():
+                            deletedDict[gene].append(target_list[i])
+                        target_list.pop(i)
             # Now generating the targets
             self.Output[gene] = list()
             i = 0
@@ -383,28 +465,33 @@ class genLibrary(QtWidgets.QDialog):
                             seq = deletedDict[gene][i][1]
                             pam = deletedDict[gene][i][2]
                             score = deletedDict[gene][i][3]
-                            strand = deletedDict[gene][i][4]
-                            endo = deletedDict[gene][i][5] + '*'
+                            strand = deletedDict[gene][i][4] + '*'
+                            endo = deletedDict[gene][i][5]
                             self.Output[gene].append((loc, seq, pam, score, strand, endo))
 
+        """
         for essential in self.Output:
             print(essential)
             for i in range(len(self.Output[essential])):
                 print('\t', self.Output[essential][i])
-
         print('***********************')
+        """
+
         # Now output to the file
         f = open(output_file, 'w')
         for essential in self.Output:
             i = 0
             for target in self.Output[essential]:
                 # check to see if the target did not match the user's parameters and they selected 'modify'
-                if '*' in target[5]:
+                if '*' in target[4]:
                     tag_id = "**" + essential + "-" + str(i + 1)
                 else:
                     tag_id = essential + "-" + str(i + 1)
                 i += 1
-                f.write(tag_id + "," + target[1] + "\n")
+                if self.find_off_Checkbox.isChecked():
+                    f.write(tag_id + ',' + target[1] + ',' + target[5] + '\n')
+                else:
+                    f.write(tag_id + "," + target[1] + "\n")
         f.close()
 
 
