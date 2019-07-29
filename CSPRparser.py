@@ -198,7 +198,7 @@ class CSPRparser:
                     #temp[1] = str(self.seqTrans.compress(seed,64)) + str(temp[1])
                     #print(temp)
 
-                    temp.append(str(self.seqTrans.decompress64(str(self.seqTrans.compress(seed,64)), True,slength=seqLength)))
+                    temp.append(str(self.seqTrans.decompress64(str(self.seqTrans.compress(seed,64)), toseq=True ,slength=int(seqLength))))
                     #print(temp)
                     string = ",".join(temp)
                     self.dec_tup_data[seed].append(self.seqTrans.decompress_csf_tuple(string, bool=True, endo=endoChoice))
