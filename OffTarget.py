@@ -116,7 +116,8 @@ class OffTarget(QtWidgets.QDialog):
 
         #setup arguments for C++ .exe
         app_path = GlobalSettings.appdir
-        exe_path = app_path + r'\OffTargetFolder\CasperOffTargetWindows '
+        #exe_path = app_path + r'\OffTargetFolder\CasperOffTargetWindows '
+        exe_path = app_path + r'\OffTargetFolder\OT '
         exe_path = '"' +  exe_path + '"'
         data_path = ' "' + app_path + '\\OffTargetFolder\\temp.txt' + '" ' ##
         compressed = r' True ' ##
