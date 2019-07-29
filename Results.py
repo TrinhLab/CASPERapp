@@ -801,37 +801,6 @@ class Results(QtWidgets.QMainWindow):
             out_file.close()
 
 
-
-        #     for i in range(0,length):
-        #         temp_list = []
-        #         line = out_file.readline()
-        #         line = line.strip('\n')
-        #         if(line != ''):
-        #             values = line.split(":")
-        #             row = self.rows_and_seq_list[self.comboBoxGene.currentIndex()][values[0]]
-        #             OT = QtWidgets.QTableWidgetItem()
-        #             OT.setData(QtCore.Qt.EditRole, values[1])
-        #             self.targetTable.setItem(row, 5, OT)
-        #             line = out_file.readline()
-        #             line = line.strip('\n')
-        #             if(line != ''):
-        #                 temp_list.append(line)
-        #                 details = QtWidgets.QPushButton()
-        #                 details.setText("Details")
-        #                 details.clicked.connect(self.show_details)
-        #                 self.targetTable.setCellWidget(row, 7, details)
-        #                 while(True):
-        #                     line = out_file.readline()
-        #                     line = line.strip('\n')
-        #                     if(line == ''):
-        #                         self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
-        #                         break
-        #                     temp_list.append(line)
-        #             self.seq_and_avg_list[self.comboBoxGene.currentIndex()][values[0]] = values[1]
-        # self.targetTable.resizeColumnsToContents()
-        # out_file.close()
-
-
     def show_details(self):
         #create msg box popup for the details | used html to make it easier to style with bold
         button = self.sender()
