@@ -70,15 +70,18 @@ class SeqTranslate:
     # Decompresses the base64 representation into base10.  If toseq is true it returns the sequence itself (nucleotides)
     def decompress64(self, base64seq, slength=0, toseq=False):
         base10seq = int()
-        for i in range(len(base64seq)):
-            power = len(base64seq) - (i+1)
-            index = self.base_array_64.find(base64seq[i])
-            if index != -1:
-                base10seq += index*pow(64, power)
+        if isinstance(base64seq, str):
+            for i in range(len(base64seq)):
+                power = len(base64seq) - (i+1)
+                index = self.base_array_64.find(base64seq[i])
+                if index != -1:
+                    base10seq += index*pow(64, power)
+        else:
+            base10seq = base64seq
         if toseq:
             seq = str()
             number = base10seq
-            while number>=4:
+            while number >= 4:
                 rem = number % 4
                 number = int(number/4)
                 seq += self.int2nt(rem)
