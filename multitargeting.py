@@ -103,6 +103,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                     output = str()
                     i = 1
                     for item in listtemp:
+
                         ind = item[0]
                         seq = str(self.seq_data[ind])
                         seed_id = self.seed_id_seq_pair[seq]
@@ -184,7 +185,8 @@ class Multitargeting(QtWidgets.QMainWindow):
 
         #set up parser, and get the repeats and carry stats
         self.parser.fileName = file
-        self.parser.read_repeats()
+        print(self.endo_drop.currentText())
+        self.parser.read_repeats(self.endo_drop.currentText())
         self.parser.read_first_lines()
         self.chromo_length = self.parser.karystatsList
 
@@ -207,13 +209,13 @@ class Multitargeting(QtWidgets.QMainWindow):
         dic_info = {}
         for seed in self.parser.seeds:
             temp = self.sq.compress(seed,64)
-            self.seed_id_seq_pair[str(self.sq.decompress64(temp, True))] = seed
-            dic_info[str(self.sq.decompress64(temp, True))] = {}
+            self.seed_id_seq_pair[str(self.sq.decompress64(temp, slength=20, toseq=True))] = seed
+            dic_info[str(self.sq.decompress64(temp, slength=20, toseq=True))] = {}
             for repeat in self.parser.seeds[seed]:
-                if repeat[0] in dic_info[str(self.sq.decompress64(temp, True))]:
-                    dic_info[str(self.sq.decompress64(temp, True))][repeat[0]].append(self.sq.decompress64(repeat[1]))
+                if repeat[0] in dic_info[str(self.sq.decompress64(temp, slength=20, toseq=True))]:
+                    dic_info[str(self.sq.decompress64(temp, slength=20, toseq=True))][repeat[0]].append(self.sq.decompress64(repeat[1]))
                 else:
-                    dic_info[str(self.sq.decompress64(temp, True))][repeat[0]] = [self.sq.decompress64(repeat[1])]
+                    dic_info[str(self.sq.decompress64(temp, slength=20, toseq=True))][repeat[0]] = [self.sq.decompress64(repeat[1])]
         self.chro_bar_create(dic_info)
         self.fill_Chromo_Text(dic_info)
 
@@ -240,7 +242,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.scene = QtWidgets.QGraphicsScene()
         self.graphicsView.setScene(self.scene)
         self.bar_coords.clear() #clear bar_coords list before creating visual
-
+        ind = 0
         for chromo in chromo_pos:
             pen_blk = QtGui.QPen(QtCore.Qt.black)
             pen_red = QtGui.QPen(QtCore.Qt.red)
@@ -264,7 +266,6 @@ class Multitargeting(QtWidgets.QMainWindow):
                 text.setPos(0,i*25+10*i)
 
                 self.scene.addRect(40, (i * 25)+10*i, 525, 25, pen_blk)
-            ind = 0
             for k in chromo_pos[chromo]:
                 line = self.scene.addLine(k+40, (i*25)+3+10*i , k+40, (i*25)+22+10*i, pen_red)
                 temp = [] #used for storing coordinates and saving them in self.bar_coords[]
@@ -469,8 +470,8 @@ class Multitargeting(QtWidgets.QMainWindow):
         for seed in self.parser.repeats:
             if self.parser.repeats[seed] >= int(self.min_chromo.currentText()) and self.parser.repeats[seed]<=int(self.max_chromo.currentText()):
                 any = True
-                temp = self.sq.compress(seed,64)
-                self.chromo_seed.addItem(str(self.sq.decompress64(temp, True)))
+                #temp = self.sq.compress(seed,64)
+                self.chromo_seed.addItem(str(self.sq.decompress64(seed, slength=20, toseq= True)))
         if any==False:
             QtWidgets.QMessageBox.question(self, "No matches found",
                                            "No seed that is within the specifications could be found",
@@ -550,7 +551,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                     print("reached end of repeat sequences")
                     break
                 ukey = t[:-1]  # takes away the "\n" in the string
-                key = ST.decompress64(ukey, True)
+                key = ST.decompress64(ukey, slength=20, toseq=True)
                 key = ST.fill_As(key, 16)
                 self.BAD_instances[key] = list()
                 # Add sequences and locations to the list
@@ -559,7 +560,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                     loctup = item.split(',')
                     chrom = loctup[0]
                     location = ST.decompress64(loctup[1])
-                    seq = ST.decompress64(loctup[2][1:],True)
+                    seq = ST.decompress64(loctup[2][1:], slength=20, toseq=True)
                     seq = ST.fill_As(seq, 4)  # when A's get lost in the compression this fills them back in
                     mytup = (chrom, location, seq)
                     self.BAD_instances[key].append(mytup)
