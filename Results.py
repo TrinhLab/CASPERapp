@@ -742,7 +742,12 @@ class Results(QtWidgets.QMainWindow):
         # if the user hits submit without running thr program, do nothing
         if filename == '':
             return
-        
+
+
+        for rows in range(0,self.targetTable.rowCount()):
+            self.targetTable.removeCellWidget(rows,7)
+            self.targetTable.removeCellWidget(rows,5)
+            self.targetTable.setItem(rows, 5, QtWidgets.QTableWidgetItem("--.--"))
         self.off_tar_win.hide()
         filename = filename[:len(filename)-1]
         filename = filename[1:]
@@ -753,11 +758,11 @@ class Results(QtWidgets.QMainWindow):
         #read the first line : either AVG or DETAILED OUTPUT
         output_type = out_file.readline()
         output_type = output_type.strip('\r\n')
-        length = len(self.OTA)
+        #length = len(self.OTA)
         #parse based on whether avg or detailed output
         if(output_type == "AVG OUTPUT"):
-            for i in range(0,length):
-                line = out_file.readline()
+            for line in out_file:
+                #line = out_file.readline()
                 line = line.strip('\n')
                 if (line != ''):
                     values = line.split(":")
@@ -767,34 +772,64 @@ class Results(QtWidgets.QMainWindow):
                     self.targetTable.setItem(row, 5, OT)
                     self.seq_and_avg_list[self.comboBoxGene.currentIndex()][values[0]] = values[1]
         else:
-            for i in range(0,length):
-                temp_list = []
-                line = out_file.readline()
+            details_bool = False
+            temp_list = []
+            for line in out_file:
+                #line = out_file.readline()
                 line = line.strip('\n')
-                if(line != ''):
+                if(line.find(':') != -1):
+                    if(details_bool == True):
+                        self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
+                        details_bool = False
+                        temp_list = []
                     values = line.split(":")
+                    self.seq_and_avg_list[self.comboBoxGene.currentIndex()][values[0]] = values[1]
                     row = self.rows_and_seq_list[self.comboBoxGene.currentIndex()][values[0]]
                     OT = QtWidgets.QTableWidgetItem()
                     OT.setData(QtCore.Qt.EditRole, values[1])
                     self.targetTable.setItem(row, 5, OT)
-                    line = out_file.readline()
-                    line = line.strip('\n')
-                    if(line != ''):
-                        temp_list.append(line)
-                        details = QtWidgets.QPushButton()
-                        details.setText("Details")
-                        details.clicked.connect(self.show_details)
-                        self.targetTable.setCellWidget(row, 7, details)
-                        while(True):
-                            line = out_file.readline()
-                            line = line.strip('\n')
-                            if(line == ''):
-                                self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
-                                break
-                            temp_list.append(line)
-                    self.seq_and_avg_list[self.comboBoxGene.currentIndex()][values[0]] = values[1]
-        self.targetTable.resizeColumnsToContents()
-        out_file.close()
+                else:
+                    details_bool = True
+                    temp_list.append(line)
+                    details = QtWidgets.QPushButton()
+                    details.setText("Details")
+                    details.clicked.connect(self.show_details)
+                    self.targetTable.setCellWidget(row, 7, details)
+
+
+            self.targetTable.resizeColumnsToContents()
+            out_file.close()
+
+
+
+        #     for i in range(0,length):
+        #         temp_list = []
+        #         line = out_file.readline()
+        #         line = line.strip('\n')
+        #         if(line != ''):
+        #             values = line.split(":")
+        #             row = self.rows_and_seq_list[self.comboBoxGene.currentIndex()][values[0]]
+        #             OT = QtWidgets.QTableWidgetItem()
+        #             OT.setData(QtCore.Qt.EditRole, values[1])
+        #             self.targetTable.setItem(row, 5, OT)
+        #             line = out_file.readline()
+        #             line = line.strip('\n')
+        #             if(line != ''):
+        #                 temp_list.append(line)
+        #                 details = QtWidgets.QPushButton()
+        #                 details.setText("Details")
+        #                 details.clicked.connect(self.show_details)
+        #                 self.targetTable.setCellWidget(row, 7, details)
+        #                 while(True):
+        #                     line = out_file.readline()
+        #                     line = line.strip('\n')
+        #                     if(line == ''):
+        #                         self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
+        #                         break
+        #                     temp_list.append(line)
+        #             self.seq_and_avg_list[self.comboBoxGene.currentIndex()][values[0]] = values[1]
+        # self.targetTable.resizeColumnsToContents()
+        # out_file.close()
 
 
     def show_details(self):
