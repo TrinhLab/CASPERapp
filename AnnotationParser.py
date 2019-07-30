@@ -87,7 +87,7 @@ class Annotation_Parser:
                         self.reg_dict[currentLocusTag].append(values)
 
                 # if it's not a gene, skip rep_orgin, telomere, and source
-                elif feature.type != "rep_origin" and feature.type != "telomere" and feature.type != "source":
+                elif feature.type != "rep_origin" and feature.type != "telomere" and feature.type != "source" and feature.type != 'assembly_gap':
                     # get the data for the normal dictionary and store it
                     if feature.location.strand == -1:
                         strandChar = '-'

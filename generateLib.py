@@ -157,10 +157,13 @@ class genLibrary(QtWidgets.QDialog):
 
         # when finished, parse the off file, and then generate the lib
         def finished():
+            print('in finished')
             self.progressBar.setValue(100)
             self.parse_off_file()
             self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
             self.off_target_running = False
+            os.remove(GlobalSettings.CSPR_DB + '/off_compressed.txt')
+            os.remove(GlobalSettings.CSPR_DB + '/temp_off.txt')
             self.cancel_function()
 
         # as off-targeting outputs things, update the off-target progress bar
@@ -182,7 +185,7 @@ class genLibrary(QtWidgets.QDialog):
                         self.bool_temp = True
 
         app_path = GlobalSettings.appdir
-        exe_path = app_path + '/OffTargetFolder/CasperOffTargetWindows'
+        exe_path = app_path + '/OffTargetFolder/OT'
         exe_path = '"' + exe_path + '" '
         data_path = '"' + GlobalSettings.CSPR_DB + "/off_compressed.txt" + '" '
         compressed = r' True '  ##

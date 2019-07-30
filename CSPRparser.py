@@ -176,7 +176,6 @@ class CSPRparser:
         self.seeds.clear()
 
         #parse the info now and store it in the correct dictionaries
-        #this essentially copies what is happening in Multitargeting.py
         while(index + 1 < len(split_info)):
             seed = self.seqTrans.decompress64(split_info[index], slength=seqLength)
             repeat =split_info[index + 1].split("\t")
@@ -185,6 +184,7 @@ class CSPRparser:
             self.seeds[seed] = []
             self.dec_tup_data[seed] = []
             for item in repeat:
+                #print(self.seqTrans.decompress_csf_tuple(item, endo=endoChoice, bool=True))
                 if item != "":
                     self.repeats[seed] += 1
                     sequence =item.split(',')
@@ -201,6 +201,8 @@ class CSPRparser:
                     temp.append(str(self.seqTrans.decompress64(str(self.seqTrans.compress(seed,64)), toseq=True ,slength=int(seqLength))))
                     #print(temp)
                     string = ",".join(temp)
+                    #print(string)
+                    #print('\t', self.seqTrans.decompress_csf_tuple(string, bool=True, endo=endoChoice))
                     self.dec_tup_data[seed].append(self.seqTrans.decompress_csf_tuple(string, bool=True, endo=endoChoice))
                     self.multiSum += self.seqTrans.decompress64(sequence[3], slength=seqLength)
                     self.multiCount += 1

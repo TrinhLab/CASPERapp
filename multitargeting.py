@@ -207,15 +207,16 @@ class Multitargeting(QtWidgets.QMainWindow):
         if self.ready_chromo_make_graph==False:
             return
         dic_info = {}
+        seqLength = int(self.sq.endo_info[self.endo_drop.currentText()][2])
         for seed in self.parser.seeds:
             temp = self.sq.compress(seed,64)
-            self.seed_id_seq_pair[str(self.sq.decompress64(temp, slength=20, toseq=True))] = seed
-            dic_info[str(self.sq.decompress64(temp, slength=20, toseq=True))] = {}
+            self.seed_id_seq_pair[str(self.sq.decompress64(temp, slength=seqLength, toseq=True))] = seed
+            dic_info[str(self.sq.decompress64(temp, slength=seqLength, toseq=True))] = {}
             for repeat in self.parser.seeds[seed]:
-                if repeat[0] in dic_info[str(self.sq.decompress64(temp, slength=20, toseq=True))]:
-                    dic_info[str(self.sq.decompress64(temp, slength=20, toseq=True))][repeat[0]].append(self.sq.decompress64(repeat[1]))
+                if repeat[0] in dic_info[str(self.sq.decompress64(temp, slength=seqLength, toseq=True))]:
+                    dic_info[str(self.sq.decompress64(temp, slength=seqLength, toseq=True))][repeat[0]].append(self.sq.decompress64(repeat[1]))
                 else:
-                    dic_info[str(self.sq.decompress64(temp, slength=20, toseq=True))][repeat[0]] = [self.sq.decompress64(repeat[1])]
+                    dic_info[str(self.sq.decompress64(temp, slength=seqLength, toseq=True))][repeat[0]] = [self.sq.decompress64(repeat[1])]
         self.chro_bar_create(dic_info)
         self.fill_Chromo_Text(dic_info)
 
@@ -467,11 +468,12 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.ready_chromo_make_graph = False
         self.chromo_seed.clear()
         any = False
+        seqLength = int(self.sq.endo_info[self.endo_drop.currentText()][2])
         for seed in self.parser.repeats:
             if self.parser.repeats[seed] >= int(self.min_chromo.currentText()) and self.parser.repeats[seed]<=int(self.max_chromo.currentText()):
                 any = True
                 #temp = self.sq.compress(seed,64)
-                self.chromo_seed.addItem(str(self.sq.decompress64(seed, slength=20, toseq= True)))
+                self.chromo_seed.addItem(str(self.sq.decompress64(seed, slength=seqLength, toseq= True)))
         if any==False:
             QtWidgets.QMessageBox.question(self, "No matches found",
                                            "No seed that is within the specifications could be found",
