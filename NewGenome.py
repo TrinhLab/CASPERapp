@@ -424,7 +424,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.keggSuggested.resizeColumnsToContents()
 
     def run_jobs(self):
-
+        self.progressBar.setValue(0)
         def output_stdout(p):
             line = str(p.readAll())
             line = line[2:]
