@@ -860,55 +860,67 @@ class Results(QtWidgets.QMainWindow):
         filename = QtWidgets.QFileDialog.getSaveFileName(self,
                                       "Enter Text File Name", ".txt",
                                       "Text Document (*.txt)" )
-        f = open(str(filename[0]), "w+")
-        for genomes in self.AllData:
-            f.write("***"+genomes + "\n")
-            for items in self.AllData[genomes]:
-                for i in items:
-                    f.write(str(i) + '|')
-                f.write(str(self.highlighted[items[1]]))
-                f.write("\n")
-        f.close()
+
+        if (str(filename[0]) != ''):
+            f = open(str(filename[0]), "w+")
+            for genomes in self.AllData:
+                f.write("***"+genomes + "\n")
+                for items in self.AllData[genomes]:
+                    for i in items:
+                        for j in i:
+                            f.write(str(j) + '|')
+
+                        f.write(str(self.highlighted[items[1][1]]))
+                        f.write("\n")
+            f.close()
 
     #open any saved .txt of previous tables opened
     def open_data(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')
-        self.AllData.clear()
-        self.highlighted.clear()
-        first = 1
-        list1 = []
-        s = ""
-        self.comboBoxGene.clear()
         if (os.path.isfile(str(filename[0]))):
             f = open(str(filename[0]), "r+")
-            for line in f:
-                if(line.startswith("***")):
-                    if(first == 0):
-                        self.AllData[s] = list1
-                    else:
-                        first = 0
-                    s = line[3:]
-                    s = s.strip('\n')
-                    list1 = []
-                    self.comboBoxGene.addItem(s)
-                else:
-                    temp = line.split("|")
-                    h = temp.pop()
-                    h = h.strip('\n')
-                    self.highlighted[temp[1]] = eval(h)
-                    tup = tuple(temp)
-                    list1.append(tup)
-            self.AllData[s] = list1
-            f.close()
-            self.displayGeneData()
-
-        else:
-            msg = QtWidgets.QMessageBox()
-            msg.setWindowTitle("Error")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.setIcon(QtWidgets.QMessageBox.Critical)
-            msg.setText("<font size=4>" + "Could not open file." + "</font>")
-            msg.exec()
+            temp_str = f.readline()
+            if(temp_str.startswith("***") == False):
+                msg = QtWidgets.QMessageBox()
+                msg.setWindowTitle("Error")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.setIcon(QtWidgets.QMessageBox.Critical)
+                msg.setText("<font size=4>" + "Not correct file format" + "</font>")
+                msg.exec()
+                f.close()
+            else:
+                f.close()
+                self.AllData.clear()
+                self.highlighted.clear()
+                first = 1
+                list1 = []
+                list2 = []
+                s = ""
+                self.comboBoxGene.clear()
+                if (os.path.isfile(str(filename[0]))):
+                    f = open(str(filename[0]), "r+")
+                    for line in f:
+                        if(line.startswith("***")):
+                            if(first == 0):
+                                list2.append(list1)
+                                self.AllData[s] = list2
+                            else:
+                                first = 0
+                            s = line[3:]
+                            s = s.strip('\n')
+                            list1 = []
+                            self.comboBoxGene.addItem(s)
+                        else:
+                            temp = line.split("|")
+                            h = temp.pop()
+                            h = h.strip('\n')
+                            self.highlighted[temp[1]] = eval(h)
+                            tup = tuple(temp)
+                            list1.append(tup)
+                    list2.append(list1)
+                    self.AllData[s] = list2
+                    f.close()
+                    self.displayGeneData()
 
     # this function calls the closingWindow class.
     def closeEvent(self, event):
