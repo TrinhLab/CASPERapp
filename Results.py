@@ -903,8 +903,12 @@ class Results(QtWidgets.QMainWindow):
             self.displayGeneData()
 
         else:
-            # change to dialog box
-            print('Could not open file')
+            msg = QtWidgets.QMessageBox()
+            msg.setWindowTitle("Error")
+            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msg.setIcon(QtWidgets.QMessageBox.Critical)
+            msg.setText("<font size=4>" + "Could not open file." + "</font>")
+            msg.exec()
 
     # this function calls the closingWindow class.
     def closeEvent(self, event):
