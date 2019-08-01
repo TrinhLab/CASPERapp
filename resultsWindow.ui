@@ -361,19 +361,6 @@
      <string>Gene Viewer Settings</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="selectAllButton">
-    <property name="geometry">
-     <rect>
-      <x>620</x>
-      <y>40</y>
-      <width>75</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Select All</string>
-    </property>
-   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

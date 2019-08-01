@@ -93,7 +93,6 @@ class Results(QtWidgets.QMainWindow):
         #using this helps speed up updating the chart
         self.OTA = []
 
-        self.selectAllButton.clicked.connect(self.selectAll_OffT)
 
 
         self.detail_output_list = []
@@ -406,7 +405,7 @@ class Results(QtWidgets.QMainWindow):
         full_org = str(GlobalSettings.mainWindow.orgChoice.currentText())
         organism = GlobalSettings.mainWindow.shortHand[full_org]
 
-        endoChoice = self.endonucleaseBox.currentText().split(",")
+        endoChoice = self.endonucleaseBox.currentText().split("|")
 
         # enable the cotarget checkbox if needed
         if len(endoChoice) > 1:
@@ -659,15 +658,19 @@ class Results(QtWidgets.QMainWindow):
                     strandData2 = self.AllData[curgene][j][k][4]
                     endoData2 = self.AllData[curgene][j][k][5]
 
+                    dir1 = self.S.endo_info[endoData1][3]
+                    dir2 = self.S.endo_info[endoData2][3]
+
                     # if they match, combine the two. Keep the first ones data, but append the second's ones endo to the first one
                     if locationData1 == locationData2 and endoData1 != endoData2 and endoData2 not in endoData1:
-                        endoData1 = endoData1 + "|" + endoData2
-                        self.AllData[curgene][0][i] = (locationData1, sequenceData1, pamData1, scoreData1, strandData1, endoData1)
-                        # update the deletion list
-                        if j not in deletingDict:
-                            deletingDict[j] = list()
+                        if dir1 == dir2 and strandData1 == strandData2:
+                            endoData1 = endoData1 + "|" + endoData2
+                            self.AllData[curgene][0][i] = (locationData1, sequenceData1, pamData1, scoreData1, strandData1, endoData1)
+                            # update the deletion list
+                            if j not in deletingDict:
+                                deletingDict[j] = list()
 
-                        deletingDict[j].append(k)
+                            deletingDict[j].append(k)
 
         # delete the ones that need to be deleted
         for item in deletingDict:
@@ -820,13 +823,6 @@ class Results(QtWidgets.QMainWindow):
         detail_str = "<html><b>Deatailed Output: Score, Chromsome, Location, Sequence:<br></b></html>"
         msg.setText(chromo_str + input_str + detail_str + temp_str)
         msg.exec()
-
-    #select all off target checkboxes in results window
-    def selectAll_OffT(self):
-        for row in range(self.targetTable.rowCount()):
-            if(self.targetTable.cellWidget(row,6).isChecked() == False):
-                self.targetTable.cellWidget(row,6).click()
-
 
 
     # Function for displaying the target in the gene viewer

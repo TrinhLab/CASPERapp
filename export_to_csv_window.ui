@@ -41,13 +41,13 @@
   </widget>
   <widget class="QLineEdit" name="fileLocation_line_edit">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
      <x>200</x>
      <y>80</y>
-     <width>113</width>
+     <width>241</width>
      <height>20</height>
     </rect>
    </property>
@@ -68,7 +68,7 @@
   <widget class="QPushButton" name="browse_button">
    <property name="geometry">
     <rect>
-     <x>330</x>
+     <x>450</x>
      <y>80</y>
      <width>75</width>
      <height>23</height>
