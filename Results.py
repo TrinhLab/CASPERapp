@@ -93,7 +93,6 @@ class Results(QtWidgets.QMainWindow):
         #using this helps speed up updating the chart
         self.OTA = []
 
-        self.selectAllButton.clicked.connect(self.selectAll_OffT)
 
 
         self.detail_output_list = []
@@ -406,7 +405,7 @@ class Results(QtWidgets.QMainWindow):
         full_org = str(GlobalSettings.mainWindow.orgChoice.currentText())
         organism = GlobalSettings.mainWindow.shortHand[full_org]
 
-        endoChoice = self.endonucleaseBox.currentText().split(",")
+        endoChoice = self.endonucleaseBox.currentText().split("|")
 
         # enable the cotarget checkbox if needed
         if len(endoChoice) > 1:
@@ -659,15 +658,19 @@ class Results(QtWidgets.QMainWindow):
                     strandData2 = self.AllData[curgene][j][k][4]
                     endoData2 = self.AllData[curgene][j][k][5]
 
+                    dir1 = self.S.endo_info[endoData1][3]
+                    dir2 = self.S.endo_info[endoData2][3]
+
                     # if they match, combine the two. Keep the first ones data, but append the second's ones endo to the first one
                     if locationData1 == locationData2 and endoData1 != endoData2 and endoData2 not in endoData1:
-                        endoData1 = endoData1 + "|" + endoData2
-                        self.AllData[curgene][0][i] = (locationData1, sequenceData1, pamData1, scoreData1, strandData1, endoData1)
-                        # update the deletion list
-                        if j not in deletingDict:
-                            deletingDict[j] = list()
+                        if dir1 == dir2 and strandData1 == strandData2:
+                            endoData1 = endoData1 + "|" + endoData2
+                            self.AllData[curgene][0][i] = (locationData1, sequenceData1, pamData1, scoreData1, strandData1, endoData1)
+                            # update the deletion list
+                            if j not in deletingDict:
+                                deletingDict[j] = list()
 
-                        deletingDict[j].append(k)
+                            deletingDict[j].append(k)
 
         # delete the ones that need to be deleted
         for item in deletingDict:
@@ -821,13 +824,6 @@ class Results(QtWidgets.QMainWindow):
         msg.setText(chromo_str + input_str + detail_str + temp_str)
         msg.exec()
 
-    #select all off target checkboxes in results window
-    def selectAll_OffT(self):
-        for row in range(self.targetTable.rowCount()):
-            if(self.targetTable.cellWidget(row,6).isChecked() == False):
-                self.targetTable.cellWidget(row,6).click()
-
-
 
     # Function for displaying the target in the gene viewer
     """def displayGene(self,fastafile=None, Kegg=False, NCBI=False):
@@ -860,51 +856,67 @@ class Results(QtWidgets.QMainWindow):
         filename = QtWidgets.QFileDialog.getSaveFileName(self,
                                       "Enter Text File Name", ".txt",
                                       "Text Document (*.txt)" )
-        f = open(str(filename[0]), "w+")
-        for genomes in self.AllData:
-            f.write("***"+genomes + "\n")
-            for items in self.AllData[genomes]:
-                for i in items:
-                    f.write(str(i) + '|')
-                f.write(str(self.highlighted[items[1]]))
-                f.write("\n")
-        f.close()
+
+        if (str(filename[0]) != ''):
+            f = open(str(filename[0]), "w+")
+            for genomes in self.AllData:
+                f.write("***"+genomes + "\n")
+                for items in self.AllData[genomes]:
+                    for i in items:
+                        for j in i:
+                            f.write(str(j) + '|')
+
+                        f.write(str(self.highlighted[items[1][1]]))
+                        f.write("\n")
+            f.close()
 
     #open any saved .txt of previous tables opened
     def open_data(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')
-        self.AllData.clear()
-        self.highlighted.clear()
-        first = 1
-        list1 = []
-        s = ""
-        self.comboBoxGene.clear()
         if (os.path.isfile(str(filename[0]))):
             f = open(str(filename[0]), "r+")
-            for line in f:
-                if(line.startswith("***")):
-                    if(first == 0):
-                        self.AllData[s] = list1
-                    else:
-                        first = 0
-                    s = line[3:]
-                    s = s.strip('\n')
-                    list1 = []
-                    self.comboBoxGene.addItem(s)
-                else:
-                    temp = line.split("|")
-                    h = temp.pop()
-                    h = h.strip('\n')
-                    self.highlighted[temp[1]] = eval(h)
-                    tup = tuple(temp)
-                    list1.append(tup)
-            self.AllData[s] = list1
-            f.close()
-            self.displayGeneData()
-
-        else:
-            # change to dialog box
-            print('Could not open file')
+            temp_str = f.readline()
+            if(temp_str.startswith("***") == False):
+                msg = QtWidgets.QMessageBox()
+                msg.setWindowTitle("Error")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.setIcon(QtWidgets.QMessageBox.Critical)
+                msg.setText("<font size=4>" + "Not correct file format" + "</font>")
+                msg.exec()
+                f.close()
+            else:
+                f.close()
+                self.AllData.clear()
+                self.highlighted.clear()
+                first = 1
+                list1 = []
+                list2 = []
+                s = ""
+                self.comboBoxGene.clear()
+                if (os.path.isfile(str(filename[0]))):
+                    f = open(str(filename[0]), "r+")
+                    for line in f:
+                        if(line.startswith("***")):
+                            if(first == 0):
+                                list2.append(list1)
+                                self.AllData[s] = list2
+                            else:
+                                first = 0
+                            s = line[3:]
+                            s = s.strip('\n')
+                            list1 = []
+                            self.comboBoxGene.addItem(s)
+                        else:
+                            temp = line.split("|")
+                            h = temp.pop()
+                            h = h.strip('\n')
+                            self.highlighted[temp[1]] = eval(h)
+                            tup = tuple(temp)
+                            list1.append(tup)
+                    list2.append(list1)
+                    self.AllData[s] = list2
+                    f.close()
+                    self.displayGeneData()
 
     # this function calls the closingWindow class.
     def closeEvent(self, event):
