@@ -113,7 +113,11 @@ class SeqTranslate:
             sequence = seq[0]
             pam = seq[1]
             dira = "-"
-        seqlength = int(self.endo_info[endo][2])  # gets the total sequence length
+        if bool:
+            seqlength = int(self.endo_info[endo][2]) - int(
+                self.endo_info[endo][1])  # gets the tail sequence length for processing repeats
+        else:
+            seqlength = int(self.endo_info[endo][2])  # gets the total sequence length
         pamlength = len(self.endo_info[endo][0].split(",")[0])  # gets the length of the primary PAM
         #print(seqlength,pamlength)
         sequence = self.decompress64(sequence, seqlength, True)

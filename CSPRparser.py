@@ -161,7 +161,7 @@ class CSPRparser:
 
         index = 0
 
-        seqLength = self.seqTrans.endo_info[endoChoice][2]
+        seedLength = int(self.seqTrans.endo_info[endoChoice][1])
 
         #skip first part of the file until it reaches the repeats part
         while True:
@@ -177,7 +177,7 @@ class CSPRparser:
 
         #parse the info now and store it in the correct dictionaries
         while(index + 1 < len(split_info)):
-            seed = self.seqTrans.decompress64(split_info[index], slength=seqLength)
+            seed = self.seqTrans.decompress64(split_info[index], slength=seedLength)
             repeat =split_info[index + 1].split("\t")
 
             self.repeats[seed] = 0
@@ -198,13 +198,13 @@ class CSPRparser:
                     #temp[1] = str(self.seqTrans.compress(seed,64)) + str(temp[1])
                     #print(temp)
 
-                    temp.append(str(self.seqTrans.decompress64(str(self.seqTrans.compress(seed,64)), toseq=True ,slength=int(seqLength))))
+                    temp.append(str(self.seqTrans.decompress64(seed, toseq=True ,slength=int(seedLength))))
                     #print(temp)
                     string = ",".join(temp)
                     #print(string)
                     #print('\t', self.seqTrans.decompress_csf_tuple(string, bool=True, endo=endoChoice))
                     self.dec_tup_data[seed].append(self.seqTrans.decompress_csf_tuple(string, bool=True, endo=endoChoice))
-                    self.multiSum += self.seqTrans.decompress64(sequence[3], slength=seqLength)
+                    self.multiSum += self.seqTrans.decompress64(sequence[3], slength=seedLength)
                     self.multiCount += 1
 
             index = index + 2
