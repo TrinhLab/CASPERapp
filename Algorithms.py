@@ -124,7 +124,7 @@ class SeqTranslate:
         pam = self.decompress64(pam, pamlength, True)
         # The for loops fixes the problem of A's not being added to the end because they are removed on compression
         if(bool == True):
-            sequence = front_seq + sequence
+            sequence = sequence + front_seq
         return int(loc), str(sequence), pam, int(scr), dira, endo
 
     def endo_import(self):
