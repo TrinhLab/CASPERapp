@@ -799,9 +799,10 @@ class Results(QtWidgets.QMainWindow):
                     details.setText("Details")
                     details.clicked.connect(self.show_details)
                     self.targetTable.setCellWidget(row, 7, details)
-            self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
+            if(details_bool == True):
+                self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
 
-
+            print(self.detail_output_list)
             self.targetTable.resizeColumnsToContents()
             out_file.close()
 
