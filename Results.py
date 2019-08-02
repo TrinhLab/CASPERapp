@@ -777,6 +777,7 @@ class Results(QtWidgets.QMainWindow):
         else:
             details_bool = False
             temp_list = []
+            values = []
             for line in out_file:
                 #line = out_file.readline()
                 line = line.strip('\n')
@@ -798,11 +799,11 @@ class Results(QtWidgets.QMainWindow):
                     details.setText("Details")
                     details.clicked.connect(self.show_details)
                     self.targetTable.setCellWidget(row, 7, details)
+            self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
 
 
             self.targetTable.resizeColumnsToContents()
             out_file.close()
-
 
     def show_details(self):
         #create msg box popup for the details | used html to make it easier to style with bold
