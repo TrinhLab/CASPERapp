@@ -130,7 +130,7 @@ class Results(QtWidgets.QMainWindow):
 
         # make sure that the difference between indicies is not too large
         if abs(tempTuple[1] - tempTuple[2]) > 50000:
-            print(abs(tempTuple[1] - tempTuple[2]))
+            #print(abs(tempTuple[1] - tempTuple[2]))
             QtWidgets.QMessageBox.question(self, "Sequence Too Long",
                                            "The sequence is too long! "
                                            "Please choose indicies that will make the sequence less than 50,000!",
@@ -817,7 +817,7 @@ class Results(QtWidgets.QMainWindow):
             if(details_bool == True):
                 self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
 
-            print(self.detail_output_list)
+            #print(self.detail_output_list)
             self.targetTable.resizeColumnsToContents()
             out_file.close()
 
@@ -1021,7 +1021,7 @@ class geneViewerSettings(QtWidgets.QDialog):
     # It will go based on the lengths stored in the comboGeneBox dictionary
     def submitFunction(self):
         if not self.kegg_radio_button.isChecked() and (self.file_name_edit.displayText() == "" or self.file_name_edit.displayText() == "Please choose a file!"):
-            print("No file chosen")
+            #print("No file chosen")
             return
 
         sequence = ""
@@ -1097,7 +1097,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         # take out the endlines and uppercase the string
         pre_sequence = pre_sequence.replace("\n", "")
         pre_sequence = pre_sequence.upper()
-        print("Length of the pre-sequence: ", len(pre_sequence))
+        #print("Length of the pre-sequence: ", len(pre_sequence))
 
         # we are having an issue here. Sometimes the length of the pre_sequence string is not large enough
         # need to talk to brian to see what could be causing that
@@ -1134,7 +1134,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         # uppercase that chromesome, and change all endlines with spaces
         sequence = sequence.upper()
         sequence = sequence.replace("\n", "")
-        print("Length of the pre-sequence: ", len(sequence))
+        #print("Length of the pre-sequence: ", len(sequence))
         # now set the return sequence to the substring that we want
         NTSequence = sequence[location_data[1]:location_data[2]]
 

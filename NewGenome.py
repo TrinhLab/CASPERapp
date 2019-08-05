@@ -216,7 +216,7 @@ class NCBI_Search_File(QtWidgets.QDialog):
         file_names = os.listdir(GlobalSettings.CSPR_DB)
         for file in file_names:
             if ".gz" in file:
-                print("Deleting: ", file)
+                #print("Deleting: ", file)
                 os.remove(file)
 
         self.hide()
@@ -660,6 +660,6 @@ class CasperJob:
         ret_array.append(self.sequence_length)
         ret_array.append(self.seed_length)
         ret_array.append(self.substrain)
-        print(ret_array)
+        #print(ret_array)
 
         return ret_array
