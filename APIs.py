@@ -16,8 +16,10 @@ class Kegg:
         res = self.k.get(gene_id)
         d = self.k.parse(res)
         newstr = d['POSITION']
+        # make sure to store the chromosome that's given by KEGG too
         cstop = newstr.find(':')
         if cstop == -1:
+            chrom = -1
             chromosome = 1
         else:
             chrom = newstr[0:cstop]
@@ -46,7 +48,7 @@ class Kegg:
                 endloc = newstr[spc+2:len(newstr)-1]
             else:
                 endloc = newstr[spc+2:len(newstr)]
-        totloc = (chromosome, sense, int(startloc), int(endloc))
+        totloc = (chromosome, sense, int(startloc), int(endloc), chrom)
         return totloc
 
     def translate_chromosome(self, chr):                                                        #Translate Chromosome - recives chromosome as letter or roman numeral and returns it as a number

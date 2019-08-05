@@ -139,17 +139,30 @@ class Results(QtWidgets.QMainWindow):
             self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
             return
 
-        self.geneDict[self.comboBoxGene.currentText()] = tempTuple
 
         # if the user is using kegg
         if GlobalSettings.mainWindow.gene_viewer_settings.file_type == "kegg":
+            tempTuple = (self.geneDict[self.comboBoxGene.currentText()][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()), self.geneDict[self.comboBoxGene.currentText()][3])
+            self.geneDict[self.comboBoxGene.currentText()] = tempTuple
             # build the URL string
-            url = "https://www.genome.jp/dbget-bin/cut_sequence_genes.pl?FROM="
-            url = url + str(self.geneDict[self.comboBoxGene.currentText()][1])
-            url = url + "&TO="
-            url = url + str(self.geneDict[self.comboBoxGene.currentText()][2])
-            url = url + "&VECTOR=1&ORG="
-            url = url + GlobalSettings.mainWindow.Annotations_Organism.currentText().split(" ")[1]
+            # build the URL one way if the chrom from KEGG is -1
+            if tempTuple[3] == -1:
+                url = "https://www.genome.jp/dbget-bin/cut_sequence_genes.pl?FROM="
+                url = url + str(self.geneDict[self.comboBoxGene.currentText()][1])
+                url = url + "&TO="
+                url = url + str(self.geneDict[self.comboBoxGene.currentText()][2])
+                url = url + "&VECTOR=1&ORG="
+                url = url + GlobalSettings.mainWindow.Annotations_Organism.currentText().split(" ")[1]
+            # build it a different way if the chrom is not -1
+            else:
+                url = "https://www.genome.jp/dbget-bin/cut_sequence_genes.pl?FROM="
+                url = url + str(self.geneDict[self.comboBoxGene.currentText()][1])
+                url = url + "&TO="
+                url = url + str(self.geneDict[self.comboBoxGene.currentText()][2])
+                url = url + "&VECTOR=1&ORG="
+                url = url + GlobalSettings.mainWindow.Annotations_Organism.currentText().split(" ")[1]
+                url = url + '&CHR=' + tempTuple[3]
+
 
             # soup time
             source = requests.get(url)
@@ -185,10 +198,12 @@ class Results(QtWidgets.QMainWindow):
                 print("indexing error")
         # if the user is using gbff
         elif GlobalSettings.mainWindow.gene_viewer_settings.file_type == "gbff":
+            self.geneDict[self.comboBoxGene.currentText()] = tempTuple
             sequence = GlobalSettings.mainWindow.gene_viewer_settings.gbff_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
             self.geneNTDict[self.comboBoxGene.currentText()] = sequence
         # if the user is using fna
         elif GlobalSettings.mainWindow.gene_viewer_settings.file_type == "fna":
+            self.geneDict[self.comboBoxGene.currentText()] = tempTuple
             sequence = GlobalSettings.mainWindow.gene_viewer_settings.fna_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
             self.geneNTDict[self.comboBoxGene.currentText()] = sequence
 
@@ -564,7 +579,7 @@ class Results(QtWidgets.QMainWindow):
                 if int(item[i][3]) > int(self.minScoreLine.text()):
                     # Removing all non 5' G sequences:
                     if self.fivegseqCheckBox.isChecked():
-                        if item[1].startswith("G"):
+                        if item[i][1].startswith("G"):
                             subset_display.add(item[i])
                     else:
                         subset_display.add(item[i])

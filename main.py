@@ -775,7 +775,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 nt_sequence = k.get_nt_sequence(organism+":"+name)
 
                 #print(item[0])
-                holder = (gene_info[0],gene_info[2],gene_info[3])
+                holder = (gene_info[0],gene_info[2],gene_info[3],gene_info[4])
                 self.checked_info[item[0]]=holder
                 self.check_ntseq_info[item[0]] = nt_sequence
 
