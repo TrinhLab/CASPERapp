@@ -912,7 +912,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.Annotations_Organism.clear()
                 k = KEGG()
 
-                #print("Searching Kegg for: ", self.Search_Input.text())
+                print("Searching Kegg for: ", self.Search_Input.text())
 
                 #search the kegg database. If the orignal search input returns nothing, split it up on spaces and search each individual term
                 All_org = k.lookfor_organism(self.Search_Input.text())
@@ -925,15 +925,16 @@ class CMainWindow(QtWidgets.QMainWindow):
                 if(len(self.Annotations_Organism) <= 0):
                     stringList = self.Search_Input.text().split(" ")
                     for i in range(len(stringList)):
-                 #       print("Searching Kegg for: ", stringList[i])
-                        All_org = k.lookfor_organism(stringList[i])
+                        print("Searching Kegg for: ", stringList[i])
+                        if stringList[i] != "":
+                            All_org = k.lookfor_organism(stringList[i])
 
-                        for item in All_org:
-                            hold = self.organism_finder(item)
-                            #make sure that there are no repeats
-                            if(self.Annotations_Organism.findText(hold) == -1):
-                                self.Annotations_Organism.addItem(hold)
-                                self.TNumbers[hold] = item[:6]
+                            for item in All_org:
+                                hold = self.organism_finder(item)
+                                #make sure that there are no repeats
+                                if(self.Annotations_Organism.findText(hold) == -1):
+                                    self.Annotations_Organism.addItem(hold)
+                                    self.TNumbers[hold] = item[:6]
 
                 #print("Done searching.\n")
                 if(len(self.Annotations_Organism) <= 0):
