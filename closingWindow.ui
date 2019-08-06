@@ -50,6 +50,12 @@
    <property name="autoScroll">
     <bool>true</bool>
    </property>
+   <property name="verticalScrollMode">
+    <enum>QAbstractItemView::ScrollPerPixel</enum>
+   </property>
+   <property name="horizontalScrollMode">
+    <enum>QAbstractItemView::ScrollPerPixel</enum>
+   </property>
    <attribute name="verticalHeaderShowSortIndicator" stdset="0">
     <bool>true</bool>
    </attribute>

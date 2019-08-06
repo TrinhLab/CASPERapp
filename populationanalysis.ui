@@ -124,6 +124,12 @@
       <height>371</height>
      </rect>
     </property>
+    <property name="verticalScrollMode">
+     <enum>QAbstractItemView::ScrollPerPixel</enum>
+    </property>
+    <property name="horizontalScrollMode">
+     <enum>QAbstractItemView::ScrollPerPixel</enum>
+    </property>
    </widget>
    <widget class="QTableWidget" name="org_Table">
     <property name="geometry">
@@ -224,6 +230,9 @@
       <height>261</height>
      </rect>
     </property>
+    <property name="horizontalScrollMode">
+     <enum>QAbstractItemView::ScrollPerPixel</enum>
+    </property>
    </widget>
    <widget class="QPushButton" name="clear_Button">
     <property name="geometry">
@@ -245,7 +254,7 @@
      <x>0</x>
      <y>0</y>
      <width>1221</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
