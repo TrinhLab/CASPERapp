@@ -29,9 +29,10 @@ class Kegg:
             sense = False
             cstop = newstr.find('(')
         if newstr.find('join') != -1:
-            cstop = newstr.find('(')
+            joinFind = newstr.find('join')
+            cstop = newstr.find('(', joinFind)
             srt = cstop + 1
-            bothpos = newstr[srt:len(newstr)-1].split(",")
+            bothpos = newstr[srt:len(newstr)-2].split(",")
             totpos = []
             for i in range(0, len(bothpos)):
                 spc = bothpos[i].find('..')
@@ -122,7 +123,13 @@ class Kegg:
 
         # remove kegg's extra spaces and return the string
         newstr = newstr.replace(" ", "")
-        return newstr.upper()
+
+        newstr = newstr.upper()
+
+        if 'complement' in d['POSITION']:
+            newstr = self.revcom(newstr)
+
+        return newstr
 
 class SeqFromCSPR:
 
