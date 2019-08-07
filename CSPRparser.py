@@ -155,25 +155,21 @@ class CSPRparser:
 #    this function is very similar to what make_graphs in Multitargeting.py was doing before
 ########################################################################################################
     def read_repeats(self, endoChoice):
-        #get all of the data and split it
-        file_info = self.get_whole_file()
-        split_info = file_info.split('\n')
-
         index = 0
 
         seedLength = int(self.seqTrans.endo_info[endoChoice][1])
 
-        #skip first part of the file until it reaches the repeats part
-        while True:
-            if(split_info[index] == "REPEATS"):
-                index = index + 1
-                break
-            else:
-                index = index + 1
-
         #clear what is already in there
         self.repeats.clear()
         self.seeds.clear()
+
+        # only read the repeats section of the file
+        fileStream = open(self.fileName, 'r')
+        buf = fileStream.readline()
+        while buf != "REPEATS\n":
+            buf = fileStream.readline()
+        split_info = fileStream.read().split('\n')
+        fileStream.close()
 
         #parse the info now and store it in the correct dictionaries
         while(index + 1 < len(split_info)):
@@ -215,44 +211,30 @@ class CSPRparser:
     def popParser(self, file_list, endoChoice):
         self.popData.clear()
 
-        # get the right seed length
-        seedLength = int(self.seqTrans.endo_info[endoChoice][1])
-
         # for each file given
         for count in range(len(file_list)):
 
+            # open the file and get the orgName
             fileStream = open(file_list[count], 'r')
             buf = fileStream.readline()
-
             colonIndex = buf.find(':')
             orgName = buf[colonIndex + 2:]
             orgName = orgName.replace('\n', '')
             print(orgName)
 
+            # now skip until the repeats section
             while buf != 'REPEATS\n':
                 buf = fileStream.readline()
 
+            # read the whole repeats section
             split_info = fileStream.read().split('\n')
             fileStream.close()
 
-
-
-            """
-            fileStream = open(file_list[count], 'r')
-            fileData = fileStream.read()
-            fileStream.close()
-
-            split_info = fileData.split('\n')
-
-            colonIndex = split_info[0].find(':')
-            orgName = split_info[0][colonIndex + 2:]
-
-            index = split_info.index('REPEATS') + 1
-            """
             index = 0
             while (index + 1 < len(split_info)):
                 # get the seed and repeat line
-                seed = self.seqTrans.decompress64(split_info[index], slength=seedLength)
+                #seed = self.seqTrans.decompress64(split_info[index], slength=seedLength)
+                seed = split_info[index]
                 repeat = split_info[index + 1].split("\t")
 
                 # if the seed is not in the dict, put it in there
@@ -270,12 +252,13 @@ class CSPRparser:
                         # from read_repeats
                         sequence = item.split(',')
                         temp = sequence[1:4]
-                        temp.append(str(self.seqTrans.decompress64(seed, toseq=True ,slength=int(seedLength))))
-                        string = ",".join(temp)
-                        tempTuple = self.seqTrans.decompress_csf_tuple(string, bool=True, endo=endoChoice)
+                        #temp.append(str(self.seqTrans.decompress64(seed, toseq=True ,slength=int(seedLength))))
+                        #string = ",".join(temp)
+                        #tempTuple = self.seqTrans.decompress_csf_tuple(string, bool=True, endo=endoChoice)
 
                         # store what we need
-                        storeTuple = (orgName, chrom,  tempTuple[0], tempTuple[1], tempTuple[2], tempTuple[3], tempTuple[4], tempTuple[5],)
+                        #storeTuple = (orgName, chrom,  tempTuple[0], tempTuple[1], tempTuple[2], tempTuple[3], tempTuple[4], tempTuple[5],)
+                        storeTuple = (orgName, chrom, temp)
 
                         # append it
                         self.popData[seed].append(storeTuple)
@@ -410,6 +393,7 @@ class CSPRparser:
 
 
 # this is testing code. show's how popParser function works
+
 """
 if __name__ == '__main__':
     files = ['C:/Users/Josh/Desktop/Work/Testing/crisper_files/New_CSPR_files/sce_spCas9.cspr', 'C:/Users/Josh/Desktop/Work/Testing/crisper_files/New_CSPR_files/pde_spCas9.cspr']
@@ -418,13 +402,28 @@ if __name__ == '__main__':
 
     parser.popParser(files, 'spCas9')
 
-    outFile = open('testStore.txt', 'w')
+    outFile = open('testStore2.txt', 'w')
+
+    seedLength = int(parser.seqTrans.endo_info['spCas9'][1])
 
     for item in parser.popData:
-        outFile.write(str(item) + '\n')
+        seed = parser.seqTrans.decompress64(item, slength=seedLength)
+        outFile.write(str(seed) + '\n')
         for i in range(len(parser.popData[item])):
             outFile.write('\t')
 
+            #outFile.write(' ' + str(parser.popData[item][i][0]))
+            #outFile.write(' ' + str(parser.popData[item][i][1]))
+
+            #temp = parser.popData[item][i][2]
+            #temp.append(str(parser.seqTrans.decompress64(seed, toseq=True, slength=seedLength)))
+            #string = ",".join(temp)
+            #tempTuple = parser.seqTrans.decompress_csf_tuple(string, bool=True, endo='spCas9')
+
+            #for j in range(len(tempTuple)):
+             #   outFile.write(' ' + str(tempTuple[j]))
+
+            # DO NOT USE
             for j in range(len(parser.popData[item][i])):
                 outFile.write(' ' + str(parser.popData[item][i][j]))
 
