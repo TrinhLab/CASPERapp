@@ -566,7 +566,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     file_names = os.listdir(GlobalSettings.CSPR_DB)
                     for file in file_names:
                         if ".gz" in file:
-                            print("Deleting: ", file)
+                            #print("Deleting: ", file)
                             os.remove(file)
 
                     # now run results
@@ -775,7 +775,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 nt_sequence = k.get_nt_sequence(organism+":"+name)
 
                 #print(item[0])
-                holder = (gene_info[0],gene_info[2],gene_info[3])
+                holder = (gene_info[0],gene_info[2],gene_info[3],gene_info[4])
                 self.checked_info[item[0]]=holder
                 self.check_ntseq_info[item[0]] = nt_sequence
 
@@ -819,7 +819,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         else:
             s = False
         current = self.selected_annotation()
-        print(current)
+        #print(current)
         if current == "Own":
             self.Search_Button.setText("Browse")
             self.Search_Button.setEnabled(s)
@@ -926,16 +926,17 @@ class CMainWindow(QtWidgets.QMainWindow):
                     stringList = self.Search_Input.text().split(" ")
                     for i in range(len(stringList)):
                         print("Searching Kegg for: ", stringList[i])
-                        All_org = k.lookfor_organism(stringList[i])
+                        if stringList[i] != "":
+                            All_org = k.lookfor_organism(stringList[i])
 
-                        for item in All_org:
-                            hold = self.organism_finder(item)
-                            #make sure that there are no repeats
-                            if(self.Annotations_Organism.findText(hold) == -1):
-                                self.Annotations_Organism.addItem(hold)
-                                self.TNumbers[hold] = item[:6]
+                            for item in All_org:
+                                hold = self.organism_finder(item)
+                                #make sure that there are no repeats
+                                if(self.Annotations_Organism.findText(hold) == -1):
+                                    self.Annotations_Organism.addItem(hold)
+                                    self.TNumbers[hold] = item[:6]
 
-                print("Done searching.\n")
+                #print("Done searching.\n")
                 if(len(self.Annotations_Organism) <= 0):
                     QtWidgets.QMessageBox.question(self, "Error",
                                                   "No matches found with that search parameter",
@@ -988,7 +989,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             # add each item found into the dropdown menu
             for item in self.organismDict:
                 self.Annotations_Organism.addItem(item)
-            print("Done searching NCBI")
+           # print("Done searching NCBI")
 
 
 
@@ -1041,7 +1042,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         choice = QtWidgets.QMessageBox.question(self, "Extract!", "Are you sure you want to Quit?",
                                             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
-            print(self.orgChoice.currentText())
+            #print(self.orgChoice.currentText())
             sys.exit()
         else:
             pass
@@ -1207,12 +1208,12 @@ class StartupWindow(QtWidgets.QDialog):
         cdir = self.lineEdit.text()
         self.gdirectory = mydir
         GlobalSettings.CSPR_DB = cdir
-        print(mydir)
-        print(cdir)
+        #print(mydir)
+        #print(cdir)
 
     def errormsgmulti(self):
             self.gdirectory = str(self.lineEdit.text())
-            print(self.gdirectory)
+            #print(self.gdirectory)
             if "Please select a directory that contains .cspr files" in self.gdirectory:
                 QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory",
                                                QtWidgets.QMessageBox.Ok)
@@ -1277,7 +1278,7 @@ class StartupWindow(QtWidgets.QDialog):
     def show_window(self):
 
         self.gdirectory = str(self.lineEdit.text())
-        print(self.gdirectory)
+        #print(self.gdirectory)
         if "Please select a directory that contains .capr files" in self.gdirectory:
             QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory",
                                                                                       QtWidgets.QMessageBox.Ok)

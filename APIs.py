@@ -16,8 +16,10 @@ class Kegg:
         res = self.k.get(gene_id)
         d = self.k.parse(res)
         newstr = d['POSITION']
+        # make sure to store the chromosome that's given by KEGG too
         cstop = newstr.find(':')
         if cstop == -1:
+            chrom = -1
             chromosome = 1
         else:
             chrom = newstr[0:cstop]
@@ -27,9 +29,10 @@ class Kegg:
             sense = False
             cstop = newstr.find('(')
         if newstr.find('join') != -1:
-            cstop = newstr.find('(')
+            joinFind = newstr.find('join')
+            cstop = newstr.find('(', joinFind)
             srt = cstop + 1
-            bothpos = newstr[srt:len(newstr)-1].split(",")
+            bothpos = newstr[srt:len(newstr)-2].split(",")
             totpos = []
             for i in range(0, len(bothpos)):
                 spc = bothpos[i].find('..')
@@ -46,7 +49,7 @@ class Kegg:
                 endloc = newstr[spc+2:len(newstr)-1]
             else:
                 endloc = newstr[spc+2:len(newstr)]
-        totloc = (chromosome, sense, int(startloc), int(endloc))
+        totloc = (chromosome, sense, int(startloc), int(endloc), chrom)
         return totloc
 
     def translate_chromosome(self, chr):                                                        #Translate Chromosome - recives chromosome as letter or roman numeral and returns it as a number
@@ -120,7 +123,13 @@ class Kegg:
 
         # remove kegg's extra spaces and return the string
         newstr = newstr.replace(" ", "")
-        return newstr.upper()
+
+        newstr = newstr.upper()
+
+        if 'complement' in d['POSITION']:
+            newstr = self.revcom(newstr)
+
+        return newstr
 
 class SeqFromCSPR:
 

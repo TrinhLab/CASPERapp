@@ -207,7 +207,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         if self.ready_chromo_make_graph==False:
             return
         dic_info = {}
-        seqLength = int(self.sq.endo_info[self.endo_drop.currentText()][2])
+        seqLength = int(self.sq.endo_info[self.endo_drop.currentText()][1])
         for seed in self.parser.seeds:
             temp = self.sq.compress(seed,64)
             self.seed_id_seq_pair[str(self.sq.decompress64(temp, slength=seqLength, toseq=True))] = seed
@@ -468,7 +468,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.ready_chromo_make_graph = False
         self.chromo_seed.clear()
         any = False
-        seqLength = int(self.sq.endo_info[self.endo_drop.currentText()][2])
+        seqLength = int(self.sq.endo_info[self.endo_drop.currentText()][1])
         for seed in self.parser.repeats:
             if self.parser.repeats[seed] >= int(self.min_chromo.currentText()) and self.parser.repeats[seed]<=int(self.max_chromo.currentText()):
                 any = True

@@ -9,6 +9,7 @@ import GlobalSettings
 import multitargeting
 import populationAnalysis
 from functools import partial
+from Algorithms import SeqTranslate
 
 def iter_except(function, exception):
     """Works like builtin 2-argument `iter()`, but stops on `exception`."""
@@ -216,7 +217,7 @@ class NCBI_Search_File(QtWidgets.QDialog):
         file_names = os.listdir(GlobalSettings.CSPR_DB)
         for file in file_names:
             if ".gz" in file:
-                print("Deleting: ", file)
+                #print("Deleting: ", file)
                 os.remove(file)
 
         self.hide()
@@ -258,6 +259,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.process = QtCore.QProcess()
         self.process.setProcessChannelMode(QtCore.QProcess.MergedChannels)
         self.process.finished.connect(self.upon_process_finishing)
+        self.seqTrans = SeqTranslate()
 
 
 
@@ -372,6 +374,12 @@ class NewGenome(QtWidgets.QMainWindow):
         self.comboBoxEndo.addItems(self.Endos.keys())
 
     def endo_settings(self):
+        # check the if it's 3' or 5', and check the box accordingly
+        if int(self.seqTrans.endo_info[self.Endos[self.comboBoxEndo.currentText()][0]][3]) == 3:
+            self.pamBox.setChecked(0)
+        elif int(self.seqTrans.endo_info[self.Endos[self.comboBoxEndo.currentText()][0]][3]) == 5:
+            self.pamBox.setChecked(1)
+
         self.tot_len_box.setText(self.Endos[self.comboBoxEndo.currentText()][3])
         self.seed_len_box.setText(self.Endos[self.comboBoxEndo.currentText()][2])
 
@@ -660,6 +668,6 @@ class CasperJob:
         ret_array.append(self.sequence_length)
         ret_array.append(self.seed_length)
         ret_array.append(self.substrain)
-        print(ret_array)
+        #print(ret_array)
 
         return ret_array

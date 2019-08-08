@@ -113,14 +113,18 @@ class SeqTranslate:
             sequence = seq[0]
             pam = seq[1]
             dira = "-"
-        seqlength = int(self.endo_info[endo][2])  # gets the total sequence length
+        if bool:
+            seqlength = int(self.endo_info[endo][2]) - int(
+                self.endo_info[endo][1])  # gets the tail sequence length for processing repeats
+        else:
+            seqlength = int(self.endo_info[endo][2])  # gets the total sequence length
         pamlength = len(self.endo_info[endo][0].split(",")[0])  # gets the length of the primary PAM
         #print(seqlength,pamlength)
         sequence = self.decompress64(sequence, seqlength, True)
         pam = self.decompress64(pam, pamlength, True)
         # The for loops fixes the problem of A's not being added to the end because they are removed on compression
         if(bool == True):
-            sequence = front_seq + sequence
+            sequence = sequence + front_seq
         return int(loc), str(sequence), pam, int(scr), dira, endo
 
     def endo_import(self):

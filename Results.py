@@ -130,7 +130,7 @@ class Results(QtWidgets.QMainWindow):
 
         # make sure that the difference between indicies is not too large
         if abs(tempTuple[1] - tempTuple[2]) > 50000:
-            print(abs(tempTuple[1] - tempTuple[2]))
+            #print(abs(tempTuple[1] - tempTuple[2]))
             QtWidgets.QMessageBox.question(self, "Sequence Too Long",
                                            "The sequence is too long! "
                                            "Please choose indicies that will make the sequence less than 50,000!",
@@ -139,17 +139,30 @@ class Results(QtWidgets.QMainWindow):
             self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
             return
 
-        self.geneDict[self.comboBoxGene.currentText()] = tempTuple
 
         # if the user is using kegg
         if GlobalSettings.mainWindow.gene_viewer_settings.file_type == "kegg":
+            tempTuple = (self.geneDict[self.comboBoxGene.currentText()][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()), self.geneDict[self.comboBoxGene.currentText()][3])
+            self.geneDict[self.comboBoxGene.currentText()] = tempTuple
             # build the URL string
-            url = "https://www.genome.jp/dbget-bin/cut_sequence_genes.pl?FROM="
-            url = url + str(self.geneDict[self.comboBoxGene.currentText()][1])
-            url = url + "&TO="
-            url = url + str(self.geneDict[self.comboBoxGene.currentText()][2])
-            url = url + "&VECTOR=1&ORG="
-            url = url + GlobalSettings.mainWindow.Annotations_Organism.currentText().split(" ")[1]
+            # build the URL one way if the chrom from KEGG is -1
+            if tempTuple[3] == -1:
+                url = "https://www.genome.jp/dbget-bin/cut_sequence_genes.pl?FROM="
+                url = url + str(self.geneDict[self.comboBoxGene.currentText()][1])
+                url = url + "&TO="
+                url = url + str(self.geneDict[self.comboBoxGene.currentText()][2])
+                url = url + "&VECTOR=1&ORG="
+                url = url + GlobalSettings.mainWindow.Annotations_Organism.currentText().split(" ")[1]
+            # build it a different way if the chrom is not -1
+            else:
+                url = "https://www.genome.jp/dbget-bin/cut_sequence_genes.pl?FROM="
+                url = url + str(self.geneDict[self.comboBoxGene.currentText()][1])
+                url = url + "&TO="
+                url = url + str(self.geneDict[self.comboBoxGene.currentText()][2])
+                url = url + "&VECTOR=1&ORG="
+                url = url + GlobalSettings.mainWindow.Annotations_Organism.currentText().split(" ")[1]
+                url = url + '&CHR=' + tempTuple[3]
+
 
             # soup time
             source = requests.get(url)
@@ -185,10 +198,12 @@ class Results(QtWidgets.QMainWindow):
                 print("indexing error")
         # if the user is using gbff
         elif GlobalSettings.mainWindow.gene_viewer_settings.file_type == "gbff":
+            self.geneDict[self.comboBoxGene.currentText()] = tempTuple
             sequence = GlobalSettings.mainWindow.gene_viewer_settings.gbff_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
             self.geneNTDict[self.comboBoxGene.currentText()] = sequence
         # if the user is using fna
         elif GlobalSettings.mainWindow.gene_viewer_settings.file_type == "fna":
+            self.geneDict[self.comboBoxGene.currentText()] = tempTuple
             sequence = GlobalSettings.mainWindow.gene_viewer_settings.fna_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
             self.geneNTDict[self.comboBoxGene.currentText()] = sequence
 
@@ -564,7 +579,7 @@ class Results(QtWidgets.QMainWindow):
                 if int(item[i][3]) > int(self.minScoreLine.text()):
                     # Removing all non 5' G sequences:
                     if self.fivegseqCheckBox.isChecked():
-                        if item[1].startswith("G"):
+                        if item[i][1].startswith("G"):
                             subset_display.add(item[i])
                     else:
                         subset_display.add(item[i])
@@ -799,9 +814,10 @@ class Results(QtWidgets.QMainWindow):
                     details.setText("Details")
                     details.clicked.connect(self.show_details)
                     self.targetTable.setCellWidget(row, 7, details)
-            self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
+            if(details_bool == True):
+                self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
 
-
+            #print(self.detail_output_list)
             self.targetTable.resizeColumnsToContents()
             out_file.close()
 
@@ -1005,7 +1021,7 @@ class geneViewerSettings(QtWidgets.QDialog):
     # It will go based on the lengths stored in the comboGeneBox dictionary
     def submitFunction(self):
         if not self.kegg_radio_button.isChecked() and (self.file_name_edit.displayText() == "" or self.file_name_edit.displayText() == "Please choose a file!"):
-            print("No file chosen")
+            #print("No file chosen")
             return
 
         sequence = ""
@@ -1081,7 +1097,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         # take out the endlines and uppercase the string
         pre_sequence = pre_sequence.replace("\n", "")
         pre_sequence = pre_sequence.upper()
-        print("Length of the pre-sequence: ", len(pre_sequence))
+        #print("Length of the pre-sequence: ", len(pre_sequence))
 
         # we are having an issue here. Sometimes the length of the pre_sequence string is not large enough
         # need to talk to brian to see what could be causing that
@@ -1118,7 +1134,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         # uppercase that chromesome, and change all endlines with spaces
         sequence = sequence.upper()
         sequence = sequence.replace("\n", "")
-        print("Length of the pre-sequence: ", len(sequence))
+        #print("Length of the pre-sequence: ", len(sequence))
         # now set the return sequence to the substring that we want
         NTSequence = sequence[location_data[1]:location_data[2]]
 

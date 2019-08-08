@@ -67,6 +67,12 @@
    <property name="toolTip">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;These are the list of endonucleases available for this organism. &lt;/p&gt;&lt;p&gt;Select which endonucleases you want shown at the same time.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
+   <property name="verticalScrollMode">
+    <enum>QAbstractItemView::ScrollPerPixel</enum>
+   </property>
+   <property name="horizontalScrollMode">
+    <enum>QAbstractItemView::ScrollPerPixel</enum>
+   </property>
   </widget>
   <widget class="QPushButton" name="submit_button">
    <property name="geometry">

@@ -63,6 +63,7 @@ class genLibrary(QtWidgets.QDialog):
         self.anno_data = annotation_data
         self.kegg_nonKegg = anno_type
         self.parser.fileName = self.cspr_file
+        self.process = QtCore.QProcess()
 
 
 
@@ -101,11 +102,12 @@ class genLibrary(QtWidgets.QDialog):
 
     # this is here in case the user clicks 'x' instead of cancel. Just calls the cancel function
     def closeEvent(self, event):
-        if self.off_target_running:
+        closeWindow = self.cancel_function()
+
+        # if the user is doing OT and does not decide to cancel it ignore the event
+        if closeWindow == -2:
             event.ignore()
-            return
         else:
-            self.cancel_function()
             event.accept()
 
 
@@ -153,18 +155,18 @@ class genLibrary(QtWidgets.QDialog):
         self.perc = False
         self.bool_temp = False
         self.running = False
-        process = QtCore.QProcess()
 
         # when finished, parse the off file, and then generate the lib
         def finished():
-            print('in finished')
-            self.progressBar.setValue(100)
-            self.parse_off_file()
-            self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
-            self.off_target_running = False
+            if self.off_target_running:
+                self.progressBar.setValue(100)
+                self.parse_off_file()
+                self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
+                self.off_target_running = False
+                self.process.kill()
+                self.cancel_function()
             os.remove(GlobalSettings.CSPR_DB + '/off_compressed.txt')
             os.remove(GlobalSettings.CSPR_DB + '/temp_off.txt')
-            self.cancel_function()
 
         # as off-targeting outputs things, update the off-target progress bar
         def progUpdate(p):
@@ -206,10 +208,10 @@ class genLibrary(QtWidgets.QDialog):
         cmd = exe_path + data_path + compressed + cspr_path + output_path + CASPER_info_path + str(
             num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
 
-        process.readyReadStandardOutput.connect(partial(progUpdate, process))
+        self.process.readyReadStandardOutput.connect(partial(progUpdate, self.process))
         self.progressBar.setValue(0)
-        QtCore.QTimer.singleShot(100, partial(process.start, cmd))
-        process.finished.connect(finished)
+        QtCore.QTimer.singleShot(100, partial(self.process.start, cmd))
+        self.process.finished.connect(finished)
 
     # submit function
     # this function takes all of the input from the window, and calls the generate function
@@ -298,7 +300,18 @@ class genLibrary(QtWidgets.QDialog):
     # clears everything and hides the window
     def cancel_function(self):
         if self.off_target_running:
-            return
+            error = QtWidgets.QMessageBox.question(self, "Off-Targeting is running",
+                                            "Off-Targetting is running. Closing this window will cancel that process, and return to the main window. .\n\n"
+                                            "Do you wish to continue?",
+                                            QtWidgets.QMessageBox.Yes |
+                                            QtWidgets.QMessageBox.No,
+                                            QtWidgets.QMessageBox.No)
+            if (error == QtWidgets.QMessageBox.No):
+                    return -2
+            else:
+                self.off_target_running = False
+                self.process.kill()
+
         self.cspr_file = ''
         self.anno_data = dict()
         self.kegg_nonKegg = ''
@@ -486,11 +499,13 @@ class genLibrary(QtWidgets.QDialog):
             i = 0
             for target in self.Output[essential]:
                 # check to see if the target did not match the user's parameters and they selected 'modify'
+                # if the target has an error, put 2 asterisks in front of the target sequence
                 if '*' in target[4]:
                     tag_id = "**" + essential + "-" + str(i + 1)
                 else:
                     tag_id = essential + "-" + str(i + 1)
                 i += 1
+                # if the user did OT, write the OT score, if not, don't right it
                 if self.find_off_Checkbox.isChecked():
                     f.write(tag_id + ',' + target[1] + ',' + target[5] + '\n')
                 else:
