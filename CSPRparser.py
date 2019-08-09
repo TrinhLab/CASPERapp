@@ -231,15 +231,15 @@ class CSPRparser:
             fileStream.close()
 
             index = 0
+            seedLength = self.seqTrans.endo_info[endoChoice][1]
             while (index + 1 < len(split_info)):
                 # get the seed and repeat line
-                #seed = self.seqTrans.decompress64(split_info[index], slength=seedLength)
-                seed = split_info[index]
+                seed_d = self.seqTrans.decompress64(split_info[index], slength=int(seedLength), toseq=True)
                 repeat = split_info[index + 1].split("\t")
 
                 # if the seed is not in the dict, put it in there
-                if seed not in self.popData:
-                    self.popData[seed] = list()
+                if seed_d not in self.popData:
+                    self.popData[seed_d] = list()
 
 
                 # go through and append each line
@@ -248,20 +248,19 @@ class CSPRparser:
                         # get the chromosome number
                         commaIndex = item.find(',')
                         chrom = item[:commaIndex]
-
                         # from read_repeats
                         sequence = item.split(',')
                         temp = sequence[1:4]
-                        #temp.append(str(self.seqTrans.decompress64(seed, toseq=True ,slength=int(seedLength))))
-                        #string = ",".join(temp)
-                        #tempTuple = self.seqTrans.decompress_csf_tuple(string, bool=True, endo=endoChoice)
+                        temp.append(str(seed_d))
+                        string = ",".join(temp)
+                        tempTuple = self.seqTrans.decompress_csf_tuple(string, bool=True, endo=endoChoice)
 
                         # store what we need
-                        #storeTuple = (orgName, chrom,  tempTuple[0], tempTuple[1], tempTuple[2], tempTuple[3], tempTuple[4], tempTuple[5],)
-                        storeTuple = (orgName, chrom, temp)
+                        storeTuple = (orgName, chrom,  tempTuple[0], tempTuple[1], tempTuple[2], tempTuple[3], tempTuple[4], tempTuple[5],)
+                        #storeTuple = (orgName, chrom, temp)
 
                         # append it
-                        self.popData[seed].append(storeTuple)
+                        self.popData[seed_d].append(storeTuple)
                 index += 2
             split_info.clear()
 

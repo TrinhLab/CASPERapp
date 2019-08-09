@@ -4,6 +4,8 @@ import os
 from CSPRparser import CSPRparser
 import Algorithms
 
+from statistics import mode
+
 class Pop_Analysis(QtWidgets.QMainWindow):
     def __init__(self):
         super(Pop_Analysis, self).__init__()
@@ -29,9 +31,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.org_Table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
 
         #top right table
-        self.table2.setColumnCount(7)
+        self.table2.setColumnCount(9)
         self.table2.setShowGrid(False)
-        self.table2.setHorizontalHeaderLabels(["Sequence","Strand","PAM", "Score","% Conserved","Total Repeats","Avg. Repeats/Organism"])
+        self.table2.setHorizontalHeaderLabels(["Seed","% Conserved","Total Repeats","Avg. Repeats/Organism", "Consensus Sequence", "% Consensus", "Strand","PAM", "Score"])
         self.table2.horizontalHeader().setSectionsClickable(True)
         self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -131,6 +133,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     def fill_data(self):
 
+        endo = str(self.endoBox.currentText())
+        endo = endo[:endo.find(" ")]
         selected_files = self.org_Table.selectedItems()
         error = False
         filenames = []
@@ -147,39 +151,72 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
 
         if(error != True):
-            #self.parser.popParser(filenames)
-            #print(self.parser.popData.keys())
+            self.parser.popParser(filenames, endoChoice=endo)
+            print(self.parser.popData)
             self.table2.setRowCount(0)
             index = 0
-            for files in selected_files:
-                self.parser.fileName = self.cspr_files[files.text()]
-                self.parser.read_chromesome()
-                for items in self.parser.chromesomeList:
-                    first = True
-                    for data in items:
-                        if first == True:
-                            first = False
-                        else:
-                            self.table2.setRowCount(index + 1)
-                            seq = QtWidgets.QTableWidgetItem(data[1])
-                            strand = QtWidgets.QTableWidgetItem(str(data[4]))
-                            PAM = QtWidgets.QTableWidgetItem(data[2])
-                            num1 = int(data[3])
-                            score = QtWidgets.QTableWidgetItem()
-                            score.setData(QtCore.Qt.EditRole, num1)
+            for seeds in self.parser.popData:
+                self.table2.setRowCount(index + 1)
 
-                            #if data[1] in self.parser.popData[files.text()]:
-                             #   print(self.parser.popData[files.text()][data[1]])
+                seed = QtWidgets.QTableWidgetItem()
+                total_repeats = QtWidgets.QTableWidgetItem()
+                total_repeats.setData(QtCore.Qt.EditRole, len(self.parser.popData[seeds]))
+                seed.setData(QtCore.Qt.EditRole, str(seeds))
+
+                self.table2.setItem(index, 0, seed)
+                self.table2.setItem(index, 2, total_repeats)
 
 
-                            self.table2.setItem(index, 0, seq)
-                            self.table2.setItem(index, 1, strand)
-                            self.table2.setItem(index, 2, PAM)
-                            self.table2.setItem(index, 3, score)
+                #loop through the tuples for each seed
+                sequences = []
+                for tuples in self.parser.popData[seeds]:
+                    sequences.append(tuples[3])
 
-                            index += 1
-                self.table2.resizeColumnsToContents()
-            self.plot_repeats_vs_seeds()
+                con_seq_temp = str(max(set(sequences), key=sequences.count))
+                consensus_seq = QtWidgets.QTableWidgetItem()
+                consensus_seq.setData(QtCore.Qt.EditRole, con_seq_temp)
+                self.table2.setItem(index, 4, consensus_seq)
+
+                consensus_percentage = sequences.count(con_seq_temp) / len(sequences) * 100
+                consensus_percentage = round(consensus_percentage, 1)
+                consensus_perc = QtWidgets.QTableWidgetItem()
+                consensus_perc.setData(QtCore.Qt.EditRole, consensus_percentage)
+                self.table2.setItem(index, 5, consensus_perc)
+
+
+                index += 1
+            self.table2.resizeColumnsToContents()
+
+
+            # for files in selected_files:
+            #     self.parser.fileName = self.cspr_files[files.text()]
+            #     self.parser.read_chromesome()
+            #     for items in self.parser.chromesomeList:
+            #         first = True
+            #         for data in items:
+            #             if first == True:
+            #                 first = False
+            #             else:
+            #                 self.table2.setRowCount(index + 1)
+            #                 seq = QtWidgets.QTableWidgetItem(data[1])
+            #                 strand = QtWidgets.QTableWidgetItem(str(data[4]))
+            #                 PAM = QtWidgets.QTableWidgetItem(data[2])
+            #                 num1 = int(data[3])
+            #                 score = QtWidgets.QTableWidgetItem()
+            #                 score.setData(QtCore.Qt.EditRole, num1)
+            #
+            #                 #if data[1] in self.parser.popData[files.text()]:
+            #                  #   print(self.parser.popData[files.text()][data[1]])
+            #
+            #
+            #                 self.table2.setItem(index, 0, seq)
+            #                 self.table2.setItem(index, 1, strand)
+            #                 self.table2.setItem(index, 2, PAM)
+            #                 self.table2.setItem(index, 3, score)
+            #
+            #                 index += 1
+            #     self.table2.resizeColumnsToContents()
+            # self.plot_repeats_vs_seeds()
         else:
             msg = QtWidgets.QMessageBox()
             msg.setWindowTitle("Error")
@@ -192,61 +229,71 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.table2.setRowCount(0)
 
     def plot_repeats_vs_seeds(self):
-        selected_files = self.org_Table.selectedItems()
-        first = True
-        cspr_filenames = []
-        plots = []
-        i = 0
-        for files in selected_files:
-            self.parser.fileName = self.cspr_files[files.text()]
-            cspr_filenames.append(files.text())
-            self.parser.read_repeats()
-            index = 0
-            data = {}
-            max = 0
-            y1 = []
-            x1 = []
-            for seed in self.parser.repeats:
-                number = self.parser.repeats[seed]
-                if number in data:
-                    data[number]+=1
-                else:
-                    data[number] =1
-
-            for number in self.order(data):
-
-                if int(data[number]) >max:
-                    max = int(data[number])
-                    self.mode = number
-
-                hold = 0
-                while hold < data[number]:
-                    if index == int(round(len(self.parser.repeats) / 2)):
-                        self.median = number
-                    x1.append(index)
-                    y1.append(number)
-                    index= index+1
-                    hold +=1
-
-            if(first == True):
-                first = False
-                #clear axes
-                self.pop_analysis_repeats_graph.canvas.axes.clear()
-                #the following are for plotting / formatting
-                self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1, label=cspr_filenames[i])
-                self.pop_analysis_repeats_graph.canvas.axes.set_xlabel('Seed Id Number')
-                self.pop_analysis_repeats_graph.canvas.axes.set_ylabel('Number of Repeats')
-                self.pop_analysis_repeats_graph.canvas.axes.set_title('Number of Repeats per Seed Id Number')
-                #always redraw at the end
-                self.pop_analysis_repeats_graph.canvas.draw()
-                i += 1
-            else:
-                self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1, label=cspr_filenames[i])
-                self.pop_analysis_repeats_graph.canvas.draw()
-                i += 1
-
-        self.pop_analysis_repeats_graph.canvas.axes.legend(loc=0)
-        self.pop_analysis_repeats_graph.canvas.draw()
+        print('graph')
+        # selected_files = self.org_Table.selectedItems()
+        # first = True
+        # cspr_filenames = []
+        # plots = []
+        # i = 0
+        # endo = str(self.endoBox.currentText())
+        # endo = endo[:endo.find(" ")]
+        # print(endo)
+        # for files in selected_files:
+        #     self.parser.fileName = self.cspr_files[files.text()]
+        #     cspr_filenames.append(files.text())
+        #     #self.parser.read_repeats(endoChoice=endo)
+        #     self.parser.popParser(endoChoice=endo)
+        #     index = 0
+        #     data = {}
+        #     max = 0
+        #     y1 = []
+        #     x1 = []
+        #
+        #     for seed in self.parser.popData:
+        #
+        #
+        #
+        #     # for seed in self.parser.repeats:
+        #     #     number = self.parser.repeats[seed]
+        #     #     if number in data:
+        #     #         data[number]+=1
+        #     #     else:
+        #     #         data[number] =1
+        #     #
+        #     # for number in self.order(data):
+        #     #
+        #     #     if int(data[number]) >max:
+        #     #         max = int(data[number])
+        #     #         self.mode = number
+        #     #
+        #     #     hold = 0
+        #     #     while hold < data[number]:
+        #     #         if index == int(round(len(self.parser.repeats) / 2)):
+        #     #             self.median = number
+        #     #         x1.append(index)
+        #     #         y1.append(number)
+        #     #         index= index+1
+        #     #         hold +=1
+        #
+        #     if(first == True):
+        #         first = False
+        #         #clear axes
+        #         self.pop_analysis_repeats_graph.canvas.axes.clear()
+        #         #the following are for plotting / formatting
+        #         self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1, label=cspr_filenames[i])
+        #         self.pop_analysis_repeats_graph.canvas.axes.set_xlabel('Seed Id Number')
+        #         self.pop_analysis_repeats_graph.canvas.axes.set_ylabel('Number of Repeats')
+        #         self.pop_analysis_repeats_graph.canvas.axes.set_title('Number of Repeats per Seed Id Number')
+        #         #always redraw at the end
+        #         self.pop_analysis_repeats_graph.canvas.draw()
+        #         i += 1
+        #     else:
+        #         self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1, label=cspr_filenames[i])
+        #         self.pop_analysis_repeats_graph.canvas.draw()
+        #         i += 1
+        #
+        # self.pop_analysis_repeats_graph.canvas.axes.legend(loc=0)
+        # self.pop_analysis_repeats_graph.canvas.draw()
 
     def order(self,data_par):
         data = dict(data_par)
