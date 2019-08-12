@@ -53,7 +53,7 @@ saCas9;NNGRRT;16;20;3;Staphylococcus aureus;II-A
 spCas9-VRER;NGCG;16;20;3;Streptococcus pyogenes engineered variant;II-A
 st1Cas9;NNAGAAW;16;24;3;Streptococcus thermophilus;II-C
 nmCas9;NNNNGATT;16;24;3;Neisseria meningitidis;II-C
-AsCpf1;TTTV;16;24;5;Acidimonaccocus;V-A
+asCas12;TTTV;16;24;5;Acidimonaccocus;V-A
 LbCpf1;TTTV,TCTN;16;24;5;Lachnospiraceae bacterium;V-A
 ------------------------------------------------------------
 ORGANISMS

@@ -195,7 +195,12 @@ class Results(QtWidgets.QMainWindow):
                 buffer = buffer.replace("\n", "")
                 self.geneNTDict[self.comboBoxGene.currentText()] = buffer
             except:
-                print("indexing error")
+                QtWidgets.QMessageBox.question(self, "Error",
+                                               'An error has occured. It is possible that KEGG does not allow for NT Sequence changes for this organism.',
+                                               QtWidgets.QMessageBox.Ok)
+                self.lineEditStart.setText(str(self.geneDict[self.comboBoxGene.currentText()][1]))
+                self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
+                return
         # if the user is using gbff
         elif GlobalSettings.mainWindow.gene_viewer_settings.file_type == "gbff":
             self.geneDict[self.comboBoxGene.currentText()] = tempTuple
@@ -653,39 +658,60 @@ class Results(QtWidgets.QMainWindow):
     def combine_coTargets(self, curgene):
         deletingDict = dict()
 
-        # figure out which ones to combine and which ones to delete
-        for i in range(len(self.AllData[curgene][0])):
-            # set the first one's data
-            locationData1 = self.AllData[curgene][0][i][0]
-            sequenceData1 = self.AllData[curgene][0][i][1]
-            pamData1 = self.AllData[curgene][0][i][2]
-            scoreData1 = self.AllData[curgene][0][i][3]
-            strandData1 = self.AllData[curgene][0][i][4]
-            endoData1 = self.AllData[curgene][0][i][5]
-            #print(self.AllData[curgene][0][i])
-            for j in range(1, len(self.AllData[curgene])):
-                for k in range(len(self.AllData[curgene][j])):
-                    # set the second's one data. Currently, all are set, but in the future it could be only location and endo will be needed
-                    locationData2 = self.AllData[curgene][j][k][0]
-                    sequenceData2 = self.AllData[curgene][j][k][1]
-                    pamData2 = self.AllData[curgene][j][k][2]
-                    scoreData2 = self.AllData[curgene][j][k][3]
-                    strandData2 = self.AllData[curgene][j][k][4]
-                    endoData2 = self.AllData[curgene][j][k][5]
+        # for each endoNuclease in the curGene block
+        for i in range(len(self.AllData[curgene])):
+            # for each target in that gene
+            for j in range(len(self.AllData[curgene][i])):
+                # get first locations endo
+                locationData1 = self.AllData[curgene][i][j][0]
+                sequenceData1 = self.AllData[curgene][i][j][1]
+                pamData1 = self.AllData[curgene][i][j][2]
+                scoreData1 = self.AllData[curgene][i][j][3]
+                strandData1 = self.AllData[curgene][i][j][4]
+                endoData1 = self.AllData[curgene][i][j][5]
 
-                    dir1 = self.S.endo_info[endoData1][3]
-                    dir2 = self.S.endo_info[endoData2][3]
+                # if a | is in the endoData one, get the first one because that's the current endoData
+                if '|' in endoData1:
+                    barIndex = endoData1.find('|')
+                    dirEndo1 = endoData1[:barIndex]
+                else:
+                    dirEndo1 = endoData1
 
-                    # if they match, combine the two. Keep the first ones data, but append the second's ones endo to the first one
-                    if locationData1 == locationData2 and endoData1 != endoData2 and endoData2 not in endoData1:
-                        if dir1 == dir2 and strandData1 == strandData2:
-                            endoData1 = endoData1 + "|" + endoData2
-                            self.AllData[curgene][0][i] = (locationData1, sequenceData1, pamData1, scoreData1, strandData1, endoData1)
-                            # update the deletion list
-                            if j not in deletingDict:
-                                deletingDict[j] = list()
+                # for each endoNuclease in the curGene block
+                for k in range(len(self.AllData[curgene])):
+                    # for each target in that gene
+                    for l in range(len(self.AllData[curgene][k])):
+                        locationData2 = self.AllData[curgene][k][l][0]
+                        sequenceData2 = self.AllData[curgene][k][l][1]
+                        pamData2 = self.AllData[curgene][k][l][2]
+                        scoreData2 = self.AllData[curgene][k][l][3]
+                        strandData2 = self.AllData[curgene][k][l][4]
+                        endoData2 = self.AllData[curgene][k][l][5]
 
-                            deletingDict[j].append(k)
+                        # if endo's are the same, or the exist in each other, continue out
+                        if endoData2 == endoData1 or endoData2 in endoData1 or endoData1 in endoData2:
+                            continue
+
+                        # skip if endoData2 has a | in it, because we are combining based on endoData1
+                        if '|' in endoData2:
+                            continue
+
+                        # get the directions
+                        dir1 = self.S.endo_info[dirEndo1][3]
+                        dir2 = self.S.endo_info[endoData2][3]
+
+                        # check if can be combined
+                        if locationData1 == locationData2 and endoData1 != endoData2 and endoData2 not in endoData1:
+                            if dir1 == dir2 and strandData1 == strandData2:
+                                # combine the endo data
+                                endoData1 = endoData1 + '|' + endoData2
+                                self.AllData[curgene][i][j] = (locationData1, sequenceData1, pamData1, scoreData1, strandData1, endoData1)
+
+                                # store which ones to delete
+                                if k not in deletingDict:
+                                    deletingDict[k] = list()
+                                deletingDict[k].append(l)
+
 
         # delete the ones that need to be deleted
         for item in deletingDict:
