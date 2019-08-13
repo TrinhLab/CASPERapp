@@ -550,6 +550,10 @@ class Results(QtWidgets.QMainWindow):
                     self.highlighted[item[i][1]] = False
         self.displayGeneData()
 
+        # if the endo choice is greater than 1, call the combine function
+        if len(self.endo) > 1:
+            self.combine_coTargets(genename)
+
 
     ###############################################################################################################
     # Main Function for updating the Table.  Connected to all filter buttons and the Gene toggling of the combobox.
@@ -569,10 +573,7 @@ class Results(QtWidgets.QMainWindow):
             self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
             self.geneViewer.setText(self.geneNTDict[self.comboBoxGene.currentText()])
 
-        # if the length of endo is greater than 1, go through and combine the ones the need combining
-        if len(self.endo) > 1:
-            self.combine_coTargets(curgene)
-        # if the cotarget button is checked, go through and only show the ones that need to be checked
+        # if this checkBox is checked, remove the single endo
         if self.cotarget_checkbox.isChecked():
             self.remove_single_endo(curgene)
 
@@ -657,9 +658,20 @@ class Results(QtWidgets.QMainWindow):
     # parameter curgene:  the key to which part in the dictionary to look at
     def combine_coTargets(self, curgene):
         deletingDict = dict()
+        endoList = list()
+
+        #print(self.AllData[curgene])
+        # get the endo list data
+        for i in range(len(self.AllData[curgene])):
+            # if one of them is empty, just return because co-targeting is useless for that one
+            if len(self.AllData[curgene][i]) == 0:
+                return
+            endoList.append(self.AllData[curgene][i][0][5])
+
 
         # for each endoNuclease in the curGene block
         for i in range(len(self.AllData[curgene])):
+            endoData1 = endoList[i]
             # for each target in that gene
             for j in range(len(self.AllData[curgene][i])):
                 # get first locations endo
@@ -668,44 +680,39 @@ class Results(QtWidgets.QMainWindow):
                 pamData1 = self.AllData[curgene][i][j][2]
                 scoreData1 = self.AllData[curgene][i][j][3]
                 strandData1 = self.AllData[curgene][i][j][4]
-                endoData1 = self.AllData[curgene][i][j][5]
-
-                # if a | is in the endoData one, get the first one because that's the current endoData
-                if '|' in endoData1:
-                    barIndex = endoData1.find('|')
-                    dirEndo1 = endoData1[:barIndex]
-                else:
-                    dirEndo1 = endoData1
 
                 # for each endoNuclease in the curGene block
                 for k in range(len(self.AllData[curgene])):
+                    # if k == i then we are on the same endo target list, so break out because there can't be any combinations
+                    if k == i:
+                        break
+                    endoData2 = endoList[k]
                     # for each target in that gene
                     for l in range(len(self.AllData[curgene][k])):
                         locationData2 = self.AllData[curgene][k][l][0]
-                        sequenceData2 = self.AllData[curgene][k][l][1]
-                        pamData2 = self.AllData[curgene][k][l][2]
-                        scoreData2 = self.AllData[curgene][k][l][3]
                         strandData2 = self.AllData[curgene][k][l][4]
-                        endoData2 = self.AllData[curgene][k][l][5]
+                        pamData2 = self.AllData[curgene][k][l][2]
 
-                        # if endo's are the same, or the exist in each other, continue out
-                        if endoData2 == endoData1 or endoData2 in endoData1 or endoData1 in endoData2:
-                            continue
-
-                        # skip if endoData2 has a | in it, because we are combining based on endoData1
-                        if '|' in endoData2:
-                            continue
+                        # check which PAM is longer, and store the longer one. Otherwise, just store the first one
+                        if len(pamData1) > len(pamData2):
+                            storePam = pamData1
+                        elif len(pamData1) < len(pamData2):
+                            storePam = pamData2
+                        else:
+                            storePam = pamData1
 
                         # get the directions
-                        dir1 = self.S.endo_info[dirEndo1][3]
+                        dir1 = self.S.endo_info[endoData1][3]
                         dir2 = self.S.endo_info[endoData2][3]
 
                         # check if can be combined
                         if locationData1 == locationData2 and endoData1 != endoData2 and endoData2 not in endoData1:
                             if dir1 == dir2 and strandData1 == strandData2:
+                                storeEndo = self.AllData[curgene][i][j][5]
+                                if endoData2 not in storeEndo:
+                                    storeEndo = storeEndo + "|" + endoData2
                                 # combine the endo data
-                                endoData1 = endoData1 + '|' + endoData2
-                                self.AllData[curgene][i][j] = (locationData1, sequenceData1, pamData1, scoreData1, strandData1, endoData1)
+                                    self.AllData[curgene][i][j] = (locationData1, sequenceData1, storePam, scoreData1, strandData1, storeEndo)
 
                                 # store which ones to delete
                                 if k not in deletingDict:

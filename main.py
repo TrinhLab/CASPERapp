@@ -422,7 +422,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         own_cspr_parser = CSPRparser(cspr_file)
         own_cspr_parser.read_first_lines()
 
-        if len(own_cspr_parser.karystatsList) - 1 != self.annotation_parser.max_chrom:
+        if len(own_cspr_parser.karystatsList) != self.annotation_parser.max_chrom:
             QtWidgets.QMessageBox.question(self, "Warning:",
                                            "The number of chromesomes do not match. This could cause errors."
                                            , QtWidgets.QMessageBox.Ok)

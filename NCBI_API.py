@@ -48,6 +48,7 @@ class Assembly:
         self.database_url_list = list()
         self.orgName_dict = dict()
         self.gca_rectList = list()
+        self.orgIDs = list()
         myidlist = list()
 
         # get the internal ID's
@@ -64,12 +65,21 @@ class Assembly:
         for ret in myidlist:
             # this calls Entrez function
             handle = Entrez.esummary(db="assembly", id=ret)
-            # another Entrez function, but handle is a dictionary. These are keys and stuff for it. You can print it to see the dictionary
-            gca_rec = Entrez.read(handle)["DocumentSummarySet"]["DocumentSummary"][0]["AssemblyAccession"]
+            record = Entrez.read(handle)
+
+            # get the orgID which is the ID for the genbank or Refseq link. This could be different than the accession link
+            if database == 'RefSeq':
+                orgID = record['DocumentSummarySet']['DocumentSummary'][0]['Synonym']['RefSeq']
+            elif database == 'GenBank':
+                orgID = record['DocumentSummarySet']['DocumentSummary'][0]['Synonym']['Genbank']
+
+            # get the accession link and store it
+            gca_rec = record["DocumentSummarySet"]["DocumentSummary"][0]["AssemblyAccession"]
             self.gca_rectList.append(gca_rec)
+            self.orgIDs.append(orgID)
             handle.close()
             # sleep so NCBI doesn't kick us out
-            time.sleep(0.35)
+            time.sleep(0.5)
 
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(50)
         # for each GCA_ID, go through and get the refseq/genbank link, and the organism name
@@ -86,6 +96,7 @@ class Assembly:
             refseq_link = refseq_link[refseq_link.find("=") + 2: refseq_link.find(">") - 1]
             genbank_link = genbank_link[genbank_link.find("=") + 2: genbank_link.find(">") - 1]
 
+
             if self.database == "GenBank":
                 # check and see if GCF is in the the GCA_ID, if so, swap it with GCA
                 # not sure if doing this is correct or not, but this way each description actually goes to a download link
@@ -99,18 +110,21 @@ class Assembly:
             if (database == "RefSeq" and len(refseq_link) < 5):
                 error = True
                 print("Error: No RefSeq file to download!")
+                print(url)
             elif (database == "GenBank" and len(genbank_link) < 5):
                 error = True
                 print("Error: No GenBank file to download!")
+                print(url)
             elif (len(genbank_link) < 5 and len(refseq_link) < 5):
                 error = True
                 print("Error: No RefSeq or GenBank files to download")
+                print(url)
             else:
                 error = False
                 self.database_url_list.append(database_url)
             # only set the data if there actually is a link to download with
             if orgName and error == False:
-                self.orgName_dict[orgName.string + "::" + self.gca_rectList[i]] = self.gca_rectList[i]
+                self.orgName_dict[orgName.string + "::" + self.orgIDs[i]] = self.orgIDs[i]
 
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(80)
 
