@@ -3,6 +3,7 @@ import GlobalSettings
 import os
 from CSPRparser import CSPRparser
 import Algorithms
+from functools import partial
 
 from statistics import mode
 
@@ -18,6 +19,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.Endos = dict()
         self.cspr_files = {}
         self.sq=Algorithms.SeqTranslate()
+        self.ref_para_list = list()
+
+        self.process = QtCore.QProcess()
 
 
         #orgonaism table
@@ -317,3 +321,91 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         GlobalSettings.mainWindow.closeFunction()
         event.accept()
+
+    # this function takes a list of file paths, which are FNA or Fasta files, and combines them into one file
+    # this function also builds a parallel/reference list of the chromosomes
+    def build_combined_fasta(self, file_names):
+        self.ref_para_list.clear()
+
+        # open the output file (currently just a test file)
+        out_stream = open(GlobalSettings.CSPR_DB + '/temp_fnaFile.fna', 'w')
+
+        # for each file in the list
+        for file in file_names:
+            file_stream = open(file, 'r')
+
+            buf = file_stream.readline()
+            # read the whole file
+            while buf != "":
+
+                # if buf is empty, break out
+                if buf == '' or buf == '\n':
+                    break
+
+                # if buf starts with a '>', it's a chromosome so make sure to store it in the ref_para list
+                if buf.startswith('>'):
+                    self.ref_para_list.append(buf)
+                # right the buf to the new file, and re-read it
+                out_stream.write(buf)
+                buf = file_stream.readline()
+            file_stream.close()
+        out_stream.close()
+
+    # this function builds a new cspr file from the combined FNA file
+    # very similar to New Genome
+    def build_new_cspr_file(self):
+        # this function reads output. For now it's not doing much, but it could be used to populate a prgress bar
+        def output_stdout(p):
+            print(str(p.readAll()))
+        # this function will end up doing stuff when the process is finished.
+        def upon_process_finishing():
+            print('done')
+
+        #--------------getting the arugments---------------------------------
+        # get the file path to the combined fna file
+        fna_file_path = GlobalSettings.CSPR_DB + '/temp_fnaFile.fna'
+        path_to_fna = fna_file_path
+        # get the endo_choice, hard coded for now, will eventually from with the user
+        endo_choice = 'spCas9'
+        # get the pam itself, taken from the endo_choice. Also, if there's multiple, always take the first one
+        pam = self.sq.endo_info[endo_choice][0].split(',')[0]
+        # get the code. currently hard coded to test_code until I know what to put it to later one
+        code = 'test_code'
+        # check to see if the seq_finder should do 5' prime or no
+        if int(self.sq.endo_info[endo_choice][3]) == 3:
+            pamdir = False
+        else:
+            pamdir = True
+        # get the output folder location
+        output_location = GlobalSettings.CSPR_DB
+        # get the path to CASPERinfo
+        path_to_info = GlobalSettings.appdir + '/CASPERinfo'
+        # make org name something that will make more sense, this is just for testing right now
+        orgName = 'testOrganism_bsu_and_pant'
+        # get the seed and RNA length, based on the endo choice
+        gRNA_length = self.sq.endo_info[endo_choice][2]
+        seed_length = self.sq.endo_info[endo_choice][1]
+        #------------------done getting the arguments------------------------------
+
+        # get the program path
+        program = '"' + GlobalSettings.appdir + '/Casper_Seq_Finder_Windows' + '" '
+
+        # compile all of the arguments into one line
+        args =  '"' + endo_choice + '" '
+        args = args + '"' + pam + '" '
+        args = args + '"' + code + '" '
+        args = args + str(pamdir) + ' '
+        args = args + '"' + output_location + '" '
+        args = args + '"' + path_to_info + '" '
+        args = args + '"' + path_to_fna + '" '
+        args = args + '"' + orgName + '" '
+        args = args + gRNA_length + ' '
+        args = args + seed_length + ' '
+        args = args + '"' + code + '"'
+
+        # combine the program and arguments into 1
+        program = program + args
+
+        self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
+        self.process.finished.connect(upon_process_finishing)
+        self.process.start(program)
