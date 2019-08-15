@@ -15,6 +15,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.goBackButton.clicked.connect(self.go_back)
         self.analyze_button.clicked.connect(self.fill_data)
         self.clear_Button.clicked.connect(self.clear)
+        self.ncbi_search_button.clicked.connect(self.launch_ncbi_seacher)
         self.parser = CSPRparser("")
         self.Endos = dict()
         self.cspr_files = {}
@@ -55,6 +56,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         # action buttons
         self.actionMetaGenome_Parser.triggered.connect(self.launch_chrom_selector)
 
+    def launch_ncbi_seacher(self):
+        GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
+        GlobalSettings.mainWindow.ncbi_search_dialog.show()
+
     # launches the chromesome selector window
     def launch_chrom_selector(self):
         GlobalSettings.mainWindow.cspr_selector.launch(self.cspr_files)
@@ -66,9 +71,23 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     def get_data(self):
         onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
+
+        index = 0
+        for file in onlyfiles:
+            if file.find('.fna') != -1 or file.find('.fasta') != -1:
+                tabWidget = QtWidgets.QTableWidgetItem(file)
+                self.org_Table.setRowCount(index + 1)
+                self.org_Table.setItem(index, 0, tabWidget)
+                index += 1
+
+        self.org_Table.resizeColumnsToContents()
+
+        """
         orgsandendos = {}
         shortName = {}
         index = 0
+
+
         for file in onlyfiles:
             if file.find('.cspr')!=-1:
                 newname = file[0:-4]
@@ -85,11 +104,16 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     orgsandendos[species] =[endo]
                     self.cspr_files[str(species)] = file
                     index+=1
-        self.data = orgsandendos
-        self.shortHand = shortName
-        self.fillEndo()
-        self.changeEndos()
 
+        # data is a dict. Key is the organism (taken from the cspr file) key is a list of endonuclease's that the organism has or that the user has
+        self.data = orgsandendos
+        # shortHand is another dict where the key is the organism name (Taken from the cspr file). The value the short hand for that org (bsu, sce, yli)
+        self.shortHand = shortName
+        """
+        self.fillEndo()
+        #self.changeEndos()
+
+    # this function opens CASPERinfo and builds the dropdown menu of selectable endonucleases
     def fillEndo(self):
         if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
             f = open(GlobalSettings.appdir + "\\CASPERinfo")
@@ -117,8 +141,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         f.close()
         self.endoBox.addItem("None Selected")
         self.endoBox.addItems(self.Endos.keys())
-        self.endoBox.currentIndexChanged.connect(self.changeEndos)
+        #self.endoBox.currentIndexChanged.connect(self.changeEndos)
 
+    # this function displays all of the organisms of which the user has that endo in their DB
     def changeEndos(self):
         endo_box = str(self.endoBox.currentText())
         endo_box = endo_box[:endo_box.find(" ")]
@@ -135,8 +160,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 index += 1
         self.org_Table.resizeColumnsToContents()
 
+    # this function calls the popParser function and fills all the tables
     def fill_data(self):
-
         endo = str(self.endoBox.currentText())
         endo = endo[:endo.find(" ")]
         selected_files = self.org_Table.selectedItems()
@@ -406,6 +431,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         # combine the program and arguments into 1
         program = program + args
 
-        self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
+        #self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
         self.process.finished.connect(upon_process_finishing)
         self.process.start(program)

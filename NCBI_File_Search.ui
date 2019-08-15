@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>563</width>
-    <height>361</height>
+    <width>582</width>
+    <height>420</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,8 +19,8 @@
   <widget class="QPushButton" name="submitPushButton">
    <property name="geometry">
     <rect>
-     <x>310</x>
-     <y>320</y>
+     <x>360</x>
+     <y>390</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -36,7 +36,7 @@
    <property name="geometry">
     <rect>
      <x>110</x>
-     <y>320</y>
+     <y>390</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -51,8 +51,8 @@
   <widget class="QPushButton" name="searchPushButton">
    <property name="geometry">
     <rect>
-     <x>330</x>
-     <y>20</y>
+     <x>350</x>
+     <y>70</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -67,8 +67,8 @@
   <widget class="QLineEdit" name="organismLineEdit">
    <property name="geometry">
     <rect>
-     <x>50</x>
-     <y>20</y>
+     <x>90</x>
+     <y>10</y>
      <width>113</width>
      <height>20</height>
     </rect>
@@ -78,7 +78,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>80</y>
+     <y>150</y>
      <width>241</width>
      <height>231</height>
     </rect>
@@ -111,8 +111,8 @@
   <widget class="QTableWidget" name="submissionTableWidget">
    <property name="geometry">
     <rect>
-     <x>290</x>
-     <y>80</y>
+     <x>320</x>
+     <y>150</y>
      <width>251</width>
      <height>231</height>
     </rect>
@@ -127,8 +127,8 @@
   <widget class="QPushButton" name="deselectButton">
    <property name="geometry">
     <rect>
-     <x>260</x>
-     <y>270</y>
+     <x>270</x>
+     <y>300</y>
      <width>21</width>
      <height>23</height>
     </rect>
@@ -143,8 +143,8 @@
   <widget class="QPushButton" name="selectButton">
    <property name="geometry">
     <rect>
-     <x>260</x>
-     <y>120</y>
+     <x>270</x>
+     <y>190</y>
      <width>21</width>
      <height>23</height>
     </rect>
@@ -159,10 +159,10 @@
   <widget class="QLabel" name="ogranismLabel">
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>20</y>
-     <width>47</width>
-     <height>14</height>
+     <x>10</x>
+     <y>10</y>
+     <width>71</width>
+     <height>16</height>
     </rect>
    </property>
    <property name="text">
@@ -172,8 +172,8 @@
   <widget class="QProgressBar" name="searchProgressBar">
    <property name="geometry">
     <rect>
-     <x>420</x>
-     <y>20</y>
+     <x>450</x>
+     <y>70</y>
      <width>118</width>
      <height>23</height>
     </rect>
@@ -185,8 +185,8 @@
   <widget class="QLabel" name="found_matches_label">
    <property name="geometry">
     <rect>
-     <x>90</x>
-     <y>60</y>
+     <x>60</x>
+     <y>120</y>
      <width>81</width>
      <height>16</height>
     </rect>
@@ -198,8 +198,8 @@
   <widget class="QLabel" name="selected_matches_label">
    <property name="geometry">
     <rect>
-     <x>390</x>
-     <y>60</y>
+     <x>380</x>
+     <y>130</y>
      <width>91</width>
      <height>16</height>
     </rect>
@@ -211,8 +211,8 @@
   <widget class="QLabel" name="select_label">
    <property name="geometry">
     <rect>
-     <x>260</x>
-     <y>100</y>
+     <x>270</x>
+     <y>170</y>
      <width>31</width>
      <height>16</height>
     </rect>
@@ -224,8 +224,8 @@
   <widget class="QLabel" name="deselect_label">
    <property name="geometry">
     <rect>
-     <x>250</x>
-     <y>250</y>
+     <x>260</x>
+     <y>280</y>
      <width>47</width>
      <height>14</height>
     </rect>
@@ -237,8 +237,8 @@
   <widget class="QLineEdit" name="ncbi_ret_max_line_edit">
    <property name="geometry">
     <rect>
-     <x>190</x>
-     <y>20</y>
+     <x>380</x>
+     <y>10</y>
      <width>113</width>
      <height>20</height>
     </rect>
@@ -250,8 +250,8 @@
   <widget class="QLabel" name="ncbi_ret_max_label">
    <property name="geometry">
     <rect>
-     <x>200</x>
-     <y>0</y>
+     <x>220</x>
+     <y>10</y>
      <width>161</width>
      <height>16</height>
     </rect>
@@ -260,7 +260,55 @@
     <string>NCBI Return Max</string>
    </property>
   </widget>
+  <widget class="QCheckBox" name="refseq_checkbox">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>70</y>
+     <width>111</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>RefSeq</string>
+   </property>
+   <attribute name="buttonGroup">
+    <string notr="true">data_base_selection_group</string>
+   </attribute>
+  </widget>
+  <widget class="QCheckBox" name="genbank_checkbox">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>70</y>
+     <width>121</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>GenBank</string>
+   </property>
+   <attribute name="buttonGroup">
+    <string notr="true">data_base_selection_group</string>
+   </attribute>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>40</y>
+     <width>241</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Select which databse to search in</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="data_base_selection_group"/>
+ </buttongroups>
 </ui>

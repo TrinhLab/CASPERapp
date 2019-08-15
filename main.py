@@ -563,7 +563,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 if compressed_file:
                     self.progressBar.setValue(25)
                     storeFileName = self.ncbi_searcher.decompress_annotation_file(compressed_file, type_of_annotation_file)
-                    file_names = os.listdir(GlobalSettings.CSPR_DB)
+                    file_names = [f for f in os.listdir(GlobalSettings.CSPR_DB) if os.path.isfile(os.path.join(GlobalSettings.CSPR_DB, f))]
                     for file in file_names:
                         if ".gz" in file:
                             #print("Deleting: ", file)
