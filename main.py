@@ -1119,6 +1119,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def changeto_population_Analysis(self):
         os.chdir(os.getcwd())
+        GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
         GlobalSettings.pop_Analysis.show()
         GlobalSettings.mainWindow.hide()
 
@@ -1296,7 +1297,6 @@ class StartupWindow(QtWidgets.QDialog):
             GlobalSettings.mainWindow.show()
             #Tanner - still setup data for MT
             GlobalSettings.MTWin.launch(self.gdirectory)
-            GlobalSettings.pop_Analysis.launch(self.gdirectory)
             self.close()
         else:
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",

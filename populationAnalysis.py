@@ -18,11 +18,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.ncbi_search_button.clicked.connect(self.launch_ncbi_seacher)
         self.parser = CSPRparser("")
         self.Endos = dict()
+        self.fna_files = dict()
         self.cspr_files = {}
         self.sq=Algorithms.SeqTranslate()
         self.ref_para_list = list()
-
-        self.process = QtCore.QProcess()
 
 
         #orgonaism table
@@ -56,6 +55,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         # action buttons
         self.actionMetaGenome_Parser.triggered.connect(self.launch_chrom_selector)
 
+        self.combinerWindow = fna_and_cspr_combiner()
+
     def launch_ncbi_seacher(self):
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
         GlobalSettings.mainWindow.ncbi_search_dialog.show()
@@ -71,11 +72,24 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     def get_data(self):
         onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
+        self.fna_files.clear()
 
         index = 0
         for file in onlyfiles:
             if file.find('.fna') != -1 or file.find('.fasta') != -1:
-                tabWidget = QtWidgets.QTableWidgetItem(file)
+                # find the organism name
+                f = open(file, 'r')
+                hold = f.readline()
+                f.close()
+                spaceIndex = hold.find(' ') + 1
+                commaIndex = hold.find(',')
+                buf = hold[spaceIndex:commaIndex]
+
+                # store the name in the dict of fna_files, that keys the name with the file path
+                self.fna_files[buf] = file
+
+                # store the data in the table
+                tabWidget = QtWidgets.QTableWidgetItem(buf)
                 self.org_Table.setRowCount(index + 1)
                 self.org_Table.setItem(index, 0, tabWidget)
                 index += 1
@@ -162,6 +176,19 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     # this function calls the popParser function and fills all the tables
     def fill_data(self):
+        selectedList = self.org_Table.selectedItems()
+
+        # check to make sure that the user selected at least 2 organisms, and 1 endonuclease
+        if len(selectedList) < 2 or self.endoBox.currentText() == 'None Selected':
+            QtWidgets.QMessageBox.question(self, "Nothing Seleted", "No items selected. Please select at least 2 organisms, and only 1 endonuclease",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+        submitList = list()
+        for item in selectedList:
+            submitList.append(self.fna_files[item.text()])
+        self.combinerWindow.launch(submitList)
+    """
         endo = str(self.endoBox.currentText())
         endo = endo[:endo.find(" ")]
         selected_files = self.org_Table.selectedItems()
@@ -253,7 +280,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             msg.setIcon(QtWidgets.QMessageBox.Critical)
             msg.setText("<font size=4>" + "Endo does not match." + "</font>")
             msg.exec()
-
+    """
     def clear(self):
         self.table2.setRowCount(0)
 
@@ -347,16 +374,100 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.closeFunction()
         event.accept()
 
+
+###############################################################################
+# class name: fna_and_cspr_combiner
+# this opens a window for the user to select the Organism Name, FNA File Name, and the organism code.
+# It combines the FNA files, and then runs the sequencer. This way it creates 1 cspr file.
+# after the new cspr file is created, it will run the population analysis
+###############################################################################
+class fna_and_cspr_combiner(QtWidgets.QDialog):
+    def __init__(self):
+        # Qt init stuff
+        super(fna_and_cspr_combiner, self).__init__()
+        uic.loadUi("pop_analysis_fna_combiner.ui", self)
+        self.sequencer_prog_bar.setValue(0)
+
+        # button connections
+        self.cancel_button.clicked.connect(self.cancel_function)
+        self.start_button.clicked.connect(self.run_analysis)
+
+        # variables below
+        self.process = QtCore.QProcess()
+        self.ref_para_list = list()
+        self.fna_file_names = list()
+        self.sq = Algorithms.SeqTranslate()
+        self.proc_running = False
+        self.generated_files = list()
+        self.combined_fna_file = ''
+
+    # for when the user clicks the 'x' button
+    def closeEvent(self, event):
+        closeWindow = self.cancel_function()
+
+        # if the user is doing OT and does not decide to cancel it ignore the event
+        if closeWindow == -2:
+            event.ignore()
+        else:
+            event.accept()
+
+    # this is the function that will eventually run the analysis. For now, it is just running the combine/build new cspr function
+    def run_analysis(self):
+
+        # make sure the process isn't already running
+        if self.proc_running:
+            return
+
+
+        if self.orgName_line_edit.text() == '' or self.fna_fileName_lineEdit.text() == '' or self.org_code_line_edit.text() == '':
+            QtWidgets.QMessageBox.question(self, "Missing Information",
+                                           "Please input an Organism Name, FNA File Name, and an Organism Code.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+        self.combine_fna_files()
+        self.build_new_cspr_file()
+
+    # cancel function, just clears everything and closes the window
+    def cancel_function(self):
+        # check to see if the sequencer is running. If so ask the user if they wish to close out
+        if self.proc_running:
+            error = QtWidgets.QMessageBox.question(self, "Sequencer is Running",
+                                                   "Sequencer is running. Closing this window will cancel that process, and return to the Population Analysis window. .\n\n"
+                                                   "Do you wish to continue?",
+                                                   QtWidgets.QMessageBox.Yes |
+                                                   QtWidgets.QMessageBox.No,
+                                                   QtWidgets.QMessageBox.No)
+            if (error == QtWidgets.QMessageBox.No):
+                return -2
+            else:
+                self.off_target_running = False
+                self.process.kill()
+
+        # close out and leave
+        self.orgName_line_edit.setText('')
+        self.fna_fileName_lineEdit.setText('')
+        self.org_code_line_edit.setText('')
+        self.sequencer_prog_bar.setValue(0)
+        self.hide()
+
+    # open the window and get the fna files that the user wishes to use
+    def launch(self, filenames):
+        self.fna_file_names = filenames
+        self.show()
+
+
     # this function takes a list of file paths, which are FNA or Fasta files, and combines them into one file
     # this function also builds a parallel/reference list of the chromosomes
-    def build_combined_fasta(self, file_names):
+    def combine_fna_files(self):
         self.ref_para_list.clear()
 
         # open the output file (currently just a test file)
-        out_stream = open(GlobalSettings.CSPR_DB + '/temp_fnaFile.fna', 'w')
+        self.combined_fna_file = GlobalSettings.CSPR_DB + '/' + self.fna_fileName_lineEdit.text() + '.fna'
+        out_stream = open(self.combined_fna_file, 'w')
 
         # for each file in the list
-        for file in file_names:
+        for file in self.fna_file_names:
             file_stream = open(file, 'r')
 
             buf = file_stream.readline()
@@ -375,27 +486,55 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 buf = file_stream.readline()
             file_stream.close()
         out_stream.close()
+        self.generated_files.append(GlobalSettings.CSPR_DB + '/' + self.fna_fileName_lineEdit.text() + '.fna')
+
 
     # this function builds a new cspr file from the combined FNA file
     # very similar to New Genome
     def build_new_cspr_file(self):
-        # this function reads output. For now it's not doing much, but it could be used to populate a prgress bar
+        self.num_chromo_next = False
+        self.num_chromo = 0
+        # this function reads output. Just used to populate the progress bar
         def output_stdout(p):
-            print(str(p.readAll()))
+            line = str(p.readAll())
+            line = line[2:]
+            line = line[:len(line) - 1]
+            for lines in filter(None, line.split(r'\r\n')):
+                if (lines == 'Finished reading in the genome file.'):
+                    self.num_chromo_next = True
+                elif (self.num_chromo_next == True):
+                    self.num_chromo_next = False
+                    self.num_chromo = int(lines)
+                elif (lines.find('Chromosome') != -1 and lines.find('complete.') != -1):
+                    temp = lines
+                    temp = temp.replace('Chromosome ', '')
+                    temp = temp.replace(' complete.', '')
+                    if (int(temp) == self.num_chromo):
+                        self.sequencer_prog_bar.setValue(99)
+                    else:
+                        self.sequencer_prog_bar.setValue(int(temp) / self.num_chromo * 100)
+                elif (lines == 'Finished Creating File.'):
+                    self.sequencer_prog_bar.setValue(100)
         # this function will end up doing stuff when the process is finished.
         def upon_process_finishing():
-            print('done')
+            self.proc_running = False
+            self.process.kill()
+
+            # get the file name
+            cspr_file_name = GlobalSettings.CSPR_DB + '/' + self.org_code_line_edit.text() + '_' + GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0] + '.cspr'
+            self.generated_files.append(cspr_file_name)
+            print(self.generated_files)
 
         #--------------getting the arugments---------------------------------
         # get the file path to the combined fna file
-        fna_file_path = GlobalSettings.CSPR_DB + '/temp_fnaFile.fna'
+        fna_file_path = self.combined_fna_file
         path_to_fna = fna_file_path
         # get the endo_choice, hard coded for now, will eventually from with the user
-        endo_choice = 'spCas9'
+        endo_choice = GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0]
         # get the pam itself, taken from the endo_choice. Also, if there's multiple, always take the first one
         pam = self.sq.endo_info[endo_choice][0].split(',')[0]
         # get the code. currently hard coded to test_code until I know what to put it to later one
-        code = 'test_code'
+        code = self.org_code_line_edit.text()
         # check to see if the seq_finder should do 5' prime or no
         if int(self.sq.endo_info[endo_choice][3]) == 3:
             pamdir = False
@@ -406,7 +545,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         # get the path to CASPERinfo
         path_to_info = GlobalSettings.appdir + '/CASPERinfo'
         # make org name something that will make more sense, this is just for testing right now
-        orgName = 'testOrganism_bsu_and_pant'
+        orgName = self.orgName_line_edit.text()
         # get the seed and RNA length, based on the endo choice
         gRNA_length = self.sq.endo_info[endo_choice][2]
         seed_length = self.sq.endo_info[endo_choice][1]
@@ -431,6 +570,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         # combine the program and arguments into 1
         program = program + args
 
-        #self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
+        self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
         self.process.finished.connect(upon_process_finishing)
+        self.proc_running = True
         self.process.start(program)
