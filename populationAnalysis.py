@@ -393,7 +393,6 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         self.start_button.clicked.connect(self.run_analysis)
 
         # variables below
-        self.process = QtCore.QProcess()
         self.ref_para_list = list()
         self.fna_file_names = list()
         self.sq = Algorithms.SeqTranslate()
@@ -413,11 +412,9 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
 
     # this is the function that will eventually run the analysis. For now, it is just running the combine/build new cspr function
     def run_analysis(self):
-
         # make sure the process isn't already running
         if self.proc_running:
             return
-
 
         if self.orgName_line_edit.text() == '' or self.fna_fileName_lineEdit.text() == '' or self.org_code_line_edit.text() == '':
             QtWidgets.QMessageBox.question(self, "Missing Information",
@@ -454,6 +451,7 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
     # open the window and get the fna files that the user wishes to use
     def launch(self, filenames):
         self.fna_file_names = filenames
+        self.process = QtCore.QProcess()
         self.show()
 
 
@@ -486,7 +484,6 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
                 buf = file_stream.readline()
             file_stream.close()
         out_stream.close()
-        self.generated_files.append(GlobalSettings.CSPR_DB + '/' + self.fna_fileName_lineEdit.text() + '.fna')
 
 
     # this function builds a new cspr file from the combined FNA file
@@ -516,14 +513,15 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
                 elif (lines == 'Finished Creating File.'):
                     self.sequencer_prog_bar.setValue(100)
         # this function will end up doing stuff when the process is finished.
-        def upon_process_finishing():
+        def finished():
             self.proc_running = False
-            self.process.kill()
 
             # get the file name
             cspr_file_name = GlobalSettings.CSPR_DB + '/' + self.org_code_line_edit.text() + '_' + GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0] + '.cspr'
             self.generated_files.append(cspr_file_name)
-            print(self.generated_files)
+            os.remove(self.combined_fna_file)
+            self.process.kill()
+            self.cancel_function()
 
         #--------------getting the arugments---------------------------------
         # get the file path to the combined fna file
@@ -571,6 +569,6 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         program = program + args
 
         self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
-        self.process.finished.connect(upon_process_finishing)
         self.proc_running = True
         self.process.start(program)
+        self.process.finished.connect(finished)
