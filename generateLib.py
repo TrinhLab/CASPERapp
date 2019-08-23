@@ -224,9 +224,17 @@ class genLibrary(QtWidgets.QDialog):
         num_targets = int(self.numGenescomboBox.currentText())
         fiveseq = ''
 
-        # make sure to add the .txt to the file name
-        if not output_file.endswith('.txt'):
-            output_file = output_file + '.txt'
+        # error check for csv or txt files
+        if not output_file.endswith('.txt') and not self.to_csv_checkbox.isChecked():
+            if output_file.endswith('.csv'):
+                output_file = output_file.replace('.csv', '.txt')
+            else:
+                output_file = output_file + '.txt'
+        elif self.to_csv_checkbox.isChecked():
+            if output_file.endswith('.txt'):
+                output_file = output_file.replace('.txt', '.csv')
+            elif not output_file.endswith('.txt') and not output_file.endswith('.csv'):
+                output_file = output_file + '.csv'
 
         # error checking for the space value
         # if they enter nothing, default to 15 and also make sure it's actually a digit
@@ -326,12 +334,14 @@ class genLibrary(QtWidgets.QDialog):
         self.start_target_range.setText('0')
         self.end_target_range.setText('100')
         self.space_line_edit.setText('15')
+        self.to_csv_checkbox.setChecked(False)
         self.find_off_Checkbox.setChecked(False)
         self.modifyParamscheckBox.setChecked(False)
         self.maxOFF_comboBox.setText('')
         self.fiveprimeseq.setText('')
         self.off_target_running = False
         self.progressBar.setValue(0)
+        self.output_all_checkbox.setChecked(False)
 
         self.hide()
 
@@ -495,6 +505,20 @@ class genLibrary(QtWidgets.QDialog):
 
         # Now output to the file
         f = open(output_file, 'w')
+
+        # if both OT and output all are checked
+        if self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
+            f.write('Gene Name,Sequence,On-Target Score,Off-Target Score,Location,PAM,Strand\n')
+        # if only output all is checked
+        elif not self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
+            f.write('Gene Name,Sequence,On-Target Score,Location,PAM,Strand\n')
+        # if only OT is checked
+        elif self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
+            f.write('Gene Name,Sequence,Off-Target Score\n')
+        # if neither is checked
+        elif not self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
+            f.write('Gene Name,Sequence\n')
+
         for essential in self.Output:
             i = 0
             for target in self.Output[essential]:
@@ -505,10 +529,18 @@ class genLibrary(QtWidgets.QDialog):
                 else:
                     tag_id = essential + "-" + str(i + 1)
                 i += 1
-                # if the user did OT, write the OT score, if not, don't right it
-                if self.find_off_Checkbox.isChecked():
+
+                # if both OT and output all are checked
+                if self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
+                    f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[5]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')
+                # if only output all is checked
+                elif not self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
+                    f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')
+                # if only OT is checked
+                elif self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
                     f.write(tag_id + ',' + target[1] + ',' + target[5] + '\n')
-                else:
+                # if neither is checked
+                elif not self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
                     f.write(tag_id + "," + target[1] + "\n")
         f.close()
 
