@@ -16,6 +16,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.analyze_button.clicked.connect(self.fill_data)
         self.clear_Button.clicked.connect(self.clear)
         self.ncbi_search_button.clicked.connect(self.launch_ncbi_seacher)
+        self.meta_genomic_cspr_checkbox.stateChanged.connect(self.get_data)
         self.parser = CSPRparser("")
         self.Endos = dict()
         self.fna_files = dict()
@@ -70,32 +71,70 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.directory = path
         self.get_data()
 
+    # this function builds the Select Organisms table
     def get_data(self):
         onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
         self.fna_files.clear()
 
-        index = 0
-        for file in onlyfiles:
-            if file.find('.fna') != -1 or file.find('.fasta') != -1:
-                # find the organism name
-                f = open(file, 'r')
-                hold = f.readline()
-                f.close()
-                spaceIndex = hold.find(' ') + 1
-                commaIndex = hold.find(',')
-                buf = hold[spaceIndex:commaIndex]
+        # show/hide the stuff that isn't needed 
+        if self.meta_genomic_cspr_checkbox.isChecked():
+            self.endoBox.hide()
+            self.ncbi_search_button.hide()
+            self.label_3.hide()
+            self.label_2.setText('Select 1 Meta Genomic CSPR File')
+        elif not self.meta_genomic_cspr_checkbox.isChecked():
+            self.endoBox.show()
+            self.ncbi_search_button.show()
+            self.label_3.show()
+            self.label_2.setText('Select organism(s) and endonuclease:')
 
-                # store the name in the dict of fna_files, that keys the name with the file path
-                self.fna_files[buf] = file
+        # if the user wants the FNA/Fast files to be sown
+        if not self.meta_genomic_cspr_checkbox.isChecked():
+            index = 0
+            for file in onlyfiles:
+                if file.find('.fna') != -1 or file.find('.fasta') != -1:
+                    # find the organism name
+                    f = open(file, 'r')
+                    hold = f.readline()
+                    f.close()
+                    # get the organism name
+                    spaceIndex = hold.find(' ') + 1
+                    commaIndex = hold.find(',')
+                    buf = hold[spaceIndex:commaIndex]
 
-                # store the data in the table
-                tabWidget = QtWidgets.QTableWidgetItem(buf)
-                self.org_Table.setRowCount(index + 1)
-                self.org_Table.setItem(index, 0, tabWidget)
-                index += 1
+                    # store the name in the dict of fna_files, that keys the name with the file path
+                    self.fna_files[buf] = file
 
+                    # store the data in the table
+                    tabWidget = QtWidgets.QTableWidgetItem(buf)
+                    self.org_Table.setRowCount(index + 1)
+                    self.org_Table.setItem(index, 0, tabWidget)
+                    index += 1
+        # if the user wants the metagenomic cspr files to be shown
+        else:
+            index = 0
+            for file in onlyfiles:
+                if file.find('.cspr') != -1:
+                    f = open(file, 'r')
+                    hold = f.readline()
+                    f.close()
+                    # only show the files that are metagenomic
+                    if '_meta' in hold:
+                        colonIndex = hold.find(':') + 1
+                        commaIndex = hold.find(',')
+                        orgName = hold[colonIndex:commaIndex]
+
+                        self.fna_files[orgName] = file
+
+                        tabWidget = QtWidgets.QTableWidgetItem(orgName)
+                        self.org_Table.setRowCount(index + 1)
+                        self.org_Table.setItem(index, 0, tabWidget)
+                        index += 1
+            if index == 0:
+                self.org_Table.clearContents()
+                self.org_Table.setRowCount(0)
+        
         self.org_Table.resizeColumnsToContents()
-
         """
         orgsandendos = {}
         shortName = {}
@@ -178,16 +217,38 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     def fill_data(self):
         selectedList = self.org_Table.selectedItems()
 
-        # check to make sure that the user selected at least 2 organisms, and 1 endonuclease
-        if len(selectedList) < 2 or self.endoBox.currentText() == 'None Selected':
-            QtWidgets.QMessageBox.question(self, "Nothing Seleted", "No items selected. Please select at least 2 organisms, and only 1 endonuclease",
-                                           QtWidgets.QMessageBox.Ok)
-            return
+        # if the table is showing only fna/fasta files
+        if not self.meta_genomic_cspr_checkbox.isChecked():
+            # rules for selecting FNA/Fasta files
+            # check to make sure that the user selected at least 2 organisms, and 1 endonuclease
+            if len(selectedList) < 1 or self.endoBox.currentText() == 'None Selected':
+                QtWidgets.QMessageBox.question(self, "Nothing Seleted", "No items selected. Please select at least 1 organism, and only 1 endonuclease",
+                                            QtWidgets.QMessageBox.Ok)
+                return
+            if len(selectedList) == 1:
+                error = QtWidgets.QMessageBox.question(self, "Only 1 Organism Selected",
+                                                        "Population Analysis works with multiple organisms, or a meta genome. If the file selected it not a meta genome, the program may not function correctly. Do you wish to continu?.\n\n"
+                                                        "Do you wish to continue?",
+                                                        QtWidgets.QMessageBox.Yes |
+                                                        QtWidgets.QMessageBox.No,
+                                                        QtWidgets.QMessageBox.No)
+                if (error == QtWidgets.QMessageBox.No):
+                    return 
 
-        submitList = list()
-        for item in selectedList:
-            submitList.append(self.fna_files[item.text()])
-        self.combinerWindow.launch(submitList)
+            submitList = list()
+            for item in selectedList:
+                submitList.append(self.fna_files[item.text()])
+            self.combinerWindow.launch(submitList)
+        # rules for selecting cspr files
+        elif self.meta_genomic_cspr_checkbox.isChecked():
+            if len(selectedList) == 0:
+                QtWidgets.QMessageBox.question(self, "Nothing Seleted", "No items selected. Please select one meta genome for Population Analysis.",
+                                            QtWidgets.QMessageBox.Ok)
+                return
+            elif len(selectedList) > 1:
+                QtWidgets.QMessageBox.question(self, "Too many Selected", "Only 1 meta genomic CSPR file is allowed to be selected",
+                                            QtWidgets.QMessageBox.Ok)
+                return
     """
         endo = str(self.endoBox.currentText())
         endo = endo[:endo.find(" ")]
@@ -366,6 +427,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         return data2
 
     def go_back(self):
+        GlobalSettings.mainWindow.getData()
         GlobalSettings.mainWindow.show()
         self.hide()
 
@@ -416,9 +478,9 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         if self.proc_running:
             return
 
-        if self.orgName_line_edit.text() == '' or self.fna_fileName_lineEdit.text() == '' or self.org_code_line_edit.text() == '':
+        if self.orgName_line_edit.text() == '' or self.org_code_line_edit.text() == '':
             QtWidgets.QMessageBox.question(self, "Missing Information",
-                                           "Please input an Organism Name, FNA File Name, and an Organism Code.",
+                                           "Please input an Organism Name and an Organism Code.",
                                            QtWidgets.QMessageBox.Ok)
             return
 
@@ -443,7 +505,6 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
 
         # close out and leave
         self.orgName_line_edit.setText('')
-        self.fna_fileName_lineEdit.setText('')
         self.org_code_line_edit.setText('')
         self.sequencer_prog_bar.setValue(0)
         self.hide()
@@ -461,7 +522,7 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         self.ref_para_list.clear()
 
         # open the output file (currently just a test file)
-        self.combined_fna_file = GlobalSettings.CSPR_DB + '/' + self.fna_fileName_lineEdit.text() + '.fna'
+        self.combined_fna_file = GlobalSettings.CSPR_DB + '/' + 'temp.fna'
         out_stream = open(self.combined_fna_file, 'w')
 
         # for each file in the list
@@ -469,6 +530,11 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
             file_stream = open(file, 'r')
 
             buf = file_stream.readline()
+            
+            spaceIndex = buf.find(' ') + 1
+            commaIndex = buf.find(',')
+            orgName = buf[spaceIndex:commaIndex]
+
             # read the whole file
             while buf != "":
 
@@ -478,7 +544,7 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
 
                 # if buf starts with a '>', it's a chromosome so make sure to store it in the ref_para list
                 if buf.startswith('>'):
-                    self.ref_para_list.append(buf)
+                    self.ref_para_list.append((orgName, buf))
                 # right the buf to the new file, and re-read it
                 out_stream.write(buf)
                 buf = file_stream.readline()
@@ -543,10 +609,16 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         # get the path to CASPERinfo
         path_to_info = GlobalSettings.appdir + '/CASPERinfo'
         # make org name something that will make more sense, this is just for testing right now
-        orgName = self.orgName_line_edit.text()
+        orgName = self.orgName_line_edit.text() + '  ,_meta'
         # get the seed and RNA length, based on the endo choice
         gRNA_length = self.sq.endo_info[endo_choice][2]
         seed_length = self.sq.endo_info[endo_choice][1]
+
+        secondCode = ''
+        # get the notes here
+        for i in range(len(self.ref_para_list)):
+            secondCode = secondCode + self.ref_para_list[i][0] + ',' + self.ref_para_list[i][1] + '|'
+            secondCode = secondCode.replace('\n', '') 
         #------------------done getting the arguments------------------------------
 
         # get the program path
@@ -563,10 +635,11 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         args = args + '"' + orgName + '" '
         args = args + gRNA_length + ' '
         args = args + seed_length + ' '
-        args = args + '"' + code + '"'
+        args = args + '"' + secondCode + '"'
 
         # combine the program and arguments into 1
         program = program + args
+
 
         self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
         self.proc_running = True

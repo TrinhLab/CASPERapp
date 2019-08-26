@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>517</width>
-    <height>306</height>
+    <height>212</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QLabel" name="orgNameLabel">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>30</y>
+     <x>80</x>
+     <y>40</y>
      <width>161</width>
      <height>16</height>
     </rect>
@@ -26,24 +26,11 @@
     <string>Organism Name</string>
    </property>
   </widget>
-  <widget class="QLabel" name="FNA_FileName_Label">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>60</y>
-     <width>161</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>FNA File Name</string>
-   </property>
-  </widget>
   <widget class="QLabel" name="cspr_org_code_name">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>90</y>
+     <x>80</x>
+     <y>70</y>
      <width>161</width>
      <height>16</height>
     </rect>
@@ -55,8 +42,8 @@
   <widget class="QLineEdit" name="orgName_line_edit">
    <property name="geometry">
     <rect>
-     <x>180</x>
-     <y>30</y>
+     <x>240</x>
+     <y>40</y>
      <width>191</width>
      <height>20</height>
     </rect>
@@ -65,24 +52,11 @@
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This will be the organism/genome name in the newly generated CSPR file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="fna_fileName_lineEdit">
-   <property name="geometry">
-    <rect>
-     <x>180</x>
-     <y>60</y>
-     <width>191</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="toolTip">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This will be the name of the FNA file generated.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-  </widget>
   <widget class="QLineEdit" name="org_code_line_edit">
    <property name="geometry">
     <rect>
-     <x>180</x>
-     <y>90</y>
+     <x>240</x>
+     <y>70</y>
      <width>191</width>
      <height>20</height>
     </rect>
@@ -94,8 +68,8 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>150</y>
+     <x>110</x>
+     <y>110</y>
      <width>141</width>
      <height>16</height>
     </rect>
@@ -107,8 +81,8 @@
   <widget class="QProgressBar" name="sequencer_prog_bar">
    <property name="geometry">
     <rect>
-     <x>200</x>
-     <y>150</y>
+     <x>280</x>
+     <y>110</y>
      <width>118</width>
      <height>23</height>
     </rect>
@@ -120,8 +94,8 @@
   <widget class="QPushButton" name="cancel_button">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>260</y>
+     <x>110</x>
+     <y>160</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -133,8 +107,8 @@
   <widget class="QPushButton" name="start_button">
    <property name="geometry">
     <rect>
-     <x>410</x>
-     <y>260</y>
+     <x>320</x>
+     <y>160</y>
      <width>75</width>
      <height>23</height>
     </rect>

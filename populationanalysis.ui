@@ -263,6 +263,19 @@
      <string>Search for FNA File on NCBI</string>
     </property>
    </widget>
+   <widget class="QCheckBox" name="meta_genomic_cspr_checkbox">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>380</y>
+      <width>251</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Show Meta Genomic CSPR Files</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
