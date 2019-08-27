@@ -42,6 +42,7 @@ class export_csv_window(QtWidgets.QDialog):
     def export_function(self):
         # get the full path ( path and file name)
         file_name = self.filename_line_edit.text()
+        self.location = self.fileLocation_line_edit.text() + '/'
         full_path = ""
         if '.csv' in file_name:
             full_path = self.location + file_name
