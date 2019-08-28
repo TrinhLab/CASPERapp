@@ -273,8 +273,25 @@ class Annotation_Parser:
                     elif currentLocusTag in self.reg_dict:
                         self.reg_dict[currentLocusTag].append(values)
 
+                if splitLine[13] != '':
+                    if para_dict_key_string == '':
+                        para_dict_key_string = splitLine[13] + ';'
+                    else:
+                        para_dict_key_string = para_dict_key_string + splitLine[13] + ';'
+                if splitLine[12] != '':
+                    if para_dict_key_string == '':
+                        para_dict_key_string = splitLine[12] + ';'
+                    else:
+                        para_dict_key_string = para_dict_key_string + splitLine[12] + ';'
+                if splitLine[14] != '':
+                    if para_dict_key_string == '':
+                        para_dict_key_string = splitLine[14] + ';'
+                    else:
+                        para_dict_key_string = para_dict_key_string + splitLine[14] + ';'
+
+                para_dict_key_string = para_dict_key_string.replace(',', ' ')
                 # set the parallel dictionary's key string
-                para_dict_key_string = splitLine[13] + ";" + splitLine[12] + ";" + splitLine[14]
+                #para_dict_key_string = splitLine[13] + ";" + splitLine[12] + ";" + splitLine[14]
 
                 # if the current line we're on has the data we want for the parellel dictionary, store it
                 if len(para_dict_key_string) > 3:
