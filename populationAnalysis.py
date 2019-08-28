@@ -119,7 +119,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     hold = f.readline()
                     f.close()
                     # only show the files that are metagenomic
-                    if '_meta' in hold:
+                    if '(meta)' in hold:
                         colonIndex = hold.find(':') + 1
                         commaIndex = hold.find(',')
                         orgName = hold[colonIndex:commaIndex]
@@ -609,7 +609,7 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         # get the path to CASPERinfo
         path_to_info = GlobalSettings.appdir + '/CASPERinfo'
         # make org name something that will make more sense, this is just for testing right now
-        orgName = self.orgName_line_edit.text() + '  ,_meta'
+        orgName = self.orgName_line_edit.text() + '  , (meta)'
         # get the seed and RNA length, based on the endo choice
         gRNA_length = self.sq.endo_info[endo_choice][2]
         seed_length = self.sq.endo_info[endo_choice][1]
