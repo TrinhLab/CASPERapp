@@ -13,7 +13,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         uic.loadUi('populationanalysis.ui', self)
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
         self.goBackButton.clicked.connect(self.go_back)
-        self.analyze_button.clicked.connect(self.fill_data)
+        self.analyze_button.clicked.connect(self.pre_analyze)
         self.clear_Button.clicked.connect(self.clear)
         self.ncbi_search_button.clicked.connect(self.launch_ncbi_seacher)
         self.meta_genomic_cspr_checkbox.stateChanged.connect(self.get_data)
@@ -38,7 +38,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         #top right table
         self.table2.setColumnCount(9)
         self.table2.setShowGrid(False)
-        self.table2.setHorizontalHeaderLabels(["Seed","% Conserved","Total Repeats","Avg. Repeats/Organism", "Consensus Sequence", "% Consensus", "Strand","PAM", "Score"])
+        self.table2.setHorizontalHeaderLabels(["Seed","% Conserved","Total Repeats","Avg. Repeats/Chromosome", "Consensus Sequence", "% Consensus", "Score","PAM", "Strand"])
         self.table2.horizontalHeader().setSectionsClickable(True)
         self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -57,6 +57,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.actionMetaGenome_Parser.triggered.connect(self.launch_chrom_selector)
 
         self.combinerWindow = fna_and_cspr_combiner()
+
+        self.total_org_number = 0
 
     def launch_ncbi_seacher(self):
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
@@ -214,41 +216,62 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.org_Table.resizeColumnsToContents()
 
     # this function calls the popParser function and fills all the tables
-    def fill_data(self):
-        selectedList = self.org_Table.selectedItems()
+    def pre_analyze(self):
+        # if the user is wanting to go with 1 meta genomic cspr file
+        if self.meta_genomic_cspr_checkbox.isChecked():
+            selectedList = self.org_Table.selectedItems()
 
-        # if the table is showing only fna/fasta files
-        if not self.meta_genomic_cspr_checkbox.isChecked():
-            # rules for selecting FNA/Fasta files
-            # check to make sure that the user selected at least 2 organisms, and 1 endonuclease
-            if len(selectedList) < 1 or self.endoBox.currentText() == 'None Selected':
-                QtWidgets.QMessageBox.question(self, "Nothing Seleted", "No items selected. Please select at least 1 organism, and only 1 endonuclease",
-                                            QtWidgets.QMessageBox.Ok)
+            # error check
+            if len(selectedList) == 0 or len(selectedList) > 1:
+                QtWidgets.QMessageBox.question(self, "Error", "Please select no more than 1 CSPR file for analysis.",
+                                                QtWidgets.QMessageBox.Ok)
                 return
-            if len(selectedList) == 1:
-                error = QtWidgets.QMessageBox.question(self, "Only 1 Organism Selected",
-                                                        "Population Analysis works with multiple organisms, or a meta genome. If the file selected it not a meta genome, the program may not function correctly. Do you wish to continu?.\n\n"
-                                                        "Do you wish to continue?",
-                                                        QtWidgets.QMessageBox.Yes |
-                                                        QtWidgets.QMessageBox.No,
-                                                        QtWidgets.QMessageBox.No)
-                if (error == QtWidgets.QMessageBox.No):
-                    return 
+            
+            # get the cspr_file name, the endochoice, and call the popParser
+            orgName = selectedList[0].text()
+            cspr_file_name = self.fna_files[orgName]
+            # split the file name by '_', then take that second index, split by '.', and then take the first index. Thus giving the Endo Choice
+            endoChoice = cspr_file_name.split('_')[1].split('.')[0]
+            # call the parser and the call fill_data
+            cspr_file_name = GlobalSettings.CSPR_DB + '/' + cspr_file_name
+            self.total_org_number =  self.parser.popParser(cspr_file_name, endoChoice)
+            self.fill_data()
+        # if the user is wanting to go with creating a new meta genomic cspr file
+        else:
+            selectedList = self.org_Table.selectedItems()
 
-            submitList = list()
-            for item in selectedList:
-                submitList.append(self.fna_files[item.text()])
-            self.combinerWindow.launch(submitList)
-        # rules for selecting cspr files
-        elif self.meta_genomic_cspr_checkbox.isChecked():
-            if len(selectedList) == 0:
-                QtWidgets.QMessageBox.question(self, "Nothing Seleted", "No items selected. Please select one meta genome for Population Analysis.",
-                                            QtWidgets.QMessageBox.Ok)
-                return
-            elif len(selectedList) > 1:
-                QtWidgets.QMessageBox.question(self, "Too many Selected", "Only 1 meta genomic CSPR file is allowed to be selected",
-                                            QtWidgets.QMessageBox.Ok)
-                return
+            # if the table is showing only fna/fasta files
+            if not self.meta_genomic_cspr_checkbox.isChecked():
+                # rules for selecting FNA/Fasta files
+                # check to make sure that the user selected at least 2 organisms, and 1 endonuclease
+                if len(selectedList) < 1 or self.endoBox.currentText() == 'None Selected':
+                    QtWidgets.QMessageBox.question(self, "Nothing Seleted", "No items selected. Please select at least 1 organism, and only 1 endonuclease",
+                                                QtWidgets.QMessageBox.Ok)
+                    return
+                if len(selectedList) == 1:
+                    error = QtWidgets.QMessageBox.question(self, "Only 1 Organism Selected",
+                                                            "Population Analysis works with multiple organisms, or a meta genome. If the file selected it not a meta genome, the program may not function correctly. Do you wish to continu?.\n\n"
+                                                            "Do you wish to continue?",
+                                                            QtWidgets.QMessageBox.Yes |
+                                                            QtWidgets.QMessageBox.No,
+                                                            QtWidgets.QMessageBox.No)
+                    if (error == QtWidgets.QMessageBox.No):
+                        return 
+
+                submitList = list()
+                for item in selectedList:
+                    submitList.append(self.fna_files[item.text()])
+                self.combinerWindow.launch(submitList)
+            # rules for selecting cspr files
+            elif self.meta_genomic_cspr_checkbox.isChecked():
+                if len(selectedList) == 0:
+                    QtWidgets.QMessageBox.question(self, "Nothing Seleted", "No items selected. Please select one meta genome for Population Analysis.",
+                                                QtWidgets.QMessageBox.Ok)
+                    return
+                elif len(selectedList) > 1:
+                    QtWidgets.QMessageBox.question(self, "Too many Selected", "Only 1 meta genomic CSPR file is allowed to be selected",
+                                                QtWidgets.QMessageBox.Ok)
+                    return
     """
         endo = str(self.endoBox.currentText())
         endo = endo[:endo.find(" ")]
@@ -342,6 +365,65 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             msg.setText("<font size=4>" + "Endo does not match." + "</font>")
             msg.exec()
     """
+
+    # this function calculates the percentConserved for the table
+    # it runs through and finds out how many different organisms each seed is repeated in
+    # if it's equal to the total_org_number, it then returns 1, otherwise it returns a double
+    def findPercentConserved(self, seed):
+        tempSet = set()
+        for item in self.parser.popData[seed]:
+            tempSet.add(item[0])
+   
+        if self.total_org_number == len(tempSet):
+            return 1
+        else:
+            return len(tempSet) / self.total_org_number
+
+
+    # this function fills the top-right table
+    def fill_data(self):
+        self.table2.setRowCount(0)
+        index = 0
+        for seeds in self.parser.popData:
+            self.table2.setRowCount(index + 1)
+
+            seed = QtWidgets.QTableWidgetItem()
+            total_repeats = QtWidgets.QTableWidgetItem()
+            total_repeats.setData(QtCore.Qt.EditRole, len(self.parser.popData[seeds]))
+            seed.setData(QtCore.Qt.EditRole, str(seeds))
+
+            self.table2.setItem(index, 0, seed)
+            self.table2.setItem(index, 2, total_repeats)
+            tempPercentConserved = self.findPercentConserved(seeds) * 100
+            percentTab = QtWidgets.QTableWidgetItem(str(tempPercentConserved) + '%')
+            self.table2.setItem(index, 1, percentTab)
+
+            #loop through the tuples for each seed
+            sequences = []
+            for tuples in self.parser.popData[seeds]:
+                sequences.append(tuples[3])
+
+            con_seq_temp = str(max(set(sequences), key=sequences.count))
+            conIndex = sequences.index(con_seq_temp)
+            consensus_seq = QtWidgets.QTableWidgetItem()
+            consensus_seq.setData(QtCore.Qt.EditRole, con_seq_temp)
+            self.table2.setItem(index, 4, consensus_seq)
+            tabScore = QtWidgets.QTableWidgetItem(str(self.parser.popData[seeds][conIndex][5]))
+            tabPAM = QtWidgets.QTableWidgetItem(self.parser.popData[seeds][conIndex][4])
+            tabStrand = QtWidgets.QTableWidgetItem(self.parser.popData[seeds][conIndex][6])
+            self.table2.setItem(index, 6, tabScore)
+            self.table2.setItem(index, 7, tabPAM)
+            self.table2.setItem(index, 8, tabStrand)
+
+            consensus_percentage = sequences.count(con_seq_temp) / len(sequences) * 100
+            consensus_percentage = round(consensus_percentage, 1)
+            consensus_perc = QtWidgets.QTableWidgetItem()
+            consensus_perc.setData(QtCore.Qt.EditRole, consensus_percentage)
+            self.table2.setItem(index, 5, consensus_perc)
+
+
+            index += 1
+        self.table2.resizeColumnsToContents()
     def clear(self):
         self.table2.setRowCount(0)
 
@@ -459,7 +541,6 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         self.fna_file_names = list()
         self.sq = Algorithms.SeqTranslate()
         self.proc_running = False
-        self.generated_files = list()
         self.combined_fna_file = ''
 
     # for when the user clicks the 'x' button
@@ -478,9 +559,17 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         if self.proc_running:
             return
 
-        if self.orgName_line_edit.text() == '' or self.org_code_line_edit.text() == '':
+        # make sure the user inputs whats needed
+        if self.orgName_line_edit.text() == '' or self.org_code_line_edit.text() == '' or self.orgNum_lineEdit.text() == '':
             QtWidgets.QMessageBox.question(self, "Missing Information",
-                                           "Please input an Organism Name and an Organism Code.",
+                                           "Please input an Organism Name, an Organism Code, and the number of Organisms you are analyzing.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+        
+        # make sure the user inputs an integer for the number of organisms
+        if not self.orgNum_lineEdit.text().isdigit():
+            QtWidgets.QMessageBox.question(self, "Error",
+                                           "Organism Number must be integers only!",
                                            QtWidgets.QMessageBox.Ok)
             return
 
@@ -552,6 +641,7 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         out_stream.close()
 
 
+
     # this function builds a new cspr file from the combined FNA file
     # very similar to New Genome
     def build_new_cspr_file(self):
@@ -584,9 +674,10 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
 
             # get the file name
             cspr_file_name = GlobalSettings.CSPR_DB + '/' + self.org_code_line_edit.text() + '_' + GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0] + '.cspr'
-            self.generated_files.append(cspr_file_name)
             os.remove(self.combined_fna_file)
             self.process.kill()
+            GlobalSettings.pop_Analysis.total_org_number = GlobalSettings.pop_Analysis.parser.popParser(cspr_file_name, GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0])
+            GlobalSettings.pop_Analysis.fill_data()
             self.cancel_function()
 
         #--------------getting the arugments---------------------------------
@@ -609,7 +700,7 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         # get the path to CASPERinfo
         path_to_info = GlobalSettings.appdir + '/CASPERinfo'
         # make org name something that will make more sense, this is just for testing right now
-        orgName = self.orgName_line_edit.text() + '  , (meta)'
+        orgName = self.orgName_line_edit.text() + '  , (meta), ' + self.orgNum_lineEdit.text()
         # get the seed and RNA length, based on the endo choice
         gRNA_length = self.sq.endo_info[endo_choice][2]
         seed_length = self.sq.endo_info[endo_choice][1]

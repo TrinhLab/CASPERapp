@@ -208,9 +208,72 @@ class CSPRparser:
     # this function takes a list of all the file names
     # it finds the repeats for each file, and also checks to see if those repeats are in each file, not just the first
     # stores the data in a class object
-    def popParser(self, file_list, endoChoice):
+    def popParser(self, cspr_file, endoChoice):
         self.popData.clear()
+        seedLength = self.seqTrans.endo_info[endoChoice][1]
 
+        referenceList = list()
+
+        # skip the junk
+        file_stream = open(cspr_file, 'r')
+        genomeLine = file_stream.readline()
+        file_stream.readline()
+
+        # parse the genome line
+        genomeLine = genomeLine.split(',')
+        retNumber = int(genomeLine[len(genomeLine ) - 1])
+
+        # parse the miscalleneous line and get the data we want out of it
+        misc_line = file_stream.readline()
+        colonIndex = misc_line.find(':') + 2
+        usefulData = misc_line[colonIndex:]
+        
+        usefulData = usefulData.split('|')
+        usefulData.pop()
+        
+        i = 0
+        while i < len(usefulData):
+            temp = usefulData[i].split(',')
+            referenceList.append((temp[0], temp[1]))
+            i += 1
+
+        buf = file_stream.readline()
+        while buf != 'REPEATS\n':
+            buf = file_stream.readline()
+        
+        split_info = file_stream.read().split('\n')
+        file_stream.close()
+
+        index = 0
+        while (index + 1 < len(split_info)):
+            # get the seed and repeat line
+            seed_d = self.seqTrans.decompress64(split_info[index], slength=int(seedLength), toseq=True)
+            repeat = split_info[index + 1].split('\t')
+
+            # if the seed is not in the dict, put it in there
+            if seed_d not in self.popData:
+                self.popData[seed_d] = list()
+
+            for item in repeat:
+                if item != '':
+                    commaIndex = item.find(',')
+                    chrom = item[:commaIndex] 
+                    sequence = item.split(',')
+                    temp = sequence[1:4]
+                    temp.append(str(seed_d))
+                    string = ",".join(temp)
+                    tempTuple = self.seqTrans.decompress_csf_tuple(string, bool=True, endo=endoChoice)
+                    orgName = referenceList[int(chrom) - 1][0]
+
+                    storeTuple = (orgName, chrom,  tempTuple[0], tempTuple[1], tempTuple[2], tempTuple[3], tempTuple[4], tempTuple[5],)
+                    
+                    self.popData[seed_d].append(storeTuple)
+            
+            index += 2
+
+        return retNumber
+
+        """
         # for each file given
         for count in range(len(file_list)):
 
@@ -263,75 +326,6 @@ class CSPRparser:
                         self.popData[seed_d].append(storeTuple)
                 index += 2
             split_info.clear()
-
-
-        """
-        for count in range(len(file_list)):
-            #print('going around', file_list[count])
-            # open the file and read it all in
-            fileStream = open(file_list[count])
-            fileData = fileStream.read()
-            fileStream.close()
-            split_info = fileData.split('\n')
-
-            index = 0
-
-            # make sure to store the orgname
-            colonIndex = split_info[index].find(':')
-            self.popData[split_info[index][colonIndex + 2:]] = {}
-            orgName = split_info[index][colonIndex + 2:]
-
-            # now skip to the repeats part
-            index = split_info.index("REPEATS")
-            index += 1
-
-            # for each repeats
-            while(index + 1 < len(split_info)):
-                # get the seed, uncompressed seed, and repeats
-                seed = self.seqTrans.decompress64(split_info[index],True)
-                unCompSeed = split_info[index]
-                repeat = split_info[index + 1].split("\t")
-
-                # if its not in there, add it in
-                if seed not in self.popData[orgName]:
-                    self.popData[orgName][seed] = list()
-                    # go through and add an index for each file name
-                    for i in range(len(file_list)):
-                        self.popData[orgName][seed].append(0)
-                    # go through and incrememnt the current one's repeats
-                    for repeat in repeat:
-                        if repeat != "":
-                            self.popData[orgName][seed][count] += 1
-
-                    # now go through and check the other files
-                    for i in range(len(file_list)):
-                        # get the orgName and other data
-                        otherFile = open(file_list[i])
-                        fileData2 = otherFile.read()
-                        otherFile.close()
-                        split_info2 = fileData2.split('\n')
-                        colonIndex2 = split_info2[0].find(':')
-                        secondOrgName = split_info2[0][colonIndex2 + 1:]
-
-                        # if the orgName is the same, and file is the same, skip that file. don't want it
-                        if secondOrgName == orgName and file_list[i] == file_list[count]:
-                            continue
-                        else:
-                            # check and see if the uncompressed seed is in the second file
-                            if unCompSeed in split_info2:
-                                #print(seed)
-                                # get to that index
-                                tempIndex = split_info2.index(unCompSeed)
-
-                                # split those repeats and increment them
-                                repeat2 = split_info2[tempIndex + 1].split('\t')
-                                for repeat in repeat2:
-                                    if repeat != "":
-                                        self.popData[orgName][seed][i] += 1
-                            else:
-                                continue
-                # incrememnt index by 2
-                index = index + 2
         """
     #this function just reads the whole file
     def read_all(self):
