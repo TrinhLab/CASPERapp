@@ -187,12 +187,12 @@ class genLibrary(QtWidgets.QDialog):
                         self.bool_temp = True
 
         app_path = GlobalSettings.appdir
-        exe_path = app_path + '/OffTargetFolder/OT'
+        exe_path = app_path + '\OffTargetFolder\OT'
         exe_path = '"' + exe_path + '" '
-        data_path = '"' + GlobalSettings.CSPR_DB + "/off_compressed.txt" + '" '
+        data_path = '"' + GlobalSettings.CSPR_DB.replace('/','\\') + "\\off_compressed.txt" + '" '
         compressed = r' True '  ##
-        cspr_path = '"' + self.cspr_file + '" '
-        output_path = '"' + GlobalSettings.CSPR_DB + '/temp_off.txt" '
+        cspr_path = '"' + self.cspr_file.replace('/','\\') + '" '
+        output_path = '"' + GlobalSettings.CSPR_DB.replace('/','\\') + '\\temp_off.txt" '
         filename = output_path
         filename = filename[:len(filename) - 1]
         filename = filename[1:]
@@ -208,6 +208,7 @@ class genLibrary(QtWidgets.QDialog):
         cmd = exe_path + data_path + compressed + cspr_path + output_path + CASPER_info_path + str(
             num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
 
+        print(cmd)
         self.process.readyReadStandardOutput.connect(partial(progUpdate, self.process))
         self.progressBar.setValue(0)
         QtCore.QTimer.singleShot(100, partial(self.process.start, cmd))
