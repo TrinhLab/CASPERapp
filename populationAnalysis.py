@@ -40,6 +40,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.table2.setShowGrid(False)
         self.table2.setHorizontalHeaderLabels(["Seed","% Conserved","Total Repeats","Avg. Repeats/Chromosome", "Consensus Sequence", "% Consensus", "Score","PAM", "Strand"])
         self.table2.horizontalHeader().setSectionsClickable(True)
+        self.table2.horizontalHeader().sectionClicked.connect(self.table_sorting)
         self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.table2.resizeColumnsToContents()
@@ -59,6 +60,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.combinerWindow = fna_and_cspr_combiner()
 
         self.total_org_number = 0
+
+        self.switcher = [1,1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
 
     def launch_ncbi_seacher(self):
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
@@ -137,34 +140,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 self.org_Table.setRowCount(0)
         
         self.org_Table.resizeColumnsToContents()
-        """
-        orgsandendos = {}
-        shortName = {}
-        index = 0
 
-
-        for file in onlyfiles:
-            if file.find('.cspr')!=-1:
-                newname = file[0:-4]
-                s = newname.split('_')
-                hold = open(file)
-                buf = (hold.readline())
-                species = buf[8:buf.find('\n')]
-                endo = str(s[1])
-                if species not in shortName:
-                    shortName[species] = s[0]
-                if species in orgsandendos:
-                    orgsandendos[species].append(endo)
-                else:
-                    orgsandendos[species] =[endo]
-                    self.cspr_files[str(species)] = file
-                    index+=1
-
-        # data is a dict. Key is the organism (taken from the cspr file) key is a list of endonuclease's that the organism has or that the user has
-        self.data = orgsandendos
-        # shortHand is another dict where the key is the organism name (Taken from the cspr file). The value the short hand for that org (bsu, sce, yli)
-        self.shortHand = shortName
-        """
         self.fillEndo()
         #self.changeEndos()
 
@@ -272,99 +248,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     QtWidgets.QMessageBox.question(self, "Too many Selected", "Only 1 meta genomic CSPR file is allowed to be selected",
                                                 QtWidgets.QMessageBox.Ok)
                     return
-    """
-        endo = str(self.endoBox.currentText())
-        endo = endo[:endo.find(" ")]
-        selected_files = self.org_Table.selectedItems()
-        error = False
-        filenames = []
-        for files in selected_files:
-            cspr_name = self.cspr_files[files.text()]
-            cspr_name = str(cspr_name)
-            cspr_name = cspr_name[cspr_name.find('_')+1:]
-            cspr_name = cspr_name[:cspr_name.find('.')]
-            current_endo = str(self.endoBox.currentText())
-            if(cspr_name !=  current_endo[:current_endo.find(" ")]):
-                error = True
-            filenames.append(self.cspr_files[files.text()])
-
-
-
-        if(error != True):
-            self.parser.popParser(filenames, endoChoice=endo)
-            print(self.parser.popData)
-            self.table2.setRowCount(0)
-            index = 0
-            for seeds in self.parser.popData:
-                self.table2.setRowCount(index + 1)
-
-                seed = QtWidgets.QTableWidgetItem()
-                total_repeats = QtWidgets.QTableWidgetItem()
-                total_repeats.setData(QtCore.Qt.EditRole, len(self.parser.popData[seeds]))
-                seed.setData(QtCore.Qt.EditRole, str(seeds))
-
-                self.table2.setItem(index, 0, seed)
-                self.table2.setItem(index, 2, total_repeats)
-
-
-                #loop through the tuples for each seed
-                sequences = []
-                for tuples in self.parser.popData[seeds]:
-                    sequences.append(tuples[3])
-
-                con_seq_temp = str(max(set(sequences), key=sequences.count))
-                consensus_seq = QtWidgets.QTableWidgetItem()
-                consensus_seq.setData(QtCore.Qt.EditRole, con_seq_temp)
-                self.table2.setItem(index, 4, consensus_seq)
-
-                consensus_percentage = sequences.count(con_seq_temp) / len(sequences) * 100
-                consensus_percentage = round(consensus_percentage, 1)
-                consensus_perc = QtWidgets.QTableWidgetItem()
-                consensus_perc.setData(QtCore.Qt.EditRole, consensus_percentage)
-                self.table2.setItem(index, 5, consensus_perc)
-
-
-                index += 1
-            self.table2.resizeColumnsToContents()
-
-
-            # for files in selected_files:
-            #     self.parser.fileName = self.cspr_files[files.text()]
-            #     self.parser.read_chromesome()
-            #     for items in self.parser.chromesomeList:
-            #         first = True
-            #         for data in items:
-            #             if first == True:
-            #                 first = False
-            #             else:
-            #                 self.table2.setRowCount(index + 1)
-            #                 seq = QtWidgets.QTableWidgetItem(data[1])
-            #                 strand = QtWidgets.QTableWidgetItem(str(data[4]))
-            #                 PAM = QtWidgets.QTableWidgetItem(data[2])
-            #                 num1 = int(data[3])
-            #                 score = QtWidgets.QTableWidgetItem()
-            #                 score.setData(QtCore.Qt.EditRole, num1)
-            #
-            #                 #if data[1] in self.parser.popData[files.text()]:
-            #                  #   print(self.parser.popData[files.text()][data[1]])
-            #
-            #
-            #                 self.table2.setItem(index, 0, seq)
-            #                 self.table2.setItem(index, 1, strand)
-            #                 self.table2.setItem(index, 2, PAM)
-            #                 self.table2.setItem(index, 3, score)
-            #
-            #                 index += 1
-            #     self.table2.resizeColumnsToContents()
-            # self.plot_repeats_vs_seeds()
-        else:
-            msg = QtWidgets.QMessageBox()
-            msg.setWindowTitle("Error")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.setIcon(QtWidgets.QMessageBox.Critical)
-            msg.setText("<font size=4>" + "Endo does not match." + "</font>")
-            msg.exec()
-    """
 
     # this function calculates the percentConserved for the table
     # it runs through and finds out how many different organisms each seed is repeated in
@@ -379,6 +262,24 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         else:
             return len(tempSet) / self.total_org_number
 
+    # this function calculates the average repeats per chromosome for a seed
+    # runs through the sequences in a seed and calculates it
+    # returns the average
+    def findAvgRepeats(self, seed):
+        firstChrom = 0
+        secondChrom = 0
+        divideBy = 1
+        tempSum = 0
+        for item in self.parser.popData[seed]:
+            firstChrom = item[1]
+
+            if firstChrom != secondChrom and secondChrom != 0:
+                divideBy += 1
+
+            tempSum += 1
+            secondChrom = item[1]
+
+        return tempSum / divideBy
 
     # this function fills the top-right table
     def fill_data(self):
@@ -398,23 +299,37 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             percentTab = QtWidgets.QTableWidgetItem(str(tempPercentConserved) + '%')
             self.table2.setItem(index, 1, percentTab)
 
+            # get the avg repeats per chromosome
+            tempAvgRepeatsPerChrom = self.findAvgRepeats(seeds)
+            rounded = float("%.2f" % tempAvgRepeatsPerChrom)
+            avgTab = QtWidgets.QTableWidgetItem()
+            avgTab.setData(QtCore.Qt.EditRole, rounded)
+            self.table2.setItem(index, 3, avgTab)
+
             #loop through the tuples for each seed
             sequences = []
             for tuples in self.parser.popData[seeds]:
                 sequences.append(tuples[3])
 
+            # set consensus seq
             con_seq_temp = str(max(set(sequences), key=sequences.count))
             conIndex = sequences.index(con_seq_temp)
             consensus_seq = QtWidgets.QTableWidgetItem()
             consensus_seq.setData(QtCore.Qt.EditRole, con_seq_temp)
             self.table2.setItem(index, 4, consensus_seq)
-            tabScore = QtWidgets.QTableWidgetItem(str(self.parser.popData[seeds][conIndex][5]))
+
+            # get the data for the rest
+            tabScore = QtWidgets.QTableWidgetItem()
+            tabScore.setData(QtCore.Qt.EditRole, int(self.parser.popData[seeds][conIndex][5]))
             tabPAM = QtWidgets.QTableWidgetItem(self.parser.popData[seeds][conIndex][4])
             tabStrand = QtWidgets.QTableWidgetItem(self.parser.popData[seeds][conIndex][6])
+
+            # set all that data
             self.table2.setItem(index, 6, tabScore)
             self.table2.setItem(index, 7, tabPAM)
             self.table2.setItem(index, 8, tabStrand)
 
+            # set consensus percentage
             consensus_percentage = sequences.count(con_seq_temp) / len(sequences) * 100
             consensus_percentage = round(consensus_percentage, 1)
             consensus_perc = QtWidgets.QTableWidgetItem()
@@ -517,6 +432,14 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         GlobalSettings.mainWindow.closeFunction()
         event.accept()
+
+    def table_sorting(self, logicalIndex):
+        self.switcher[logicalIndex] *= -1
+        if self.switcher[logicalIndex] == -1:
+            self.table2.sortItems(logicalIndex, QtCore.Qt.DescendingOrder)
+        else:
+            self.table2.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
+
 
 
 ###############################################################################
