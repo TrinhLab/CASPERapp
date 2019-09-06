@@ -11,7 +11,7 @@ from CSPRparser import CSPRparser
 from matplotlib.backends.backend_qt5agg import (NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.backends.backend_qt5agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.ticker import MaxNLocator
-import time
+import datetime
 
 
 class Multitargeting(QtWidgets.QMainWindow):
@@ -204,23 +204,24 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     #fill in chromo bar visualization
     def chro_bar_data(self):
+
         if self.ready_chromo_make_graph==False:
             return
         dic_info = {}
         seqLength = int(self.sq.endo_info[self.endo_drop.currentText()][1])
         for seed in self.parser.seeds:
-            temp = self.sq.compress(seed,64)
-            self.seed_id_seq_pair[str(self.sq.decompress64(temp, slength=seqLength, toseq=True))] = seed
-            dic_info[str(self.sq.decompress64(temp, slength=seqLength, toseq=True))] = {}
+            temp = seed
+            temp1 = str(self.sq.decompress64(temp, slength=seqLength, toseq=True))
+            self.seed_id_seq_pair[temp1] = seed
+            dic_info[temp1] = {}
             for repeat in self.parser.seeds[seed]:
-                if repeat[0] in dic_info[str(self.sq.decompress64(temp, slength=seqLength, toseq=True))]:
-                    dic_info[str(self.sq.decompress64(temp, slength=seqLength, toseq=True))][repeat[0]].append(self.sq.decompress64(repeat[1]))
+                if repeat[0] in dic_info[temp1]:
+                    dic_info[temp1][repeat[0]].append(self.sq.decompress64(repeat[1]))
                 else:
-                    dic_info[str(self.sq.decompress64(temp, slength=seqLength, toseq=True))][repeat[0]] = [self.sq.decompress64(repeat[1])]
+                    dic_info[temp1][repeat[0]] = [self.sq.decompress64(repeat[1])]
         self.chro_bar_create(dic_info)
         self.fill_Chromo_Text(dic_info)
-
-
+git
     #fill in chromo bar visualization
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
