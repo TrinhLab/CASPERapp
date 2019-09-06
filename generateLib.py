@@ -531,6 +531,9 @@ class genLibrary(QtWidgets.QDialog):
                     tag_id = essential + "-" + str(i + 1)
                 i += 1
 
+                if self.to_csv_checkbox.isChecked():
+                    tag_id = tag_id.replace(',', '')
+
                 # if both OT and output all are checked
                 if self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
                     f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[5]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')

@@ -156,6 +156,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         if index == 0:
             return -1
         index= 0
+        
         for sValues in mainWindow.searches:
             for definition in mainWindow.searches[sValues]:
                 defin_obj = QtWidgets.QTableWidgetItem(definition)
@@ -736,19 +737,20 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 gene_info = k.gene_locator(organism+":"+name)
 
-                if gene_info[1] == False:
-                    holder = (gene_info[0],'-',gene_info[2],gene_info[3])
-                elif gene_info[1] == True:
-                    holder = (gene_info[0],'+',gene_info[2],gene_info[3])
-                # append the data
-                if item not in temp_dict:
-                    temp_dict[item] = dict()
-                    if gene not in temp_dict[item]:
-                        temp_dict[item][gene] = [holder]
+                if gene_info != -1:
+                    if gene_info[1] == False:
+                        holder = (gene_info[0],'-',gene_info[2],gene_info[3])
+                    elif gene_info[1] == True:
+                        holder = (gene_info[0],'+',gene_info[2],gene_info[3])
+                    # append the data
+                    if item not in temp_dict:
+                        temp_dict[item] = dict()
+                        if gene not in temp_dict[item]:
+                            temp_dict[item][gene] = [holder]
+                        else:
+                            temp_dict[item][gene].append(holder)
                     else:
-                        temp_dict[item][gene].append(holder)
-                else:
-                    temp_dict[item][gene] = [holder]
+                        temp_dict[item][gene] = [holder]
 
         # return this new dict
         return temp_dict
@@ -772,18 +774,21 @@ class CMainWindow(QtWidgets.QMainWindow):
                 #print(nameFull)
 
                 # get kegg's ntsequence and store it
-                nt_sequence = k.get_nt_sequence(organism+":"+name)
+                if gene_info != -1:
+                    nt_sequence = k.get_nt_sequence(organism+":"+name)
 
-                #print(item[0])
-                holder = (gene_info[0],gene_info[2],gene_info[3],gene_info[4])
-                self.checked_info[item[0]]=holder
-                self.check_ntseq_info[item[0]] = nt_sequence
+                    #print(item[0])
+                    holder = (gene_info[0],gene_info[2],gene_info[3],gene_info[4])
+                    self.checked_info[item[0]]=holder
+                    self.check_ntseq_info[item[0]] = nt_sequence
 
-
-        self.progressBar.setValue(80)
-        self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())] ,os.getcwd(),self.checked_info, self.check_ntseq_info, "")
-        self.progressBar.setValue(100)
-        self.pushButton_ViewTargets.setEnabled(True)
+        if len(self.checked_info) > 0:
+            self.progressBar.setValue(80)
+            self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())] ,os.getcwd(),self.checked_info, self.check_ntseq_info, "")
+            self.progressBar.setValue(100)
+            self.pushButton_ViewTargets.setEnabled(True)
+        else:
+            print("No items were found. Please search again.")
 
 
 # ------------------------------------------------------------------------------------------------------ #

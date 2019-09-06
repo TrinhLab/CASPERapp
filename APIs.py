@@ -19,75 +19,79 @@ class Kegg:
         self.sense = True
 
         res = self.k.get(gene_id)
-        d = self.k.parse(res)
-        newstr = d['POSITION']
-        # if KEGG does not had the data required for pos and strand, get the data from Entrez
-        if len(newstr) <= 5:
+        if res != 404:
+            d = self.k.parse(res)
+            newstr = d['POSITION']
+            # if KEGG does not had the data required for pos and strand, get the data from Entrez
+            if len(newstr) <= 5:
 
-            # get chromosome and chrom
-            if newstr.isdigit():
-                chromosome = newstr
-            else:
-                chromosome = self.translate_chromosome(newstr)
-            chrom = chromosome
-
-            # search entrez for the data we need
-            db_data = d['DBLINKS']['NCBI-GeneID']
-            handle = Entrez.esearch(db='gene', term=db_data)
-            record = Entrez.read(handle)
-            tempID = record['IdList'][0]
-            handle = Entrez.esummary(db="gene", id=tempID)
-            pos_data = Entrez.read(handle)
-
-            # get the start/end location
-            startloc = pos_data['DocumentSummarySet']['DocumentSummary'][0]['GenomicInfo'][0]['ChrStart']
-            endloc = pos_data['DocumentSummarySet']['DocumentSummary'][0]['GenomicInfo'][0]['ChrStop']
-
-            # if start is greater than end, sense is False, because it is a compliment
-            # reverse the start and end then
-            if int(startloc) > int(endloc):
-                temp = startloc
-                startloc = endloc
-                endloc = temp
-                self.sense = False
-
-        # otherwise, run the algorithm like normal
-        # make sure to store the chromosome that's given by KEGG too
-        else:
-            cstop = newstr.find(':')
-            if cstop == -1:
-                chrom = -1
-                chromosome = 1
-            else:
-                chrom = newstr[0:cstop]
-                chromosome = self.translate_chromosome(chrom)
-            sense = True
-            if newstr.find('complement') != -1:                # it is on the opposite strand of DNA
-                sense = False
-                cstop = newstr.find('(')
-            if newstr.find('join') != -1:
-                joinFind = newstr.find('join')
-                cstop = newstr.find('(', joinFind)
-                srt = cstop + 1
-                bothpos = newstr[srt:len(newstr)-2].split(",")
-                totpos = []
-                for i in range(0, len(bothpos)):
-                    spc = bothpos[i].find('..')
-                    spos = bothpos[i][0:spc]
-                    epos = bothpos[i][spc+2:len(bothpos[i])]
-                    totpos.append((spos, epos))
-                startloc = totpos[0][0]
-                endloc = totpos[len(bothpos)-1][1]
-            else:
-                srt = cstop + 1
-                spc = newstr.find('..')
-                startloc = newstr[srt:spc]
-                if not sense:
-                    endloc = newstr[spc+2:len(newstr)-1]
+                # get chromosome and chrom
+                if newstr.isdigit():
+                    chromosome = newstr
                 else:
-                    endloc = newstr[spc+2:len(newstr)]
-        totloc = (chromosome, self.sense, int(startloc), int(endloc), chrom)
-        return totloc
+                    chromosome = self.translate_chromosome(newstr)
+                chrom = chromosome
+
+                # search entrez for the data we need
+                db_data = d['DBLINKS']['NCBI-GeneID']
+                handle = Entrez.esearch(db='gene', term=db_data)
+                record = Entrez.read(handle)
+                tempID = record['IdList'][0]
+                handle = Entrez.esummary(db="gene", id=tempID)
+                pos_data = Entrez.read(handle)
+
+                # get the start/end location
+                startloc = pos_data['DocumentSummarySet']['DocumentSummary'][0]['GenomicInfo'][0]['ChrStart']
+                endloc = pos_data['DocumentSummarySet']['DocumentSummary'][0]['GenomicInfo'][0]['ChrStop']
+
+                # if start is greater than end, sense is False, because it is a compliment
+                # reverse the start and end then
+                if int(startloc) > int(endloc):
+                    temp = startloc
+                    startloc = endloc
+                    endloc = temp
+                    self.sense = False
+
+            # otherwise, run the algorithm like normal
+            # make sure to store the chromosome that's given by KEGG too
+            else:
+                cstop = newstr.find(':')
+                if cstop == -1:
+                    chrom = -1
+                    chromosome = 1
+                else:
+                    chrom = newstr[0:cstop]
+                    chromosome = self.translate_chromosome(chrom)
+                sense = True
+                if newstr.find('complement') != -1:                # it is on the opposite strand of DNA
+                    sense = False
+                    cstop = newstr.find('(')
+                if newstr.find('join') != -1:
+                    joinFind = newstr.find('join')
+                    cstop = newstr.find('(', joinFind)
+                    srt = cstop + 1
+                    bothpos = newstr[srt:len(newstr) - 2].split(",")
+                    totpos = []
+                    for i in range(0, len(bothpos)):
+                        spc = bothpos[i].find('..')
+                        spos = bothpos[i][0:spc]
+                        epos = bothpos[i][spc+2:len(bothpos[i])]
+                        totpos.append((spos, epos))
+                    startloc = totpos[0][0]
+                    endloc = totpos[len(bothpos)-1][1]
+                else:
+                    srt = cstop + 1
+                    spc = newstr.find('..')
+                    startloc = newstr[srt:spc]
+                    if not sense:
+                        endloc = newstr[spc+2:len(newstr)-1]
+                    else:
+                        endloc = newstr[spc+2:len(newstr)]
+            totloc = (chromosome, self.sense, int(startloc), int(endloc), chrom)
+            print(totloc)
+            return totloc
+        else:
+            return -1
 
     def translate_chromosome(self, chr):                                                        #Translate Chromosome - recives chromosome as letter or roman numeral and returns it as a number
         numbers = ('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16')      #Create a multi dementional list of all the ways to specify chromosome 
@@ -101,7 +105,7 @@ class Kegg:
                 # changed this to return an int, easy to change back if it was needed as a char
                 # -Josh
                 return int(numbers[ind])
-        return 1
+        return -1
 
     def revcom(self, sequence):                                       #Revcom - recives a sequance and returns the inverse of the sequance            
         revseq = ""
