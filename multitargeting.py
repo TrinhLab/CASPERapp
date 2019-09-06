@@ -221,7 +221,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                     dic_info[temp1][repeat[0]] = [self.sq.decompress64(repeat[1])]
         self.chro_bar_create(dic_info)
         self.fill_Chromo_Text(dic_info)
-git
+        git
     #fill in chromo bar visualization
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
