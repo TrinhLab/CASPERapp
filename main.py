@@ -72,9 +72,9 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.tableWidget.clearContents()
         self.mainWindow = mainWindow
         index = 0
-        self.tableWidget.setColumnCount(4)
+        self.tableWidget.setColumnCount(5)
         self.mainWindow.progressBar.setValue(85)
-        self.tableWidget.setHorizontalHeaderLabels("Description;Type;Gene ID;Select".split(";"))
+        self.tableWidget.setHorizontalHeaderLabels("Description;Chromosome #;Type;Gene ID;Select".split(";"))
         mainWindow.checkBoxes = []
         self.type = "nonkegg"
 
@@ -91,7 +91,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
                 for gene in mainWindow.searches[searchValue][definition]:
                     # set the checkbox
                     ckbox = QtWidgets.QCheckBox()
-                    self.tableWidget.setCellWidget(index, 3, ckbox)
+                    self.tableWidget.setCellWidget(index, 4, ckbox)
 
                     # set the description part of the window as well as set the correct data for the checkbox
                     if definition != gene[0]:
@@ -108,11 +108,14 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
 
                     # set the type in the window
                     type_obj = QtWidgets.QTableWidgetItem(gene[2])
-                    self.tableWidget.setItem(index, 1, type_obj)
+                    self.tableWidget.setItem(index, 2, type_obj)
 
                     # set the gene id in the window
                     gene_id_obj = QtWidgets.QTableWidgetItem(gene[0])
-                    self.tableWidget.setItem(index, 2, gene_id_obj)
+                    self.tableWidget.setItem(index, 3, gene_id_obj)
+
+                    chrom_number = QtWidgets.QTableWidgetItem(str(gene[1]))
+                    self.tableWidget.setItem(index, 1, chrom_number)
 
                     index += 1
         index = 0
@@ -364,6 +367,25 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 # launch generateLib
                 self.progressBar.setValue(100)
+                
+                # calculate the total number of matches found
+                tempSum = 0
+                for item in self.searches:
+                    tempSum += len(self.searches[item])
+                
+                # warn the user if the number is greater than 50
+                if tempSum > 50:
+                    error = QtWidgets.QMessageBox.question(self, "Many matches Found",
+                                                       "More than 50 matches have been found. Continuing could cause a slow down. .\n\n"
+                                                       "Do you wish to continue?",
+                                                       QtWidgets.QMessageBox.Yes |
+                                                       QtWidgets.QMessageBox.No,
+                                                       QtWidgets.QMessageBox.No)
+                    if(error == QtWidgets.QMessageBox.No):
+                        self.searches.clear()
+                        self.progressBar.setValue(0)
+                        return -2
+
                 self.genLib.launch(self.searches, fileName, kegg_non)
             else:
                 self.progressBar.setValue(0)
@@ -472,11 +494,12 @@ class CMainWindow(QtWidgets.QMainWindow):
                     # loop through each list item now
                     for i in range(len(self.annotation_parser.para_dict[item])):
                         # now loop through the regular dict's position and store the ones we want
-                        for match in self.annotation_parser.reg_dict[self.annotation_parser.para_dict[item][i]]:
-                            if item not in self.searches[search]:
-                                self.searches[search][item] = [match]
-                            elif item not in self.searches[search][item]:
-                                self.searches[search][item].append(match)
+                        if self.annotation_parser.para_dict[item][i] != '':
+                            for match in self.annotation_parser.reg_dict[self.annotation_parser.para_dict[item][i]]:
+                                if item not in self.searches[search]:
+                                    self.searches[search][item] = [match]
+                                elif item not in self.searches[search][item]:
+                                    self.searches[search][item].append(match)
         # if the search returns nothing, throw an error
         if len(self.searches[searchValues[0]]) <= 0:
             QtWidgets.QMessageBox.question(self, "No Matches Found",
