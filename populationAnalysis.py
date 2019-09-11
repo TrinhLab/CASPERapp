@@ -24,6 +24,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.sq=Algorithms.SeqTranslate()
         self.ref_para_list = list()
         self.mode = 0
+        self.find_locs_button.clicked.connect(self.find_locations)
 
 
         #orgonaism table
@@ -44,6 +45,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.table2.horizontalHeader().sectionClicked.connect(self.table_sorting)
         self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.table2.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
         self.table2.resizeColumnsToContents()
 
         #Finder table
@@ -76,6 +78,23 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         os.chdir(path)
         self.directory = path
         self.get_data()
+
+    # this is the find_locations function
+    # it takes the selected Seed IDs from the table2, and outputs their locations to the locations table
+    def find_locations(self):
+        selectedList = self.table2.selectedItems();
+
+        if len(selectedList) == 0:
+            print("No items selected")
+            return
+
+        for i in range(self.table2.rowCount()):
+            if self.table2.item(i,0).isSelected():
+                currentSeed = self.table2.item(i,0).text()
+                for item in self.parser.popData[currentSeed]:
+                    print(item)
+
+    
 
     # this function builds the Select Organisms table
     def get_data(self):
