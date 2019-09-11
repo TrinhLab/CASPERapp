@@ -23,6 +23,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.cspr_files = {}
         self.sq=Algorithms.SeqTranslate()
         self.ref_para_list = list()
+        self.mode = 0
 
 
         #orgonaism table
@@ -211,7 +212,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             # call the parser and the call fill_data
             cspr_file_name = GlobalSettings.CSPR_DB + '/' + cspr_file_name
             self.total_org_number =  self.parser.popParser(cspr_file_name, endoChoice)
-            self.fill_data()
+            self.fill_data(endoChoice)
         # if the user is wanting to go with creating a new meta genomic cspr file
         else:
             selectedList = self.org_Table.selectedItems()
@@ -282,7 +283,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         return tempSum / divideBy
 
     # this function fills the top-right table
-    def fill_data(self):
+    def fill_data(self, endoChoice):
         self.table2.setRowCount(0)
         index = 0
         for seeds in self.parser.popData:
@@ -339,75 +340,63 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
             index += 1
         self.table2.resizeColumnsToContents()
+        self.plot_repeats_vs_seeds(endoChoice)
     def clear(self):
         self.table2.setRowCount(0)
 
-    def plot_repeats_vs_seeds(self):
-        print('graph')
-        # selected_files = self.org_Table.selectedItems()
-        # first = True
-        # cspr_filenames = []
-        # plots = []
-        # i = 0
-        # endo = str(self.endoBox.currentText())
-        # endo = endo[:endo.find(" ")]
-        # print(endo)
-        # for files in selected_files:
-        #     self.parser.fileName = self.cspr_files[files.text()]
-        #     cspr_filenames.append(files.text())
-        #     #self.parser.read_repeats(endoChoice=endo)
-        #     self.parser.popParser(endoChoice=endo)
-        #     index = 0
-        #     data = {}
-        #     max = 0
-        #     y1 = []
-        #     x1 = []
-        #
-        #     for seed in self.parser.popData:
-        #
-        #
-        #
-        #     # for seed in self.parser.repeats:
-        #     #     number = self.parser.repeats[seed]
-        #     #     if number in data:
-        #     #         data[number]+=1
-        #     #     else:
-        #     #         data[number] =1
-        #     #
-        #     # for number in self.order(data):
-        #     #
-        #     #     if int(data[number]) >max:
-        #     #         max = int(data[number])
-        #     #         self.mode = number
-        #     #
-        #     #     hold = 0
-        #     #     while hold < data[number]:
-        #     #         if index == int(round(len(self.parser.repeats) / 2)):
-        #     #             self.median = number
-        #     #         x1.append(index)
-        #     #         y1.append(number)
-        #     #         index= index+1
-        #     #         hold +=1
-        #
-        #     if(first == True):
-        #         first = False
-        #         #clear axes
-        #         self.pop_analysis_repeats_graph.canvas.axes.clear()
-        #         #the following are for plotting / formatting
-        #         self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1, label=cspr_filenames[i])
-        #         self.pop_analysis_repeats_graph.canvas.axes.set_xlabel('Seed Id Number')
-        #         self.pop_analysis_repeats_graph.canvas.axes.set_ylabel('Number of Repeats')
-        #         self.pop_analysis_repeats_graph.canvas.axes.set_title('Number of Repeats per Seed Id Number')
-        #         #always redraw at the end
-        #         self.pop_analysis_repeats_graph.canvas.draw()
-        #         i += 1
-        #     else:
-        #         self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1, label=cspr_filenames[i])
-        #         self.pop_analysis_repeats_graph.canvas.draw()
-        #         i += 1
-        #
-        # self.pop_analysis_repeats_graph.canvas.axes.legend(loc=0)
-        # self.pop_analysis_repeats_graph.canvas.draw()
+
+    # this function graphs the repeats_vs_seeds graph
+    def plot_repeats_vs_seeds(self, endoChoice):
+        #selected_files = self.org_Table.selectedItems()
+        #first = True
+        #cspr_filenames = []
+        #plots = []
+        #i = 0
+        #endo = str(self.endoBox.currentText())
+        #endo = endo[:endo.find(" ")]
+        data = {}
+        for seed in self.parser.popData:
+            number = 0
+            for repeat in self.parser.popData[seed]:
+                number += 1
+            if number in data:
+                data[number] += 1
+            else:
+                data[number] = 1
+        
+        max = 0
+        y1 = []
+        x1 = []
+        plots = []
+        time = 0
+        index = 0
+
+        for number in self.order(data):
+            time += 1
+
+            if int(data[number]) > max:
+                max = int(data[number])
+                self.mode = number
+
+            hold = 0
+            while hold < data[number]:
+                if index == int(round(len(self.parser.popData) / 2)):
+                    self.median = number
+                x1.append(index)
+                y1.append(number)
+
+                index = index + 1
+                hold += 1
+
+        # now plot the stuff
+        self.pop_analysis_repeats_graph.canvas.axes.clear()
+        # set everything up
+        self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1)
+        self.pop_analysis_repeats_graph.canvas.axes.set_xlabel('Seed ID Number')
+        self.pop_analysis_repeats_graph.canvas.axes.set_ylabel('Number of Repeats')
+        self.pop_analysis_repeats_graph.canvas.axes.set_title('Number of Repeats per Seed ID Number')
+        # now draw
+        self.pop_analysis_repeats_graph.canvas.draw()
 
     def order(self,data_par):
         data = dict(data_par)
@@ -599,8 +588,9 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
             cspr_file_name = GlobalSettings.CSPR_DB + '/' + self.org_code_line_edit.text() + '_' + GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0] + '.cspr'
             os.remove(self.combined_fna_file)
             self.process.kill()
-            GlobalSettings.pop_Analysis.total_org_number = GlobalSettings.pop_Analysis.parser.popParser(cspr_file_name, GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0])
-            GlobalSettings.pop_Analysis.fill_data()
+            endoChoice = GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0]
+            GlobalSettings.pop_Analysis.total_org_number = GlobalSettings.pop_Analysis.parser.popParser(cspr_file_name, endoChoice)
+            GlobalSettings.pop_Analysis.fill_data(endoChoice)
             self.cancel_function()
 
         #--------------getting the arugments---------------------------------
