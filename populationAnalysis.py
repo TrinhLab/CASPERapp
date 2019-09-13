@@ -25,6 +25,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.ref_para_list = list()
         self.mode = 0
         self.find_locs_button.clicked.connect(self.find_locations)
+        self.clear_loc_button.clicked.connect(self.clear_loc_table)
 
 
         #orgonaism table
@@ -79,22 +80,54 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.directory = path
         self.get_data()
 
+    # this function clears the loc_finder_table
+    def clear_loc_table(self):
+        self.loc_finder_table.clearContents()
+        self.loc_finder_table.setRowCount(0)
+
     # this is the find_locations function
     # it takes the selected Seed IDs from the table2, and outputs their locations to the locations table
     def find_locations(self):
-        selectedList = self.table2.selectedItems();
+        selectedList = self.table2.selectedItems()
+        tableIndex = 0
 
+        # error checking
         if len(selectedList) == 0:
-            print("No items selected")
+            QtWidgets.QMessageBox.question(self, "Error", "Please select at least 1 seed to find locations of.",
+                                                QtWidgets.QMessageBox.Ok)
+            self.loc_finder_table.setRowCount(0)
             return
 
-        for i in range(self.table2.rowCount()):
-            if self.table2.item(i,0).isSelected():
-                currentSeed = self.table2.item(i,0).text()
-                for item in self.parser.popData[currentSeed]:
-                    print(item)
+        # loop through and get the data
+        for i in range(len(selectedList)):
+            # we only want the first column's data for the popParser key
+            if i % 9 == 0:
+                currentSeed = selectedList[i].text()
 
-    
+                for item in self.parser.popData[currentSeed]:
+                    self.loc_finder_table.setRowCount(tableIndex + 1)
+                    tempSeq = item[3]
+                    tempOrg = item[0]
+                    tempChrom = item[1]
+                    tempLoc = item[2]
+
+                    tabSeq = QtWidgets.QTableWidgetItem()
+                    tabSeq.setData(QtCore.Qt.EditRole, tempSeq)
+                    tabOrg = QtWidgets.QTableWidgetItem()
+                    tabOrg.setData(QtCore.Qt.EditRole, tempOrg)
+                    tabChrom = QtWidgets.QTableWidgetItem()
+                    tabChrom.setData(QtCore.Qt.EditRole, int(tempChrom))
+                    tabLoc = QtWidgets.QTableWidgetItem()
+                    tabLoc.setData(QtCore.Qt.EditRole, int(tempLoc))
+
+                    self.loc_finder_table.setItem(tableIndex, 0, tabSeq)
+                    self.loc_finder_table.setItem(tableIndex, 1, tabOrg)
+                    self.loc_finder_table.setItem(tableIndex, 2, tabChrom)
+                    self.loc_finder_table.setItem(tableIndex, 3, tabLoc)
+                    tableIndex += 1
+        
+        self.loc_finder_table.resizeColumnsToContents()
+
 
     # this function builds the Select Organisms table
     def get_data(self):

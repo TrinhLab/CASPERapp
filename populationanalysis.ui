@@ -276,6 +276,19 @@
      <string>Show Meta Genomic CSPR Files</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="clear_loc_button">
+    <property name="geometry">
+     <rect>
+      <x>1074</x>
+      <y>700</y>
+      <width>131</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Clear Locations</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
