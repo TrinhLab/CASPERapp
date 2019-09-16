@@ -776,7 +776,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
 
-        print(self.checked_info)
 
     # this function is very similar for the Kegg version of collect_table_data
     # difference is that it doesn't use the checkboxes from Annotation Window, just the search values
