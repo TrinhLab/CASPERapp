@@ -269,7 +269,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         # --- Setup for Gene Entry Field --- #
         self.geneEntryField.setPlainText("Example Inputs: \n"
                                                "Gene (LocusID): YOL086C  *for Saccharomyces Cerevisiae ADH1 gene* \n"
-                                               "Position: (chromosome,start,stop)(chromosome,start,stop)...\n"
+                                               "Position: chromosome,start,stop\n chromosome,start,stop...\n"
                                                "Sequence: *Pure sequence. CASPER will search for targets and report off"
                                                "targets based on the genome selected if any*")
 
@@ -409,8 +409,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 ginput = inputstring.split(',')
                 self.run_results("gene", ginput)
             elif self.radioButton_Position.isChecked():
-                pinput = inputstring.split(';')
-                self.run_results("position", pinput)
+                self.run_results("position", inputstring)
             elif self.radioButton_Sequence.isChecked():
                 sinput = inputstring
                 self.run_results("sequence", sinput)
@@ -545,16 +544,16 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Results.change_start_end_button.setEnabled(False)
         self.Results.displayGeneViewer.setChecked(0)
 
-        # make sure an annotation file has been selected
-        if self.Annotations_Organism.currentText() == "":
-            error = QtWidgets.QMessageBox.question(self, "No Annotation",
-                                                   "Please select an Annotation from either KEGG, NCBI, or provide you own Annotation File"
-                                                   , QtWidgets.QMessageBox.Ok)
-            self.progressBar.setValue(0)
-            return
-
 
         if inputtype == "gene":
+            # make sure an annotation file has been selected
+            if self.Annotations_Organism.currentText() == "":
+                error = QtWidgets.QMessageBox.question(self, "No Annotation",
+                                                   "Please select an Annotation from either KEGG, NCBI, or provide you own Annotation File"
+                                                   , QtWidgets.QMessageBox.Ok)
+                self.progressBar.setValue(0)
+                return
+            
             # ncbi file search code
             if self.NCBI_Select.isChecked():
                 type_of_annotation_file = ""
@@ -683,8 +682,45 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.progressBar.setValue(0)
                 return
         if inputtype == "position":
-            ginfo = inputstring[1:-1].split(",")
-            self.progressBar.setValue(45)
+            inputstring = inputstring.replace(' ', '')
+            searchInput = inputstring.split('\n')
+            full_org = str(self.orgChoice.currentText())
+            self.checked_info.clear()
+            self.check_ntseq_info.clear()
+
+            for item in searchInput:
+                searchIndicies = item.split(',')
+
+                # make sure the right amount of arguments were passed
+                if len(searchIndicies) != 3:
+                    QtWidgets.QMessageBox.question(self, "Position Error: Invalid Input",
+                                                   "There are 3 arguments required for this function. The chromosome, start position, and end position.",
+                                                   QtWidgets.QMessageBox.Ok)
+                    self.progressBar.setValue(0)
+                    return
+
+                # make sure user inputs digits
+                if not searchIndicies[0].isdigit() or not searchIndicies[1].isdigit() or not searchIndicies[2].isdigit():
+                    QtWidgets.QMessageBox.question(self, "Position Error: Invalid Input",
+                                                   "The positions given must be integers. Please try again.",
+                                                   QtWidgets.QMessageBox.Ok)
+                    self.progressBar.setValue(0)
+                    return
+                # make sure start is less than end
+                elif int(searchIndicies[1]) >= int(searchIndicies[2]):
+                    QtWidgets.QMessageBox.question(self, "Position Error: Start must be less than End",
+                                                   "The start index must be less than the end index.",
+                                                   QtWidgets.QMessageBox.Ok)
+                    self.progressBar.setValue(0)
+                    return
+                # append the data into the checked_info 
+                self.checked_info[str(searchIndicies[0]) + ',' + str(searchIndicies[1]) + ',' + str(searchIndicies[2])] = (int(searchIndicies[0]), int(searchIndicies[1]), int(searchIndicies[2]))
+
+            self.progressBar.setValue(50)
+            self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
+                                   self.checked_info, self.check_ntseq_info, "")
+            self.progressBar.setValue(100)
+            self.pushButton_ViewTargets.setEnabled(True)
         if inputtype == "sequence":
             self.progressBar.setValue(45)
         # For processing the gene sequence from a specified fasta file.
@@ -739,6 +775,8 @@ class CMainWindow(QtWidgets.QMainWindow):
                                    self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
+
+        print(self.checked_info)
 
     # this function is very similar for the Kegg version of collect_table_data
     # difference is that it doesn't use the checkboxes from Annotation Window, just the search values
