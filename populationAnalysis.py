@@ -47,12 +47,13 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.table2.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+        self.table2.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.table2.resizeColumnsToContents()
 
         #Finder table
-        self.loc_finder_table.setColumnCount(4)
+        self.loc_finder_table.setColumnCount(5)
         self.loc_finder_table.setShowGrid(False)
-        self.loc_finder_table.setHorizontalHeaderLabels(["Sequence", "Organism", "Chromosome", "Location"])
+        self.loc_finder_table.setHorizontalHeaderLabels(["Seed ID", "Sequence", "Organism", "Chromosome", "Location"])
         self.loc_finder_table.horizontalHeader().setSectionsClickable(True)
         self.loc_finder_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.loc_finder_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -111,6 +112,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     tempChrom = item[1]
                     tempLoc = item[2]
 
+                    tabSeed = QtWidgets.QTableWidgetItem()
+                    tabSeed.setData(QtCore.Qt.EditRole, currentSeed)
                     tabSeq = QtWidgets.QTableWidgetItem()
                     tabSeq.setData(QtCore.Qt.EditRole, tempSeq)
                     tabOrg = QtWidgets.QTableWidgetItem()
@@ -120,10 +123,11 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     tabLoc = QtWidgets.QTableWidgetItem()
                     tabLoc.setData(QtCore.Qt.EditRole, int(tempLoc))
 
-                    self.loc_finder_table.setItem(tableIndex, 0, tabSeq)
-                    self.loc_finder_table.setItem(tableIndex, 1, tabOrg)
-                    self.loc_finder_table.setItem(tableIndex, 2, tabChrom)
-                    self.loc_finder_table.setItem(tableIndex, 3, tabLoc)
+                    self.loc_finder_table.setItem(tableIndex, 0, tabSeed)
+                    self.loc_finder_table.setItem(tableIndex, 1, tabSeq)
+                    self.loc_finder_table.setItem(tableIndex, 2, tabOrg)
+                    self.loc_finder_table.setItem(tableIndex, 3, tabChrom)
+                    self.loc_finder_table.setItem(tableIndex, 4, tabLoc)
                     tableIndex += 1
         
         self.loc_finder_table.resizeColumnsToContents()
