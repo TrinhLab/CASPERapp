@@ -681,6 +681,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             else:
                 self.progressBar.setValue(0)
                 return
+        # position code below
         if inputtype == "position":
             inputstring = inputstring.replace(' ', '')
             searchInput = inputstring.split('\n')
@@ -714,29 +715,54 @@ class CMainWindow(QtWidgets.QMainWindow):
                     self.progressBar.setValue(0)
                     return
                 # append the data into the checked_info 
-                self.checked_info[str(searchIndicies[0]) + ',' + str(searchIndicies[1]) + ',' + str(searchIndicies[2])] = (int(searchIndicies[0]), int(searchIndicies[1]), int(searchIndicies[2]))
+                tempString = 'chrom: ' + str(searchIndicies[0]) + ' start: ' + str(searchIndicies[1]) + ' end: ' + str(searchIndicies[2])
+                self.checked_info[tempString] = (int(searchIndicies[0]), int(searchIndicies[1]), int(searchIndicies[2]))
 
             self.progressBar.setValue(50)
             self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
                                    self.checked_info, self.check_ntseq_info, "")
             self.progressBar.setValue(100)
             self.pushButton_ViewTargets.setEnabled(True)
+        # sequence code below
         if inputtype == "sequence":
+            checkString = 'AGTCN'
             self.progressBar.setValue(45)
-        # For processing the gene sequence from a specified fasta file.
-        """s = SeqFromFasta()
-        filename = self.dbpath + org + ".fna"
-        s.setfilename(filename)
-        progvalue = 75
-        self.progressBar.setValue(progvalue)
-        for gene in inputstring:
-            s.getsequenceandtargets(ginfo[gene], 100, 100, self.dbpath+'/'+org, endo)
-            progvalue += 25/len(inputstring)
-            self.progressBar.setValue(progvalue)
-            self.view_my_results.loadGenesandTargets(s.getgenesequence(), ginfo[gene][2]+100, ginfo[gene][3]-100,
-                                                     s.gettargets(), gene)
-        self.progressBar.setValue(100)
-        self.pushButton_ViewTargets.setEnabled(True)"""
+            inputstring = inputstring.upper()
+
+            # make sure all the chars are one of A, G, T, C, or N
+            for letter in inputstring:
+                if letter == '\n':
+                    continue
+                if letter not in checkString:
+                    QtWidgets.QMessageBox.question(self, "Sequence Error",
+                                                   "The sequence must consist of A, G, T, C, or N. No other characters are allowed.",
+                                                   QtWidgets.QMessageBox.Ok)
+                    self.progressBar.setValue(0)
+                    return
+
+            myEndoChoice = str(self.endoChoice.currentText())
+
+            fna_file_path = GlobalSettings.CSPR_DB + '/temp.fna'
+
+            outFile = open(fna_file_path, 'w')
+            outFile.write('>temp org here\n')
+            outFile.write(inputstring)
+            outFile.close()
+
+            # args i need:
+            """
+                fna_file_path: already up above
+                endo_choice: already up above
+                pam -> taken from APIs and endo choice: pam = self.sq.endo_info[endo_choice][0].split(',')[0]
+                code -> bsu or something like that
+                pamdir -> check if endo_info[endo_choice] is 3 or 5. 3 = true, 5 = false
+                output_location -> what folder to store it in: cspr_db
+                path_to_info -> path to CASPERinfo
+                org_name -> temp_org
+                gRNA_length -> endo_info[endo][2]
+                seed_length -> endo_info[endo][1]
+                second_code is just empty
+            """
 
     def launch_newGenome(self):
        self.newGenome.show()
