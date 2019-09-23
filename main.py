@@ -20,6 +20,7 @@ from NCBI_API import Assembly
 from export_to_csv import export_csv_window
 from cspr_chromesome_selection import cspr_chromesome_selection
 from generateLib import genLibrary
+from functools import partial
 ############################## MT Libraries #####################
 import operator
 import pyqtgraph as pg
@@ -719,6 +720,8 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.checked_info[tempString] = (int(searchIndicies[0]), int(searchIndicies[1]), int(searchIndicies[2]))
 
             self.progressBar.setValue(50)
+            
+
             self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
                                    self.checked_info, self.check_ntseq_info, "")
             self.progressBar.setValue(100)
@@ -726,11 +729,13 @@ class CMainWindow(QtWidgets.QMainWindow):
         # sequence code below
         if inputtype == "sequence":
             checkString = 'AGTCN'
-            self.progressBar.setValue(45)
+            self.checked_info.clear()
+            self.progressBar.setValue(10)
             inputstring = inputstring.upper()
 
             # make sure all the chars are one of A, G, T, C, or N
             for letter in inputstring:
+                # skip the end line character
                 if letter == '\n':
                     continue
                 if letter not in checkString:
@@ -739,30 +744,76 @@ class CMainWindow(QtWidgets.QMainWindow):
                                                    QtWidgets.QMessageBox.Ok)
                     self.progressBar.setValue(0)
                     return
-
-            myEndoChoice = str(self.endoChoice.currentText())
-
+            self.progressBar.setValue(30)
+            # build the CSPR file, and go into results
             fna_file_path = GlobalSettings.CSPR_DB + '/temp.fna'
-
+            self.checked_info['Sequence Finder'] = (1, 0, len(inputstring))
             outFile = open(fna_file_path, 'w')
             outFile.write('>temp org here\n')
             outFile.write(inputstring)
+            outFile.write('\n\n')
             outFile.close()
+            self.progressBar.setValue(55)
+            self.build_cspr_for_seq(fna_file_path)
 
-            # args i need:
-            """
-                fna_file_path: already up above
-                endo_choice: already up above
-                pam -> taken from APIs and endo choice: pam = self.sq.endo_info[endo_choice][0].split(',')[0]
-                code -> bsu or something like that
-                pamdir -> check if endo_info[endo_choice] is 3 or 5. 3 = true, 5 = false
-                output_location -> what folder to store it in: cspr_db
-                path_to_info -> path to CASPERinfo
-                org_name -> temp_org
-                gRNA_length -> endo_info[endo][2]
-                seed_length -> endo_info[endo][1]
-                second_code is just empty
-            """
+    # this function actually builds the cspr file
+    # I am not pulling out the data for the progress bar here, but it could be added easily. Figured it would be best without it since the progress should run quickly
+    def build_cspr_for_seq(self, fna_file_path):
+        seq_search_process = QtCore.QProcess()
+        # this function decides what to do when the process is finished.
+        # what it does:
+        #       Deletes the temp FNA file, and calls transfer_data in results.
+        def finished():
+            self.proc_running = False
+
+            # get the file name
+            cspr_file_name = GlobalSettings.CSPR_DB + '/' + code + '_' + myEndoChoice + '.cspr'
+            os.remove(fna_file_path)
+            seq_search_process.kill()
+            self.Results.transfer_data('tempCode', [str(self.endoChoice.currentText())], os.getcwd(),
+                                   self.checked_info, self.check_ntseq_info, "")
+            self.progressBar.setValue(100)
+            self.pushButton_ViewTargets.setEnabled(True)
+            self.Results.seq_finder_cspr_file = cspr_file_name
+
+        #--------------------getting all of the arguments-------------------
+        myEndoChoice = str(self.endoChoice.currentText())
+        my_seq = SeqTranslate()
+        pam = my_seq.endo_info[myEndoChoice][0].split(',')[0]
+        code = 'tempCode'
+        if int(my_seq.endo_info[myEndoChoice][3]) == 3:
+            pamdir = False
+        else:
+            pamdir = True
+            
+        output_location = GlobalSettings.CSPR_DB
+        path_to_info = GlobalSettings.appdir + '/CASPERinfo'
+        orgName = 'temp org'
+        gRNA_length = my_seq.endo_info[myEndoChoice][2]
+        seed_length = my_seq.endo_info[myEndoChoice][1]
+        secondCode = 'test second code'
+        #----------------------------------------------------------------------
+
+        #------------compile the executable line------------------------------------
+        program = '"' + GlobalSettings.appdir + '/Casper_Seq_Finder_Windows' + '" '
+        args =  '"' + myEndoChoice + '" '
+        args = args + '"' + pam + '" '
+        args = args + '"' + code + '" '
+        args = args + str(pamdir) + ' '
+        args = args + '"' + output_location + '" '
+        args = args + '"' + path_to_info + '" '
+        args = args + '"' + fna_file_path + '" '
+        args = args + '"' + orgName + '" '
+        args = args + gRNA_length + ' '
+        args = args + seed_length + ' '
+        args = args + '"' + secondCode + '"'
+        program = program + args
+        #----------------------------------------------------------------------------
+
+        # start the process
+        self.proc_running = True
+        seq_search_process.start(program)
+        seq_search_process.finished.connect(finished)
 
     def launch_newGenome(self):
        self.newGenome.show()

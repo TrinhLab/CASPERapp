@@ -99,6 +99,7 @@ class Results(QtWidgets.QMainWindow):
         self.rows_and_seq_list = []
         self.seq_and_avg_list = []
         self.files_list = []
+        self.seq_finder_cspr_file = ''
 
     # this function opens the export_to_csv window
     # first it makes sure that the user actually has some highlighted targets that they want exported
@@ -474,6 +475,10 @@ class Results(QtWidgets.QMainWindow):
         self.first_boot = True
 
     def goBack(self):
+        # check and see if they searched on Sequence. If so, delete the temp CSPR file
+        if len(self.seq_finder_cspr_file) > 0:
+            os.remove(self.seq_finder_cspr_file)
+            GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
         GlobalSettings.mainWindow.show()
         self.cotarget_checkbox.setChecked(0)
         self.hide()
@@ -970,6 +975,11 @@ class Results(QtWidgets.QMainWindow):
 
     # this function calls the closingWindow class.
     def closeEvent(self, event):
+        # check and see if they searched on Sequence. If so, delete the temp CSPR file
+        if len(self.seq_finder_cspr_file) > 0:
+            os.remove(self.seq_finder_cspr_file)
+            GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
+
         GlobalSettings.mainWindow.closeFunction()
         event.accept()
 
