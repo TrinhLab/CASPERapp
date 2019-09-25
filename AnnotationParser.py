@@ -113,6 +113,13 @@ class Annotation_Parser:
                         else:
                             para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['product'][0]
 
+                    # pull out the protein ID
+                    if 'protein_id' in feature.qualifiers:
+                        if para_dict_key_string == "":
+                            para_dict_key_string = feature.qualifiers['protein_id'][0]
+                        else:
+                            para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['protein_id'][0]
+
         # not sure if this number is correct, yet
         self.max_chrom = indexNumber
 
