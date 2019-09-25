@@ -479,6 +479,7 @@ class Results(QtWidgets.QMainWindow):
         if len(self.seq_finder_cspr_file) > 0:
             os.remove(self.seq_finder_cspr_file)
             GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
+            self.seq_finder_cspr_file = ''
         GlobalSettings.mainWindow.show()
         self.cotarget_checkbox.setChecked(0)
         self.hide()
@@ -979,6 +980,7 @@ class Results(QtWidgets.QMainWindow):
         if len(self.seq_finder_cspr_file) > 0:
             os.remove(self.seq_finder_cspr_file)
             GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
+            self.seq_finder_cspr_file = ''
 
         GlobalSettings.mainWindow.closeFunction()
         event.accept()
