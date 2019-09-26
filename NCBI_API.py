@@ -90,8 +90,8 @@ class Assembly:
             plain_text = source.text
             soup = BeautifulSoup(plain_text, "html.parser")
 
-            refseq_link = str(soup.find('a', text="Download the RefSeq assembly"))
-            genbank_link = str(soup.find('a', text="Download the GenBank assembly"))
+            refseq_link = str(soup.find('a', text="FTP directory for RefSeq assembly"))
+            genbank_link = str(soup.find('a', text="FTP directory for GenBank assembly"))
             orgName = soup.find('dd')
             refseq_link = refseq_link[refseq_link.find("=") + 2: refseq_link.find(">") - 1]
             genbank_link = genbank_link[genbank_link.find("=") + 2: genbank_link.find(">") - 1]
