@@ -478,6 +478,8 @@ class Results(QtWidgets.QMainWindow):
         # check and see if they searched on Sequence. If so, delete the temp CSPR file
         if len(self.seq_finder_cspr_file) > 0:
             os.remove(self.seq_finder_cspr_file)
+            self.displayGeneViewer.setEnabled(False)
+            self.gene_viewer_settings_button.setEnabled(True)
             GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
             self.seq_finder_cspr_file = ''
         GlobalSettings.mainWindow.show()

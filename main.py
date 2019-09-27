@@ -345,13 +345,17 @@ class CMainWindow(QtWidgets.QMainWindow):
             if self.radioButton_Gene.isChecked():
                 ginput = inputstring.split(',')
                 found_matches_bool = self.run_results("gene", ginput, openAnnoWindow=False)
+            elif self.radioButton_Position.isChecked() or self.radioButton_Sequence.isChecked():
+                QtWidgets.QMessageBox.question(self, "Error", "Generate Library can only work with Gene (Locus ID)", QtWidgets.QMessageBox.Ok)
+                return
+            """
             elif self.radioButton_Position.isChecked():
                 pinput = inputstring.split(';')
                 found_matches_bool = self.run_results("position", pinput,openAnnoWindow=False)
             elif self.radioButton_Sequence.isChecked():
                 sinput = inputstring
                 found_matches_bool = self.run_results("sequence", sinput, openAnnoWindow=False)
-
+            """
             # if matches are found
             if found_matches_bool == True:
                 # get the cspr file name
@@ -733,6 +737,24 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.progressBar.setValue(10)
             inputstring = inputstring.upper()
 
+            # check to make sure that the use gave a long enough sequence
+            if len(inputstring) < 100:
+                QtWidgets.QMessageBox.question(self, "Error", "The sequence given is too small. At least 100 characters is required.", QtWidgets.QMessageBox.Ok)
+                self.progressBar.setValue(0)
+                return
+
+            # give a warning if the length of the sequence is long 
+            if len(inputstring) > 30000:
+                error = QtWidgets.QMessageBox.question(self, "Large Sequence Detected",
+                                                       "The sequence given is a large one, and could slow down the process.\n\n"
+                                                       "Do you wish to continue?",
+                                                       QtWidgets.QMessageBox.Yes |
+                                                       QtWidgets.QMessageBox.No,
+                                                       QtWidgets.QMessageBox.No)
+                if (error == QtWidgets.QMessageBox.No):
+                    self.progressBar.setValue(0)
+                    return
+
             # make sure all the chars are one of A, G, T, C, or N
             for letter in inputstring:
                 # skip the end line character
@@ -745,9 +767,11 @@ class CMainWindow(QtWidgets.QMainWindow):
                     self.progressBar.setValue(0)
                     return
             self.progressBar.setValue(30)
+
             # build the CSPR file, and go into results
             fna_file_path = GlobalSettings.CSPR_DB + '/temp.fna'
             self.checked_info['Sequence Finder'] = (1, 0, len(inputstring))
+            self.check_ntseq_info['Sequence Finder'] = inputstring.replace('\n', '')
             outFile = open(fna_file_path, 'w')
             outFile.write('>temp org here\n')
             outFile.write(inputstring)
@@ -764,14 +788,15 @@ class CMainWindow(QtWidgets.QMainWindow):
         # what it does:
         #       Deletes the temp FNA file, and calls transfer_data in results.
         def finished():
-            self.proc_running = False
-
-            # get the file name
+            # get the file name and process all of the targets
             cspr_file_name = GlobalSettings.CSPR_DB + '/' + code + '_' + myEndoChoice + '.cspr'
             os.remove(fna_file_path)
             seq_search_process.kill()
             self.Results.transfer_data('tempCode', [str(self.endoChoice.currentText())], os.getcwd(),
                                    self.checked_info, self.check_ntseq_info, "")
+
+            self.Results.displayGeneViewer.setEnabled(True)
+            self.Results.gene_viewer_settings_button.setEnabled(False)
             self.progressBar.setValue(100)
             self.pushButton_ViewTargets.setEnabled(True)
             self.Results.seq_finder_cspr_file = cspr_file_name
@@ -811,7 +836,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         #----------------------------------------------------------------------------
 
         # start the process
-        self.proc_running = True
         seq_search_process.start(program)
         seq_search_process.finished.connect(finished)
 
