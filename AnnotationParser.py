@@ -6,6 +6,7 @@
 
 import gffutils
 import GlobalSettings
+import os
 from Bio import SeqIO
 
 class Annotation_Parser:
@@ -158,7 +159,7 @@ class Annotation_Parser:
             if prevFirstIndex != feature.seqid and prevFirstIndex != "":
                 indexNumber += 1
             # if we find a new gene, update the locus_tag/name
-            if feature.featuretype == "gene":
+            if feature.featuretype == "gene" or feature.featuretype == 'pseudogene':
 
                 # check and see if locus tag is in the attributes, go on the Name if locus_tag is not in there
                 if 'locus_tag' in feature.attributes:
