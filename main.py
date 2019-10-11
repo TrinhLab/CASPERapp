@@ -984,6 +984,18 @@ class CMainWindow(QtWidgets.QMainWindow):
             s = True
         else:
             s = False
+
+        # check to see if the sequence button is pressed, and act accordingly
+        if self.radioButton_Sequence.isChecked():
+            mySeq = SeqTranslate()
+            seq_checker = False
+            # time to reset the endo's
+            self.endoChoice.clear() 
+            for item in mySeq.endo_info:
+                self.endoChoice.addItem(item)
+        else:
+            seq_checker = True
+            self.changeEndos()
         current = self.selected_annotation()
         #print(current)
         if current == "Own":
@@ -1001,6 +1013,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Annotations_Organism.setEnabled(s)
         self.Annotation_Ownfile.setEnabled(s)
         self.Annotation_Kegg.setEnabled(s)
+        self.orgChoice.setEnabled(seq_checker)
         self.NCBI_Select.setEnabled(s)
 
     def selected_annotation(self):
