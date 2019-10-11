@@ -384,6 +384,8 @@ class genLibrary(QtWidgets.QDialog):
                 if temp_descript == 'hypothetical protein':
                     temp_descript = temp_descript + " " + str(self.anno_data[search][gene][0][3])
 
+                temp_descript = temp_descript + '||' +  descript[len(descript) - 1]
+
                 self.gen_lib_dict[temp_descript] = [self.anno_data[search][gene][0][1], self.anno_data[search][gene][0][3], self.anno_data[search][gene][0][4], self.anno_data[search][gene][0][5]]
 
 

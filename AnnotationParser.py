@@ -88,7 +88,7 @@ class Annotation_Parser:
                         self.reg_dict[currentLocusTag].append(values)
 
                 # if it's not a gene, skip rep_orgin, telomere, and source
-                elif feature.type != "rep_origin" and feature.type != "telomere" and feature.type != "source" and feature.type != 'assembly_gap':
+                elif feature.type != "rep_origin" and feature.type != "telomere" and feature.type != "source" and feature.type != 'assembly_gap' and feature.type != 'repeat_region':
                     # get the data for the normal dictionary and store it
                     if feature.location.strand == -1:
                         strandChar = '-'
@@ -286,23 +286,30 @@ class Annotation_Parser:
                         para_dict_key_string = splitLine[13] + ';'
                     else:
                         para_dict_key_string = para_dict_key_string + splitLine[13] + ';'
-                if splitLine[12] != '':
-                    if para_dict_key_string == '':
-                        para_dict_key_string = splitLine[12] + ';'
-                    else:
-                        para_dict_key_string = para_dict_key_string + splitLine[12] + ';'
+
+                # leaving this in for now, it's related accession
+                #if splitLine[12] != '':
+                 #   if para_dict_key_string == '':
+                #        para_dict_key_string = splitLine[12] + ';'
+                 #   else:
+                 #       para_dict_key_string = para_dict_key_string + splitLine[12] + ';'
+
+
                 if splitLine[14] != '':
                     if para_dict_key_string == '':
                         para_dict_key_string = splitLine[14] + ';'
                     else:
                         para_dict_key_string = para_dict_key_string + splitLine[14] + ';'
 
-                para_dict_key_string = para_dict_key_string.replace(',', ' ')
+                para_dict_key_string = para_dict_key_string.replace(',', '')
                 # set the parallel dictionary's key string
                 #para_dict_key_string = splitLine[13] + ";" + splitLine[12] + ";" + splitLine[14]
 
                 # if the current line we're on has the data we want for the parellel dictionary, store it
                 if len(para_dict_key_string) > 3:
+                    if para_dict_key_string[len(para_dict_key_string) - 1] == ';':
+                        para_dict_key_string = para_dict_key_string[0:len(para_dict_key_string) - 1]
+
                     if para_dict_key_string not in self.para_dict: # make a new input into the dict
                         self.para_dict[para_dict_key_string] = [currentLocusTag]
                     elif para_dict_key_string in self.para_dict:

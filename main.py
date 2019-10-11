@@ -80,45 +80,47 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.type = "nonkegg"
 
         # below chain of loops goes through and figures out how many rows are needed
-        for searchValue in mainWindow.searches:
-            for definition in mainWindow.searches[searchValue]:
-                for gene in mainWindow.searches[searchValue][definition]:
-                    index += 1
-        self.tableWidget.setRowCount(index)
+        #for searchValue in mainWindow.searches:
+        #    for definition in mainWindow.searches[searchValue]:
+        #        for gene in mainWindow.searches[searchValue][definition]:
+        #            index += 1
+        #self.tableWidget.setRowCount(index)
 
         index = 0
         for searchValue in mainWindow.searches:
             for definition in mainWindow.searches[searchValue]:
                 for gene in mainWindow.searches[searchValue][definition]:
-                    # set the checkbox
-                    ckbox = QtWidgets.QCheckBox()
-                    self.tableWidget.setCellWidget(index, 4, ckbox)
+                    if(gene[2] != "CDS" and gene[2] != "mRNA" and gene[2] != "exon"):
+                        self.tableWidget.setRowCount(index + 1)
+                        # set the checkbox
+                        ckbox = QtWidgets.QCheckBox()
+                        self.tableWidget.setCellWidget(index, 4, ckbox)
 
-                    # set the description part of the window as well as set the correct data for the checkbox
-                    if definition != gene[0]:
-                        defin_obj = QtWidgets.QTableWidgetItem(definition)
-                        self.tableWidget.setItem(index, 0, defin_obj)
-                        mainWindow.checkBoxes.append([definition])
-                    else:
-                        checkValue = searchValue.upper()
-                        defin_obj = QtWidgets.QTableWidgetItem(checkValue)
-                        self.tableWidget.setItem(index, 0 ,defin_obj)
-                        mainWindow.checkBoxes.append([checkValue])
-                    mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(gene)
-                    mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(ckbox)
+                        # set the description part of the window as well as set the correct data for the checkbox
+                        if definition != gene[0]:
+                            defin_obj = QtWidgets.QTableWidgetItem(definition)
+                            self.tableWidget.setItem(index, 0, defin_obj)
+                            mainWindow.checkBoxes.append([definition])
+                        else:
+                            checkValue = searchValue.upper()
+                            defin_obj = QtWidgets.QTableWidgetItem(checkValue)
+                            self.tableWidget.setItem(index, 0 ,defin_obj)
+                            mainWindow.checkBoxes.append([checkValue])
+                        mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(gene)
+                        mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(ckbox)
 
-                    # set the type in the window
-                    type_obj = QtWidgets.QTableWidgetItem(gene[2])
-                    self.tableWidget.setItem(index, 2, type_obj)
+                        # set the type in the window
+                        type_obj = QtWidgets.QTableWidgetItem(gene[2])
+                        self.tableWidget.setItem(index, 2, type_obj)
 
-                    # set the gene id in the window
-                    gene_id_obj = QtWidgets.QTableWidgetItem(gene[0])
-                    self.tableWidget.setItem(index, 3, gene_id_obj)
+                        # set the gene id in the window
+                        gene_id_obj = QtWidgets.QTableWidgetItem(gene[0])
+                        self.tableWidget.setItem(index, 3, gene_id_obj)
 
-                    chrom_number = QtWidgets.QTableWidgetItem(str(gene[1]))
-                    self.tableWidget.setItem(index, 1, chrom_number)
+                        chrom_number = QtWidgets.QTableWidgetItem(str(gene[1]))
+                        self.tableWidget.setItem(index, 1, chrom_number)
 
-                    index += 1
+                        index += 1
         index = 0
         self.tableWidget.resizeColumnsToContents()
 
