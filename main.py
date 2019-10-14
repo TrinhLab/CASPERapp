@@ -90,7 +90,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         for searchValue in mainWindow.searches:
             for definition in mainWindow.searches[searchValue]:
                 for gene in mainWindow.searches[searchValue][definition]:
-                    if(gene[2] != "CDS" and gene[2] != "mRNA" and gene[2] != "exon"):
+                    if(gene[2] == 'gene' or gene[2] == 'tRNA'):
                         self.tableWidget.setRowCount(index + 1)
                         # set the checkbox
                         ckbox = QtWidgets.QCheckBox()
