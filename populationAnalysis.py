@@ -26,6 +26,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.mode = 0
         self.find_locs_button.clicked.connect(self.find_locations)
         self.clear_loc_button.clicked.connect(self.clear_loc_table)
+        self.directory = GlobalSettings.CSPR_DB
 
 
         #orgonaism table
@@ -78,7 +79,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     def launch(self,path):
         os.chdir(path)
-        self.directory = path
         self.get_data()
 
     # this function clears the loc_finder_table
