@@ -44,7 +44,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.table2.setShowGrid(False)
         self.table2.setHorizontalHeaderLabels(["Seed","% Conserved","Total Repeats","Avg. Repeats/Chromosome", "Consensus Sequence", "% Consensus", "Score","PAM", "Strand"])
         self.table2.horizontalHeader().setSectionsClickable(True)
-        self.table2.horizontalHeader().sectionClicked.connect(self.table_sorting)
+        self.table2.horizontalHeader().sectionClicked.connect(self.table2_sorting)
         self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.table2.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
@@ -56,8 +56,11 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loc_finder_table.setShowGrid(False)
         self.loc_finder_table.setHorizontalHeaderLabels(["Seed ID", "Sequence", "Organism", "Chromosome", "Location"])
         self.loc_finder_table.horizontalHeader().setSectionsClickable(True)
+        self.loc_finder_table.horizontalHeader().sectionClicked.connect(self.loc_table_sorter)
         self.loc_finder_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.loc_finder_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.loc_finder_table.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+        self.loc_finder_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.loc_finder_table.resizeColumnsToContents()
 
         # action buttons
@@ -67,7 +70,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         self.total_org_number = 0
 
-        self.switcher = [1,1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
+        self.switcher_table2 = [1,1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
+        self.switcher_loc_table = [1, 1, 1, 1, 1] # for sorting the location finder table
 
     def launch_ncbi_seacher(self):
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
@@ -478,12 +482,21 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.closeFunction()
         event.accept()
 
-    def table_sorting(self, logicalIndex):
-        self.switcher[logicalIndex] *= -1
-        if self.switcher[logicalIndex] == -1:
+    # sorting to table2: IE the table in top-right
+    def table2_sorting(self, logicalIndex):
+        self.switcher_table2[logicalIndex] *= -1
+        if self.switcher_table2[logicalIndex] == -1:
             self.table2.sortItems(logicalIndex, QtCore.Qt.DescendingOrder)
         else:
             self.table2.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
+
+    # sorting for location table: IE table in bottom right
+    def loc_table_sorter(self, logicalIndex):
+        self.switcher_loc_table[logicalIndex] *= -1
+        if(self.switcher_loc_table[logicalIndex] == -1):
+            self.loc_finder_table.sortItems(logicalIndex, QtCore.Qt.DescendingOrder)
+        else:
+            self.loc_finder_table.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
 
 
 
