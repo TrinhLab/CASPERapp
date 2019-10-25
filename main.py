@@ -46,6 +46,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.setWindowIcon(QtGui.QIcon("cas9image.png"))
         self.Submit_button.clicked.connect(self.submit)
         self.Go_Back_Button.clicked.connect(self.go_Back)
+        self.select_all_checkbox.stateChanged.connect(self.select_all_genes)
         self.mainWindow=""
         self.type = ""
 
@@ -142,6 +143,24 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
                 obj[2].setChecked(True)
             self.mainWindow.collect_table_data_nonkegg()
         return 0
+
+    # this is the connection for the select all checkbox
+    # selects/deselects all the genes in the table
+    def select_all_genes(self):
+        # check to see if we're selecting all of them or not
+        if self.select_all_checkbox.isChecked():
+            select_all = True
+        else:
+            select_all = False
+
+        # go through and do the selection
+        if self.type == 'kegg':
+            for i in range(self.tableWidget.rowCount()):
+                self.tableWidget.cellWidget(i, 2).setChecked(select_all)   
+        elif self.type == 'nonkegg':
+            for i in range(self.tableWidget.rowCount()):
+                self.tableWidget.cellWidget(i,4).setChecked(select_all)
+
 
     def fill_Table(self,mainWindow):
         self.tableWidget.clearContents()
