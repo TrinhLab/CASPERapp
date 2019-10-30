@@ -271,7 +271,7 @@ class CSPRparser:
             
             index += 2
 
-        return retNumber
+        return retNumber, referenceList
 
         """
         # for each file given

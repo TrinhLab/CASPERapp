@@ -112,12 +112,32 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         selectedList = self.table2.selectedItems()
         tableIndex = 0
 
+        org_chrom_num = list()
+        tempD = dict()
+
+
         # error checking
         if len(selectedList) == 0:
             QtWidgets.QMessageBox.question(self, "Error", "Please select at least 1 seed to find locations of.",
                                                 QtWidgets.QMessageBox.Ok)
             self.loc_finder_table.setRowCount(0)
             return
+
+        # get the chromosome numbers for each organism.
+        counter = 0
+        org_index = 0
+        for item in self.ref_para_list:
+            if item[0] not in tempD:
+                if counter != 0:
+                    org_chrom_num.append(counter)
+                
+                counter = 1
+                tempD[item[0]] = org_index
+                org_index += 1
+            else:
+                counter += 1
+        if counter != 0:
+            org_chrom_num.append(counter)
 
         # loop through and get the data
         for i in range(len(selectedList)):
@@ -129,8 +149,14 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     self.loc_finder_table.setRowCount(tableIndex + 1)
                     tempSeq = item[3]
                     tempOrg = item[0]
-                    tempChrom = item[1]
+                    tempChrom = int(item[1])
                     tempLoc = item[2]
+
+                    # calculate the true chromosome number
+                    tempIndex = tempD[tempOrg]
+                    while tempIndex > 0:
+                        tempChrom = tempChrom - org_chrom_num[int(tempIndex - 1)]
+                        tempIndex -= 1
 
                     tabSeed = QtWidgets.QTableWidgetItem()
                     tabSeed.setData(QtCore.Qt.EditRole, currentSeed)
@@ -287,7 +313,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             endoChoice = cspr_file_name.split('_')[1].split('.')[0]
             # call the parser and the call fill_data
             cspr_file_name = GlobalSettings.CSPR_DB + '/' + cspr_file_name
-            self.total_org_number =  self.parser.popParser(cspr_file_name, endoChoice)
+            self.total_org_number, self.ref_para_list =  self.parser.popParser(cspr_file_name, endoChoice)
             self.fill_data(endoChoice)
         # if the user is wanting to go with creating a new meta genomic cspr file
         else:
