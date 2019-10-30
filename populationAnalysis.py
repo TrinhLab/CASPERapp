@@ -61,7 +61,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.table2.setShowGrid(False)
         self.table2.setHorizontalHeaderLabels(["Seed","% Conserved","Total Repeats","Avg. Repeats/Chromosome", "Consensus Sequence", "% Consensus", "Score","PAM", "Strand"])
         self.table2.horizontalHeader().setSectionsClickable(True)
-        self.table2.horizontalHeader().sectionClicked.connect(self.table_sorting)
+        self.table2.horizontalHeader().sectionClicked.connect(self.table2_sorting)
         self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.table2.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
@@ -73,8 +73,11 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loc_finder_table.setShowGrid(False)
         self.loc_finder_table.setHorizontalHeaderLabels(["Seed ID", "Sequence", "Organism", "Chromosome", "Location"])
         self.loc_finder_table.horizontalHeader().setSectionsClickable(True)
+        self.loc_finder_table.horizontalHeader().sectionClicked.connect(self.loc_table_sorter)
         self.loc_finder_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.loc_finder_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.loc_finder_table.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+        self.loc_finder_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.loc_finder_table.resizeColumnsToContents()
 
         # action buttons
@@ -84,7 +87,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         self.total_org_number = 0
 
-        self.switcher = [1,1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
+        self.switcher_table2 = [1,1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
+        self.switcher_loc_table = [1, 1, 1, 1, 1]
 
     def launch_ncbi_seacher(self):
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
@@ -101,6 +105,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     # this function clears the loc_finder_table
     def clear_loc_table(self):
         self.loc_finder_table.clearContents()
+        self.loc_finder_table.setRowCount(0)
 
 
     def find_locations(self):
@@ -112,39 +117,40 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.question(self, "Error", "Please select at least 1 seed to find locations of.",
                                                 QtWidgets.QMessageBox.Ok)
             self.loc_finder_table.setRowCount(0)
+            return
 
-            # loop through and get the data
-            for i in range(len(selectedList)):
-                # we only want the first column's data for the popParser key
-                if i % 9 == 0:
-                    currentSeed = selectedList[i].text()
+        # loop through and get the data
+        for i in range(len(selectedList)):
+            # we only want the first column's data for the popParser key
+            if i % 9 == 0:
+                currentSeed = selectedList[i].text()
 
-                    for item in self.parser.popData[currentSeed]:
-                        self.loc_finder_table.setRowCount(tableIndex + 1)
-                        tempSeq = item[3]
-                        tempOrg = item[0]
-                        tempChrom = item[1]
-                        tempLoc = item[2]
+                for item in self.parser.popData[currentSeed]:
+                    self.loc_finder_table.setRowCount(tableIndex + 1)
+                    tempSeq = item[3]
+                    tempOrg = item[0]
+                    tempChrom = item[1]
+                    tempLoc = item[2]
 
-                        tabSeed = QtWidgets.QTableWidgetItem()
-                        tabSeed.setData(QtCore.Qt.EditRole, currentSeed)
-                        tabSeq = QtWidgets.QTableWidgetItem()
-                        tabSeq.setData(QtCore.Qt.EditRole, tempSeq)
-                        tabOrg = QtWidgets.QTableWidgetItem()
-                        tabOrg.setData(QtCore.Qt.EditRole, tempOrg)
-                        tabChrom = QtWidgets.QTableWidgetItem()
-                        tabChrom.setData(QtCore.Qt.EditRole, int(tempChrom))
-                        tabLoc = QtWidgets.QTableWidgetItem()
-                        tabLoc.setData(QtCore.Qt.EditRole, int(tempLoc))
+                    tabSeed = QtWidgets.QTableWidgetItem()
+                    tabSeed.setData(QtCore.Qt.EditRole, currentSeed)
+                    tabSeq = QtWidgets.QTableWidgetItem()
+                    tabSeq.setData(QtCore.Qt.EditRole, tempSeq)
+                    tabOrg = QtWidgets.QTableWidgetItem()
+                    tabOrg.setData(QtCore.Qt.EditRole, tempOrg)
+                    tabChrom = QtWidgets.QTableWidgetItem()
+                    tabChrom.setData(QtCore.Qt.EditRole, int(tempChrom))
+                    tabLoc = QtWidgets.QTableWidgetItem()
+                    tabLoc.setData(QtCore.Qt.EditRole, int(tempLoc))
 
-                        self.loc_finder_table.setItem(tableIndex, 0, tabSeed)
-                        self.loc_finder_table.setItem(tableIndex, 1, tabSeq)
-                        self.loc_finder_table.setItem(tableIndex, 2, tabOrg)
-                        self.loc_finder_table.setItem(tableIndex, 3, tabChrom)
-                        self.loc_finder_table.setItem(tableIndex, 4, tabLoc)
-                        tableIndex += 1
+                    self.loc_finder_table.setItem(tableIndex, 0, tabSeed)
+                    self.loc_finder_table.setItem(tableIndex, 1, tabSeq)
+                    self.loc_finder_table.setItem(tableIndex, 2, tabOrg)
+                    self.loc_finder_table.setItem(tableIndex, 3, tabChrom)
+                    self.loc_finder_table.setItem(tableIndex, 4, tabLoc)
+                    tableIndex += 1
 
-            self.loc_finder_table.resizeColumnsToContents()
+        self.loc_finder_table.resizeColumnsToContents()
 
 
         # this function builds the Select Organisms table
