@@ -59,7 +59,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         #top right table
         self.table2.setColumnCount(9)
         self.table2.setShowGrid(False)
-        self.table2.setHorizontalHeaderLabels(["Seed","% Conserved","Total Repeats","Avg. Repeats/Chromosome", "Consensus Sequence", "% Consensus", "Score","PAM", "Strand"])
+        self.table2.setHorizontalHeaderLabels(["Seed","% Coverage","Total Repeats","Avg. Repeats/Chromosome", "Consensus Sequence", "% Consensus", "Score","PAM", "Strand"])
         self.table2.horizontalHeader().setSectionsClickable(True)
         self.table2.horizontalHeader().sectionClicked.connect(self.table2_sorting)
         self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
