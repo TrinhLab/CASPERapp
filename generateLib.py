@@ -466,7 +466,7 @@ class genLibrary(QtWidgets.QDialog):
                 if len(target_list) == 0 or vec_index >= len(target_list):
                     break
                 while abs(target_list[vec_index][0] - prev_target[0]) < space:
-                    if target_list[vec_index][3] > prev_target[3]:
+                    if target_list[vec_index][3] > prev_target[3] and prev_target != (0,"xyz", "abc", 1, "-"):
                         self.Output[gene].remove(prev_target)
                         self.Output[gene].append(target_list[vec_index])
                         prev_target = target_list[vec_index]
