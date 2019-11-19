@@ -497,6 +497,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.pop_analysis_repeats_graph.canvas.draw()
 
 
+
     #this function is for the 3D bar graph
     def plot_3D_graph(self, endoChoice):
 

@@ -77,7 +77,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.graphicsView_2.setScene(self.scene2)
         self.graphicsView.viewport().installEventFilter(self)
 
-
     def eventFilter(self, source, event):
         if (event.type() == QtCore.QEvent.MouseMove and source is self.graphicsView.viewport()):
             coord = self.graphicsView.mapToScene(event.pos())
@@ -222,7 +221,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.chro_bar_create(dic_info)
         self.fill_Chromo_Text(dic_info)
 
-
     #fill in chromo bar visualization
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
@@ -279,7 +277,6 @@ class Multitargeting(QtWidgets.QMainWindow):
                 self.bar_coords.append(temp) #push x, y1, and y2 to this list
                 ind += 1
             i = i + 1
-
 
     #creates bar graph num of repeats vs. chromsome
     #this graphs is connected to the repeats_vs_chromo.py file

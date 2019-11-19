@@ -89,24 +89,11 @@
      <string>Find Locations</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_4">
-    <property name="geometry">
-     <rect>
-      <x>230</x>
-      <y>220</y>
-      <width>181</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Search Settings</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="analyze_button">
     <property name="geometry">
      <rect>
       <x>230</x>
-      <y>320</y>
+      <y>200</y>
       <width>181</width>
       <height>41</height>
      </rect>
@@ -181,7 +168,7 @@
       <x>10</x>
       <y>410</y>
       <width>481</width>
-      <height>281</height>
+      <height>301</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -286,7 +273,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Search for FNA File on NCBI</string>
+     <string>Search for .fna File on NCBI</string>
     </property>
    </widget>
    <widget class="QCheckBox" name="meta_genomic_cspr_checkbox">
@@ -299,7 +286,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Show Meta Genomic CSPR Files</string>
+     <string>Show Metagenomic .cspr Files</string>
     </property>
    </widget>
    <widget class="QPushButton" name="clear_loc_button">
@@ -335,15 +322,8 @@
      <string>View</string>
     </property>
    </widget>
-   <widget class="QMenu" name="menuTools">
-    <property name="title">
-     <string>Tools</string>
-    </property>
-    <addaction name="actionMetaGenome_Parser"/>
-   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
-   <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionMetaGenome_Parser">
