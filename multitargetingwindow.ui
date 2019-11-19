@@ -65,14 +65,14 @@
       <x>10</x>
       <y>90</y>
       <width>321</width>
-      <height>110</height>
+      <height>116</height>
      </rect>
     </property>
     <layout class="QFormLayout" name="formLayout">
      <item row="0" column="0">
       <widget class="QLabel" name="label_8">
        <property name="text">
-        <string>Number of Unique Sequences:</string>
+        <string>Number of Unique Sequences :</string>
        </property>
       </widget>
      </item>
@@ -86,14 +86,14 @@
      <item row="1" column="0">
       <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>Number of Repeat Sequences:</string>
+        <string>Number of Repeat Sequences :</string>
        </property>
       </widget>
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="label_6">
        <property name="text">
-        <string>Average Repeat:</string>
+        <string>Average Repeat :</string>
        </property>
       </widget>
      </item>
@@ -107,7 +107,7 @@
      <item row="3" column="0">
       <widget class="QLabel" name="label_22">
        <property name="text">
-        <string>Median Number of Repeats:</string>
+        <string>Median Number of Repeats :</string>
        </property>
       </widget>
      </item>
@@ -121,14 +121,14 @@
      <item row="4" column="0">
       <widget class="QLabel" name="label_24">
        <property name="text">
-        <string>Mode Number of Repeats</string>
+        <string>Mode Number of Repeats :</string>
        </property>
       </widget>
      </item>
      <item row="5" column="0">
       <widget class="QLabel" name="label_25">
        <property name="text">
-        <string>Ave. Score. Rep./ Ave. Score Uniq.</string>
+        <string>Avg. Score Rep./ Avg. Score Uniq. :</string>
        </property>
       </widget>
      </item>
@@ -192,7 +192,7 @@
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
-      <string>Repeats per. ID Number</string>
+      <string>Repeats per ID Number</string>
      </attribute>
      <widget class="repeats_vs_seeds_line" name="repeats_vs_seeds_line" native="true">
       <property name="geometry">
@@ -224,9 +224,9 @@
    <widget class="QLabel" name="label_17">
     <property name="geometry">
      <rect>
-      <x>860</x>
-      <y>60</y>
-      <width>47</width>
+      <x>940</x>
+      <y>40</y>
+      <width>21</width>
       <height>21</height>
      </rect>
     </property>
@@ -237,10 +237,10 @@
    <widget class="QLabel" name="label_18">
     <property name="geometry">
      <rect>
-      <x>1000</x>
-      <y>60</y>
-      <width>47</width>
-      <height>13</height>
+      <x>1060</x>
+      <y>40</y>
+      <width>21</width>
+      <height>16</height>
      </rect>
     </property>
     <property name="text">
@@ -252,7 +252,7 @@
      <rect>
       <x>910</x>
       <y>60</y>
-      <width>69</width>
+      <width>81</width>
       <height>22</height>
      </rect>
     </property>
@@ -260,9 +260,9 @@
    <widget class="QComboBox" name="max_chromo">
     <property name="geometry">
      <rect>
-      <x>1040</x>
+      <x>1028</x>
       <y>60</y>
-      <width>69</width>
+      <width>81</width>
       <height>22</height>
      </rect>
     </property>
@@ -270,14 +270,14 @@
    <widget class="QLabel" name="label_19">
     <property name="geometry">
      <rect>
-      <x>970</x>
+      <x>990</x>
       <y>100</y>
       <width>41</width>
       <height>20</height>
      </rect>
     </property>
     <property name="text">
-     <string>Seed Id</string>
+     <string>Seed ID</string>
     </property>
    </widget>
    <widget class="QWidget" name="verticalLayoutWidget_2">
@@ -397,8 +397,6 @@
      <string>View</string>
     </property>
     <addaction name="actionCASPER"/>
-    <addaction name="actionGenome_Viewer"/>
-    <addaction name="actionLocation_List"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
@@ -406,7 +404,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionUpload_Organism">
    <property name="text">
-    <string>Upload Organism...</string>
+    <string>Upload Organism</string>
    </property>
   </action>
   <action name="actionGenome_Viewer">

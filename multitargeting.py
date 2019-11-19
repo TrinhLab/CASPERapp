@@ -221,6 +221,8 @@ class Multitargeting(QtWidgets.QMainWindow):
                     dic_info[temp1][repeat[0]] = [self.sq.decompress64(repeat[1])]
         self.chro_bar_create(dic_info)
         self.fill_Chromo_Text(dic_info)
+
+
     #fill in chromo bar visualization
     def fill_Chromo_Text(self, info):
         chromo_pos = {}
@@ -360,7 +362,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.seeds_vs_repeats_bar.canvas.axes.set_xticklabels(repeats)
         self.seeds_vs_repeats_bar.canvas.axes.set_xlabel('Number of Repeats')
         self.seeds_vs_repeats_bar.canvas.axes.set_ylabel('Number of Sequences')
-        self.seeds_vs_repeats_bar.canvas.axes.set_title('Amount of sequence per number of repeats')
+        self.seeds_vs_repeats_bar.canvas.axes.set_title('Number of Sequences per Number of Repeats')
         #rects are all the bar objects in the graph
         rects = self.seeds_vs_repeats_bar.canvas.axes.patches
         rect_vals = []
@@ -429,9 +431,9 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.repeats_vs_seeds_line.canvas.axes.clear()
         #the following are for plotting / formatting
         self.repeats_vs_seeds_line.canvas.axes.plot(x1,y1)
-        self.repeats_vs_seeds_line.canvas.axes.set_xlabel('Seed Id Number')
+        self.repeats_vs_seeds_line.canvas.axes.set_xlabel('Seed ID Number')
         self.repeats_vs_seeds_line.canvas.axes.set_ylabel('Number of Repeats')
-        self.repeats_vs_seeds_line.canvas.axes.set_title('Number of Repeats per Seed Id Number')
+        self.repeats_vs_seeds_line.canvas.axes.set_title('Number of Repeats per Seed ID Number')
         #always redraw at the end
         self.repeats_vs_seeds_line.canvas.draw()
 
