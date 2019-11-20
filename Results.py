@@ -107,7 +107,7 @@ class Results(QtWidgets.QMainWindow):
         select_items = self.targetTable.selectedItems()
         if len(select_items) <= 0:
             QtWidgets.QMessageBox.question(self, "Nothing Selected",
-                                           "No targets were highlighted "
+                                           "No targets were highlighted."
                                            "Please highlight the targets you want to be exported to a CSV File!",
                                            QtWidgets.QMessageBox.Ok)
             return
@@ -407,7 +407,7 @@ class Results(QtWidgets.QMainWindow):
         endo_list = list()
 
         if self.endonucleaseBox.count() <= 1:
-            QtWidgets.QMessageBox.question(self, "Not enough endonucleases",
+            QtWidgets.QMessageBox.question(self, "Not Enough Endonucleases",
                                            "There are not enough endonucleases with this organism. "
                                            "At least 2 endonucleases are required for this function. "
                                            "Use Analyze New Genome to create CSPR files with other endonucleases.",

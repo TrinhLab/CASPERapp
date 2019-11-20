@@ -36,7 +36,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Find off-targets</string>
+    <string>Find Off-Targets</string>
    </property>
   </widget>
   <widget class="QCheckBox" name="modifyParamscheckBox">
@@ -226,7 +226,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>5' End specificity</string>
+     <string>5' End Specificity</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="fiveprimeseq">
@@ -347,7 +347,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Space between Guides</string>
+    <string>Space Between Guides</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="space_line_edit">
@@ -389,7 +389,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Off-targeting Progress</string>
+    <string>Off-Targeting Progress</string>
    </property>
   </widget>
   <widget class="QCheckBox" name="output_all_checkbox">

@@ -18,6 +18,7 @@ class OffTarget(QtWidgets.QDialog):
 
         super(OffTarget, self).__init__()
         uic.loadUi(GlobalSettings.appdir+'\OffTargetAnalysis.ui', self)
+        self.setWindowTitle("Off-Target Analysis")
         self.show()
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)

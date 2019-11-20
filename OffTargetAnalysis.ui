@@ -146,7 +146,7 @@
     <enum>QFrame::Plain</enum>
    </property>
    <property name="text">
-    <string>Off Target Analysis</string>
+    <string>Off-Target Analysis</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>

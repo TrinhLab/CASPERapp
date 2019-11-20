@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>525</width>
-    <height>341</height>
+    <height>192</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>204</x>
-     <y>170</y>
+     <y>80</y>
      <width>113</width>
      <height>20</height>
     </rect>
@@ -30,7 +30,7 @@
    <property name="geometry">
     <rect>
      <x>120</x>
-     <y>170</y>
+     <y>80</y>
      <width>81</width>
      <height>20</height>
     </rect>
@@ -45,8 +45,8 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>200</x>
-     <y>80</y>
+     <x>140</x>
+     <y>30</y>
      <width>241</width>
      <height>20</height>
     </rect>
@@ -55,8 +55,8 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>90</x>
-     <y>80</y>
+     <x>30</x>
+     <y>30</y>
      <width>91</width>
      <height>20</height>
     </rect>
@@ -68,8 +68,8 @@
   <widget class="QPushButton" name="browse_button">
    <property name="geometry">
     <rect>
-     <x>450</x>
-     <y>80</y>
+     <x>390</x>
+     <y>30</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -84,8 +84,8 @@
   <widget class="QPushButton" name="cancel_button">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>300</y>
+     <x>70</x>
+     <y>130</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -97,8 +97,8 @@
   <widget class="QPushButton" name="export_button">
    <property name="geometry">
     <rect>
-     <x>350</x>
-     <y>300</y>
+     <x>320</x>
+     <y>130</y>
      <width>75</width>
      <height>23</height>
     </rect>

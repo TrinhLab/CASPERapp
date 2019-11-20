@@ -444,7 +444,7 @@
   </action>
   <action name="actionOff_Target_Analysis">
    <property name="text">
-    <string>Off Target Analysis</string>
+    <string>Off-Target Analysis</string>
    </property>
   </action>
   <action name="actionNew">
@@ -484,7 +484,7 @@
   </action>
   <action name="actionCoTargeting">
    <property name="text">
-    <string>CoTargeting</string>
+    <string>Cotargeting</string>
    </property>
   </action>
   <action name="actionTo_CSV">

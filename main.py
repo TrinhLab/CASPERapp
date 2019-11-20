@@ -293,7 +293,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                                                "Gene (LocusID): YOL086C  *for Saccharomyces Cerevisiae ADH1 gene* \n"
                                                "Position: chromosome,start,stop\n chromosome,start,stop...\n"
                                                "Sequence: *Pure sequence. CASPER will search for targets and report off"
-                                               "targets based on the genome selected if any*")
+                                               "targets based on the genome selected, if any*")
 
         #self.Kegg_Search_Imput.setPlainText("test")
         #show functionalities on window
@@ -642,8 +642,8 @@ class CMainWindow(QtWidgets.QMainWindow):
                 #IE both have bsu or otherwise. Just warn the user that the program could crash, or that targets may not be found
                 checkList = self.Annotations_Organism.currentText().split(" ")
                 if(checkList[1] != self.shortHand[self.orgChoice.currentText()]):
-                    error = QtWidgets.QMessageBox.question(self, "Miss-matched Annotation File", "The annotation file you have selected does not match the CSPR file selected. Continuing could result in the program crashing. "
-                                                                                                 "Targets may not be found as well\n\n"
+                    error = QtWidgets.QMessageBox.question(self, "Mismatched Annotation File", "The annotation file you have selected does not match the .cspr file selected. Continuing could result in the program crashing. "
+                                                                                                 "Targets may not be found as well.\n\n"
                                                                  "Do you wish to continue?",
                                                            QtWidgets.QMessageBox.Yes |
                                                            QtWidgets.QMessageBox.No,
