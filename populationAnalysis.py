@@ -709,6 +709,7 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         self.sq = Algorithms.SeqTranslate()
         self.proc_running = False
         self.combined_fna_file = ''
+        self.cancelled = False
 
     # for when the user clicks the 'x' button
     def closeEvent(self, event):
@@ -756,7 +757,7 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
             if (error == QtWidgets.QMessageBox.No):
                 return -2
             else:
-                self.off_target_running = False
+                self.cancelled = True
                 self.process.kill()
 
         # close out and leave
@@ -839,13 +840,15 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         def finished():
             self.proc_running = False
 
-            # get the file name
-            cspr_file_name = GlobalSettings.CSPR_DB + '/' + self.org_code_line_edit.text() + '_' + GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0] + '.cspr'
+            if self.cancelled == False:
+                # get the file name
+                cspr_file_name = GlobalSettings.CSPR_DB + '/' + self.org_code_line_edit.text() + '_' + GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0] + '.cspr'
+                self.process.kill()
+                endoChoice = GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0]
+                GlobalSettings.pop_Analysis.total_org_number, GlobalSettings.pop_Analysis.ref_para_list = GlobalSettings.pop_Analysis.parser.popParser(cspr_file_name, endoChoice)
+                GlobalSettings.pop_Analysis.fill_data(endoChoice)
             os.remove(self.combined_fna_file)
-            self.process.kill()
-            endoChoice = GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0]
-            GlobalSettings.pop_Analysis.total_org_number = GlobalSettings.pop_Analysis.parser.popParser(cspr_file_name, endoChoice)
-            GlobalSettings.pop_Analysis.fill_data(endoChoice)
+            self.cancelled = False
             self.cancel_function()
 
         #--------------getting the arugments---------------------------------
