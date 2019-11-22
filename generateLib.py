@@ -161,12 +161,15 @@ class genLibrary(QtWidgets.QDialog):
             if self.off_target_running:
                 self.progressBar.setValue(100)
                 self.parse_off_file()
-                self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
+                did_work = self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
                 self.off_target_running = False
-                self.process.kill()
-                self.cancel_function()
-            os.remove(GlobalSettings.CSPR_DB + '/off_compressed.txt')
-            os.remove(GlobalSettings.CSPR_DB + '/temp_off.txt')
+                #self.process.kill()
+                if did_work != -1:
+                    self.cancel_function()
+                    os.remove(GlobalSettings.CSPR_DB + '/off_compressed.txt')
+                    os.remove(GlobalSettings.CSPR_DB + '/temp_off.txt')
+
+            
 
         # as off-targeting outputs things, update the off-target progress bar
         def progUpdate(p):
@@ -208,7 +211,7 @@ class genLibrary(QtWidgets.QDialog):
         cmd = exe_path + data_path + compressed + cspr_path + output_path + CASPER_info_path + str(
             num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
 
-        print(cmd)
+        #print(cmd)
         self.process.readyReadStandardOutput.connect(partial(progUpdate, self.process))
         self.progressBar.setValue(0)
         QtCore.QTimer.singleShot(100, partial(self.process.start, cmd))
@@ -302,8 +305,10 @@ class genLibrary(QtWidgets.QDialog):
                 self.get_offTarget_data(num_targets, minScore, spaceValue, output_file, fiveseq)
         else:
         # actually call the generaete function
-            self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
-            self.cancel_function()
+            did_work = self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
+
+            if did_work != -1:
+                self.cancel_function()
 
     # cancel function
     # clears everything and hides the window
@@ -507,48 +512,57 @@ class genLibrary(QtWidgets.QDialog):
         """
 
         # Now output to the file
-        f = open(output_file, 'w')
+        try:
+            f = open(output_file, 'w')
 
-        # if both OT and output all are checked
-        if self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
-            f.write('Gene Name,Sequence,On-Target Score,Off-Target Score,Location,PAM,Strand\n')
-        # if only output all is checked
-        elif not self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
-            f.write('Gene Name,Sequence,On-Target Score,Location,PAM,Strand\n')
-        # if only OT is checked
-        elif self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
-            f.write('Gene Name,Sequence,Off-Target Score\n')
-        # if neither is checked
-        elif not self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
-            f.write('Gene Name,Sequence\n')
+            # if both OT and output all are checked
+            if self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
+                f.write('Gene Name,Sequence,On-Target Score,Off-Target Score,Location,PAM,Strand\n')
+            # if only output all is checked
+            elif not self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
+                f.write('Gene Name,Sequence,On-Target Score,Location,PAM,Strand\n')
+            # if only OT is checked
+            elif self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
+                f.write('Gene Name,Sequence,Off-Target Score\n')
+            # if neither is checked
+            elif not self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
+                f.write('Gene Name,Sequence\n')
 
-        for essential in self.Output:
-            i = 0
-            for target in self.Output[essential]:
-                # check to see if the target did not match the user's parameters and they selected 'modify'
-                # if the target has an error, put 2 asterisks in front of the target sequence
-                if '*' in target[4]:
-                    tag_id = "**" + essential + "-" + str(i + 1)
-                else:
-                    tag_id = essential + "-" + str(i + 1)
-                i += 1
+            for essential in self.Output:
+                i = 0
+                for target in self.Output[essential]:
+                    # check to see if the target did not match the user's parameters and they selected 'modify'
+                    # if the target has an error, put 2 asterisks in front of the target sequence
+                    if '*' in target[4]:
+                        tag_id = "**" + essential + "-" + str(i + 1)
+                    else:
+                        tag_id = essential + "-" + str(i + 1)
+                    i += 1
 
-                if self.to_csv_checkbox.isChecked():
-                    tag_id = tag_id.replace(',', '')
+                    if self.to_csv_checkbox.isChecked():
+                        tag_id = tag_id.replace(',', '')
 
-                # if both OT and output all are checked
-                if self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
-                    f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[5]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')
-                # if only output all is checked
-                elif not self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
-                    f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')
-                # if only OT is checked
-                elif self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
-                    f.write(tag_id + ',' + target[1] + ',' + target[5] + '\n')
-                # if neither is checked
-                elif not self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
-                    f.write(tag_id + "," + target[1] + "\n")
-        f.close()
+                    # if both OT and output all are checked
+                    if self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
+                        f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[5]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')
+                    # if only output all is checked
+                    elif not self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
+                        f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')
+                    # if only OT is checked
+                    elif self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
+                        f.write(tag_id + ',' + target[1] + ',' + target[5] + '\n')
+                    # if neither is checked
+                    elif not self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
+                        f.write(tag_id + "," + target[1] + "\n")
+            f.close()
+        except PermissionError:
+            QtWidgets.QMessageBox.question(self, "File Cannot Open",
+                                           "This file cannot be opened. Please make sure that the file is not opened elsewhere and try again.",
+                                           QtWidgets.QMessageBox.Ok)
+            return -1
+        except Exception as e:
+            print(e)
+            return
 
 
 

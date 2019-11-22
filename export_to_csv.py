@@ -49,18 +49,30 @@ class export_csv_window(QtWidgets.QDialog):
         else:
             full_path = self.location + file_name + '.csv'
 
-        # right the table headers
-        output_data = open(full_path, 'w')
-        output_data.write('Location,Sequence,Strand,PAM,Score,Off_Target,Endonuclease(s)\n')
+        # try to do it
+        try:
+             # right the table headers
+            output_data = open(full_path, 'w')
+            output_data.write('Location,Sequence,Strand,PAM,Score,Off_Target,Endonuclease(s)\n')
 
-        # loop through and write the other data
-        for item in self.selected_table_items:
-            if 'Cas' in item.text():
-                output_data.write(item.text())
-                output_data.write('\n')
-            else:
-                output_data.write(item.text())
-                output_data.write(',')
+            # loop through and write the other data
+            for item in self.selected_table_items:
+                if 'Cas' in item.text():
+                    output_data.write(item.text())
+                    output_data.write('\n')
+                else:
+                    output_data.write(item.text())
+                    output_data.write(',')
+        # catch the permission exception
+        except PermissionError:
+            QtWidgets.QMessageBox.question(self, "File Cannot Open",
+                                           "This file cannot be opened. Please make sure that the file is not opened elsewhere and try again.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+        # catch any other exception
+        except Exception as e:
+            print(e)
+            return
 
         # close the window
         self.cancel_function()
