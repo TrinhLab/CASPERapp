@@ -107,7 +107,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loc_finder_table.clearContents()
         self.loc_finder_table.setRowCount(0)
 
-
     def find_locations(self):
         selectedList = self.table2.selectedItems()
         tableIndex = 0
@@ -180,6 +179,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
 
         # this function builds the Select Organisms table
+
     def get_data(self):
         onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
         self.fna_files.clear()
@@ -449,7 +449,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     def clear(self):
         self.table2.setRowCount(0)
 
-
     # this function graphs the repeats_vs_seeds graph
     def plot_repeats_vs_seeds(self, endoChoice):
         data = {}
@@ -495,8 +494,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.pop_analysis_repeats_graph.canvas.axes.set_title('Number of Repeats per Seed ID Number')
         # now draw
         self.pop_analysis_repeats_graph.canvas.draw()
-
-
 
     #this function is for the 3D bar graph
     def plot_3D_graph(self, endoChoice):
@@ -565,7 +562,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.pop_analysis_3dgraph.canvas.draw()
 
     def plot_venn(self):
-
+        self.pop_analysis_venn_diagram.canvas.figure.clf()
         #self.pop_analysis_venn_diagram.canvas = FigureCanvas(plt.figure(figsize=(7.5,7.5)))
 
         rows, cols = (self.total_org_number, self.total_org_number)
@@ -609,18 +606,19 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     all_3 += 1
 
 
-            self.pop_analysis_venn_diagram.canvas.axes = venn3_unweighted(subsets=(singles[0], singles[1], arr[0][1], singles[2], arr[0][2],
+            venn3_unweighted(subsets=(singles[0], singles[1], arr[0][1], singles[2], arr[0][2],
                                                                  arr[1][1], all_3), set_labels=('0', '1', '2'))
 
             self.pop_analysis_venn_diagram.canvas.draw()
         else:
-            print('not enough orgs')
+            self.pop_analysis_venn_diagram.canvas.figure.clf()
+            self.pop_analysis_venn_diagram.canvas.draw()
+
             # del self.pop_analysis_venn_diagram.canvas.axes
             # self.pop_analysis_venn_diagram.canvas.draw()
 
             #self.pop_analysis_venn_diagram.canvas.axes = venn3_unweighted(
                #subsets=('null', 'null', 'null', 'null', 'null', 'null', 'null'), set_labels=('Org. 1', 'Org. 2', 'Org. 3'))
-
 
     def show_names_func(self):
         #print(self.names)
@@ -634,7 +632,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.name_form2.show()
         else:
             self.name_form2.name_table2.setRowCount(0)
-
 
     def order(self,data_par):
         data = dict(data_par)
@@ -668,7 +665,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.table2.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
 
     # sorting to table2: IE the table in top-right
-
     def table2_sorting(self, logicalIndex):
         self.switcher_table2[logicalIndex] *= -1
         if self.switcher_table2[logicalIndex] == -1:
