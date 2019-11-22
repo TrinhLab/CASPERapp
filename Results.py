@@ -101,6 +101,7 @@ class Results(QtWidgets.QMainWindow):
         self.files_list = []
         self.seq_finder_cspr_file = ''
 
+
     # this function opens the export_to_csv window
     # first it makes sure that the user actually has some highlighted targets that they want exported
     def open_export_to_csv(self):
@@ -427,6 +428,13 @@ class Results(QtWidgets.QMainWindow):
         organism = GlobalSettings.mainWindow.shortHand[full_org]
 
         endoChoice = self.endonucleaseBox.currentText().split("|")
+
+        # make sure the user actually selects a new endonuclease
+        if self.endo == endoChoice:
+            QtWidgets.QMessageBox.question(self, "Select a different Endonuclease",
+                                           "Please be sure to select a different endonuclease!",
+                                           QtWidgets.QMessageBox.Ok)
+            return
 
         # enable the cotarget checkbox if needed
         if len(endoChoice) > 1:
