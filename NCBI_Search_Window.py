@@ -12,7 +12,7 @@ class NCBI_Search_File(QtWidgets.QDialog):
         # Qt init stuff
         super(NCBI_Search_File, self).__init__()
         uic.loadUi("NCBI_File_Search.ui", self)
-        self.setWindowTitle("Search NCBI For a File")
+        self.setWindowTitle("Search NCBI for a File")
         self.searchProgressBar.setValue(0)
         self.setWindowIcon(Qt.QIcon("cas9image.png"))
 

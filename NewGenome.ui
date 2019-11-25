@@ -572,32 +572,32 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionExisting_Organism">
    <property name="text">
-    <string>Existing Organism...</string>
+    <string>Existing Organism</string>
    </property>
   </action>
   <action name="actionAdd_Endonuclease">
    <property name="text">
-    <string>Add Endonuclease...</string>
+    <string>Add Endonuclease</string>
    </property>
   </action>
   <action name="actionView_Statistics">
    <property name="text">
-    <string>View Statistics...</string>
+    <string>View Statistics</string>
    </property>
   </action>
   <action name="actionChange_Directory">
    <property name="text">
-    <string>Change Directory...</string>
+    <string>Change Directory</string>
    </property>
   </action>
   <action name="actionDocumentation">
    <property name="text">
-    <string>Documentation...</string>
+    <string>Documentation</string>
    </property>
   </action>
   <action name="actionGo_to_NCBI">
    <property name="text">
-    <string>Go to NCBI...</string>
+    <string>Go to NCBI</string>
    </property>
   </action>
  </widget>

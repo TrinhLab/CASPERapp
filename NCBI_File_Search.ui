@@ -67,7 +67,7 @@
   <widget class="QLineEdit" name="organismLineEdit">
    <property name="geometry">
     <rect>
-     <x>90</x>
+     <x>70</x>
      <y>10</y>
      <width>113</width>
      <height>20</height>
@@ -185,8 +185,8 @@
   <widget class="QLabel" name="found_matches_label">
    <property name="geometry">
     <rect>
-     <x>60</x>
-     <y>120</y>
+     <x>80</x>
+     <y>130</y>
      <width>81</width>
      <height>16</height>
     </rect>
@@ -198,7 +198,7 @@
   <widget class="QLabel" name="selected_matches_label">
    <property name="geometry">
     <rect>
-     <x>380</x>
+     <x>400</x>
      <y>130</y>
      <width>91</width>
      <height>16</height>
@@ -237,7 +237,7 @@
   <widget class="QLineEdit" name="ncbi_ret_max_line_edit">
    <property name="geometry">
     <rect>
-     <x>380</x>
+     <x>320</x>
      <y>10</y>
      <width>113</width>
      <height>20</height>
@@ -302,7 +302,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Select which databse to search in</string>
+    <string>Select which database to search in:</string>
    </property>
   </widget>
  </widget>

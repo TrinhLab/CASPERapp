@@ -111,7 +111,7 @@ class NewGenome(QtWidgets.QMainWindow):
         if len(self.lineEdit_3.text()) == 0:
             warning = warning + "\nYou must include an organism code (KEGG code recommended)."
         if len(warning)!=0:
-            hold = QtWidgets.QMessageBox.question(self, "Missing information", warning+
+            hold = QtWidgets.QMessageBox.question(self, "Missing Information", warning+
                                         "\n\nDo you wish to continue without including this information?"
                                        , QtWidgets.QMessageBox.Yes |
                                        QtWidgets.QMessageBox.No,
@@ -179,13 +179,17 @@ class NewGenome(QtWidgets.QMainWindow):
 
     def whatsthisclicked(self):
         QtWidgets.QMessageBox.information(self, "Organism Code", "The organism code is the manner in which CASPER will"
-                                                                 "label it's data files and references for the organism"
-                                                                 "you are importing here. It is HIGHLY RECOMMENDED that"
-                                                                 "you use the 3-4 letter code used by KEGG as this will"
-                                                                 "aid in automatic accession of annotations from the"
-                                                                 "database.", QtWidgets.QMessageBox.Ok)
+                                                                 " label its data files and references for the organism"
+                                                                 " you are importing here. It is HIGHLY RECOMMENDED that"
+                                                                 " you use the 3-4 letter code used by KEGG as this will"
+                                                                 " aid in automatic accession of annotations from the"
+                                                                 " database.", QtWidgets.QMessageBox.Ok)
 
     def updatekegglist(self):
+
+        if len(self.lineEdit_1.text()) == 0:
+            QtWidgets.QMessageBox.question(self, "Error!", "Please enter an organism into the Organism Name!", QtWidgets.QMessageBox.Ok)
+            return
 
         self.keggSuggested.clear()
         kegg_orglist = self.k.lookfor_organism(self.lineEdit_1.text())

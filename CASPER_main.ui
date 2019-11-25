@@ -841,7 +841,7 @@
   </action>
   <action name="actionUpload_New_Endonuclease">
    <property name="text">
-    <string>Upload New Endonuclease...</string>
+    <string>Upload New Endonuclease</string>
    </property>
   </action>
   <action name="actionChange_Directory">
@@ -866,7 +866,7 @@
   </action>
   <action name="actionMultitargeting">
    <property name="text">
-    <string>Multitargeting</string>
+    <string>Multitargeting Analysis</string>
    </property>
   </action>
   <action name="actionPopulation_Analysis">
@@ -893,7 +893,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="type_of_annotation_file"/>
   <buttongroup name="refseq_genbank_buttonGroup"/>
+  <buttongroup name="type_of_annotation_file"/>
  </buttongroups>
 </ui>
