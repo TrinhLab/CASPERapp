@@ -219,7 +219,11 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="minScoreLine"/>
+       <widget class="QLineEdit" name="minScoreLine">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
