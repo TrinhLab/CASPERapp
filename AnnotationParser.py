@@ -77,7 +77,7 @@ class Annotation_Parser:
                         strandChar = '+'
 
                     # update that one's values
-                    values = [record.id, indexNumber, feature.type, int(feature.location.start) - 1,
+                    values = [currentLocusTag, indexNumber, feature.type, int(feature.location.start) - 1,
                               int(feature.location.end), strandChar]
 
                     # insert
@@ -94,7 +94,7 @@ class Annotation_Parser:
                         strandChar = '-'
                     else:
                         strandChar = '+'
-                    values = [record.id, indexNumber, feature.type, int(feature.location.start) - 1,
+                    values = [currentLocusTag, indexNumber, feature.type, int(feature.location.start) - 1,
                               int(feature.location.end), strandChar]
                     # make sure it isn't a duplicate
                     if values not in self.reg_dict[currentLocusTag]:
@@ -177,7 +177,7 @@ class Annotation_Parser:
                             self.para_dict[para_dict_key_string].append(currentLocusTag)
                     para_dict_key_string = ""
 
-                tempList = [feature.seqid, indexNumber, feature.featuretype, feature.start - 1, feature.end,
+                tempList = [currentLocusTag, indexNumber, feature.featuretype, feature.start - 1, feature.end,
                             feature.strand]
 
                 # insert that locus tag/name into the dictionary
@@ -190,7 +190,7 @@ class Annotation_Parser:
                 # go through each of this child's children
                 for child in db.children(feature.id, level=None, featuretype=None, order_by=None, reverse=False,
                                          limit=None, completely_within=False):
-                    tempList = [child.seqid, indexNumber, child.featuretype, child.start - 1, child.end, child.strand]
+                    tempList = [currentLocusTag, indexNumber, child.featuretype, child.start - 1, child.end, child.strand]
 
                     # only insert it if it hasn't been inserted before
                     if tempList not in self.reg_dict[currentLocusTag]:
@@ -198,7 +198,7 @@ class Annotation_Parser:
 
             # now go through the other ones which are not region
             elif feature.featuretype != "region" and feature.featuretype != "telomere" and feature.featuretype != "origin_of_replication":
-                tempList = [feature.seqid, indexNumber, feature.featuretype, feature.start - 1, feature.end,
+                tempList = [currentLocusTag, indexNumber, feature.featuretype, feature.start - 1, feature.end,
                             feature.strand]
 
                 # only insert if it hasn't been inserted before
@@ -208,7 +208,7 @@ class Annotation_Parser:
                     # now same as above, go through the children again
                     for child in db.children(feature.id, level=None, featuretype=None, order_by=None, reverse=False,
                                              limit=None, completely_within=False):
-                        tempList = [child.seqid, indexNumber, child.featuretype, child.start - 1, child.end,
+                        tempList = [currentLocusTag, indexNumber, child.featuretype, child.start - 1, child.end,
                                     child.strand]
 
                         if tempList not in self.reg_dict[currentLocusTag]:
@@ -264,7 +264,7 @@ class Annotation_Parser:
                 # if parsing on locus_tag, use the locus_tag as the key for the dict
                 if self.txtLocusTag:
                     currentLocusTag = splitLine[16]
-                    values = [splitLine[6], indexNumber, splitLine[0], int(splitLine[7]) - 1, int(splitLine[8]), splitLine[9]]
+                    values = [currentLocusTag, indexNumber, splitLine[0], int(splitLine[7]) - 1, int(splitLine[8]), splitLine[9]]
 
                     if currentLocusTag not in self.reg_dict:
                         self.reg_dict[currentLocusTag] = [values]
@@ -274,7 +274,7 @@ class Annotation_Parser:
                 # if no locus_tag, parse on product_accession, use the product_accession as the key for the dict
                 elif not self.txtLocusTag:
                     currentLocusTag = splitLine[10]
-                    values = [splitLine[6], indexNumber, splitLine[0], int(splitLine[7]) - 1, int(splitLine[8]), splitLine[9]]
+                    values = [currentLocusTag, indexNumber, splitLine[0], int(splitLine[7]) - 1, int(splitLine[8]), splitLine[9]]
 
                     if currentLocusTag not in self.reg_dict:
                         self.reg_dict[currentLocusTag] = [values]
