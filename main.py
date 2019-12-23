@@ -1320,7 +1320,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.hide()
 
     def changeto_population_Analysis(self):
-        os.chdir(os.getcwd())
         GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
         GlobalSettings.pop_Analysis.show()
         GlobalSettings.mainWindow.hide()
