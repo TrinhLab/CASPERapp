@@ -280,8 +280,6 @@ class NewGenome(QtWidgets.QMainWindow):
         self.JobInProgress.clear()
         self.CompletedJobs.clear()
         self.nameFile.setText("Name Of File")
-        self.genbank_box.setChecked(False)
-        self.ref_seq_box.setChecked(False)
         self.progressBar.setValue(0)
         self.first = False
 

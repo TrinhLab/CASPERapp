@@ -182,6 +182,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         # this function builds the Select Organisms table
 
     def get_data(self):
+        if self.directory == '':
+            return
+
         onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
         self.fna_files.clear()
 
@@ -899,7 +902,7 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         # combine the program and arguments into 1
         program = program + args
 
-
+        print(program)
         self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
         self.proc_running = True
         self.process.start(program)
