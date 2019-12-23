@@ -333,7 +333,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     return
                 if len(selectedList) == 1:
                     error = QtWidgets.QMessageBox.question(self, "Only 1 Organism Selected",
-                                                            "Population Analysis works with multiple organisms, or a meta genome. If the file selected it not a meta genome, the program may not function correctly. Do you wish to continu?.\n\n"
+                                                            "Population Analysis works with multiple organisms, or a meta genome. If the file selected it not a meta genome, the program may not function correctly.\n\n"
                                                             "Do you wish to continue?",
                                                             QtWidgets.QMessageBox.Yes |
                                                             QtWidgets.QMessageBox.No,
