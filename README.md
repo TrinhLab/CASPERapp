@@ -1,6 +1,6 @@
 # CASPERapp
 
-Thank you for your interest in our Beta-Version GUI of CASPER.  While we try to debug the wrapping of our various packages and dependencies please follow the instructions below for use:
+Thank you for your interest in CASPER.  Please visit the Release page to download the CASPERapp File.  While we work on debugging our packaging for Linux please see instructions below.
 
 1) Download the ZIP File of the repository to your computer and decompress it
 2) Ensure that you have at least v3.4 or Python operating on your computer
