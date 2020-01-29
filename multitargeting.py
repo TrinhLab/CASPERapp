@@ -2,7 +2,6 @@ import os
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 import GlobalSettings
 import operator
-import pyqtgraph as pg
 from PyQt5.QtChart import (QBarCategoryAxis,QBarSet, QChartView, QBarSeries,QChart,QLineSeries, QValueAxis)
 from PyQt5.QtGui import QPainter, QBrush, QPen
 #import PyQt5
@@ -122,7 +121,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                     font.setPointSize(9)
                     text.setFont(font)
 
-        return QtGui.QWidget.eventFilter(self, source, event)
+        return Qt.QWidget.eventFilter(self, source, event)
 
     def launch(self,path):
         os.chdir(path)
@@ -186,6 +185,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.parser.fileName = file
         print(self.endo_drop.currentText())
         self.parser.read_repeats(self.endo_drop.currentText())
+        self.parser.read_chromesome(self.endo_drop.currentText())
         self.parser.read_first_lines()
         self.chromo_length = self.parser.karystatsList
 
@@ -196,6 +196,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.fill_min_max()
         #self.chro_bar_data()
         self.nbr_seq.setText(str(len(self.parser.seeds)))
+        self.nbr_unq.setText(str(self.parser.uniq_seq_count()))
         self.avg_rep.setText(str(self.average))
         self.med_rep.setText(str(self.median))
         self.mode_rep.setText(str(self.mode))

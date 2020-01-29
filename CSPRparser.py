@@ -110,7 +110,7 @@ class CSPRparser:
 
 #this function reads all of the chromosomes in the file
 #stores the data into a list of lists. So the line starting with '>' is the first index of each sub list
-    def read_chromesome(self):
+    def read_chromesome(self, endo):
         self.chromesomeList.clear()
         tempList = list()
         fileStream = open(self.fileName, 'r')
@@ -138,7 +138,7 @@ class CSPRparser:
                     tempList = []
                     break
                 else: #else decompress the data, and append it to the list
-                    bufferString = self.seqTrans.decompress_csf_tuple(bufferString)
+                    bufferString = self.seqTrans.decompress_csf_tuple(bufferString, endo=endo)
                     tempList.append(bufferString)
                     #print(bufferString)
                     bufferString = fileStream.readline()
@@ -382,6 +382,13 @@ class CSPRparser:
 
         return retList
 
+    def uniq_seq_count(self):
+        self.unique_targets = 0
+        for chromo in self.chromesomeList:
+            for data in chromo:
+                if len(data) == 6:
+                    self.unique_targets+=1
+        return self.unique_targets
 
 
 
