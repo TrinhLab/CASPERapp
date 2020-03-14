@@ -355,7 +355,7 @@
      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This button changes the start and end indicies of the Gene Viewer sequence&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="text">
-     <string>Change Indicies</string>
+     <string>Change Indices</string>
     </property>
    </widget>
    <widget class="QPushButton" name="gene_viewer_settings_button">
@@ -378,7 +378,7 @@
      <x>0</x>
      <y>0</y>
      <width>1129</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

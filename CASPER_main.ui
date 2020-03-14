@@ -45,7 +45,7 @@
      <rect>
       <x>12</x>
       <y>12</y>
-      <width>181</width>
+      <width>201</width>
       <height>50</height>
      </rect>
     </property>
@@ -95,19 +95,19 @@
    <widget class="QLabel" name="versionNum">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>40</y>
+      <x>210</x>
+      <y>38</y>
       <width>51</width>
-      <height>18</height>
+      <height>20</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
+      <pointsize>13</pointsize>
      </font>
     </property>
     <property name="text">
-     <string>V 1.1</string>
+     <string>V 1.0</string>
     </property>
    </widget>
    <widget class="QWidget" name="horizontalLayoutWidget">
@@ -268,7 +268,7 @@
      <item>
       <widget class="QRadioButton" name="Annotation_Ownfile">
        <property name="text">
-        <string>Choose Annotation fiile</string>
+        <string>Choose Annotation File</string>
        </property>
       </widget>
      </item>
@@ -609,7 +609,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Genbank</string>
+     <string>GenBank</string>
     </property>
     <property name="autoExclusive">
      <bool>true</bool>
@@ -702,17 +702,13 @@
      <x>0</x>
      <y>0</y>
      <width>942</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionNew"/>
-    <addaction name="actionOpen"/>
-    <addaction name="actionOpen_Recent"/>
-    <addaction name="actionSave"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -750,7 +746,6 @@
     </widget>
     <addaction name="actionMultitargeting"/>
     <addaction name="actionPopulation_Analysis"/>
-    <addaction name="actionComplete_Target_Analysis"/>
     <addaction name="separator"/>
     <addaction name="menuExport_to"/>
     <addaction name="actionNCBI_BLAST"/>
@@ -893,7 +888,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="refseq_genbank_buttonGroup"/>
   <buttongroup name="type_of_annotation_file"/>
+  <buttongroup name="refseq_genbank_buttonGroup"/>
  </buttongroups>
 </ui>

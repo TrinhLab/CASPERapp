@@ -437,8 +437,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.table2.setItem(index, 8, tabStrand)
 
             # set consensus percentage
-            consensus_percentage = sequences.count(con_seq_temp) / len(sequences) * 100
-            consensus_percentage = round(consensus_percentage, 1)
+            consensus_percentage = float(sequences.count(con_seq_temp) / len(sequences) * 100)
+            consensus_percentage = round(consensus_percentage, 2)
+            consensus_percentage = format(consensus_percentage, '.2f')
             consensus_perc = QtWidgets.QTableWidgetItem()
             consensus_perc.setData(QtCore.Qt.EditRole, consensus_percentage)
             self.table2.setItem(index, 5, consensus_perc)

@@ -268,6 +268,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Remove_Organism_Button.clicked.connect(self.remove_Orgo)
         self.endoChoice.currentIndexChanged.connect(self.endo_Changed)
         self.GenerateLibrary.clicked.connect(self.prep_genlib)
+        self.actionExit.triggered.connect(self.close_app)
+
 
         self.Search_Input.setEnabled(False)
 
@@ -1360,6 +1362,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.endoChoice.clear()
         self.getData()
 
+    def close_app(self):
+        self.closeFunction()
+        self.close()
 
 
 
