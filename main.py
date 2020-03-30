@@ -11,6 +11,7 @@ from closingWin import closingWindow
 from Results import Results, geneViewerSettings
 from NewGenome import NewGenome, NCBI_Search_File
 
+import webbrowser
 import requests
 import GlobalSettings
 from bs4 import BeautifulSoup
@@ -289,6 +290,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.actionChange_Directory.triggered.connect(self.change_directory)
         self.actionMultitargeting.triggered.connect(self.changeto_multitargeting)
         self.actionPopulation_Analysis.triggered.connect(self.changeto_population_Analysis)
+        self.actionNCBI.triggered.connect(self.open_ncbi_web_page)
+        self.actionCasper2.triggered.connect(self.open_casper2_web_page)
         # --- Setup for Gene Entry Field --- #
         self.geneEntryField.setPlainText("Example Inputs: \n"
                                                "Gene (LocusID): YOL086C  *for Saccharomyces Cerevisiae ADH1 gene* \n"
@@ -1324,6 +1327,12 @@ class CMainWindow(QtWidgets.QMainWindow):
         GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
         GlobalSettings.pop_Analysis.show()
         GlobalSettings.mainWindow.hide()
+
+    def open_ncbi_web_page(self):
+        webbrowser.open('https://www.ncbi.nlm.nih.gov/', new=2)
+
+    def open_casper2_web_page(self):
+        webbrowser.open('http://casper2.org/', new=2)
 
     @QtCore.pyqtSlot()
     def view_results(self):

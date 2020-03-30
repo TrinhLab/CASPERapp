@@ -752,9 +752,10 @@
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
-     <string>Window</string>
+     <string>Web Links</string>
     </property>
-    <addaction name="actionNew_CASPER_Window"/>
+    <addaction name="actionNCBI"/>
+    <addaction name="actionCasper2"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -874,9 +875,14 @@
     <string>Complete Target Analysis</string>
    </property>
   </action>
-  <action name="actionNew_CASPER_Window">
+  <action name="actionNCBI">
    <property name="text">
-    <string>New CASPER Window</string>
+    <string>National Center for BioTechnology Information</string>
+   </property>
+  </action>
+  <action name="actionCasper2">
+   <property name="text">
+    <string>Casper2</string>
    </property>
   </action>
   <action name="actionCo_Targeting">
