@@ -309,8 +309,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
 
-        #self.newGenome.process.finished.connect(self.update_dropdowns)
-        self.newGenome.contButton.clicked.connect(self.update_dropdowns)
+
 
     def endo_Changed(self):
         i=3
@@ -864,7 +863,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         seq_search_process.finished.connect(finished)
 
     def launch_newGenome(self):
-       self.newGenome.show()
+        self.hide()
+        self.newGenome.show()
 
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
     def collect_table_data_nonkegg(self):
@@ -1299,7 +1299,6 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def changeEndos(self):
-
         self.endoChoice.clear()
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
         self.Search_Input.setText(self.orgChoice.currentText())
@@ -1356,11 +1355,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.myClosingWindow.get_files()
         self.myClosingWindow.show()
 
-    def update_dropdowns(self):
-        self.orgChoice.currentIndexChanged.disconnect()
-        self.orgChoice.clear()
-        self.endoChoice.clear()
-        self.getData()
 
     def close_app(self):
         self.closeFunction()

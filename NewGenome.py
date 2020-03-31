@@ -56,7 +56,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.process.setProcessChannelMode(QtCore.QProcess.MergedChannels)
         self.process.finished.connect(self.upon_process_finishing)
         self.seqTrans = SeqTranslate()
-
+        self.exit = False
 
 
         self.first = False
@@ -218,41 +218,46 @@ class NewGenome(QtWidgets.QMainWindow):
         self.keggSuggested.resizeColumnsToContents()
 
     def run_jobs(self):
-        self.progressBar.setValue(0)
-        def output_stdout(p):
-            line = str(p.readAll())
-            line = line[2:]
-            line = line[:len(line) - 1]
-            for lines in filter(None, line.split(r'\r\n')):
-                if (lines == 'Finished reading in the genome file.'):
-                    self.num_chromo_next = True
-                elif (self.num_chromo_next == True):
-                    self.num_chromo_next = False
-                    self.num_chromo = int(lines)
-                elif (lines.find('Chromosome') != -1 and lines.find('complete.') != -1):
-                    temp = lines
-                    temp = temp.replace('Chromosome ', '')
-                    temp = temp.replace(' complete.', '')
-                    if (int(temp) == self.num_chromo):
-                        self.progressBar.setValue(99)
-                    else:
-                        self.progressBar.setValue(int(temp) / self.num_chromo * 100)
-                elif (lines == 'Finished Creating File.'):
-                    self.progressBar.setValue(100)
+        if len(self.JobsQueue) > 0:
+            self.progressBar.setValue(0)
+            def output_stdout(p):
+                line = str(p.readAll())
+                line = line[2:]
+                line = line[:len(line) - 1]
+                for lines in filter(None, line.split(r'\r\n')):
+                    if (lines == 'Finished reading in the genome file.'):
+                        self.num_chromo_next = True
+                    elif (self.num_chromo_next == True):
+                        self.num_chromo_next = False
+                        self.num_chromo = int(lines)
+                    elif (lines.find('Chromosome') != -1 and lines.find('complete.') != -1):
+                        temp = lines
+                        temp = temp.replace('Chromosome ', '')
+                        temp = temp.replace(' complete.', '')
+                        if (int(temp) == self.num_chromo):
+                            self.progressBar.setValue(99)
+                        else:
+                            self.progressBar.setValue(int(temp) / self.num_chromo * 100)
+                    elif (lines == 'Finished Creating File.'):
+                        self.progressBar.setValue(100)
 
-                self.output_browser.append(lines)
+                    self.output_browser.append(lines)
 
 
-        # Top layer for loop to go through all of the jobs in the queue:
-        job = self.JobsQueue[0]
-        program = '"' + GlobalSettings.appdir + '\\Casper_Seq_Finder_Windows" '
-        self.JobInProgress.setText(job.name)
-        self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
-        self.process.start(program, job.get_arguments())
-        self.JobsQueueBox.clear()
-        for jobs in self.JobsQueue:
-            if(job.name != jobs.name):
-                self.JobsQueueBox.append(jobs.name)
+            # Top layer for loop to go through all of the jobs in the queue:
+            job = self.JobsQueue[0]
+            program = '"' + GlobalSettings.appdir + '\\Casper_Seq_Finder_Windows" '
+            self.JobInProgress.setText(job.name)
+            self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
+            self.process.start(program, job.get_arguments())
+            self.JobsQueueBox.clear()
+            for jobs in self.JobsQueue:
+                if(job.name != jobs.name):
+                    self.JobsQueueBox.append(jobs.name)
+        else:
+            error = QtWidgets.QMessageBox.critical(self, "No Jobs To Run",
+                                                   "No jobs are in the Queue to run. Please submit a job before Running.",
+                                                   QtWidgets.QMessageBox.Ok)
 
     def upon_process_finishing(self):
         self.CompletedJobs.append(self.JobsQueue[0].name)
@@ -300,17 +305,21 @@ class NewGenome(QtWidgets.QMainWindow):
                 noCSPRFiles = False
                 break
         if noCSPRFiles == True:
-            error = QtWidgets.QMessageBox.question(self, "No CSPR File generated",
-                                                    "No CSPR file has been generate, thus the main program cannot run. Please create a CSPR file."
-                                                    "Alternatively, you could quit the program. Would you like to quit?",
-                                                    QtWidgets.QMessageBox.Yes |
-                                                    QtWidgets.QMessageBox.No,
-                                                    QtWidgets.QMessageBox.No)
-            if (error == QtWidgets.QMessageBox.No):
-                event.ignore()
-                return
+            if self.exit == False:
+                error = QtWidgets.QMessageBox.question(self, "No CSPR File generated",
+                                                        "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
+                                                        "Alternatively, you could quit the program. Would you like to quit?",
+                                                        QtWidgets.QMessageBox.Yes |
+                                                        QtWidgets.QMessageBox.No,
+                                                        QtWidgets.QMessageBox.No)
+                if (error == QtWidgets.QMessageBox.No):
+                    event.ignore()
+                else:
+                    event.accept()
             else:
-                self.close()
+                self.exit = False
+                event.accept()
+
         else:
             self.process.kill()
             self.JobsQueue = []
@@ -327,6 +336,10 @@ class NewGenome(QtWidgets.QMainWindow):
             self.first = False
             GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
             GlobalSettings.mainWindow.show()
+            if GlobalSettings.mainWindow.orgChoice.currentText() != '':
+                GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
+            GlobalSettings.mainWindow.orgChoice.clear()
+            GlobalSettings.mainWindow.endoChoice.clear()
             GlobalSettings.mainWindow.getData()
             GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
             GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
@@ -341,16 +354,18 @@ class NewGenome(QtWidgets.QMainWindow):
                 noCSPRFiles = False
                 break
         if noCSPRFiles == True:
+
             error = QtWidgets.QMessageBox.question(self, "No CSPR File generated",
-                                                   "No CSPR file has been generate, thus the main program cannot run. Please create a CSPR file."
+                                                   "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
                                                    "Alternatively, you could quit the program. Would you like to quit?",
                                                    QtWidgets.QMessageBox.Yes |
-                                                   QtWidgets.QMessageBox.No,
-                                                   QtWidgets.QMessageBox.No)
-            if (error == QtWidgets.QMessageBox.No):
-                return
-            else:
+                                                   QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+
+
+            if (error == QtWidgets.QMessageBox.Yes):
+                self.exit = True
                 self.close()
+
         else:
             self.process.kill()
             self.JobsQueue = []
@@ -367,10 +382,14 @@ class NewGenome(QtWidgets.QMainWindow):
             self.first = False
             GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
             GlobalSettings.mainWindow.show()
+            if GlobalSettings.mainWindow.orgChoice.currentText() != '':
+                GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
+            GlobalSettings.mainWindow.orgChoice.clear()
+            GlobalSettings.mainWindow.endoChoice.clear()
             GlobalSettings.mainWindow.getData()
             GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
             GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
-            self.close()
+            self.hide()
 
 
 class CasperJob:
