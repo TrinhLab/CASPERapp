@@ -7,12 +7,10 @@ from bioservices import KEGG
 from Bio import Entrez
 from CoTargeting import CoTargeting
 from closingWin import closingWindow
-
+import webbrowser
 from Results import Results, geneViewerSettings
 from NewGenome import NewGenome, NCBI_Search_File
-from NewEndonuclease import NewEndonuclease
 
-import webbrowser
 import requests
 import GlobalSettings
 from bs4 import BeautifulSoup
@@ -266,12 +264,14 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Annotation_Ownfile.clicked.connect(self.change_annotation)
         self.NCBI_Select.clicked.connect(self.change_annotation)
         self.actionUpload_New_Genome.triggered.connect(self.launch_newGenome)
-        self.actionUpload_New_Endonuclease.triggered.connect(self.launch_newEndonuclease)        
         self.Add_Orgo_Button.clicked.connect(self.add_Orgo)
         self.Remove_Organism_Button.clicked.connect(self.remove_Orgo)
         self.endoChoice.currentIndexChanged.connect(self.endo_Changed)
         self.GenerateLibrary.clicked.connect(self.prep_genlib)
         self.actionExit.triggered.connect(self.close_app)
+        self.Question_Button_add_org.clicked.connect(self.add_org_popup)
+        self.Confused_Button.clicked.connect(self.annotation_information)
+        self.actionVisit_Repository.triggered.connect(self.help_info)
 
 
         self.Search_Input.setEnabled(False)
@@ -292,12 +292,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.actionChange_Directory.triggered.connect(self.change_directory)
         self.actionMultitargeting.triggered.connect(self.changeto_multitargeting)
         self.actionPopulation_Analysis.triggered.connect(self.changeto_population_Analysis)
-        self.actionNCBI.triggered.connect(self.open_ncbi_web_page)
-        self.actionCasper2.triggered.connect(self.open_casper2_web_page)
-        self.actionNCBI_BLAST.triggered.connect(self.open_ncbi_blast_web_page)
-        #self.actionUpload_New_Endonuclease.triggered.connect(self.open_new_endonuclease_web_page)
-
-	# --- Setup for Gene Entry Field --- #
+        # --- Setup for Gene Entry Field --- #
         self.geneEntryField.setPlainText("Example Inputs: \n"
                                                "Gene (LocusID): YOL086C  *for Saccharomyces Cerevisiae ADH1 gene* \n"
                                                "Position: chromosome,start,stop\n chromosome,start,stop...\n"
@@ -308,7 +303,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         #show functionalities on window
         ############################self.view_my_results = Results()
         self.newGenome = NewGenome(info_path)
-        self.newEndonuclease = NewEndonuclease()
         self.ncbi_search_dialog = NCBI_Search_File()
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
@@ -318,8 +312,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
 
-        #self.newGenome.process.finished.connect(self.update_dropdowns)
-        self.newGenome.contButton.clicked.connect(self.update_dropdowns)
+
 
     def endo_Changed(self):
         i=3
@@ -563,6 +556,8 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.Annotation_Window.fill_table_nonKegg(self)
         else:
             return True
+
+
     def run_results(self, inputtype, inputstring, openAnnoWindow=True):
         kegginfo = Kegg()
         org = str(self.orgChoice.currentText())
@@ -873,10 +868,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         seq_search_process.finished.connect(finished)
 
     def launch_newGenome(self):
-       self.newGenome.show()
-
-    def launch_newEndonuclease(self):
-       self.newEndonuclease.show()
+        self.hide()
+        self.newGenome.show()
 
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
     def collect_table_data_nonkegg(self):
@@ -1311,7 +1304,6 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def changeEndos(self):
-
         self.endoChoice.clear()
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
         self.Search_Input.setText(self.orgChoice.currentText())
@@ -1337,25 +1329,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         GlobalSettings.pop_Analysis.show()
         GlobalSettings.mainWindow.hide()
 
-    def open_ncbi_blast_web_page(self):
-        webbrowser.open('https://blast.ncbi.nlm.nih.gov/Blast.cgi', new=2)
-    
-    def open_ncbi_web_page(self):
-        webbrowser.open('https://www.ncbi.nlm.nih.gov/', new=2)
-
-    def open_casper2_web_page(self):
-        webbrowser.open('http://casper2.org/', new=2)
-
-    #def open_endonuclease_web_page(self):
-       # class Ui(QtWidgets.QMainWindow):
-        #    def __init__(self):
-         #       super(Ui, self).__init__()
-          #      uic.loadUi('basic.ui', self)
-           #     self.show()
-       # app = QtWidgets.QApplication(sys.argv)
-       # window = Ui()
-       # app.exec_()
-
     @QtCore.pyqtSlot()
     def view_results(self):
         self.hide()
@@ -1372,6 +1345,25 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         self.Results.show()
 
+    def add_org_popup(self):
+
+        info = "Annotation files for searching for targets on a gene/locus basis can be selected here using either KEGG " \
+               "or NCBI databases, or uploading your own file. Note that KEGG searches are best done with exact matches " \
+               "(e.g include strain designation), whereas NCBI will often return multiple assemblies of the same species. " \
+               "If you have trouble deciding on the search returned annotation, go to the website, download the annotation " \
+               "file to your local computer and choose ‘Choose Annotation File’"
+        QtWidgets.QMessageBox.information(self, "Add Organism Information", info, QtWidgets.QMessageBox.Ok)
+
+    def annotation_information(self):
+
+        info = "This functionality will allow users to use different organisms for off-target analysis in a future " \
+               "version of the software. If you need to run analysis on multiple organisms, please use the Population " \
+               "Analysis feature."
+        QtWidgets.QMessageBox.information(self, "Add Organism Information", info, QtWidgets.QMessageBox.Ok)
+
+    def help_info(self):
+        webbrowser.open_new("https://github.com/TrinhLab/CASPERapp")
+
     # this function calls the closingWindow class.
     def closeEvent(self, event):
         self.closeFunction()
@@ -1387,11 +1379,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.myClosingWindow.get_files()
         self.myClosingWindow.show()
 
-    def update_dropdowns(self):
-        self.orgChoice.currentIndexChanged.disconnect()
-        self.orgChoice.clear()
-        self.endoChoice.clear()
-        self.getData()
 
     def close_app(self):
         self.closeFunction()
@@ -1462,7 +1449,6 @@ class StartupWindow(QtWidgets.QDialog):
                 GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
                 self.re_write_dir()
                 GlobalSettings.mainWindow.launch_newGenome()
-                GlobalSettings.mainWindow.launch_newEndonuclease()
                 self.close()
             else:
                 QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
