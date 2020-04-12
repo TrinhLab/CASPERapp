@@ -22,7 +22,7 @@
      <rect>
       <x>10</x>
       <y>0</y>
-      <width>181</width>
+      <width>281</width>
       <height>51</height>
      </rect>
     </property>
@@ -41,7 +41,7 @@
    <widget class="QLabel" name="casperDetail">
     <property name="geometry">
      <rect>
-      <x>250</x>
+      <x>300</x>
       <y>20</y>
       <width>541</width>
       <height>31</height>
@@ -59,7 +59,7 @@
    <widget class="QLabel" name="versionNum">
     <property name="geometry">
      <rect>
-      <x>180</x>
+      <x>210</x>
       <y>30</y>
       <width>56</width>
       <height>13</height>
@@ -130,7 +130,7 @@
      <x>0</x>
      <y>0</y>
      <width>943</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

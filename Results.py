@@ -1014,6 +1014,7 @@ class geneViewerSettings(QtWidgets.QDialog):
         self.browse_button.clicked.connect(self.browseForFile)
         self.cancel_button.clicked.connect(self.cancelFunction)
         self.submit_button.clicked.connect(self.submitFunction)
+        self.file=""
 
         # class variables
         self.file_type = ""
@@ -1046,7 +1047,8 @@ class geneViewerSettings(QtWidgets.QDialog):
         # open a window so that the user can select a file
         filed = QtWidgets.QFileDialog()
         myFile = QtWidgets.QFileDialog.getOpenFileName(filed, "Choose an Annotation File")
-
+        self.file = myFile[0]
+        print(self.file)
         # make sure they choose the correct type of file
         if self.file_type not in myFile[0]:
             QtWidgets.QMessageBox.question(self, "Wrong type of file selected",
@@ -1075,7 +1077,7 @@ class geneViewerSettings(QtWidgets.QDialog):
     # it will find all of the sequences for all of the genes in the comboGeneBox in the results window
     # It will go based on the lengths stored in the comboGeneBox dictionary
     def submitFunction(self):
-        if not self.kegg_radio_button.isChecked() and (self.file_name_edit.displayText() == "" or self.file_name_edit.displayText() == "Please choose a file!"):
+        if not self.kegg_radio_button.isChecked() and self.file == "":
             #print("No file chosen")
             return
 
@@ -1090,6 +1092,7 @@ class geneViewerSettings(QtWidgets.QDialog):
                 name = nameFull[len(nameFull) - 1]
                 # get kegg's ntsequence and store it
                 nt_sequence = k.get_nt_sequence(organism + ":" + name)
+                print(nt_sequence)
                 GlobalSettings.mainWindow.Results.geneNTDict[item] = nt_sequence
             if self.file_type == "fna":
                 sequence = self.fna_sequence_finder(GlobalSettings.mainWindow.Results.geneDict[item])

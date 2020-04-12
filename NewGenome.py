@@ -80,8 +80,8 @@ class NewGenome(QtWidgets.QMainWindow):
                                                QtWidgets.QMessageBox.Ok)
                 return
             else:
-                self.nameFile.setText(myFile[0])
                 self.file = myFile[0]
+                self.s_file.append(myFile[0])
         """cdir = self.lineEdit.text()
         os.chdir(mydir)
         self.gdirectory = mydir
@@ -284,9 +284,10 @@ class NewGenome(QtWidgets.QMainWindow):
         self.output_browser.clear()
         self.JobInProgress.clear()
         self.CompletedJobs.clear()
-        self.nameFile.setText("Name Of File")
+        self.s_file.clear()
         self.progressBar.setValue(0)
         self.first = False
+        self.s_file.clear()
 
     def reset(self):
         self.lineEdit_1.clear()
@@ -294,7 +295,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.lineEdit_3.clear()
         self.keggSuggested.clear()
         self.first = False
-        self.nameFile.setText("Name Of File")
+        self.s_file.clear()
 
     def closeEvent(self, event):
         # make sure that there are cspr files in the DB
@@ -331,7 +332,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.output_browser.clear()
             self.JobInProgress.clear()
             self.CompletedJobs.clear()
-            self.nameFile.setText("Name Of File")
+            self.s_file.clear()
             self.progressBar.setValue(0)
             self.first = False
             GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
@@ -348,6 +349,7 @@ class NewGenome(QtWidgets.QMainWindow):
     def continue_to_main(self):
         # make sure that there are cspr files in the DB
         file_names = os.listdir(GlobalSettings.CSPR_DB)
+        noCSPRFiles = True
         noCSPRFiles = True
         for file in file_names:
             if 'cspr' in file:
@@ -377,7 +379,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.output_browser.clear()
             self.JobInProgress.clear()
             self.CompletedJobs.clear()
-            self.nameFile.setText("Name Of File")
+            self.s_file.clear()
             self.progressBar.setValue(0)
             self.first = False
             GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path

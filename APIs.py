@@ -14,6 +14,7 @@ class Kegg:
 
     k = KEGG()
     location = "http://www.genome.jp/dbget-bin/www_bget?"
+    sense = True
 
     def gene_locator(self, gene_id):                        #gene locator - recives the gene id and returns the location of the gene
         self.sense = True
@@ -166,7 +167,6 @@ class Kegg:
         newstr = newstr.replace(" ", "")
 
         newstr = newstr.upper()
-
         if 'complement' in d['POSITION'] or self.sense == False:
             newstr = self.revcom(newstr)
 

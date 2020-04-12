@@ -760,6 +760,7 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionVisit_Repository"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -882,6 +883,11 @@
   <action name="actionCo_Targeting">
    <property name="text">
     <string>Co-Targeting</string>
+   </property>
+  </action>
+  <action name="actionVisit_Repository">
+   <property name="text">
+    <string>Visit Repository</string>
    </property>
   </action>
  </widget>

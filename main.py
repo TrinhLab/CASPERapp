@@ -7,7 +7,7 @@ from bioservices import KEGG
 from Bio import Entrez
 from CoTargeting import CoTargeting
 from closingWin import closingWindow
-
+import webbrowser
 from Results import Results, geneViewerSettings
 from NewGenome import NewGenome, NCBI_Search_File
 
@@ -269,6 +269,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.endoChoice.currentIndexChanged.connect(self.endo_Changed)
         self.GenerateLibrary.clicked.connect(self.prep_genlib)
         self.actionExit.triggered.connect(self.close_app)
+        self.Question_Button_add_org.clicked.connect(self.add_org_popup)
+        self.Confused_Button.clicked.connect(self.annotation_information)
+        self.actionVisit_Repository.triggered.connect(self.help_info)
 
 
         self.Search_Input.setEnabled(False)
@@ -553,6 +556,8 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.Annotation_Window.fill_table_nonKegg(self)
         else:
             return True
+
+
     def run_results(self, inputtype, inputstring, openAnnoWindow=True):
         kegginfo = Kegg()
         org = str(self.orgChoice.currentText())
@@ -1339,6 +1344,25 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.Results.endonucleaseBox.addItem(item)
 
         self.Results.show()
+
+    def add_org_popup(self):
+
+        info = "Annotation files for searching for targets on a gene/locus basis can be selected here using either KEGG " \
+               "or NCBI databases, or uploading your own file. Note that KEGG searches are best done with exact matches " \
+               "(e.g include strain designation), whereas NCBI will often return multiple assemblies of the same species. " \
+               "If you have trouble deciding on the search returned annotation, go to the website, download the annotation " \
+               "file to your local computer and choose ‘Choose Annotation File’"
+        QtWidgets.QMessageBox.information(self, "Add Organism Information", info, QtWidgets.QMessageBox.Ok)
+
+    def annotation_information(self):
+
+        info = "This functionality will allow users to use different organisms for off-target analysis in a future " \
+               "version of the software. If you need to run analysis on multiple organisms, please use the Population " \
+               "Analysis feature."
+        QtWidgets.QMessageBox.information(self, "Add Organism Information", info, QtWidgets.QMessageBox.Ok)
+
+    def help_info(self):
+        webbrowser.open_new("https://github.com/TrinhLab/CASPERapp")
 
     # this function calls the closingWindow class.
     def closeEvent(self, event):

@@ -298,42 +298,6 @@
      </rect>
     </property>
    </widget>
-   <widget class="QGroupBox" name="groupBox_2">
-    <property name="geometry">
-     <rect>
-      <x>310</x>
-      <y>169</y>
-      <width>401</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Selected File</string>
-    </property>
-    <widget class="QLabel" name="nameFile">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>20</y>
-       <width>381</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>15</pointsize>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Name Of File</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-   </widget>
    <widget class="QTextBrowser" name="JobInProgress">
     <property name="geometry">
      <rect>
@@ -522,6 +486,29 @@
      <string>Continue</string>
     </property>
    </widget>
+   <widget class="QTextBrowser" name="s_file">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>190</y>
+      <width>321</width>
+      <height>41</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>170</y>
+      <width>61</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Selected File</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -529,7 +516,7 @@
      <x>0</x>
      <y>0</y>
      <width>725</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
