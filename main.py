@@ -10,7 +10,7 @@ from closingWin import closingWindow
 import webbrowser
 from Results import Results, geneViewerSettings
 from NewGenome import NewGenome, NCBI_Search_File
-
+from NewEndonuclease import NewEndonuclease
 import requests
 import GlobalSettings
 from bs4 import BeautifulSoup
@@ -272,8 +272,11 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Question_Button_add_org.clicked.connect(self.add_org_popup)
         self.Confused_Button.clicked.connect(self.annotation_information)
         self.actionVisit_Repository.triggered.connect(self.help_info)
-
-
+        self.ncbi.triggered.connect(self.launch_ncbi)
+        self.ncbi_blast.triggered.connect(self.launch_ncbi_blast)
+        self.casper_online.triggered.connect(self.launch_casper_online)
+        self.actionUpload_New_Endonuclease.triggered.connect(self.launch_newEndonuclease)
+        self.newEndonuclease = NewEndonuclease()
         self.Search_Input.setEnabled(False)
 
         self.change_annotation()
@@ -1363,6 +1366,18 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def help_info(self):
         webbrowser.open_new("https://github.com/TrinhLab/CASPERapp")
+
+    def launch_ncbi(self):
+        webbrowser.open_new("https://www.ncbi.nlm.nih.gov")
+
+    def launch_ncbi_blast(self):
+        webbrowser.open_new("https://blast.ncbi.nlm.nih.gov")
+
+    def launch_casper_online(self):
+        webbrowser.open_new("http://casper2.org")
+
+    def launch_newEndonuclease(self):
+        self.newEndonuclease.show()
 
     # this function calls the closingWindow class.
     def closeEvent(self, event):

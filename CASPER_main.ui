@@ -60,6 +60,12 @@
     <property name="text">
      <string>CASPER</string>
     </property>
+    <property name="textFormat">
+     <enum>Qt::PlainText</enum>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
    </widget>
    <widget class="QLabel" name="casperDetail">
     <property name="geometry">
@@ -95,10 +101,10 @@
    <widget class="QLabel" name="versionNum">
     <property name="geometry">
      <rect>
-      <x>210</x>
-      <y>38</y>
-      <width>51</width>
-      <height>20</height>
+      <x>220</x>
+      <y>40</y>
+      <width>41</width>
+      <height>21</height>
      </rect>
     </property>
     <property name="font">
@@ -107,7 +113,10 @@
      </font>
     </property>
     <property name="text">
-     <string>V 1.0</string>
+     <string>V 1.1</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QWidget" name="horizontalLayoutWidget">
@@ -748,13 +757,14 @@
     <addaction name="actionPopulation_Analysis"/>
     <addaction name="separator"/>
     <addaction name="menuExport_to"/>
-    <addaction name="actionNCBI_BLAST"/>
+    <addaction name="ncbi_blast"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
-     <string>Window</string>
+     <string>Web Links</string>
     </property>
-    <addaction name="actionNew_CASPER_Window"/>
+    <addaction name="ncbi"/>
+    <addaction name="casper_online"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -845,7 +855,7 @@
     <string>Change Directory</string>
    </property>
   </action>
-  <action name="actionNCBI_BLAST">
+  <action name="ncbi_blast">
    <property name="text">
     <string>NCBI BLAST</string>
    </property>
@@ -875,9 +885,9 @@
     <string>Complete Target Analysis</string>
    </property>
   </action>
-  <action name="actionNew_CASPER_Window">
+  <action name="ncbi">
    <property name="text">
-    <string>New CASPER Window</string>
+    <string>National Center for BioTechnology Information</string>
    </property>
   </action>
   <action name="actionCo_Targeting">
@@ -890,11 +900,16 @@
     <string>Visit Repository</string>
    </property>
   </action>
+  <action name="casper_online">
+   <property name="text">
+    <string>CASPER Online</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="type_of_annotation_file"/>
   <buttongroup name="refseq_genbank_buttonGroup"/>
+  <buttongroup name="type_of_annotation_file"/>
  </buttongroups>
 </ui>
