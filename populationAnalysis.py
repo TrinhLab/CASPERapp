@@ -30,8 +30,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.sq = Algorithms.SeqTranslate()
         self.ref_para_list = list()
         self.mode = 0
-        self.find_locs_button.clicked.connect(self.find_locations)
-        self.clear_loc_button.clicked.connect(self.clear_loc_table)
+        #self.find_locs_button.clicked.connect(self.find_locations)
+        #self.clear_loc_button.clicked.connect(self.clear_loc_table)
         self.directory = ""
         self.names = []
         self.names_venn = []
@@ -100,90 +100,80 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
         GlobalSettings.mainWindow.ncbi_search_dialog.show()
 
+
     # launches the chromesome selector window
     def launch_chrom_selector(self):
         GlobalSettings.mainWindow.cspr_selector.launch(self.cspr_files)
+
+
+    # this function calls the popParser function and fills all the tables
+    def pre_analyze(self):
+        # if the user is wanting to go with 1 meta genomic cspr file
+        if self.meta_genomic_cspr_checkbox.isChecked():
+            selectedList = self.org_Table.selectedItems()
+
+            # error check
+            if len(selectedList) == 0 or len(selectedList) > 1:
+                QtWidgets.QMessageBox.question(self, "Error",
+                                               "Please select no more than 1 CSPR file for analysis.",
+                                               QtWidgets.QMessageBox.Ok)
+                return
+
+            # get the cspr_file name, the endochoice, and call the popParser
+            orgName = selectedList[0].text()
+            cspr_file_name = self.fna_files[orgName]
+            # split the file name by '_', then take that second index, split by '.', and then take the first index. Thus giving the Endo Choice
+            endoChoice = cspr_file_name.split('_')[1].split('.')[0]
+            # call the parser and the call fill_data
+            cspr_file_name = GlobalSettings.CSPR_DB + '/' + cspr_file_name
+            self.total_org_number, self.ref_para_list = self.parser.popParser(cspr_file_name, endoChoice)
+            self.fill_data(endoChoice)
+        # if the user is wanting to go with creating a new meta genomic cspr file
+        else:
+            selectedList = self.org_Table.selectedItems()
+
+            # if the table is showing only fna/fasta files
+            if not self.meta_genomic_cspr_checkbox.isChecked():
+                # rules for selecting FNA/Fasta files
+                # check to make sure that the user selected at least 2 organisms, and 1 endonuclease
+                if len(selectedList) < 1 or self.endoBox.currentText() == 'None Selected':
+                    QtWidgets.QMessageBox.question(self, "Nothing Seleted",
+                                                   "No items selected. Please select at least 1 organism and only 1 endonuclease.",
+                                                   QtWidgets.QMessageBox.Ok)
+                    return
+                if len(selectedList) == 1:
+                    error = QtWidgets.QMessageBox.question(self, "Only 1 Organism Selected",
+                                                           "Population Analysis works with multiple organisms, or a metagenome. If the file selected is not a metagenome, the program may not function correctly. Do you wish to continue? \n\n"
+                                                           "Do you wish to continue?",
+                                                           QtWidgets.QMessageBox.Yes |
+                                                           QtWidgets.QMessageBox.No,
+                                                           QtWidgets.QMessageBox.No)
+                    if (error == QtWidgets.QMessageBox.No):
+                        return
+
+                submitList = list()
+                for item in selectedList:
+                    submitList.append(self.fna_files[item.text()])
+                self.combinerWindow.launch(submitList)
+            # rules for selecting cspr files
+            elif self.meta_genomic_cspr_checkbox.isChecked():
+                if len(selectedList) == 0:
+                    QtWidgets.QMessageBox.question(self, "Nothing Seleted",
+                                                   "No items selected. Please select one metagenome for Population Analysis.",
+                                                   QtWidgets.QMessageBox.Ok)
+                    return
+                elif len(selectedList) > 1:
+                    QtWidgets.QMessageBox.question(self, "Too Many Selected",
+                                                   "Only 1 metagenomic CSPR file is allowed to be selected.",
+                                                   QtWidgets.QMessageBox.Ok)
+                    return
+
 
     def launch(self, path):
         os.chdir(path)
         self.directory = path
         self.get_data()
 
-    # this function clears the loc_finder_table
-    def clear_loc_table(self):
-        self.loc_finder_table.clearContents()
-        self.loc_finder_table.setRowCount(0)
-
-    def find_locations(self):
-        selectedList = self.table2.selectedItems()
-        tableIndex = 0
-
-        org_chrom_num = list()
-        tempD = dict()
-
-        # error checking
-        if len(selectedList) == 0:
-            QtWidgets.QMessageBox.question(self, "Error", "Please select at least 1 seed to find locations of.",
-                                           QtWidgets.QMessageBox.Ok)
-            self.loc_finder_table.setRowCount(0)
-            return
-
-        # get the chromosome numbers for each organism.
-        counter = 0
-        org_index = 0
-        for item in self.ref_para_list:
-            if item[0] not in tempD:
-                if counter != 0:
-                    org_chrom_num.append(counter)
-
-                counter = 1
-                tempD[item[0]] = org_index
-                org_index += 1
-            else:
-                counter += 1
-        if counter != 0:
-            org_chrom_num.append(counter)
-
-        # loop through and get the data
-        for i in range(len(selectedList)):
-            # we only want the first column's data for the popParser key
-            if i % 9 == 0:
-                currentSeed = selectedList[i].text()
-
-                for item in self.parser.popData[currentSeed]:
-                    self.loc_finder_table.setRowCount(tableIndex + 1)
-                    tempSeq = item[3]
-                    tempOrg = item[0]
-                    tempChrom = int(item[1])
-                    tempLoc = item[2]
-
-                    # calculate the true chromosome number
-                    tempIndex = tempD[tempOrg]
-                    while tempIndex > 0:
-                        tempChrom = tempChrom - org_chrom_num[int(tempIndex - 1)]
-                        tempIndex -= 1
-
-                    tabSeed = QtWidgets.QTableWidgetItem()
-                    tabSeed.setData(QtCore.Qt.EditRole, currentSeed)
-                    tabSeq = QtWidgets.QTableWidgetItem()
-                    tabSeq.setData(QtCore.Qt.EditRole, tempSeq)
-                    tabOrg = QtWidgets.QTableWidgetItem()
-                    tabOrg.setData(QtCore.Qt.EditRole, tempOrg)
-                    tabChrom = QtWidgets.QTableWidgetItem()
-                    tabChrom.setData(QtCore.Qt.EditRole, int(tempChrom))
-                    tabLoc = QtWidgets.QTableWidgetItem()
-                    tabLoc.setData(QtCore.Qt.EditRole, int(tempLoc))
-
-                    self.loc_finder_table.setItem(tableIndex, 0, tabSeed)
-                    self.loc_finder_table.setItem(tableIndex, 1, tabSeq)
-                    self.loc_finder_table.setItem(tableIndex, 2, tabOrg)
-                    self.loc_finder_table.setItem(tableIndex, 3, tabChrom)
-                    self.loc_finder_table.setItem(tableIndex, 4, tabLoc)
-                    tableIndex += 1
-
-        self.loc_finder_table.resizeColumnsToContents()
-
-        # this function builds the Select Organisms table
 
     def get_data(self):
         if self.directory == '':
@@ -210,11 +200,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             for file in onlyfiles:
                 if file.find('.fna') != -1 or file.find('.fasta') != -1:
                     # find the organism name
-                    f = gzip.open(file, 'r')
+                    f = open(file, 'r')
                     hold = f.readline()
                     f.close()
                     hold = str(hold)
-                    hold = hold.strip("'b")
                     hold = hold[:len(hold) - 4]
                     # get the organism name
                     spaceIndex = hold.find(' ') + 1
@@ -256,10 +245,11 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 self.org_Table.clearContents()
                 self.org_Table.setRowCount(0)
 
-#        self.org_Table.resizeColumnsToContents() ##Commenting this out allows the header to remain full sized
+        #        self.org_Table.resizeColumnsToContents() ##Commenting this out allows the header to remain full sized
 
         self.fillEndo()
         # self.changeEndos()
+
 
     # this function opens CASPERinfo and builds the dropdown menu of selectable endonucleases
     def fillEndo(self):
@@ -288,350 +278,16 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.endoBox.addItems(self.Endos.keys())
         # self.endoBox.currentIndexChanged.connect(self.changeEndos)
 
-    # this function displays all of the organisms of which the user has that endo in their DB
-    def changeEndos(self):
-        endo_box = str(self.endoBox.currentText())
-        endo_box = endo_box[:endo_box.find(" ")]
-        self.org_Table.setRowCount(0)
-        index = 0
-        for keys in self.cspr_files.keys():
-            filename = str(self.cspr_files[keys])
-            endo = filename[filename.find("_") + 1:]
-            endo = endo.replace(".cspr", "")
-            if (endo == endo_box or endo_box == "None"):
-                self.org_Table.setRowCount(index + 1)
-                name = QtWidgets.QTableWidgetItem(str(keys))
-                self.org_Table.setItem(index, 0, name)
-                index += 1
-        self.org_Table.resizeColumnsToContents()
 
-    # this function calls the popParser function and fills all the tables
-    def pre_analyze(self):
-        # if the user is wanting to go with 1 meta genomic cspr file
-        if self.meta_genomic_cspr_checkbox.isChecked():
-            selectedList = self.org_Table.selectedItems()
 
-            # error check
-            if len(selectedList) == 0 or len(selectedList) > 1:
-                QtWidgets.QMessageBox.question(self, "Error", "Please select no more than 1 CSPR file for analysis.",
-                                               QtWidgets.QMessageBox.Ok)
-                return
 
-            # get the cspr_file name, the endochoice, and call the popParser
-            orgName = selectedList[0].text()
-            cspr_file_name = self.fna_files[orgName]
-            # split the file name by '_', then take that second index, split by '.', and then take the first index. Thus giving the Endo Choice
-            endoChoice = cspr_file_name.split('_')[1].split('.')[0]
-            # call the parser and the call fill_data
-            cspr_file_name = GlobalSettings.CSPR_DB + '/' + cspr_file_name
-            self.total_org_number, self.ref_para_list = self.parser.popParser(cspr_file_name, endoChoice)
-            self.fill_data(endoChoice)
-        # if the user is wanting to go with creating a new meta genomic cspr file
-        else:
-            selectedList = self.org_Table.selectedItems()
 
-            # if the table is showing only fna/fasta files
-            if not self.meta_genomic_cspr_checkbox.isChecked():
-                # rules for selecting FNA/Fasta files
-                # check to make sure that the user selected at least 2 organisms, and 1 endonuclease
-                if len(selectedList) < 1 or self.endoBox.currentText() == 'None Selected':
-                    QtWidgets.QMessageBox.question(self, "Nothing Seleted", "No items selected. Please select at least 1 organism and only 1 endonuclease.",
-                                                QtWidgets.QMessageBox.Ok)
-                    return
-                if len(selectedList) == 1:
-                    error = QtWidgets.QMessageBox.question(self, "Only 1 Organism Selected",
-                                                            "Population Analysis works with multiple organisms, or a metagenome. If the file selected is not a metagenome, the program may not function correctly. Do you wish to continue? \n\n"
-                                                            "Do you wish to continue?",
-                                                            QtWidgets.QMessageBox.Yes |
-                                                            QtWidgets.QMessageBox.No,
-                                                            QtWidgets.QMessageBox.No)
-                    if (error == QtWidgets.QMessageBox.No):
-                        return
-
-                submitList = list()
-                for item in selectedList:
-                    submitList.append(self.fna_files[item.text()])
-                self.combinerWindow.launch(submitList)
-            # rules for selecting cspr files
-            elif self.meta_genomic_cspr_checkbox.isChecked():
-                if len(selectedList) == 0:
-                    QtWidgets.QMessageBox.question(self, "Nothing Seleted", "No items selected. Please select one metagenome for Population Analysis.",
-                                                QtWidgets.QMessageBox.Ok)
-                    return
-                elif len(selectedList) > 1:
-                    QtWidgets.QMessageBox.question(self, "Too Many Selected", "Only 1 metagenomic CSPR file is allowed to be selected.",
-                                                QtWidgets.QMessageBox.Ok)
-                    return
-
-    # this function calculates the percentConserved for the table
-    # it runs through and finds out how many different organisms each seed is repeated in
-    # if it's equal to the total_org_number, it then returns 1, otherwise it returns a double
-    def findPercentConserved(self, seed):
-        tempSet = set()
-        for item in self.parser.popData[seed]:
-            tempSet.add(item[0])
-
-        if self.total_org_number == len(tempSet):
-            return 1
-        else:
-            return len(tempSet) / self.total_org_number
-
-    # this function calculates the average repeats per chromosome for a seed
-    # runs through the sequences in a seed and calculates it
-    # returns the average
-    def findAvgRepeats(self, seed):
-        firstChrom = 0
-        secondChrom = 0
-        divideBy = 1
-        tempSum = 0
-        for item in self.parser.popData[seed]:
-            firstChrom = item[1]
-
-            if firstChrom != secondChrom and secondChrom != 0:
-                divideBy += 1
-
-            tempSum += 1
-            secondChrom = item[1]
-
-        return tempSum / divideBy
-
-    # this function fills the top-right table
-    def fill_data(self, endoChoice):
-        self.table2.setRowCount(0)
-        index = 0
-        for seeds in self.parser.popData:
-            self.table2.setRowCount(index + 1)
-
-            seed = QtWidgets.QTableWidgetItem()
-            total_repeats = QtWidgets.QTableWidgetItem()
-            total_repeats.setData(QtCore.Qt.EditRole, len(self.parser.popData[seeds]))
-            seed.setData(QtCore.Qt.EditRole, str(seeds))
-
-            self.table2.setItem(index, 0, seed)
-            self.table2.setItem(index, 2, total_repeats)
-            tempPercentConserved = self.findPercentConserved(seeds) * 100
-            tempPercentConserved = float("%.2f" % tempPercentConserved)
-            percentTab = QtWidgets.QTableWidgetItem(str(tempPercentConserved) + '%')
-            self.table2.setItem(index, 1, percentTab)
-
-            # get the avg repeats per chromosome
-            tempAvgRepeatsPerChrom = self.findAvgRepeats(seeds)
-            rounded = float("%.2f" % tempAvgRepeatsPerChrom)
-            avgTab = QtWidgets.QTableWidgetItem()
-            avgTab.setData(QtCore.Qt.EditRole, rounded)
-            self.table2.setItem(index, 3, avgTab)
-
-            # loop through the tuples for each seed
-            sequences = []
-            for tuples in self.parser.popData[seeds]:
-                sequences.append(tuples[3])
-
-            # set consensus seq
-            con_seq_temp = str(max(set(sequences), key=sequences.count))
-            conIndex = sequences.index(con_seq_temp)
-            consensus_seq = QtWidgets.QTableWidgetItem()
-            consensus_seq.setData(QtCore.Qt.EditRole, con_seq_temp)
-            self.table2.setItem(index, 4, consensus_seq)
-
-            # get the data for the rest
-            tabScore = QtWidgets.QTableWidgetItem()
-            tabScore.setData(QtCore.Qt.EditRole, int(self.parser.popData[seeds][conIndex][5]))
-            tabPAM = QtWidgets.QTableWidgetItem(self.parser.popData[seeds][conIndex][4])
-            tabStrand = QtWidgets.QTableWidgetItem(self.parser.popData[seeds][conIndex][6])
-
-            # set all that data
-            self.table2.setItem(index, 6, tabScore)
-            self.table2.setItem(index, 7, tabPAM)
-            self.table2.setItem(index, 8, tabStrand)
-
-            # set consensus percentage
-            consensus_percentage = sequences.count(con_seq_temp) / len(sequences) * 100
-            consensus_percentage = round(consensus_percentage, 2)
-            consensus_percentage = format(consensus_percentage, '.2f')
-            consensus_perc = QtWidgets.QTableWidgetItem()
-            consensus_perc.setData(QtCore.Qt.EditRole, consensus_percentage)
-            self.table2.setItem(index, 5, consensus_perc)
-
-            index += 1
-        self.table2.resizeColumnsToContents()
-        self.plot_repeats_vs_seeds(endoChoice)
-        self.plot_3D_graph(endoChoice)
-        self.plot_venn()
-
-    def clear(self):
-        self.table2.setRowCount(0)
-
-    # this function graphs the repeats_vs_seeds graph
-    def plot_repeats_vs_seeds(self, endoChoice):
-        data = {}
-        for seed in self.parser.popData:
-            number = 0
-            for repeat in self.parser.popData[seed]:
-                number += 1
-            if number in data:
-                data[number] += 1
-            else:
-                data[number] = 1
-
-        max = 0
-        y1 = []
-        x1 = []
-        plots = []
-        time = 0
-        index = 0
-
-        for number in self.order(data):
-            time += 1
-
-            if int(data[number]) > max:
-                max = int(data[number])
-                self.mode = number
-
-            hold = 0
-            while hold < data[number]:
-                if index == int(round(len(self.parser.popData) / 2)):
-                    self.median = number
-                x1.append(index)
-                y1.append(number)
-
-                index = index + 1
-                hold += 1
-
-        # now plot the stuff
-        self.pop_analysis_repeats_graph.canvas.axes.clear()
-        # set everything up
-        self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1)
-        self.pop_analysis_repeats_graph.canvas.axes.set_xlabel('Seed ID Number')
-        self.pop_analysis_repeats_graph.canvas.axes.set_ylabel('Number of Repeats')
-        self.pop_analysis_repeats_graph.canvas.axes.set_title('Number of Repeats per Seed ID Number')
-        # now draw
-        self.pop_analysis_repeats_graph.canvas.draw()
-
-    # this function is for the 3D bar graph
-    def plot_3D_graph(self, endoChoice):
-        if (self.total_org_number > 2):
-            rows, cols = (self.total_org_number, self.total_org_number)
-
-            arr = [[0 for i in range(cols)] for j in range(rows)]
-
-            x3 = []
-            y3 = []
-            z3 = np.zeros(int((self.total_org_number * (self.total_org_number - 1)) / 2))
-            dz = []
-            self.names = []
-            dx = np.ones(int((self.total_org_number * (self.total_org_number - 1)) / 2))
-            dy = np.ones(int((self.total_org_number * (self.total_org_number - 1)) / 2))
-
-            for keys in self.parser.popData:
-                for items in self.parser.popData[keys]:
-                    if items[0] not in self.names:
-                        self.names.append(items[0])
-
-            for keys in self.parser.popData:
-                temp_names = []
-                for items in self.parser.popData[keys]:
-                    if items[0] not in temp_names:
-                        temp_names.append(items[0])
-
-                if len(temp_names) >= 2:
-                    for i in range(len(temp_names) - 1):
-                        j = i + 1
-                        while j != len(temp_names):
-                            arr[self.names.index(temp_names[i])][self.names.index(temp_names[j])] += 1
-                            arr[self.names.index(temp_names[j])][self.names.index(temp_names[i])] += 1
-                            j += 1
-
-            for j in range(cols):
-                i = len(self.names) - 1
-                while i != j:
-                    x3.append(i)
-                    y3.append(j)
-                    dz.append(arr[i][j])
-                    i -= 1
-
-            self.pop_analysis_3dgraph.canvas.axes.clear()
-            self.pop_analysis_3dgraph.canvas.axes.bar3d(x3, y3, z3, dx, dy, dz)
-
-            new_names = []
-
-            for n in range(len(self.names)):
-                new_names.append(n)
-
-            self.pop_analysis_3dgraph.canvas.axes.set_xlabel('x')
-            self.pop_analysis_3dgraph.canvas.axes.set_ylabel('y')
-            self.pop_analysis_3dgraph.canvas.axes.set_zlabel('z')
-
-            self.pop_analysis_3dgraph.canvas.axes.set_xticks(np.arange(1, self.total_org_number + 1, 1))
-            self.pop_analysis_3dgraph.canvas.axes.set_yticks(np.arange(0, self.total_org_number, 1))
-
-            self.pop_analysis_3dgraph.canvas.axes.tick_params(labelsize=8)
-            self.pop_analysis_3dgraph.canvas.axes.set_xticklabels(new_names, rotation=45)
-            self.pop_analysis_3dgraph.canvas.axes.set_yticklabels(new_names, rotation=-45)
-
-            self.pop_analysis_3dgraph.canvas.draw()
-
-    def plot_venn(self):
-        self.pop_analysis_venn_diagram.canvas.figure.clf()
-        # self.pop_analysis_venn_diagram.canvas = FigureCanvas(plt.figure(figsize=(7.5,7.5)))
-
-        rows, cols = (self.total_org_number, self.total_org_number)
-        arr = [[0 for i in range(cols)] for j in range(rows)]
-        all_3 = 0
-        singles = [0 for i in range(cols)]
-        counter = 0
-        self.names_venn = []
-
-        for keys in self.parser.popData:
-            for items in self.parser.popData[keys]:
-                if items[0] not in self.names_venn:
-                    self.names_venn.append(items[0])
-
-        if len(self.names_venn) >= 3:
-            for keys in self.parser.popData:
-                temp_names = []
-                for items in self.parser.popData[keys]:
-                    if items[0] not in temp_names:
-                        temp_names.append(items[0])
-
-                if len(temp_names) >= 2:
-                    for i in range(len(temp_names) - 1):
-                        j = i + 1
-                        while j != len(temp_names):
-                            arr[self.names_venn.index(temp_names[i])][self.names_venn.index(temp_names[j])] += 1
-                            arr[self.names_venn.index(temp_names[j])][self.names_venn.index(temp_names[i])] += 1
-                            j += 1
-                else:
-                    if temp_names[0] == 'Corynebacterium tuberculostearicum SK141 contig00004':
-                        counter += 1
-                    singles[self.names_venn.index(temp_names[0])] += 1
-
-            # all 3 orgs
-            for keys in self.parser.popData:
-                temp_names = []
-                for items in self.parser.popData[keys]:
-                    if items[0] not in temp_names:
-                        temp_names.append(items[0])
-                if all(x in temp_names for x in [self.names_venn[0], self.names_venn[1], self.names_venn[2]]):
-                    all_3 += 1
-
-            venn3_unweighted(subsets=(singles[0], singles[1], arr[0][1], singles[2], arr[0][2],
-                                      arr[1][1], all_3), set_labels=('0', '1', '2'))
-
-            self.pop_analysis_venn_diagram.canvas.draw()
-        else:
-            self.pop_analysis_venn_diagram.canvas.figure.clf()
-            self.pop_analysis_venn_diagram.canvas.draw()
-
-            # del self.pop_analysis_venn_diagram.canvas.axes
-            # self.pop_analysis_venn_diagram.canvas.draw()
-
-            # self.pop_analysis_venn_diagram.canvas.axes = venn3_unweighted(
-            # subsets=('null', 'null', 'null', 'null', 'null', 'null', 'null'), set_labels=('Org. 1', 'Org. 2', 'Org. 3'))
 
     def show_names_func(self):
         # print(self.names)
         self.name_form.fill_table(self.names)
         self.name_form.show()
+
 
     def show_names_func2(self):
         # print(self.names)
@@ -641,29 +297,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         else:
             self.name_form2.name_table2.setRowCount(0)
 
-    def order(self, data_par):
-        data = dict(data_par)
-        data2 = []
-        while len(data) > 0:
-            max = 0
-            for item in data:
-                if item > max:
-                    max = item
-            data2.append(max)
-            if len(data2) == 1:
-                self.max_repeats = max
-            del data[max]
-        return data2
-
-    def go_back(self):
-        GlobalSettings.mainWindow.getData()
-        GlobalSettings.mainWindow.show()
-        self.hide()
-
-    # this function calls the close window class. Allows the user to choose what files they want to keep/delete
-    def closeEvent(self, event):
-        GlobalSettings.mainWindow.closeFunction()
-        event.accept()
 
     def table_sorting(self, logicalIndex):
         self.switcher[logicalIndex] *= -1
@@ -672,6 +305,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         else:
             self.table2.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
 
+
     # sorting to table2: IE the table in top-right
     def table2_sorting(self, logicalIndex):
         self.switcher_table2[logicalIndex] *= -1
@@ -679,6 +313,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.table2.sortItems(logicalIndex, QtCore.Qt.DescendingOrder)
         else:
             self.table2.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
+
 
     # sorting for location table: IE table in bottom right
     def loc_table_sorter(self, logicalIndex):
@@ -689,12 +324,29 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.loc_finder_table.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
 
 
-###############################################################################
-# class name: fna_and_cspr_combiner
-# this opens a window for the user to select the Organism Name, FNA File Name, and the organism code.
-# It combines the FNA files, and then runs the sequencer. This way it creates 1 cspr file.
-# after the new cspr file is created, it will run the population analysis
-###############################################################################
+    def clear(self):
+        self.table2.setRowCount(0)
+
+
+    def go_back(self):
+        GlobalSettings.mainWindow.getData()
+        GlobalSettings.mainWindow.show()
+        self.hide()
+
+
+    # this function calls the close window class. Allows the user to choose what files they want to keep/delete
+    def closeEvent(self, event):
+        GlobalSettings.mainWindow.closeFunction()
+        event.accept()
+
+
+
+
+
+
+
+
+
 class fna_and_cspr_combiner(QtWidgets.QDialog):
     def __init__(self):
         # Qt init stuff

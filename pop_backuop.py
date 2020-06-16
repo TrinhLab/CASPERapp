@@ -92,6 +92,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                                 1]  # for keeping track of where we are in the sorting clicking for each column
         self.switcher_loc_table = [1, 1, 1, 1, 1]
 
+        self.mwfg = self.frameGeometry()
+        self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()
+
+
     def launch_ncbi_seacher(self):
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
         GlobalSettings.mainWindow.ncbi_search_dialog.show()
