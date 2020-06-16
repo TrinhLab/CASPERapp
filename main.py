@@ -946,7 +946,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     def launch_newGenome(self):
         self.hide()
         self.newGenome.mwfg.moveCenter(self.newGenome.cp)  ##Center window
-        self.newGenome.move(self.mwfg.topLeft())  ##Center window
+        self.newGenome.move(self.newGenome.mwfg.topLeft())  ##Center window
         self.newGenome.show()
 
 
