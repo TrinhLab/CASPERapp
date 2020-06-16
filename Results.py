@@ -24,7 +24,7 @@ class Results(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
         super(Results, self).__init__(parent)
-        uic.loadUi('resultsWindow.ui', self)
+        uic.loadUi(GlobalSettings.appdir + 'resultsWindow.ui', self)
 
         self.setWindowTitle('Results')
         self.geneViewer.setReadOnly(True)
@@ -101,6 +101,8 @@ class Results(QtWidgets.QMainWindow):
         self.files_list = []
         self.seq_finder_cspr_file = ''
 
+        self.mwfg = self.frameGeometry()  ##Center window
+        self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
 
     # this function opens the export_to_csv window
     # first it makes sure that the user actually has some highlighted targets that they want exported
@@ -774,7 +776,7 @@ class Results(QtWidgets.QMainWindow):
     #linked to when the user pushes tools->off target analysis
     def Off_Target_Analysis(self):
         #build temp file for offtarget to read from
-        f = open(GlobalSettings.appdir + '\\OffTargetFolder' + '\\temp.txt','w+')
+        f = open(GlobalSettings.appdir + 'OffTargetFolder' + '\\temp.txt','w+')
         self.OTA.clear()
         for row in range(self.targetTable.rowCount()):
             if(self.targetTable.cellWidget(row,6).isChecked()):
@@ -1003,9 +1005,9 @@ class geneViewerSettings(QtWidgets.QDialog):
     def __init__(self):
         # Qt init stuff
         super(geneViewerSettings, self).__init__()
-        uic.loadUi("geneViewerSettings.ui", self)
+        uic.loadUi(GlobalSettings.appdir + "geneViewerSettings.ui", self)
         self.setWindowTitle("Change Gene Viewer Settings")
-        self.setWindowIcon(Qt.QIcon("cas9image.png"))
+        self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.png"))
 
         # button connections
         self.kegg_radio_button.clicked.connect(self.change_file_type)

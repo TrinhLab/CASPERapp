@@ -35,8 +35,8 @@ a = Analysis(['main.py'],
 				('pop_analysis_fna_combiner.ui', '.'),
 				('name_form.ui', '.'),
 				('name_form2.ui', '.'),
-				('newendonuclease.ui', '.')
-
+				('newendonuclease.ui', '.'),
+				('CASPER-logo.jpg', '.')
 			 ],
              hiddenimports=[
 				'repeats_vs_seeds_line', 
@@ -68,7 +68,7 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=False)
+          console=True)
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,

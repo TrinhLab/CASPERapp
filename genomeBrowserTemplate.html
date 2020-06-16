@@ -1,0 +1,714 @@
+
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	<ihtml>
+	<head>
+		<title>NCBI Sequence Viewer - programmatic initialization</title>
+		<script type="text/javascript" src="https://www.ncbi.nlm.nih.gov/projects/sviewer/js/sviewer.js"></script>
+		<script>
+			function loadSV(id) {
+				var svapp = SeqView.App.findAppByDivId("mySeqViewer1");
+				if (!svapp)
+					svapp = new SeqView.App("mySeqViewer1");
+				params = 'appname=UniversityofTennesseeCasper&amp;id=' + id;
+				svapp.reload(params);
+			}
+		</script>
+	</head>
+	<body>
+		Select a chromosome from the list:<br/>
+
+	<select onchange="loadSV(event.target.value);">
+		<option value="">-</option>
+	
+		<option value="MU032034.1">Chromosome 1</option>
+	
+		<option value="MU032035.1">Chromosome 2</option>
+	
+		<option value="MU032036.1">Chromosome 3</option>
+	
+		<option value="MU032037.1">Chromosome 4</option>
+	
+		<option value="MU032038.1">Chromosome 5</option>
+	
+		<option value="MU032039.1">Chromosome 6</option>
+	
+		<option value="MU032040.1">Chromosome 7</option>
+	
+		<option value="MU032041.1">Chromosome 8</option>
+	
+		<option value="MU032042.1">Chromosome 9</option>
+	
+		<option value="MU032043.1">Chromosome 10</option>
+	
+		<option value="MU032044.1">Chromosome 11</option>
+	
+		<option value="MU032045.1">Chromosome 12</option>
+	
+		<option value="MU032046.1">Chromosome 13</option>
+	
+		<option value="MU032047.1">Chromosome 14</option>
+	
+		<option value="MU032048.1">Chromosome 15</option>
+	
+		<option value="MU032049.1">Chromosome 16</option>
+	
+		<option value="MU032050.1">Chromosome 17</option>
+	
+		<option value="MU032051.1">Chromosome 18</option>
+	
+		<option value="MU032052.1">Chromosome 19</option>
+	
+		<option value="MU032053.1">Chromosome 20</option>
+	
+		<option value="MU032054.1">Chromosome 21</option>
+	
+		<option value="MU032055.1">Chromosome 22</option>
+	
+		<option value="MU032056.1">Chromosome 23</option>
+	
+		<option value="MU032057.1">Chromosome 24</option>
+	
+		<option value="MU032058.1">Chromosome 25</option>
+	
+		<option value="MU032059.1">Chromosome 26</option>
+	
+		<option value="MU032060.1">Chromosome 27</option>
+	
+		<option value="MU032061.1">Chromosome 28</option>
+	
+		<option value="MU032062.1">Chromosome 29</option>
+	
+		<option value="MU032063.1">Chromosome 30</option>
+	
+		<option value="MU032064.1">Chromosome 31</option>
+	
+		<option value="MU032065.1">Chromosome 32</option>
+	
+		<option value="MU032066.1">Chromosome 33</option>
+	
+		<option value="MU032067.1">Chromosome 34</option>
+	
+		<option value="MU032068.1">Chromosome 35</option>
+	
+		<option value="MU032069.1">Chromosome 36</option>
+	
+		<option value="MU032070.1">Chromosome 37</option>
+	
+		<option value="MU032071.1">Chromosome 38</option>
+	
+		<option value="MU032072.1">Chromosome 39</option>
+	
+		<option value="MU032073.1">Chromosome 40</option>
+	
+		<option value="MU032074.1">Chromosome 41</option>
+	
+		<option value="MU032075.1">Chromosome 42</option>
+	
+		<option value="MU032076.1">Chromosome 43</option>
+	
+		<option value="MU032077.1">Chromosome 44</option>
+	
+		<option value="MU032078.1">Chromosome 45</option>
+	
+		<option value="MU032079.1">Chromosome 46</option>
+	
+		<option value="MU032080.1">Chromosome 47</option>
+	
+		<option value="MU032081.1">Chromosome 48</option>
+	
+		<option value="MU032082.1">Chromosome 49</option>
+	
+		<option value="MU032083.1">Chromosome 50</option>
+	
+		<option value="MU032084.1">Chromosome 51</option>
+	
+		<option value="MU032085.1">Chromosome 52</option>
+	
+		<option value="MU032086.1">Chromosome 53</option>
+	
+		<option value="AFZS01000838.1">Chromosome 54</option>
+	
+		<option value="MU032087.1">Chromosome 55</option>
+	
+		<option value="MU032088.1">Chromosome 56</option>
+	
+		<option value="MU032089.1">Chromosome 57</option>
+	
+		<option value="MU032090.1">Chromosome 58</option>
+	
+		<option value="MU032091.1">Chromosome 59</option>
+	
+		<option value="MU032092.1">Chromosome 60</option>
+	
+		<option value="MU032093.1">Chromosome 61</option>
+	
+		<option value="MU032094.1">Chromosome 62</option>
+	
+		<option value="MU032095.1">Chromosome 63</option>
+	
+		<option value="MU032096.1">Chromosome 64</option>
+	
+		<option value="MU032097.1">Chromosome 65</option>
+	
+		<option value="AFZS01000983.1">Chromosome 66</option>
+	
+		<option value="AFZS01000984.1">Chromosome 67</option>
+	
+		<option value="MU032098.1">Chromosome 68</option>
+	
+		<option value="MU032099.1">Chromosome 69</option>
+	
+		<option value="MU032100.1">Chromosome 70</option>
+	
+		<option value="MU032101.1">Chromosome 71</option>
+	
+		<option value="AFZS01001069.1">Chromosome 72</option>
+	
+		<option value="AFZS01001070.1">Chromosome 73</option>
+	
+		<option value="MU032102.1">Chromosome 74</option>
+	
+		<option value="MU032103.1">Chromosome 75</option>
+	
+		<option value="AFZS01001099.1">Chromosome 76</option>
+	
+		<option value="MU032104.1">Chromosome 77</option>
+	
+		<option value="MU032105.1">Chromosome 78</option>
+	
+		<option value="MU032106.1">Chromosome 79</option>
+	
+		<option value="AFZS01001146.1">Chromosome 80</option>
+	
+		<option value="MU032107.1">Chromosome 81</option>
+	
+		<option value="MU032108.1">Chromosome 82</option>
+	
+		<option value="MU032109.1">Chromosome 83</option>
+	
+		<option value="MU032110.1">Chromosome 84</option>
+	
+		<option value="MU032111.1">Chromosome 85</option>
+	
+		<option value="MU032112.1">Chromosome 86</option>
+	
+		<option value="AFZS01001164.1">Chromosome 87</option>
+	
+		<option value="AFZS01001165.1">Chromosome 88</option>
+	
+		<option value="AFZS01001166.1">Chromosome 89</option>
+	
+		<option value="AFZS01001167.1">Chromosome 90</option>
+	
+		<option value="AFZS01001168.1">Chromosome 91</option>
+	
+		<option value="AFZS01001169.1">Chromosome 92</option>
+	
+		<option value="AFZS01001170.1">Chromosome 93</option>
+	
+		<option value="AFZS01001171.1">Chromosome 94</option>
+	
+		<option value="AFZS01001172.1">Chromosome 95</option>
+	
+		<option value="AFZS01001173.1">Chromosome 96</option>
+	
+		<option value="AFZS01001174.1">Chromosome 97</option>
+	
+		<option value="AFZS01001175.1">Chromosome 98</option>
+	
+		<option value="AFZS01001176.1">Chromosome 99</option>
+	
+		<option value="AFZS01001177.1">Chromosome 100</option>
+	
+		<option value="AFZS01001178.1">Chromosome 101</option>
+	
+		<option value="AFZS01001179.1">Chromosome 102</option>
+	
+		<option value="AFZS01001180.1">Chromosome 103</option>
+	
+		<option value="AFZS01001181.1">Chromosome 104</option>
+	
+		<option value="AFZS01001182.1">Chromosome 105</option>
+	
+		<option value="AFZS01001183.1">Chromosome 106</option>
+	
+		<option value="AFZS01001184.1">Chromosome 107</option>
+	
+		<option value="AFZS01001185.1">Chromosome 108</option>
+	
+		<option value="AFZS01001186.1">Chromosome 109</option>
+	
+		<option value="AFZS01001187.1">Chromosome 110</option>
+	
+		<option value="AFZS01001188.1">Chromosome 111</option>
+	
+		<option value="AFZS01001189.1">Chromosome 112</option>
+	
+		<option value="AFZS01001190.1">Chromosome 113</option>
+	
+		<option value="AFZS01001191.1">Chromosome 114</option>
+	
+		<option value="AFZS01001192.1">Chromosome 115</option>
+	
+		<option value="AFZS01001193.1">Chromosome 116</option>
+	
+		<option value="AFZS01001194.1">Chromosome 117</option>
+	
+		<option value="AFZS01001195.1">Chromosome 118</option>
+	
+		<option value="AFZS01001196.1">Chromosome 119</option>
+	
+		<option value="AFZS01001197.1">Chromosome 120</option>
+	
+		<option value="AFZS01001198.1">Chromosome 121</option>
+	
+		<option value="AFZS01001199.1">Chromosome 122</option>
+	
+		<option value="AFZS01001200.1">Chromosome 123</option>
+	
+		<option value="AFZS01001201.1">Chromosome 124</option>
+	
+		<option value="AFZS01001202.1">Chromosome 125</option>
+	
+		<option value="AFZS01001203.1">Chromosome 126</option>
+	
+		<option value="AFZS01001204.1">Chromosome 127</option>
+	
+		<option value="AFZS01001205.1">Chromosome 128</option>
+	
+		<option value="AFZS01001206.1">Chromosome 129</option>
+	
+		<option value="AFZS01001207.1">Chromosome 130</option>
+	
+		<option value="AFZS01001208.1">Chromosome 131</option>
+	
+		<option value="AFZS01001209.1">Chromosome 132</option>
+	
+		<option value="AFZS01001210.1">Chromosome 133</option>
+	
+		<option value="AFZS01001211.1">Chromosome 134</option>
+	
+		<option value="AFZS01001212.1">Chromosome 135</option>
+	
+		<option value="AFZS01001213.1">Chromosome 136</option>
+	
+		<option value="AFZS01001214.1">Chromosome 137</option>
+	
+		<option value="AFZS01001215.1">Chromosome 138</option>
+	
+		<option value="AFZS01001216.1">Chromosome 139</option>
+	
+		<option value="AFZS01001217.1">Chromosome 140</option>
+	
+		<option value="AFZS01001218.1">Chromosome 141</option>
+	
+		<option value="AFZS01001219.1">Chromosome 142</option>
+	
+		<option value="AFZS01001220.1">Chromosome 143</option>
+	
+		<option value="AFZS01001221.1">Chromosome 144</option>
+	
+		<option value="AFZS01001222.1">Chromosome 145</option>
+	
+		<option value="AFZS01001223.1">Chromosome 146</option>
+	
+		<option value="AFZS01001224.1">Chromosome 147</option>
+	
+		<option value="AFZS01001225.1">Chromosome 148</option>
+	
+		<option value="AFZS01001226.1">Chromosome 149</option>
+	
+		<option value="AFZS01001227.1">Chromosome 150</option>
+	
+		<option value="AFZS01001228.1">Chromosome 151</option>
+	
+		<option value="AFZS01001229.1">Chromosome 152</option>
+	
+		<option value="AFZS01001230.1">Chromosome 153</option>
+	
+		<option value="AFZS01001231.1">Chromosome 154</option>
+	
+		<option value="AFZS01001232.1">Chromosome 155</option>
+	
+		<option value="AFZS01001233.1">Chromosome 156</option>
+	
+		<option value="AFZS01001234.1">Chromosome 157</option>
+	
+		<option value="AFZS01001235.1">Chromosome 158</option>
+	
+		<option value="AFZS01001236.1">Chromosome 159</option>
+	
+		<option value="AFZS01001237.1">Chromosome 160</option>
+	
+		<option value="AFZS01001238.1">Chromosome 161</option>
+	
+		<option value="AFZS01001239.1">Chromosome 162</option>
+	
+		<option value="AFZS01001240.1">Chromosome 163</option>
+	
+		<option value="AFZS01001241.1">Chromosome 164</option>
+	
+		<option value="AFZS01001242.1">Chromosome 165</option>
+	
+		<option value="AFZS01001243.1">Chromosome 166</option>
+	
+		<option value="AFZS01001244.1">Chromosome 167</option>
+	
+		<option value="AFZS01001245.1">Chromosome 168</option>
+	
+		<option value="AFZS01001246.1">Chromosome 169</option>
+	
+		<option value="AFZS01001247.1">Chromosome 170</option>
+	
+		<option value="AFZS01001248.1">Chromosome 171</option>
+	
+		<option value="AFZS01001249.1">Chromosome 172</option>
+	
+		<option value="AFZS01001250.1">Chromosome 173</option>
+	
+		<option value="AFZS01001251.1">Chromosome 174</option>
+	
+		<option value="AFZS01001252.1">Chromosome 175</option>
+	
+		<option value="AFZS01001253.1">Chromosome 176</option>
+	
+		<option value="AFZS01001254.1">Chromosome 177</option>
+	
+		<option value="AFZS01001255.1">Chromosome 178</option>
+	
+		<option value="AFZS01001256.1">Chromosome 179</option>
+	
+		<option value="AFZS01001257.1">Chromosome 180</option>
+	
+		<option value="AFZS01001258.1">Chromosome 181</option>
+	
+		<option value="AFZS01001259.1">Chromosome 182</option>
+	
+		<option value="AFZS01001260.1">Chromosome 183</option>
+	
+		<option value="AFZS01001261.1">Chromosome 184</option>
+	
+		<option value="AFZS01001262.1">Chromosome 185</option>
+	
+		<option value="AFZS01001263.1">Chromosome 186</option>
+	
+		<option value="AFZS01001264.1">Chromosome 187</option>
+	
+		<option value="AFZS01001265.1">Chromosome 188</option>
+	
+		<option value="AFZS01001266.1">Chromosome 189</option>
+	
+		<option value="AFZS01001267.1">Chromosome 190</option>
+	
+		<option value="AFZS01001268.1">Chromosome 191</option>
+	
+		<option value="AFZS01001269.1">Chromosome 192</option>
+	
+		<option value="AFZS01001270.1">Chromosome 193</option>
+	
+		<option value="AFZS01001271.1">Chromosome 194</option>
+	
+		<option value="AFZS01001272.1">Chromosome 195</option>
+	
+		<option value="AFZS01001273.1">Chromosome 196</option>
+	
+		<option value="AFZS01001274.1">Chromosome 197</option>
+	
+		<option value="AFZS01001275.1">Chromosome 198</option>
+	
+		<option value="AFZS01001276.1">Chromosome 199</option>
+	
+		<option value="AFZS01001277.1">Chromosome 200</option>
+	
+		<option value="AFZS01001278.1">Chromosome 201</option>
+	
+		<option value="AFZS01001279.1">Chromosome 202</option>
+	
+		<option value="AFZS01001280.1">Chromosome 203</option>
+	
+		<option value="AFZS01001281.1">Chromosome 204</option>
+	
+		<option value="AFZS01001282.1">Chromosome 205</option>
+	
+		<option value="AFZS01001283.1">Chromosome 206</option>
+	
+		<option value="AFZS01001284.1">Chromosome 207</option>
+	
+		<option value="AFZS01001285.1">Chromosome 208</option>
+	
+		<option value="AFZS01001286.1">Chromosome 209</option>
+	
+		<option value="AFZS01001287.1">Chromosome 210</option>
+	
+		<option value="AFZS01001288.1">Chromosome 211</option>
+	
+		<option value="AFZS01001289.1">Chromosome 212</option>
+	
+		<option value="AFZS01001290.1">Chromosome 213</option>
+	
+		<option value="AFZS01001291.1">Chromosome 214</option>
+	
+		<option value="AFZS01001292.1">Chromosome 215</option>
+	
+		<option value="AFZS01001293.1">Chromosome 216</option>
+	
+		<option value="AFZS01001294.1">Chromosome 217</option>
+	
+		<option value="AFZS01001295.1">Chromosome 218</option>
+	
+		<option value="AFZS01001296.1">Chromosome 219</option>
+	
+		<option value="AFZS01001297.1">Chromosome 220</option>
+	
+		<option value="AFZS01001298.1">Chromosome 221</option>
+	
+		<option value="AFZS01001299.1">Chromosome 222</option>
+	
+		<option value="AFZS01001300.1">Chromosome 223</option>
+	
+		<option value="AFZS01001301.1">Chromosome 224</option>
+	
+		<option value="AFZS01001302.1">Chromosome 225</option>
+	
+		<option value="AFZS01001303.1">Chromosome 226</option>
+	
+		<option value="AFZS01001304.1">Chromosome 227</option>
+	
+		<option value="AFZS01001305.1">Chromosome 228</option>
+	
+		<option value="AFZS01001306.1">Chromosome 229</option>
+	
+		<option value="AFZS01001307.1">Chromosome 230</option>
+	
+		<option value="AFZS01001308.1">Chromosome 231</option>
+	
+		<option value="AFZS01001309.1">Chromosome 232</option>
+	
+		<option value="AFZS01001310.1">Chromosome 233</option>
+	
+		<option value="AFZS01001311.1">Chromosome 234</option>
+	
+		<option value="AFZS01001312.1">Chromosome 235</option>
+	
+		<option value="AFZS01001313.1">Chromosome 236</option>
+	
+		<option value="AFZS01001314.1">Chromosome 237</option>
+	
+		<option value="AFZS01001315.1">Chromosome 238</option>
+	
+		<option value="AFZS01001316.1">Chromosome 239</option>
+	
+		<option value="AFZS01001317.1">Chromosome 240</option>
+	
+		<option value="AFZS01001318.1">Chromosome 241</option>
+	
+		<option value="AFZS01001319.1">Chromosome 242</option>
+	
+		<option value="AFZS01001320.1">Chromosome 243</option>
+	
+		<option value="AFZS01001321.1">Chromosome 244</option>
+	
+		<option value="AFZS01001322.1">Chromosome 245</option>
+	
+		<option value="AFZS01001323.1">Chromosome 246</option>
+	
+		<option value="AFZS01001324.1">Chromosome 247</option>
+	
+		<option value="AFZS01001325.1">Chromosome 248</option>
+	
+		<option value="AFZS01001326.1">Chromosome 249</option>
+	
+		<option value="AFZS01001327.1">Chromosome 250</option>
+	
+		<option value="AFZS01001328.1">Chromosome 251</option>
+	
+		<option value="AFZS01001329.1">Chromosome 252</option>
+	
+		<option value="AFZS01001330.1">Chromosome 253</option>
+	
+		<option value="AFZS01001331.1">Chromosome 254</option>
+	
+		<option value="AFZS01001332.1">Chromosome 255</option>
+	
+		<option value="AFZS01001333.1">Chromosome 256</option>
+	
+		<option value="AFZS01001334.1">Chromosome 257</option>
+	
+		<option value="AFZS01001335.1">Chromosome 258</option>
+	
+		<option value="AFZS01001336.1">Chromosome 259</option>
+	
+		<option value="AFZS01001337.1">Chromosome 260</option>
+	
+		<option value="AFZS01001338.1">Chromosome 261</option>
+	
+		<option value="AFZS01001339.1">Chromosome 262</option>
+	
+		<option value="AFZS01001340.1">Chromosome 263</option>
+	
+		<option value="AFZS01001341.1">Chromosome 264</option>
+	
+		<option value="AFZS01001342.1">Chromosome 265</option>
+	
+		<option value="AFZS01001343.1">Chromosome 266</option>
+	
+		<option value="AFZS01001344.1">Chromosome 267</option>
+	
+		<option value="AFZS01001345.1">Chromosome 268</option>
+	
+		<option value="AFZS01001346.1">Chromosome 269</option>
+	
+		<option value="AFZS01001347.1">Chromosome 270</option>
+	
+		<option value="AFZS01001348.1">Chromosome 271</option>
+	
+		<option value="AFZS01001349.1">Chromosome 272</option>
+	
+		<option value="AFZS01001350.1">Chromosome 273</option>
+	
+		<option value="AFZS01001351.1">Chromosome 274</option>
+	
+		<option value="AFZS01001352.1">Chromosome 275</option>
+	
+		<option value="AFZS01001353.1">Chromosome 276</option>
+	
+		<option value="AFZS01001354.1">Chromosome 277</option>
+	
+		<option value="AFZS01001355.1">Chromosome 278</option>
+	
+		<option value="AFZS01001356.1">Chromosome 279</option>
+	
+		<option value="AFZS01001357.1">Chromosome 280</option>
+	
+		<option value="AFZS01001358.1">Chromosome 281</option>
+	
+		<option value="AFZS01001359.1">Chromosome 282</option>
+	
+		<option value="AFZS01001360.1">Chromosome 283</option>
+	
+		<option value="AFZS01001361.1">Chromosome 284</option>
+	
+		<option value="AFZS01001362.1">Chromosome 285</option>
+	
+		<option value="AFZS01001363.1">Chromosome 286</option>
+	
+		<option value="AFZS01001364.1">Chromosome 287</option>
+	
+		<option value="AFZS01001365.1">Chromosome 288</option>
+	
+		<option value="AFZS01001366.1">Chromosome 289</option>
+	
+		<option value="AFZS01001367.1">Chromosome 290</option>
+	
+		<option value="AFZS01001368.1">Chromosome 291</option>
+	
+		<option value="AFZS01001369.1">Chromosome 292</option>
+	
+		<option value="AFZS01001370.1">Chromosome 293</option>
+	
+		<option value="AFZS01001371.1">Chromosome 294</option>
+	
+		<option value="AFZS01001372.1">Chromosome 295</option>
+	
+		<option value="AFZS01001373.1">Chromosome 296</option>
+	
+		<option value="AFZS01001374.1">Chromosome 297</option>
+	
+		<option value="AFZS01001375.1">Chromosome 298</option>
+	
+		<option value="AFZS01001376.1">Chromosome 299</option>
+	
+		<option value="AFZS01001377.1">Chromosome 300</option>
+	
+		<option value="AFZS01001378.1">Chromosome 301</option>
+	
+		<option value="AFZS01001379.1">Chromosome 302</option>
+	
+		<option value="AFZS01001380.1">Chromosome 303</option>
+	
+		<option value="AFZS01001381.1">Chromosome 304</option>
+	
+		<option value="AFZS01001382.1">Chromosome 305</option>
+	
+		<option value="AFZS01001383.1">Chromosome 306</option>
+	
+		<option value="AFZS01001384.1">Chromosome 307</option>
+	
+		<option value="AFZS01001385.1">Chromosome 308</option>
+	
+		<option value="AFZS01001386.1">Chromosome 309</option>
+	
+		<option value="AFZS01001387.1">Chromosome 310</option>
+	
+		<option value="AFZS01001388.1">Chromosome 311</option>
+	
+		<option value="AFZS01001389.1">Chromosome 312</option>
+	
+		<option value="AFZS01001390.1">Chromosome 313</option>
+	
+		<option value="AFZS01001391.1">Chromosome 314</option>
+	
+		<option value="AFZS01001392.1">Chromosome 315</option>
+	
+		<option value="AFZS01001393.1">Chromosome 316</option>
+	
+		<option value="AFZS01001394.1">Chromosome 317</option>
+	
+		<option value="AFZS01001395.1">Chromosome 318</option>
+	
+		<option value="AFZS01001396.1">Chromosome 319</option>
+	
+		<option value="AFZS01001397.1">Chromosome 320</option>
+	
+		<option value="AFZS01001398.1">Chromosome 321</option>
+	
+		<option value="AFZS01001399.1">Chromosome 322</option>
+	
+		<option value="AFZS01001400.1">Chromosome 323</option>
+	
+		<option value="AFZS01001401.1">Chromosome 324</option>
+	
+		<option value="AFZS01001402.1">Chromosome 325</option>
+	
+		<option value="AFZS01001403.1">Chromosome 326</option>
+	
+		<option value="AFZS01001404.1">Chromosome 327</option>
+	
+		<option value="AFZS01001405.1">Chromosome 328</option>
+	
+		<option value="AFZS01001406.1">Chromosome 329</option>
+	
+		<option value="AFZS01001407.1">Chromosome 330</option>
+	
+		<option value="AFZS01001408.1">Chromosome 331</option>
+	
+		<option value="AFZS01001409.1">Chromosome 332</option>
+	
+		<option value="AFZS01001410.1">Chromosome 333</option>
+	
+		<option value="AFZS01001411.1">Chromosome 334</option>
+	
+		<option value="AFZS01001412.1">Chromosome 335</option>
+	
+		<option value="AFZS01001413.1">Chromosome 336</option>
+	
+		<option value="AFZS01001414.1">Chromosome 337</option>
+	
+		<option value="AFZS01001415.1">Chromosome 338</option>
+	
+		<option value="AFZS01001416.1">Chromosome 339</option>
+	
+		<option value="AFZS01001417.1">Chromosome 340</option>
+	
+		<option value="AFZS01001418.1">Chromosome 341</option>
+	
+		</select>
+		<br/>
+	
+		<div id="mySeqViewer1" class="SeqViewerApp" data-autoload> 
+			<a href="?embedded=true&appname=testapp1&id=MU032034.1"></a> 
+		</div>	
+		
+	</body>
+	</html>
+	

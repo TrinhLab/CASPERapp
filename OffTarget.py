@@ -17,7 +17,7 @@ class OffTarget(QtWidgets.QDialog):
     def __init__(self):
 
         super(OffTarget, self).__init__()
-        uic.loadUi(GlobalSettings.appdir+'\OffTargetAnalysis.ui', self)
+        uic.loadUi(GlobalSettings.appdir + 'OffTargetAnalysis.ui', self)
         self.setWindowTitle("Off-Target Analysis")
         self.show()
         self.progressBar.setMinimum(0)
@@ -118,9 +118,9 @@ class OffTarget(QtWidgets.QDialog):
         #setup arguments for C++ .exe
         app_path = GlobalSettings.appdir
         #exe_path = app_path + r'\OffTargetFolder\CasperOffTargetWindows '
-        exe_path = app_path + r'\OffTargetFolder\OT '
+        exe_path = app_path + r'OffTargetFolder\OT '
         exe_path = '"' +  exe_path + '"'
-        data_path = ' "' + app_path + '\\OffTargetFolder\\temp.txt' + '" ' ##
+        data_path = ' "' + app_path + 'OffTargetFolder\\temp.txt' + '" ' ##
         compressed = r' True ' ##
         cspr_path = ' "' + os.getcwd() + '\\' + file_name + '" '
         self.output_path = ' "' + os.getcwd() + '\\' + self.FileName.text() + '_OffTargetResults.txt" '
@@ -130,7 +130,7 @@ class OffTarget(QtWidgets.QDialog):
         filename = filename.replace(r'\\', '\\')
         filename = filename.replace('"', '')
         exists = os.path.isfile(filename)
-        CASPER_info_path = r' "' + app_path + '\\CASPERinfo' + '" '
+        CASPER_info_path = r' "' + app_path + 'CASPERinfo' + '" '
         num_of_mismathes = int(self.mismatchcomboBox.currentText())
         tolerance = self.tolerance
 

@@ -128,7 +128,7 @@ class SeqTranslate:
         return int(loc), str(sequence), pam, int(scr), dira, endo
 
     def endo_import(self):
-        f = open(GlobalSettings.appdir + "/CASPERinfo")
+        f = open(GlobalSettings.appdir + "CASPERinfo")
         while True:
             line = f.readline()
             if line.startswith("ENDONUCLEASES"):

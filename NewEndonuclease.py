@@ -2,12 +2,11 @@ import sys, os
 from PyQt5 import QtWidgets, uic, QtGui, QtCore, Qt
 from bioservices import KEGG
 import GlobalSettings
-
 class NewEndonuclease(QtWidgets.QDialog):
 
     def __init__(self):
         super(NewEndonuclease, self).__init__()
-        uic.loadUi('newendonuclease.ui', self)
+        uic.loadUi(GlobalSettings.appdir + 'newendonuclease.ui', self)
         self.setWindowTitle('New Endonuclease')
         self.k = KEGG()
         self.error = False
@@ -39,14 +38,14 @@ class NewEndonuclease(QtWidgets.QDialog):
     #		print("hello no error")
 
     def writeNewEndonuclease(self, newEndonucleaseStr):
-        with open(GlobalSettings.CASPER_FOLDER_LOCATION + '\\CASPERinfo', 'r') as f, open(GlobalSettings.CASPER_FOLDER_LOCATION + "\\new_file", 'w+') as f1:
+        with open(GlobalSettings.appdir + 'CASPERinfo', 'r') as f, open(GlobalSettings.appdir + "new_file", 'w+') as f1:
             for line in f:
                 f1.write(line)
                 if 'ENDONUCLEASES' in line:
                     f1.write(newEndonucleaseStr + '\n')  # Move f1.write(line) above, to write above instead
-        os.remove(GlobalSettings.CASPER_FOLDER_LOCATION + "\\CASPERinfo")
-        os.rename(GlobalSettings.CASPER_FOLDER_LOCATION + "\\new_file",
-                  GlobalSettings.CASPER_FOLDER_LOCATION + "\\CASPERinfo")  # Rename the new file
+        os.remove(GlobalSettings.appdir + "CASPERinfo")
+        os.rename(GlobalSettings.appdir + "new_file",
+                  GlobalSettings.appdir + "CASPERinfo")  # Rename the new file
 
     def printButtonPressed(self):
         # This is executed when the button is pressed

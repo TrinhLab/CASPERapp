@@ -12,8 +12,8 @@ class CoTargeting(QtWidgets.QDialog):
     def __init__(self, path):
         # pyqt stuff
         super(CoTargeting, self).__init__()
-        uic.loadUi('co_targeting.ui', self)
-        self.setWindowIcon(QtGui.QIcon("cas9image.png"))
+        uic.loadUi(GlobalSettings.appdir + 'co_targeting.ui', self)
+        self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
 
         # endo_table stuff
         self.endo_table.setColumnCount(1)  # hardcoded because there will always be 1 columns

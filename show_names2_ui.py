@@ -6,7 +6,7 @@ import GlobalSettings
 class show_names_table2(QtWidgets.QDialog):
     def __init__(self):
         super(show_names_table2, self).__init__()
-        uic.loadUi('name_form2.ui', self)
+        uic.loadUi(GlobalSettings.appdir + 'name_form2.ui', self)
         self.name_table2.setColumnCount(1)
 
     def fill_table(self, names):

@@ -1,11 +1,11 @@
 import sys
-
+import GlobalSettings
 
 class OnTargetScore:
 
     def __init__(self):
         self.ScoringMatrix = []  # holds all the info of the Crisprscan features
-        f = open('CASPERinfo')
+        f = open(GlobalSettings.appdir + 'CASPERinfo')
         while True:
             line = f.readline()
             if line[:-1] == 'CRISPRSCAN_DATA':

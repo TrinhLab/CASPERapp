@@ -172,6 +172,7 @@ class Kegg:
 
         return newstr
 
+
 class SeqFromCSPR:
 
     def __init__(self, filename):
@@ -206,6 +207,7 @@ class SeqFromCSPR:
     def print_targets(self):
         for item in self.targets:
             print(item)
+
 
 class SeqFromFasta:
 
