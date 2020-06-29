@@ -482,18 +482,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         for number in self.order(data):
             time += 1
-
             if int(data[number]) > max:
                 max = int(data[number])
                 self.mode = number
-
             hold = 0
             while hold < data[number]:
                 if index == int(round(len(self.parser.popData) / 2)):
                     self.median = number
                 x1.append(index)
                 y1.append(number)
-
                 index = index + 1
                 hold += 1
 

@@ -13,6 +13,7 @@ import sys
 import gzip
 import sqlite3
 from collections import Counter
+import statistics
 
 class Pop_Analysis(QtWidgets.QMainWindow):
     def __init__(self):
@@ -281,7 +282,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         #get misc line from cspr file to know the number of orgs in file
         with gzip.open('bsupant_spCas9.cspr','r') as f:
             i = 0
-            org_list = []
+            self.org_list = []
             for line in f:
                 line = str(line).strip(r"'b\r\n")
                 if i == 2:
@@ -292,12 +293,12 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     j = 0
                     while j < len(usefulData):
                         temp = usefulData[j].split(',')
-                        org_list.append(temp[0])
+                        self.org_list.append(temp[0])
                         j += 1
                     break
                 i += 1
 
-
+        self.total_org_number = len(self.org_list)
         self.table2.setRowCount(0)
         index = 0
         conn = sqlite3.connect(self.filename)
@@ -350,11 +351,11 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             locs = str(seeds[1])
             locs = locs.split(',')
             if locs.count(locs[0]) == len(locs):
-                org = org_list[int(locs[0])-1]
+                org = self.org_list[int(locs[0])-1]
                 counts[org] = len(locs)
             else:
                 for loc in locs:
-                    org = org_list[int(loc)-1]
+                    org = self.org_list[int(loc)-1]
                     if org not in counts.keys():
                         counts[org] = 1
                     else:
@@ -373,7 +374,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
 
             #% coverage
-            coverage = (len(counts) / len(org_list)) * 100
+            coverage = (len(counts) / len(self.org_list)) * 100
             coverage = float("%.2f" % coverage)
             perc_coverage = QtWidgets.QTableWidgetItem(str(coverage) + '%')
             perc_coverage.setTextAlignment(QtCore.Qt.AlignHCenter)
@@ -434,14 +435,93 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             index += 1
 
         self.table2.resizeColumnsToContents()
+        self.plot_repeats_vs_seeds()
+        self.plot_3D_graph()
 
 
+    def plot_repeats_vs_seeds(self):
+        self.pop_analysis_repeats_graph.canvas.axes.clear()
+        conn = sqlite3.connect(self.filename)
+        c = conn.cursor()
+        data = c.execute("SELECT seed, count from repeats").fetchall()
+        c.close()
+        x1 = list(range(0, len(data)))
+        y1 = []
+        for obj in data:
+            y1.append(int(list(obj)[1]))
+        y1.sort(reverse=True)
+
+        # get stats
+        self.average = statistics.mean(y1)
+        self.mode = statistics.mode(y1)
+        self.median = statistics.median(y1)
+        self.repeat_count = len(data)
+
+        # clear axes
+        self.pop_analysis_repeats_graph.canvas.axes.clear()
+        # the following are for plotting / formatting
+        self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1)
+        self.pop_analysis_repeats_graph.canvas.axes.set_xlabel('Seed ID Number')
+        self.pop_analysis_repeats_graph.canvas.axes.set_ylabel('Number of Repeats')
+        self.pop_analysis_repeats_graph.canvas.axes.set_title('Number of Repeats per Seed ID Number')
+        # always redraw at the end
+        self.pop_analysis_repeats_graph.canvas.draw()
 
 
+    def plot_3D_graph(self):
+        rows, cols = (self.total_org_number, self.total_org_number)
+        arr = [[0 for i in range(cols)] for j in range(rows)]
 
+        x3 = []
+        y3 = []
+        z3 = np.zeros(int((self.total_org_number * (self.total_org_number - 1)) / 2))
+        dz = []
+        self.names = self.org_list
+        dx = np.ones(int((self.total_org_number * (self.total_org_number - 1)) / 2))
+        dy = np.ones(int((self.total_org_number * (self.total_org_number - 1)) / 2))
 
+        conn = sqlite3.connect(self.filename)
+        c = conn.cursor()
+        for seeds in c.execute("select * from repeats"):
+            seeds = list(seeds)
+            temp_names = []
+            chroms = str(seeds[1]).split(',')
+            for c in chroms:
+                c_name = self.org_list[int(c)-1]
+                if c_name not in temp_names:
+                    temp_names.append(c_name)
 
+            if len(temp_names) >= 2:
+                for i in range(len(temp_names)-1):
+                    j = i + 1
+                    while j != len(temp_names):
+                        arr[self.names.index(temp_names[i])][self.names.index(temp_names[j])] += 1
+                        arr[self.names.index(temp_names[j])][self.names.index(temp_names[i])] += 1
+                        j += 1
 
+        for j in range(cols):
+            i = len(self.names)-1
+            while i != j:
+                x3.append(i)
+                y3.append(j)
+                dz.append(arr[i][j])
+                i -= 1
+
+        new_names = []
+        for n in range(len(self.names)):
+            new_names.append(n)
+
+        self.pop_analysis_3dgraph.canvas.axes.clear()
+        self.pop_analysis_3dgraph.canvas.axes.bar3d(x3, y3, z3, dx, dy, dz)
+        self.pop_analysis_3dgraph.canvas.axes.set_xlabel('x')
+        self.pop_analysis_3dgraph.canvas.axes.set_ylabel('y')
+        self.pop_analysis_3dgraph.canvas.axes.set_zlabel('z')
+        self.pop_analysis_3dgraph.canvas.axes.set_xticks(np.arange(1, self.total_org_number + 1, 1))
+        self.pop_analysis_3dgraph.canvas.axes.set_yticks(np.arange(0, self.total_org_number, 1))
+        self.pop_analysis_3dgraph.canvas.axes.tick_params(labelsize=8)
+        self.pop_analysis_3dgraph.canvas.axes.set_xticklabels(new_names, rotation=45)
+        self.pop_analysis_3dgraph.canvas.axes.set_yticklabels(new_names, rotation=-45)
+        self.pop_analysis_3dgraph.canvas.draw()
 
 
     def show_names_func(self):
