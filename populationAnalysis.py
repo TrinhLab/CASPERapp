@@ -32,8 +32,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.sq = Algorithms.SeqTranslate()
         self.ref_para_list = list()
         self.mode = 0
-        #self.find_locs_button.clicked.connect(self.find_locations)
-        #self.clear_loc_button.clicked.connect(self.clear_loc_table)
+        self.find_locs_button.clicked.connect(self.find_locations)
+        self.clear_loc_button.clicked.connect(self.clear_loc_table)
         self.directory = ""
         self.names = []
         self.names_venn = []
@@ -522,6 +522,71 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.pop_analysis_3dgraph.canvas.axes.set_xticklabels(new_names, rotation=45)
         self.pop_analysis_3dgraph.canvas.axes.set_yticklabels(new_names, rotation=-45)
         self.pop_analysis_3dgraph.canvas.draw()
+
+
+    def find_locations(self):
+
+        #error checking
+        if len(self.table2.selectedItems()) == 0:
+            QtWidgets.QMessageBox.question(self, "Error", "Please select at least 1 seed to find locations of.",
+                                                QtWidgets.QMessageBox.Ok)
+            self.loc_finder_table.setRowCount(0)
+            return
+
+        #get data from sql table on seeds selected and fill in locations table
+        seeds = []
+        i = 0
+        for item in self.table2.selectedItems():
+            if i % 9 == 0:
+                seeds.append(item.text())
+            i += 1
+        conn = sqlite3.connect(self.filename)
+        c = conn.cursor()
+        index = 0
+        for seed in seeds:
+            print(seed)
+            data = c.execute("SELECT * FROM repeats WHERE seed = ? ", (seed,)).fetchone()
+            data = list(data)
+            chroms = str(data[1]).split(',')
+            locs = str(data[2]).split(',')
+            tails = str(data[3]).split(',')
+            tail_data = []
+            for tail in tails:
+                if tail.find('+') != -1:
+                    tail = tail.split('+')
+                    tail_data.append(tail[0])
+                else:
+                    tail = tail.split('-')
+                    tail_data.append(tail[0])
+            i = 0
+            for chrom in chroms:
+                self.loc_finder_table.setRowCount(index + 1)
+                seed_table = QtWidgets.QTableWidgetItem()
+                sequence_table = QtWidgets.QTableWidgetItem()
+                organism_table = QtWidgets.QTableWidgetItem()
+                chromsome_table = QtWidgets.QTableWidgetItem()
+                location_table = QtWidgets.QTableWidgetItem()
+
+                seed_table.setData(QtCore.Qt.EditRole, seed)
+                sequence_table.setData(QtCore.Qt.EditRole, tail_data[i] + seed)
+                organism_table.setData(QtCore.Qt.EditRole, self.org_list[int(chrom)-1])
+                chromsome_table.setData(QtCore.Qt.EditRole, chrom)
+                location_table.setData(QtCore.Qt.EditRole, locs[i])
+                self.loc_finder_table.setItem(index, 0, seed_table)
+                self.loc_finder_table.setItem(index, 1, sequence_table)
+                self.loc_finder_table.setItem(index, 2, organism_table)
+                self.loc_finder_table.setItem(index, 3, chromsome_table)
+                self.loc_finder_table.setItem(index, 4, location_table)
+                i += 1
+                index += 1
+
+        self.loc_finder_table.resizeColumnsToContents()
+
+
+    # this function clears the loc_finder_table
+    def clear_loc_table(self):
+        self.loc_finder_table.clearContents()
+        self.loc_finder_table.setRowCount(0)
 
 
     def show_names_func(self):
