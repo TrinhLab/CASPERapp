@@ -11,7 +11,8 @@ import show_nams_ui
 import show_names2_ui
 import sys
 import gzip
-
+import sqlite3
+from collections import Counter
 
 class Pop_Analysis(QtWidgets.QMainWindow):
     def __init__(self):
@@ -96,6 +97,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()
 
 
+        self.filename = 'bsupant_spCas9_repeats.db'
+
+
     def launch_ncbi_seacher(self):
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
         GlobalSettings.mainWindow.ncbi_search_dialog.show()
@@ -118,16 +122,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                                                "Please select no more than 1 CSPR file for analysis.",
                                                QtWidgets.QMessageBox.Ok)
                 return
+            self.fill_data()
 
-            # get the cspr_file name, the endochoice, and call the popParser
-            orgName = selectedList[0].text()
-            cspr_file_name = self.fna_files[orgName]
-            # split the file name by '_', then take that second index, split by '.', and then take the first index. Thus giving the Endo Choice
-            endoChoice = cspr_file_name.split('_')[1].split('.')[0]
-            # call the parser and the call fill_data
-            cspr_file_name = GlobalSettings.CSPR_DB + '/' + cspr_file_name
-            self.total_org_number, self.ref_para_list = self.parser.popParser(cspr_file_name, endoChoice)
-            self.fill_data(endoChoice)
+
+
         # if the user is wanting to go with creating a new meta genomic cspr file
         else:
             selectedList = self.org_Table.selectedItems()
@@ -277,6 +275,169 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.endoBox.addItem("None Selected")
         self.endoBox.addItems(self.Endos.keys())
         # self.endoBox.currentIndexChanged.connect(self.changeEndos)
+
+
+    def fill_data(self):
+        #get misc line from cspr file to know the number of orgs in file
+        with gzip.open('bsupant_spCas9.cspr','r') as f:
+            i = 0
+            org_list = []
+            for line in f:
+                line = str(line).strip(r"'b\r\n")
+                if i == 2:
+                    colonIndex = line.find(':') + 2
+                    usefulData = line[colonIndex:]
+                    usefulData = usefulData.split('|')
+                    usefulData.pop()
+                    j = 0
+                    while j < len(usefulData):
+                        temp = usefulData[j].split(',')
+                        org_list.append(temp[0])
+                        j += 1
+                    break
+                i += 1
+
+
+        self.table2.setRowCount(0)
+        index = 0
+        conn = sqlite3.connect(self.filename)
+        c = conn.cursor()
+        for seeds in c.execute("select * from repeats"):
+            self.table2.setRowCount(index + 1)
+            seeds = list(seeds)
+
+            #seed
+            seed = QtWidgets.QTableWidgetItem()
+            s = seeds[0]
+            seed.setData(QtCore.Qt.EditRole, str(s))
+            seed.setTextAlignment(QtCore.Qt.AlignHCenter)
+
+            #total repeats
+            total_repeats = QtWidgets.QTableWidgetItem()
+            count = seeds[-1]
+            total_repeats.setData(QtCore.Qt.EditRole, count)
+            total_repeats.setTextAlignment(QtCore.Qt.AlignHCenter)
+
+            #score
+            score = QtWidgets.QTableWidgetItem()
+            sc = str(seeds[4])
+            sc = sc.split(',')
+            c = Counter(sc)
+            score.setData(QtCore.Qt.EditRole, list(c.most_common(1)[0])[0])
+            score.setTextAlignment(QtCore.Qt.AlignHCenter)
+
+            #PAM and Strand
+            tail = str(seeds[3])
+            tail = tail.split(',')[0]
+            if tail.find('+') != -1:
+                st = '+'
+                tail = tail.split('+')
+                p = tail[1]
+            else:
+                st = '-'
+                tail = tail.split('-')
+                p = tail[1]
+            strand = QtWidgets.QTableWidgetItem()
+            pam = QtWidgets.QTableWidgetItem()
+            strand.setData(QtCore.Qt.EditRole, st)
+            pam.setData(QtCore.Qt.EditRole, p)
+            pam.setTextAlignment(QtCore.Qt.AlignHCenter)
+            strand.setTextAlignment(QtCore.Qt.AlignHCenter)
+
+
+            #location counts
+            counts = {}
+            locs = str(seeds[1])
+            locs = locs.split(',')
+            if locs.count(locs[0]) == len(locs):
+                org = org_list[int(locs[0])-1]
+                counts[org] = len(locs)
+            else:
+                for loc in locs:
+                    org = org_list[int(loc)-1]
+                    if org not in counts.keys():
+                        counts[org] = 1
+                    else:
+                        counts[org] += 1
+
+            #avg repeats per scaffold
+            scaffold_count = 0
+            rep_count = 0
+            for key in counts.keys():
+                scaffold_count += 1
+                rep_count += counts[key]
+            avg_rep_per_scaff = rep_count / scaffold_count
+            avg_rep = QtWidgets.QTableWidgetItem()
+            avg_rep.setData(QtCore.Qt.EditRole, str(avg_rep_per_scaff))
+            avg_rep.setTextAlignment(QtCore.Qt.AlignHCenter)
+
+
+            #% coverage
+            coverage = (len(counts) / len(org_list)) * 100
+            coverage = float("%.2f" % coverage)
+            perc_coverage = QtWidgets.QTableWidgetItem(str(coverage) + '%')
+            perc_coverage.setTextAlignment(QtCore.Qt.AlignHCenter)
+
+
+            #%consensus
+            tails = str(seeds[3]).split(',')
+            pam_counts = {}
+            for tail in tails:
+                if tail.find('+') != -1:
+                    tail = tail.split('+')
+                    p = tail[1]
+                else:
+                    tail = tail.split('-')
+                    p = tail[1]
+                if p not in pam_counts.keys():
+                    pam_counts[p] = 1
+                else:
+                    pam_counts[p] += 1
+
+            perc_cons = (max(pam_counts.values()) / sum(pam_counts.values())) * 100
+            perc_cons = float("%.2f" % perc_cons)
+            consensus = QtWidgets.QTableWidgetItem(str(perc_cons) + '%')
+            consensus.setTextAlignment(QtCore.Qt.AlignHCenter)
+
+            #consensus seq
+            temp = ""
+            cnt = 0
+            for p in pam_counts.keys():
+                if pam_counts[p] > cnt:
+                    cnt = pam_counts[p]
+                    temp = p
+            for tail in tails:
+                if tail.find('+') != -1:
+                    tail = tail.split('+')
+                else:
+                    tail = tail.split('-')
+                if temp == tail[1]:
+                    temp = tail[0]
+                    break
+
+
+            cons_seq = temp + s
+            consensus_seq = QtWidgets.QTableWidgetItem()
+            consensus_seq.setData(QtCore.Qt.EditRole, cons_seq)
+            consensus_seq.setTextAlignment(QtCore.Qt.AlignHCenter)
+
+            self.table2.setItem(index, 0, seed)
+            self.table2.setItem(index, 1, perc_coverage)
+            self.table2.setItem(index, 2, total_repeats)
+            self.table2.setItem(index, 3, avg_rep)
+            self.table2.setItem(index, 4, consensus_seq)
+            self.table2.setItem(index, 5, consensus)
+            self.table2.setItem(index, 6, score)
+            self.table2.setItem(index, 7, pam)
+            self.table2.setItem(index, 8, strand)
+
+            index += 1
+
+        self.table2.resizeColumnsToContents()
+
+
+
+
 
 
 
@@ -508,7 +669,7 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
                 endoChoice = GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0]
                 GlobalSettings.pop_Analysis.total_org_number, GlobalSettings.pop_Analysis.ref_para_list = GlobalSettings.pop_Analysis.parser.popParser(
                     cspr_file_name, endoChoice)
-                GlobalSettings.pop_Analysis.fill_data(endoChoice)
+                GlobalSettings.pop_Analysis.fill_data()
             os.remove(self.combined_fna_file)
             self.cancelled = False
             self.cancel_function()
