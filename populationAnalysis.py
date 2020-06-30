@@ -7,7 +7,7 @@ from functools import partial
 import numpy as np
 from PyQt5.QtWidgets import *
 from matplotlib_venn import venn3_unweighted
-import show_nams_ui
+import show_names_ui
 import show_names2_ui
 import sys
 import gzip
@@ -38,8 +38,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.names = []
         self.names_venn = []
         self.show_names.clicked.connect(self.show_names_func)
-        self.show_names2.clicked.connect(self.show_names_func2)
-        self.name_form = show_nams_ui.show_names_table()
+        self.show_names_2.clicked.connect(self.show_names_func2)
+        self.name_form = show_names_ui.show_names_table()
         self.name_form2 = show_names2_ui.show_names_table2()
 
 
@@ -457,7 +457,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.table2.resizeColumnsToContents()
         self.plot_repeats_vs_seeds()
         self.plot_3D_graph()
-        #self.plot_venn()
+        self.plot_venn()
 
 
     def plot_repeats_vs_seeds(self):
@@ -555,12 +555,51 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     def plot_venn(self):
         self.pop_analysis_venn_diagram.canvas.figure.clf()
-        # self.pop_analysis_venn_diagram.canvas = FigureCanvas(plt.figure(figsize=(7.5,7.5)))
         rows, cols = (self.total_org_number, self.total_org_number)
         arr = [[0 for i in range(cols)] for j in range(rows)]
         all_3 = 0
         singles = [0 for i in range(cols)]
-        self.names_venn = []
+        self.names_venn = list(self.org_list.keys())
+
+        if len(self.names_venn) >= 3:
+            conn = sqlite3.connect(self.db_file)
+            c = conn.cursor()
+            for seeds in c.execute("select * from repeats"):
+                seeds = list(seeds)
+                temp_names = []
+                chroms = str(seeds[1]).split(',')
+                for c in chroms:
+                    ind = int(c)
+                    cnt = 0
+                    c_name = ""
+                    for k in self.org_list.keys():
+                        cnt += self.org_list[k]
+                        if ind <= cnt:
+                            c_name = k
+                            break
+                    if c_name not in temp_names:
+                        temp_names.append(c_name)
+
+                if len(temp_names) >= 2:
+                    for i in range(len(temp_names) - 1):
+                        j = i + 1
+                        while j != len(temp_names):
+                            arr[self.names_venn.index(temp_names[i])][self.names_venn.index(temp_names[j])] += 1
+                            arr[self.names_venn.index(temp_names[j])][self.names_venn.index(temp_names[i])] += 1
+                            j += 1
+                else:
+                    singles[self.names_venn.index(temp_names[0])] += 1
+
+                if all(x in temp_names for x in [self.names_venn[0], self.names_venn[1], self.names_venn[2]]):
+                    all_3 += 1
+
+            venn3_unweighted(subsets=(singles[0], singles[1], arr[0][1], singles[2], arr[0][2],
+                                      arr[1][2], all_3), set_labels=('0', '1', '2'))
+            self.pop_analysis_venn_diagram.canvas.draw()
+
+        else:
+            self.pop_analysis_venn_diagram.canvas.figure.clf()
+            self.pop_analysis_venn_diagram.canvas.draw()
 
 
     def find_locations(self):
