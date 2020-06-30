@@ -207,7 +207,7 @@ class NCBI_Search_File(QtWidgets.QDialog):
         for i in range(len(self.compressedFilePaths)):
             self.decompressedFilePaths.append(self.ncbi_searcher.decompress_file(self.compressedFilePaths[i]))
 
-        GlobalSettings.mainWindow.newGenome.s_file.append(self.ncbi_searcher.decompress_file(self.compressedFilePaths[0]))
+        GlobalSettings.mainWindow.newGenome.s_file.setText(self.ncbi_searcher.decompress_file(self.compressedFilePaths[0]))
 
         # go through and delete the compressed files
         file_names = [f for f in os.listdir(GlobalSettings.CSPR_DB) if os.path.isfile(os.path.join(GlobalSettings.CSPR_DB, f))]
