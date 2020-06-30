@@ -92,6 +92,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                                 1]  # for keeping track of where we are in the sorting clicking for each column
         self.switcher_loc_table = [1, 1, 1, 1, 1]
 
+        self.mwfg = self.frameGeometry()
+        self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()
+
+
     def launch_ncbi_seacher(self):
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
         GlobalSettings.mainWindow.ncbi_search_dialog.show()
@@ -478,18 +482,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         for number in self.order(data):
             time += 1
-
             if int(data[number]) > max:
                 max = int(data[number])
                 self.mode = number
-
             hold = 0
             while hold < data[number]:
                 if index == int(round(len(self.parser.popData) / 2)):
                     self.median = number
                 x1.append(index)
                 y1.append(number)
-
                 index = index + 1
                 hold += 1
 
@@ -574,7 +575,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         arr = [[0 for i in range(cols)] for j in range(rows)]
         all_3 = 0
         singles = [0 for i in range(cols)]
-        counter = 0
         self.names_venn = []
 
         for keys in self.parser.popData:
@@ -597,8 +597,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                             arr[self.names_venn.index(temp_names[j])][self.names_venn.index(temp_names[i])] += 1
                             j += 1
                 else:
-                    if temp_names[0] == 'Corynebacterium tuberculostearicum SK141 contig00004':
-                        counter += 1
                     singles[self.names_venn.index(temp_names[0])] += 1
 
             # all 3 orgs
