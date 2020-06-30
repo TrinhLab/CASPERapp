@@ -344,14 +344,11 @@ class NewGenome(QtWidgets.QMainWindow):
         self.job_Table.clearContents()
         self.job_Table.setRowCount(0)
         self.JobsQueue = []
-        self.JobsQueueBox.clear()
         self.lineEdit_1.clear()
         self.lineEdit_2.clear()
         self.lineEdit_3.clear()
         self.keggSuggested.setRowCount(0)
         self.output_browser.clear()
-        self.JobInProgress.clear()
-        self.CompletedJobs.clear()
         self.s_file.clear()
         self.progressBar.setValue(0)
         self.s_file.setText("Name of File")
@@ -479,9 +476,10 @@ class CasperJob:
 
     def get_arguments(self):
         db_location = GlobalSettings.CSPR_DB
+        ref = str(self.reference_file)
         if(GlobalSettings.OPERATING_SYSTEM_ID == "Windows"):
             db_location = db_location.replace('/','\\')
-            ref = str(self.reference_file).replace('/','\\')
+            ref = ref.replace('/','\\')
         cmd = str()
         cmd += '"' + str(self.endo_name) + '" '
         cmd += '"' + str(self.endo_pam) + '" '
@@ -499,7 +497,7 @@ class CasperJob:
            cmd += '"' + db_location + '" '
            cmd += '"' + GlobalSettings.CASPER_FOLDER_LOCATION + "\\CASPERinfo" + '" '
         else:
-            cmd += '"' + db_location + "\\" + '" '
+            cmd += '"' + db_location + '" '
             cmd += '"' + GlobalSettings.CASPER_FOLDER_LOCATION + "/CASPERinfo" + '" '
 
         cmd += '"' + ref + '" '
@@ -539,4 +537,5 @@ class CasperJob:
         ret_array.append(self.substrain)
         #print(ret_array)
 
-        return ret_array
+        #return ret_array
+        return cmd
