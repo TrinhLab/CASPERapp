@@ -9,9 +9,8 @@ import time
 import GlobalSettings
 import gzip
 from PyQt5 import QtWidgets
-
+import xmltodict
 Entrez.email = "bmendoz1@vols.utk.edu"
-
 
 class GBFF_Parse:
 
@@ -39,9 +38,9 @@ class Assembly:
         # this searches entrez searcher. We always search the assembly data base
         # ret-max is taken from the user, my code defaults it to 20 elsewhere
         # and the term is the search organism
-        handle = Entrez.esearch(db="assembly", retmax=ncbi_ret_max, term=organism)
+        handle = Entrez.esearch(db="assembly", retmax=100, term=organism)
         # this parses the data from the search
-        record = Entrez.read(handle)
+        record = handle.read()
         self.database = database
 
         # make sure to clear all the things
@@ -49,12 +48,12 @@ class Assembly:
         self.orgName_dict = dict()
         self.gca_rectList = list()
         self.orgIDs = list()
-        myidlist = list()
 
         # get the internal ID's
         # record is a big dictionary. 'IdList' is a key in that
-        for id in record["IdList"]:
-            myidlist.append(id)
+        soup = str(BeautifulSoup(record, 'xml').getText()).split('\n')
+        soup = soup[:-1]
+        myidlist = soup
 
         # if the len of myIdList is still 0, then return out
         if len(myidlist) == 0:
@@ -62,24 +61,30 @@ class Assembly:
 
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(30)
         # go through and get the GCA/GCF ID's
+        cnt = 0
         for ret in myidlist:
-            # this calls Entrez function
-            handle = Entrez.esummary(db="assembly", id=ret)
-            record = Entrez.read(handle, validate=False)
+            if cnt >= ncbi_ret_max:
+                break
+            try:
+                # this calls Entrez function
+                handle = Entrez.esummary(db="assembly", id=ret)
+                record = Entrez.read(handle, validate=False)
+                # get the orgID which is the ID for the genbank or Refseq link. This could be different than the accession link
+                if database == 'RefSeq':
+                    orgID = record['DocumentSummarySet']['DocumentSummary'][0]['Synonym']['RefSeq']
+                elif database == 'GenBank':
+                    orgID = record['DocumentSummarySet']['DocumentSummary'][0]['Synonym']['Genbank']
 
-            # get the orgID which is the ID for the genbank or Refseq link. This could be different than the accession link
-            if database == 'RefSeq':
-                orgID = record['DocumentSummarySet']['DocumentSummary'][0]['Synonym']['RefSeq']
-            elif database == 'GenBank':
-                orgID = record['DocumentSummarySet']['DocumentSummary'][0]['Synonym']['Genbank']
-
-            # get the accession link and store it
-            gca_rec = record["DocumentSummarySet"]["DocumentSummary"][0]["AssemblyAccession"]
-            self.gca_rectList.append(gca_rec)
-            self.orgIDs.append(orgID)
-            handle.close()
-            # sleep so NCBI doesn't kick us out
-            time.sleep(0.5)
+                # get the accession link and store it
+                gca_rec = record["DocumentSummarySet"]["DocumentSummary"][0]["AssemblyAccession"]
+                self.gca_rectList.append(gca_rec)
+                self.orgIDs.append(orgID)
+                handle.close()
+                # sleep so NCBI doesn't kick us out
+                time.sleep(0.5)
+                cnt += 1
+            except:
+                continue
 
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(50)
         # for each GCA_ID, go through and get the refseq/genbank link, and the organism name
@@ -248,8 +253,6 @@ class Assembly:
         writeStream.close()
         print("\tDone Decompressing")
         return(storeFileName)
-
-
 # testing below
 #myNCBI = Assembly()
 #myNCBI.get_annotation_file("Bacillus Subtilis[Organism]", "GenBank")
