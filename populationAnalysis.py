@@ -97,8 +97,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.mwfg = self.frameGeometry()
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()
 
-
-        self.filename = 'bsupant_spCas9_repeats.db'
+        self.cspr_file = ""
+        self.db_file = ""
 
 
     def launch_ncbi_seacher(self):
@@ -116,13 +116,16 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         # if the user is wanting to go with 1 meta genomic cspr file
         if self.meta_genomic_cspr_checkbox.isChecked():
             selectedList = self.org_Table.selectedItems()
-
             # error check
             if len(selectedList) == 0 or len(selectedList) > 1:
                 QtWidgets.QMessageBox.question(self, "Error",
                                                "Please select no more than 1 CSPR file for analysis.",
                                                QtWidgets.QMessageBox.Ok)
                 return
+
+            orgName = selectedList[0].text()
+            self.cspr_file = str(self.fna_files[orgName])
+            self.db_file = self.cspr_file.strip('.cspr') + '_repeats.db'
             self.fill_data()
 
 
@@ -280,9 +283,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     def fill_data(self):
         #get misc line from cspr file to know the number of orgs in file
-        with gzip.open('bsupant_spCas9.cspr','r') as f:
+        with gzip.open(self.cspr_file,'r') as f:
             i = 0
-            self.org_list = []
+            self.org_list = {}
             for line in f:
                 line = str(line).strip(r"'b\r\n")
                 if i == 2:
@@ -293,15 +296,17 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     j = 0
                     while j < len(usefulData):
                         temp = usefulData[j].split(',')
-                        self.org_list.append(temp[0])
+                        if temp[0] not in self.org_list.keys():
+                            self.org_list[temp[0]] = 1
+                        else:
+                            self.org_list[temp[0]] += 1
                         j += 1
                     break
                 i += 1
-
-        self.total_org_number = len(self.org_list)
+        self.total_org_number = len(self.org_list.keys())
         self.table2.setRowCount(0)
         index = 0
-        conn = sqlite3.connect(self.filename)
+        conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         for seeds in c.execute("select * from repeats"):
             self.table2.setRowCount(index + 1)
@@ -351,11 +356,25 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             locs = str(seeds[1])
             locs = locs.split(',')
             if locs.count(locs[0]) == len(locs):
-                org = self.org_list[int(locs[0])-1]
+                ind = int(locs[0])
+                cnt = 0
+                org = ""
+                for k in self.org_list.keys():
+                    cnt += self.org_list[k]
+                    if ind <= cnt:
+                        org = k
+                        break
                 counts[org] = len(locs)
             else:
                 for loc in locs:
-                    org = self.org_list[int(loc)-1]
+                    ind = int(loc)
+                    cnt = 0
+                    org = ""
+                    for k in self.org_list.keys():
+                        cnt += self.org_list[k]
+                        if ind <= cnt:
+                            org = k
+                            break
                     if org not in counts.keys():
                         counts[org] = 1
                     else:
@@ -368,13 +387,14 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 scaffold_count += 1
                 rep_count += counts[key]
             avg_rep_per_scaff = rep_count / scaffold_count
+            avg_rep_per_scaff = float("%.2f" % avg_rep_per_scaff)
             avg_rep = QtWidgets.QTableWidgetItem()
             avg_rep.setData(QtCore.Qt.EditRole, str(avg_rep_per_scaff))
             avg_rep.setTextAlignment(QtCore.Qt.AlignHCenter)
 
 
             #% coverage
-            coverage = (len(counts) / len(self.org_list)) * 100
+            coverage = (len(counts) / len(self.org_list.keys())) * 100
             coverage = float("%.2f" % coverage)
             perc_coverage = QtWidgets.QTableWidgetItem(str(coverage) + '%')
             perc_coverage.setTextAlignment(QtCore.Qt.AlignHCenter)
@@ -433,15 +453,16 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.table2.setItem(index, 8, strand)
 
             index += 1
-
+            #break
         self.table2.resizeColumnsToContents()
         self.plot_repeats_vs_seeds()
         self.plot_3D_graph()
+        #self.plot_venn()
 
 
     def plot_repeats_vs_seeds(self):
         self.pop_analysis_repeats_graph.canvas.axes.clear()
-        conn = sqlite3.connect(self.filename)
+        conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         data = c.execute("SELECT seed, count from repeats").fetchall()
         c.close()
@@ -476,18 +497,24 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         y3 = []
         z3 = np.zeros(int((self.total_org_number * (self.total_org_number - 1)) / 2))
         dz = []
-        self.names = self.org_list
+        self.names = list(self.org_list.keys())
         dx = np.ones(int((self.total_org_number * (self.total_org_number - 1)) / 2))
         dy = np.ones(int((self.total_org_number * (self.total_org_number - 1)) / 2))
-
-        conn = sqlite3.connect(self.filename)
+        conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         for seeds in c.execute("select * from repeats"):
             seeds = list(seeds)
             temp_names = []
             chroms = str(seeds[1]).split(',')
             for c in chroms:
-                c_name = self.org_list[int(c)-1]
+                ind = int(c)
+                cnt = 0
+                c_name = ""
+                for k in self.org_list.keys():
+                    cnt += self.org_list[k]
+                    if ind <= cnt:
+                        c_name = k
+                        break
                 if c_name not in temp_names:
                     temp_names.append(c_name)
 
@@ -507,12 +534,14 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 dz.append(arr[i][j])
                 i -= 1
 
+        self.pop_analysis_3dgraph.canvas.axes.clear()
+        self.pop_analysis_3dgraph.canvas.axes.bar3d(x3, y3, z3, dx, dy, dz)
+
         new_names = []
         for n in range(len(self.names)):
             new_names.append(n)
 
-        self.pop_analysis_3dgraph.canvas.axes.clear()
-        self.pop_analysis_3dgraph.canvas.axes.bar3d(x3, y3, z3, dx, dy, dz)
+
         self.pop_analysis_3dgraph.canvas.axes.set_xlabel('x')
         self.pop_analysis_3dgraph.canvas.axes.set_ylabel('y')
         self.pop_analysis_3dgraph.canvas.axes.set_zlabel('z')
@@ -522,6 +551,16 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.pop_analysis_3dgraph.canvas.axes.set_xticklabels(new_names, rotation=45)
         self.pop_analysis_3dgraph.canvas.axes.set_yticklabels(new_names, rotation=-45)
         self.pop_analysis_3dgraph.canvas.draw()
+
+
+    def plot_venn(self):
+        self.pop_analysis_venn_diagram.canvas.figure.clf()
+        # self.pop_analysis_venn_diagram.canvas = FigureCanvas(plt.figure(figsize=(7.5,7.5)))
+        rows, cols = (self.total_org_number, self.total_org_number)
+        arr = [[0 for i in range(cols)] for j in range(rows)]
+        all_3 = 0
+        singles = [0 for i in range(cols)]
+        self.names_venn = []
 
 
     def find_locations(self):
@@ -540,11 +579,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             if i % 9 == 0:
                 seeds.append(item.text())
             i += 1
-        conn = sqlite3.connect(self.filename)
+        conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         index = 0
         for seed in seeds:
-            print(seed)
             data = c.execute("SELECT * FROM repeats WHERE seed = ? ", (seed,)).fetchone()
             data = list(data)
             chroms = str(data[1]).split(',')
@@ -560,6 +598,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     tail_data.append(tail[0])
             i = 0
             for chrom in chroms:
+                ind = int(chrom)
+                cnt = 0
+                org = ""
+                for k in self.org_list.keys():
+                    cnt += self.org_list[k]
+                    if ind <= cnt:
+                        org = k
+                        break
+
                 self.loc_finder_table.setRowCount(index + 1)
                 seed_table = QtWidgets.QTableWidgetItem()
                 sequence_table = QtWidgets.QTableWidgetItem()
@@ -569,7 +616,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
                 seed_table.setData(QtCore.Qt.EditRole, seed)
                 sequence_table.setData(QtCore.Qt.EditRole, tail_data[i] + seed)
-                organism_table.setData(QtCore.Qt.EditRole, self.org_list[int(chrom)-1])
+                organism_table.setData(QtCore.Qt.EditRole, org)
                 chromsome_table.setData(QtCore.Qt.EditRole, chrom)
                 location_table.setData(QtCore.Qt.EditRole, locs[i])
                 self.loc_finder_table.setItem(index, 0, seed_table)

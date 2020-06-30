@@ -575,7 +575,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         arr = [[0 for i in range(cols)] for j in range(rows)]
         all_3 = 0
         singles = [0 for i in range(cols)]
-        counter = 0
         self.names_venn = []
 
         for keys in self.parser.popData:
@@ -598,8 +597,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                             arr[self.names_venn.index(temp_names[j])][self.names_venn.index(temp_names[i])] += 1
                             j += 1
                 else:
-                    if temp_names[0] == 'Corynebacterium tuberculostearicum SK141 contig00004':
-                        counter += 1
                     singles[self.names_venn.index(temp_names[0])] += 1
 
             # all 3 orgs
