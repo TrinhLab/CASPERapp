@@ -4,7 +4,7 @@ from PyQt5.QtChart import QChartView
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
 from matplotlib.ticker import MaxNLocator
-import os, sys
+import os
 import sqlite3
 import gzip
 from collections import Counter
@@ -68,6 +68,8 @@ class Multitargeting(QtWidgets.QMainWindow):
 
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
+
+        self.loading_window = loading_window()
 
 
     def eventFilter(self, source, event):
@@ -171,16 +173,26 @@ class Multitargeting(QtWidgets.QMainWindow):
 
 
     def make_graphs(self):
+        self.loading_window.loading_bar.setValue(0)
+        self.loading_window.show()
+        QtCore.QCoreApplication.processEvents()
         self.chromo_length.clear()
+        self.loading_window.loading_bar.setValue(5)
         self.plot_repeats_vs_seeds()
+        self.loading_window.loading_bar.setValue(20)
         self.bar_seeds_vs_repeats()
+        self.loading_window.loading_bar.setValue(40)
         self.fill_min_max()
+        self.loading_window.loading_bar.setValue(60)
         self.fill_seed_id_chrom()
+        self.loading_window.loading_bar.setValue(80)
         self.fill_Chromo_Text(self.chromo_seed.currentText())
+        self.loading_window.loading_bar.setValue(100)
         self.avg_rep.setText(str(float(self.average)))
         self.med_rep.setText(str(float(self.median)))
         self.mode_rep.setText(str(float(self.mode)))
         self.nbr_seq.setText(str(float(self.repeat_count)))
+        self.loading_window.hide()
 
 
     #fill in chromo bar visualization
@@ -253,6 +265,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                                            "No such seed exists in the repeats section of this organism.",
                                            QtWidgets.QMessageBox.Ok)
             return False
+
 
     # get data for chromsome viewer to display
     def generate_event_data(self):
@@ -457,19 +470,33 @@ class Multitargeting(QtWidgets.QMainWindow):
                                                "The Minimum number of repeats cant be more than the Maximum",
                                                QtWidgets.QMessageBox.Ok)
             else:
+                self.loading_window.loading_bar.setValue(5)
+                self.loading_window.show()
+                QtCore.QCoreApplication.processEvents()
                 if self.seed.toPlainText() == '':
                     self.fill_seed_id_chrom()
+                    self.loading_window.loading_bar.setValue(50)
                     self.fill_Chromo_Text(self.chromo_seed.currentText())
+                    self.loading_window.loading_bar.setValue(100)
                 else:
                     result = self.fill_Chromo_Text(self.seed.toPlainText())
+                    self.loading_window.loading_bar.setValue(50)
                     if result == True:
                         self.chro_bar_create(self.seed.toPlainText())
+                    self.loading_window.loading_bar.setValue(100)
+        self.loading_window.hide()
 
 
     def seed_chromo_changed(self):
+        self.loading_window.loading_bar.setValue(5)
+        self.loading_window.show()
+        QtCore.QCoreApplication.processEvents()
         self.seed.setText('')
         self.chro_bar_create(self.chromo_seed.currentText())
+        self.loading_window.loading_bar.setValue(50)
         self.fill_Chromo_Text(self.chromo_seed.currentText())
+        self.loading_window.loading_bar.setValue(100)
+        self.loading_window.hide()
 
 
     #connects to view->CASPER to switch back to the main CASPER window
@@ -488,3 +515,15 @@ class Multitargeting(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         GlobalSettings.mainWindow.closeFunction()
         event.accept()
+
+
+
+
+
+class loading_window(QtWidgets.QWidget):
+    def __init__(self):
+        super(loading_window, self).__init__()
+        uic.loadUi("loading_data_form.ui", self)
+        self.loading_bar.setValue(0)
+        self.setWindowTitle("Loading Data")
+        self.hide()
