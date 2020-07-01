@@ -480,7 +480,7 @@
      <x>0</x>
      <y>0</y>
      <width>1151</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -511,8 +511,8 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionDocumentation"/>
-    <addaction name="actionGo_to_NCBI"/>
+    <addaction name="visit_repo"/>
+    <addaction name="go_ncbi"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -541,12 +541,12 @@
     <string>Change Directory</string>
    </property>
   </action>
-  <action name="actionDocumentation">
+  <action name="visit_repo">
    <property name="text">
-    <string>Documentation</string>
+    <string>Visit Repository</string>
    </property>
   </action>
-  <action name="actionGo_to_NCBI">
+  <action name="go_ncbi">
    <property name="text">
     <string>Go to NCBI</string>
    </property>

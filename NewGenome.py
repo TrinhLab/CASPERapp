@@ -6,6 +6,7 @@ from functools import partial
 from Algorithms import SeqTranslate
 from NCBI_Search_Window import NCBI_Search_File
 from PyQt5.QtWidgets import *
+import webbrowser
 
 def iter_except(function, exception):
     """Works like builtin 2-argument `iter()`, but stops on `exception`."""
@@ -96,6 +97,12 @@ class NewGenome(QtWidgets.QMainWindow):
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
 
+
+        #toolbar button actions
+        self.visit_repo.triggered.connect(self.visit_repo_func)
+        self.go_ncbi.triggered.connect(self.open_ncbi_web_page)
+
+
     ####---FUNCTIONS TO RUN EACH BUTTON---####
     def remove_from_queue(self):
         if len(self.JobsQueue) != 0:
@@ -110,6 +117,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.job_Table.setRowCount(len(self.JobsQueue))
         else:
             return
+
 
     def selectFasta(self):
 
@@ -132,6 +140,7 @@ class NewGenome(QtWidgets.QMainWindow):
         print(mydir)
         print(cdir)"""
 
+
     # this function figures out which type of file the user is searching for, and then shows the
     # ncbi_search_dialog window
     # connected to the button: self.NCBI_File_Search
@@ -139,6 +148,7 @@ class NewGenome(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
         GlobalSettings.mainWindow.ncbi_search_dialog.organismLineEdit.setText(self.lineEdit_1.displayText())
         GlobalSettings.mainWindow.ncbi_search_dialog.show()
+
 
     def submit(self):
         warning = ""
@@ -172,6 +182,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.job_Table.setItem(len(self.JobsQueue) - 1, 0, the_job)
         self.job_Table.resizeColumnsToContents()
 
+
     def fillEndo(self):
         f = open(GlobalSettings.appdir + "CASPERinfo")
 
@@ -197,6 +208,7 @@ class NewGenome(QtWidgets.QMainWindow):
         f.close()
         self.comboBoxEndo.addItems(self.Endos.keys())
 
+
     def endo_settings(self):
         # check the if it's 3' or 5', and check the box accordingly
         if int(self.seqTrans.endo_info[self.Endos[self.comboBoxEndo.currentText()][0]][3]) == 3:
@@ -207,6 +219,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.tot_len_box.setText(self.Endos[self.comboBoxEndo.currentText()][3])
         self.seed_len_box.setText(self.Endos[self.comboBoxEndo.currentText()][2])
 
+
     def findFasta(self):
         choice = QtWidgets.QMessageBox.question(self, "Extract!", "Are you sure you want to Quit?",
                                             QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
@@ -215,9 +228,11 @@ class NewGenome(QtWidgets.QMainWindow):
         else:
             pass
 
+
     def testcheckandradio(self, state):
         if state == QtCore.Qt.Checked:
             pass
+
 
     def whatsthisclicked(self):
         QtWidgets.QMessageBox.information(self, "Organism Code", "The organism code is the manner in which CASPER will"
@@ -226,6 +241,7 @@ class NewGenome(QtWidgets.QMainWindow):
                                                                  " you use the 3-4 letter code used by KEGG as this will"
                                                                  " aid in automatic accession of annotations from the"
                                                                  " database.", QtWidgets.QMessageBox.Ok)
+
 
     def updatekegglist(self):
 
@@ -259,6 +275,7 @@ class NewGenome(QtWidgets.QMainWindow):
             # self.keggsearchresults.insertPlainText(item)
             holder += 1
         self.keggSuggested.resizeColumnsToContents()
+
 
     def run_jobs(self):
         if len(self.JobsQueue) > 0:
@@ -312,6 +329,7 @@ class NewGenome(QtWidgets.QMainWindow):
                                                    "No jobs are in the Queue to run. Please submit a job before Running.",
                                                    QtWidgets.QMessageBox.Ok)
 
+
     def upon_process_finishing(self):
         if len(self.JobsQueue) > 1:
             job_name = self.job_Table.item(0, 1).text()  # Get name of job in current job column
@@ -338,6 +356,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.process.close()
             self.num_chromo = 0
 
+
     def clear_job_queue(self):
         self.process.kill()
         self.fin_index = 0
@@ -355,6 +374,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.first = False
         self.s_file.clear()
 
+
     def reset(self):
         self.lineEdit_1.clear()
         self.lineEdit_2.clear()
@@ -362,6 +382,15 @@ class NewGenome(QtWidgets.QMainWindow):
         self.keggSuggested.clear()
         self.first = False
         self.s_file.clear()
+
+
+    def open_ncbi_web_page(self):
+        webbrowser.open('https://www.ncbi.nlm.nih.gov/', new=2)
+
+
+    def visit_repo_func(self):
+        webbrowser.open('https://github.com/TrinhLab/CASPERapp')
+
 
     def closeEvent(self, event):
         # make sure that there are cspr files in the DB
@@ -411,6 +440,7 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
             GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
             event.accept()
+
 
     def continue_to_main(self):
         # make sure that there are cspr files in the DB

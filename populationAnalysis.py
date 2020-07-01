@@ -9,7 +9,6 @@ from PyQt5.QtWidgets import *
 from matplotlib_venn import venn3_unweighted
 import show_names_ui
 import show_names2_ui
-import sys
 import gzip
 import sqlite3
 from collections import Counter
@@ -99,6 +98,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         self.cspr_file = ""
         self.db_file = ""
+
+        self.loading_window = loading_window()
 
 
     def launch_ncbi_seacher(self):
@@ -282,6 +283,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
 
     def fill_data(self):
+        self.loading_window.loading_bar.setValue(5)
+        self.loading_window.show()
+        QtCore.QCoreApplication.processEvents()
         #get misc line from cspr file to know the number of orgs in file
         with gzip.open(self.cspr_file,'r') as f:
             i = 0
@@ -305,6 +309,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 i += 1
         self.total_org_number = len(self.org_list.keys())
         self.table2.setRowCount(0)
+        self.loading_window.loading_bar.setValue(10)
         index = 0
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
@@ -453,11 +458,16 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.table2.setItem(index, 8, strand)
 
             index += 1
-            #break
+
         self.table2.resizeColumnsToContents()
+        self.loading_window.loading_bar.setValue(25)
         self.plot_repeats_vs_seeds()
+        self.loading_window.loading_bar.setValue(50)
         self.plot_3D_graph()
+        self.loading_window.loading_bar.setValue(75)
         self.plot_venn()
+        self.loading_window.loading_bar.setValue(100)
+        self.loading_window.hide()
 
 
     def plot_repeats_vs_seeds(self):
@@ -958,3 +968,14 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
         self.proc_running = True
         self.process.start(program)
         self.process.finished.connect(finished)
+
+
+
+
+class loading_window(QtWidgets.QWidget):
+    def __init__(self):
+        super(loading_window, self).__init__()
+        uic.loadUi("loading_data_form.ui", self)
+        self.loading_bar.setValue(0)
+        self.setWindowTitle("Loading Data")
+        self.hide()
