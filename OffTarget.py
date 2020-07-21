@@ -7,10 +7,10 @@ O = OffTargetAlgorithm()"""
 
 
 import os
-from PyQt5 import QtWidgets, uic, QtCore
+from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from functools import partial
 import GlobalSettings
-
+import gzip
 
 class OffTarget(QtWidgets.QDialog):
 
@@ -50,10 +50,15 @@ class OffTarget(QtWidgets.QDialog):
             if file.find('.cspr') != -1:
                 newname = file[0:-4]
                 s = newname.split('_')
-                hold = open(os.path.join(GlobalSettings.filedir , file))
+                hold = gzip.open(file, 'r')
                 buf = (hold.readline())
+                hold.close()
+                buf = str(buf)
+                buf = buf.strip("'b")
+                buf = buf[:len(buf) - 4]
                 species = buf[8:buf.find('\n')]
                 endo = str(s[1])
+                endo = endo.strip('.')
                 if species not in self.shortName:
                     self.shortName[species] = s[0]
                 if species in self.orgsandendos:
@@ -66,10 +71,15 @@ class OffTarget(QtWidgets.QDialog):
         temp = self.data[str(self.OrgcomboBox.currentText())]
         temp1 = []
         for i in temp:
-            i = i.strip('.')
             temp1.append(i)
         self.EndocomboBox.addItems(temp1)
         self.OrgcomboBox.currentIndexChanged.connect(self.changeEndos)
+
+        endo = str(self.EndocomboBox.currentText())
+        short = str(self.shortHand[str(self.OrgcomboBox.currentText())])
+        file = short + '_' + endo + '_' + 'repeats.db'
+        self.db_file = file
+        self.cspr_file = short + "_" + endo + ".cspr"
 
         #fill in Max Mismatch dropdown
         mismatch_list = ['1','2','3','4','5','6','7','8','9','10']
@@ -81,9 +91,14 @@ class OffTarget(QtWidgets.QDialog):
         temp = self.data[str(self.OrgcomboBox.currentText())]
         temp1 = []
         for i in temp:
-            i = i.strip('.')
             temp1.append(i)
         self.EndocomboBox.addItems(temp1)
+
+        endo = str(self.EndocomboBox.currentText())
+        short = str(self.shortHand[str(self.OrgcomboBox.currentText())])
+        file = short + '_' + endo + '_' + 'repeats.db'
+        self.db_file = file
+        self.cspr_file = short + "_" + endo + ".cspr"
 
     #tolerance slider / entry box. Allows for slider to update, or the user to input in text box
     def tol_change(self):
@@ -118,12 +133,12 @@ class OffTarget(QtWidgets.QDialog):
         #setup arguments for C++ .exe
         app_path = GlobalSettings.appdir
         #exe_path = app_path + r'\OffTargetFolder\CasperOffTargetWindows '
-        exe_path = app_path + r'OffTargetFolder\OT '
+        exe_path = app_path + r'OffTargetFolder\OT'
         exe_path = '"' +  exe_path + '"'
-        data_path = ' "' + app_path + 'OffTargetFolder\\temp.txt' + '" ' ##
-        compressed = r' True ' ##
-        cspr_path = ' "' + os.getcwd() + '\\' + file_name + '" '
-        self.output_path = ' "' + os.getcwd() + '\\' + self.FileName.text() + '_OffTargetResults.txt" '
+        data_path = ' "' + app_path + 'OffTargetFolder\\temp.txt' + '"' ##
+        cspr_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.cspr_file + '"'
+        db_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.db_file + '"'
+        self.output_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.FileName.text() + '_OffTargetResults.txt"'
         filename = self.output_path
         filename = filename[:len(filename) - 1]
         filename = filename[1:]
@@ -135,7 +150,7 @@ class OffTarget(QtWidgets.QDialog):
         tolerance = self.tolerance
 
         #create command string
-        cmd = exe_path + data_path + compressed + cspr_path + self.output_path + CASPER_info_path + str(num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
+        cmd = exe_path + data_path + cspr_path + db_path + self.output_path + CASPER_info_path + str(num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
 
         #used to know when the process is done
         def finished():
@@ -143,15 +158,17 @@ class OffTarget(QtWidgets.QDialog):
             self.progressBar.setValue(100)
 
         #used to know when data is ready to read from stdout
-        def dataReady(p):
+        def dataReady():
             #filter the data from stdout, bools used to know when the .exe starts outputting the progress
             #percentages to be able to type cast them as floats and update the progress bar. Also, must
             #split the input read based on '\n\ characters since the stdout read can read multiple lines at
             #once and is all read in as raw bytes
-            line = str(p.readAllStandardOutput())
+            line = str(self.process.readAllStandardOutput())
+
             line = line[2:]
             line = line[:len(line)-1]
-            for lines in filter(None,line.split(r'\r\n')):
+            for lines in filter(None, line.split(r'\r\n')):
+                #print(line)
                 if(lines.find("Running Off Target Algorithm for") != -1 and self.perc == False):
                     self.perc = True
                 if(self.perc == True and self.bool_temp == False and lines.find("Running Off Target Algorithm for") == -1):
@@ -167,10 +184,12 @@ class OffTarget(QtWidgets.QDialog):
         #connect QProcess to the dataReady func, and finished func, reset progressBar only if the outputfile name
         #given does not already exist
         if(exists == False):
-            self.process.readyReadStandardOutput.connect(partial(dataReady,self.process))
+            self.process.readyReadStandardOutput.connect(partial(dataReady))
+            self.process.readyReadStandardError.connect(partial(dataReady))
             self.progressBar.setValue(0)
             QtCore.QTimer.singleShot(100, partial(self.process.start, cmd))
             self.process.finished.connect(finished)
+
         else: #error message about file already being created
             msg = QtWidgets.QMessageBox()
             msg.setWindowTitle("Error")

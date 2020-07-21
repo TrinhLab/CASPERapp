@@ -1571,8 +1571,7 @@ class StartupWindow(QtWidgets.QDialog):
         cdir = self.lineEdit.text()
         self.gdirectory = mydir
         GlobalSettings.CSPR_DB = cdir
-        # print(mydir)
-        # print(cdir)
+
 
 
     def errormsgmulti(self):
@@ -1604,6 +1603,8 @@ class StartupWindow(QtWidgets.QDialog):
             if 'DIRECTORY:' in item:
                 line = item
                 break
+
+
         if len(line) < 11:
             return os.path.expanduser("~\Documents").replace('\\', '/')
         else:

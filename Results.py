@@ -786,12 +786,8 @@ class Results(QtWidgets.QMainWindow):
                 strand = self.targetTable.item(row,2).text()
                 pam = self.targetTable.item(row,3).text()
                 score = self.targetTable.item(row,4).text()
-                loc = self.S.compress(int(loc), 64)
                 self.rows_and_seq_list[self.comboBoxGene.currentIndex()][seq] = row
-                seq = self.S.compress(seq, 64)
-                pam = self.S.compress(pam, 64)
-                score = self.S.compress(int(score), 64)
-                output = str(loc) + ',' + str(seq) + str(strand) + str(pam) + ',' + score
+                output = str(loc) + ';' + str(seq) + ";" + str(pam) + ";" + score + ";" + str(strand)
                 f.write(output + '\n')
         f.close()
         #only make off target object if first time, otherwise just
