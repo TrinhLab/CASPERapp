@@ -119,7 +119,9 @@ def createGraph(self):
 		print("Please select NCBI Genome")
 		return
 
-	directory = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])))
+	directory = GlobalSettings.CSPR_DB
+	print('*****')
+	print(directory)
 	onlyfiles = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
 	for file in onlyfiles:
 		print("One file is ",file)
