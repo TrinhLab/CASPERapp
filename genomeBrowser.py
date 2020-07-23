@@ -15,7 +15,7 @@ def splitString(longString):
 	try:
 		return (longString).split(':')[2]
 	except:
-		print("Please search for a genome")
+		print("Please search for a genome at the end of step 2")
 
 def ncbiAPI(filename):
 

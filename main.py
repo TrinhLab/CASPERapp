@@ -9,7 +9,7 @@ from closingWin import closingWindow
 from Results import Results, geneViewerSettings
 from NewGenome import NewGenome, NCBI_Search_File
 from NewEndonuclease import NewEndonuclease
-# from kishanAnnotation import createGraph
+from genomeBrowser import createGraph
 import gzip
 import webbrowser
 import requests
