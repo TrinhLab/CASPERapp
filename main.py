@@ -10,6 +10,7 @@ from Results import Results, geneViewerSettings
 from NewGenome import NewGenome, NCBI_Search_File
 from NewEndonuclease import NewEndonuclease
 from genomeBrowser import createGraph
+
 import gzip
 import webbrowser
 import requests
@@ -946,7 +947,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     def launch_newGenome(self):
         self.hide()
         self.newGenome.mwfg.moveCenter(self.newGenome.cp)  ##Center window
-        self.newGenome.move(self.newGenome.mwfg.topLeft())  ##Center window
+        self.newGenome.move(self.mwfg.topLeft())  ##Center window
         self.newGenome.show()
 
 
@@ -1274,9 +1275,19 @@ class CMainWindow(QtWidgets.QMainWindow):
             else:
                 database_type = "GenBank"
 
-            ##fills in the nbci dropdown when the gbff option is chosen
+            # actually search, if nothing is returned, break out
+            # self.link_list, self.organismDict = self.ncbi_searcher.getDataBaseURL(self.Search_Input.displayText(), database_type, ret_max)
+            # if len(self.link_list) == 0 and len(self.organismDict) == 0:
+            #     QtWidgets.QMessageBox.question(self, "Error", "Search yielded 0 results. Please try again.", QtWidgets.QMessageBox.Ok)
+            #     return
+            #
+            # # add each item found into the dropdown menu
+            # for item in self.organismDict:
+            #     self.Annotations_Organism.addItem(item)
+
+            #fills in the nbci dropdown when the gbff option is chosen
             if (self.gbff_button.isChecked()):
-                self.organismData = self.ncbi_searcher.getNcbiAnnotation(self.Search_Input.displayText(), database_type,
+                self.link_list, self.organismData = self.ncbi_searcher.getDataBaseURL(self.Search_Input.displayText(), database_type,
                                                                          ret_max)
                 print("gbff button pressed")
                 print(self.organismData)
@@ -1285,10 +1296,11 @@ class CMainWindow(QtWidgets.QMainWindow):
                                                    QtWidgets.QMessageBox.Ok)
                     return
 
+                print("\n Organism Data: \n",self.organismData)
                 for item in self.organismData:
-                    org_item = item['Organism'] + ' ' + item['AssemblyAccession']
-                    self.Annotations_Organism.addItem(org_item)
-
+                    #org_item = item['Organism'] + ' ' + item['AssemblyAccession']
+                    #self.Annotations_Organism.addItem(org_item)
+                    self.Annotations_Organism.addItem(item)
                 print("organism Data is: ", self.organismData)
             ###fills in drop down for every other option
             else:
@@ -1303,7 +1315,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 # add each item found into the dropdown menu
                 for item in self.organismDict:
-                    print(item)
+                    #print(item)
                     self.Annotations_Organism.addItem(item)
 
             print("Done searching NCBI")
@@ -1571,7 +1583,8 @@ class StartupWindow(QtWidgets.QDialog):
         cdir = self.lineEdit.text()
         self.gdirectory = mydir
         GlobalSettings.CSPR_DB = cdir
-
+        # print(mydir)
+        # print(cdir)
 
 
     def errormsgmulti(self):
@@ -1603,8 +1616,6 @@ class StartupWindow(QtWidgets.QDialog):
             if 'DIRECTORY:' in item:
                 line = item
                 break
-
-
         if len(line) < 11:
             return os.path.expanduser("~\Documents").replace('\\', '/')
         else:

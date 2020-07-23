@@ -11,11 +11,21 @@ def main():
 	createGraph()
 
 
-def splitString(longString):
+def splitStringNCBI(longString):
 	try:
 		return (longString).split(':')[2]
 	except:
-		print("Please search for a genome at the end of step 2")
+		print(longString.split(':'))
+		print("Please search for a genome")
+
+def splitStringLocal(longString):
+	try:
+		print(longString)
+		print(longString.split('/'))
+		return (longString.split('/').pop()).split('.')[0]
+	except:
+		print(longString.split('/').pop()).split('.')[0]
+		print("Please search for a genome")
 
 def ncbiAPI(filename):
 
@@ -73,7 +83,7 @@ def createHtml(genomeList):
 	genomeBrowserTemplateFilePath = os.path.abspath(os.path.join(os.path.dirname(__file__), "genomeBrowserTemplate.html"))
 
 	raw = open(genomeBrowserTemplateFilePath, "r+")
-	raw.seek(0)  # <- This is the missing piece
+	raw.seek(0)
 	raw.truncate()
 
 	#write the 3 part string format
@@ -87,12 +97,22 @@ def createHtml(genomeList):
 
 def createGraph(self):
 	annotationWindow = self.findChild(QtWidgets.QComboBox,'Annotations_Organism')
+	NCBIFileBoolean = self.findChild(QtWidgets.QRadioButton, 'NCBI_Select')
+	localFileBoolean = self.findChild(QtWidgets.QRadioButton, 'Annotation_Ownfile')
+
 	selectedGenome = annotationWindow.currentText()
 
 	#returns gci String value that can be used to retrieve the file
 	print("selected Genome is ", selectedGenome)
+	gciVariable = ""
 
-	gciVariable = splitString(selectedGenome)
+	if(localFileBoolean.isChecked() == True):
+		print("local")
+		gciVariable = splitStringLocal(selectedGenome)
+	elif(NCBIFileBoolean.isChecked() == True):
+		print("NCBI")
+		gciVariable = splitStringNCBI(selectedGenome)
+
 	print("gci variable is ", gciVariable)
 
 	if(gciVariable == None):
@@ -102,16 +122,16 @@ def createGraph(self):
 	directory = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])))
 	onlyfiles = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
 	for file in onlyfiles:
+		print("One file is ",file)
 		if gciVariable in file and ".fna" not in file:
 			fileToSearch = file
 			print("searching file:", fileToSearch)
 			break
 
 	try:
+		print("file to search is ", fileToSearch)
 		genomeList = ncbiAPI(fileToSearch)
 
-		# uncomment to see returned genomes from NCBI search
-		# print(genomeList)
 	except:
 		print("No gbff file found")
 		QtWidgets.QMessageBox.question(self, "GBFF_FileNotFound", "GBFF file is not in selected directory", QtWidgets.QMessageBox.Ok)
