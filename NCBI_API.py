@@ -163,17 +163,18 @@ class Assembly:
     # Note2: this function will only be able to download feature_tables, gff, gbff files only.
     def download_compressed_annotation_file(self, database_link, fileType):
         # get to the folder on the ftp link
+        path = database_link.replace('ftp://ftp.ncbi.nlm.nih.gov','')
         print("Downloading: ", database_link)
-        ftpLink = database_link[27:]
         ftp = FTP('ftp.ncbi.nlm.nih.gov')
         ftp.login()
-        ftp.cwd(ftpLink)
+        ftp.cwd(path)
+        filename = 'temp'
+        for fn in ftp.nlst():
+            if fn.find(fileType) != -1:
+                filename = fn
 
-        # get the right file
-        fileNameIndex = database_link.rfind('/') + 1
-        filename = database_link[fileNameIndex:]
-        filename = filename + fileType
-
+        if filename == 'temp':
+            return
         # open the right file in the correct location
         local_filename = GlobalSettings.CSPR_DB + "/" + filename
         lf = open(local_filename, "wb")

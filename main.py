@@ -663,24 +663,9 @@ class CMainWindow(QtWidgets.QMainWindow):
                 elif self.feature_table_button.isChecked():
                     type_of_annotation_file = "_feature_table.txt.gz"
 
-                if type_of_annotation_file == "_genomic.gbff.gz":
+                # go through and find the link that works, and download that compressed file
 
-                    selected_option = (self.Annotations_Organism.currentText()).split()
-                    selected_assembly = selected_option[len(selected_option) - 1]
-
-                    # downloads selected organism's .gbff annotation file
-                    for item in self.organismData:
-                        if selected_assembly in item['AssemblyAccession']:
-                            compressed_file = self.ncbi_searcher.download_compressed_annotation_file(
-                                item['genbank_link'], type_of_annotation_file)
-                            break
-                else:
-                    # go through and find the link that works, and download that compressed file
-                    for i in range(len(self.link_list)):
-                        if self.organismDict[self.Annotations_Organism.currentText()] in self.link_list[i]:
-                            compressed_file = self.ncbi_searcher.download_compressed_annotation_file(self.link_list[i],
-                                                                                                     type_of_annotation_file)
-                            break
+                compressed_file = self.ncbi_searcher.download_compressed_annotation_file(self.link_list[self.Annotations_Organism.currentIndex()], type_of_annotation_file)
 
                 # decompress that file, and then delete the compressed version
                 if compressed_file:
@@ -1136,6 +1121,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.NCBI_Select.setEnabled(s)
 
 
+
     def selected_annotation(self):
         if self.Annotation_Ownfile.isChecked():
             return "Own"
@@ -1287,21 +1273,19 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             #fills in the nbci dropdown when the gbff option is chosen
             if (self.gbff_button.isChecked()):
-                self.link_list, self.organismData = self.ncbi_searcher.getDataBaseURL(self.Search_Input.displayText(), database_type,
-                                                                         ret_max)
-                print("gbff button pressed")
-                print(self.organismData)
+                self.link_list, self.organismData = self.ncbi_searcher.getDataBaseURL(self.Search_Input.displayText(), database_type, ret_max)
+
                 if self.organismData == -1:
                     QtWidgets.QMessageBox.question(self, "Error", "Search yielded 0 results. Please try again.",
                                                    QtWidgets.QMessageBox.Ok)
                     return
 
-                print("\n Organism Data: \n",self.organismData)
+
                 for item in self.organismData:
                     #org_item = item['Organism'] + ' ' + item['AssemblyAccession']
                     #self.Annotations_Organism.addItem(org_item)
                     self.Annotations_Organism.addItem(item)
-                print("organism Data is: ", self.organismData)
+
             ###fills in drop down for every other option
             else:
                 # actually search, if nothing is returned, break out
