@@ -31,8 +31,6 @@ class genLibrary(QtWidgets.QDialog):
 
         # variables
         self.anno_data = dict()
-        self.cspr_file = ''
-        self.parser = CSPRparser('')
         self.kegg_nonKegg = ''
         self.gen_lib_dict = dict()
         self.S = SeqTranslate()
@@ -41,7 +39,7 @@ class genLibrary(QtWidgets.QDialog):
         self.off_tol = .05
         self.off_max_misMatch = 4
         self.off_target_running = False
-
+        self.parser = CSPRparser("")
 
         # set the numbers for the num genes combo box item
         for i in range(10):
@@ -58,13 +56,12 @@ class genLibrary(QtWidgets.QDialog):
     #       org_file: the cspr_file that pertains to the organism that user is using at the time
     #       anno_type: whether the user is using KEGG or another type of annotation file
     def launch(self, annotation_data, org_file, anno_type):
-
         self.cspr_file = org_file
+        self.db_file = org_file[:org_file.find('.')] + '_repeats.db'
         self.anno_data = annotation_data
         self.kegg_nonKegg = anno_type
-        self.parser.fileName = self.cspr_file
         self.process = QtCore.QProcess()
-
+        self.parser.fileName = org_file
 
 
         # setting the path and file name fields
@@ -73,29 +70,16 @@ class genLibrary(QtWidgets.QDialog):
         self.filename_input.setText(self.cspr_file[index2 + 1:index1] + '_lib.txt')
         self.output_path.setText(GlobalSettings.CSPR_DB + "/")
 
-        # testing:
-        #for data in self.anno_data:
-         #   print(data)
-          #  for item in self.anno_data[data]:
-           #     print('\t', item)
-            #    for piece in self.anno_data[data][item]:
-             #       print('\t\t', piece)
-        # print(self.kegg_nonKegg)
-
         # depending on the type of file, build the dictionary accordingly
         if self.kegg_nonKegg == 'kegg':
             self.build_dict_kegg_version()
         else:
             self.build_dict_non_kegg()
 
+        #print(self.gen_lib_dict)
         # get the data from the cspr file
         self.cspr_data = self.parser.gen_lib_parser(self.gen_lib_dict, GlobalSettings.mainWindow.endoChoice.currentText())
-        #self.generate(5, 200000000000, 15, "mybsulibrary2.txt")
 
-        #for i in range(len(self.cspr_data)):
-         #   for j in range(len(self.cspr_data[i])):
-          #      print(self.cspr_data[i][j])
-           # print('\n\n')
 
         self.show()
 
@@ -114,18 +98,17 @@ class genLibrary(QtWidgets.QDialog):
     # this function takes all of the cspr data and compresses it again for off-target usage
     def compress_file_off(self):
         f = open(GlobalSettings.CSPR_DB + "/off_compressed.txt", 'w')
-
         for gene in self.cspr_data:
             for j in range(len(self.cspr_data[gene])):
-                loc = self.S.compress(self.cspr_data[gene][j][0], 64)
-                seq = self.S.compress(self.cspr_data[gene][j][1], 64)
-                pam = self.S.compress(self.cspr_data[gene][j][2], 64)
-                score = self.S.compress(self.cspr_data[gene][j][3], 64)
+                loc = self.cspr_data[gene][j][0]
+                seq = self.cspr_data[gene][j][1]
+                pam = self.cspr_data[gene][j][2]
+                score = self.cspr_data[gene][j][3]
                 strand = self.cspr_data[gene][j][4]
-
-                output = str(loc) + ',' + str(seq) + str(strand) + str(pam) + ',' + score
+                output = str(loc) + ';' + str(seq) + ';' + str(pam) + ';' + str(score) + ';' + str(strand)
                 f.write(output + '\n')
         f.close()
+
 
     # this function parses the temp_off file, which holds the off-target analysis results
     # it also updates each target in the cspr_data dictionary to replace the endo with the target's results in off-target
@@ -149,6 +132,7 @@ class genLibrary(QtWidgets.QDialog):
                 tempTuple = (self.cspr_data[gene][i][0], self.cspr_data[gene][i][1], self.cspr_data[gene][i][2], self.cspr_data[gene][i][3], self.cspr_data[gene][i][4], scoreDict[self.cspr_data[gene][i][1]])
                 self.cspr_data[gene][i] = tempTuple
 
+
     # this function runs the off_target command
     # NOTE: some changes may be needed to get it to work with other OS besides windows
     def get_offTarget_data(self, num_targets, minScore, spaceValue, output_file, fiveseq):
@@ -166,8 +150,8 @@ class genLibrary(QtWidgets.QDialog):
                 #self.process.kill()
                 if did_work != -1:
                     self.cancel_function()
-                    os.remove(GlobalSettings.CSPR_DB + '/off_compressed.txt')
-                    os.remove(GlobalSettings.CSPR_DB + '/temp_off.txt')
+                    #os.remove(GlobalSettings.CSPR_DB + '/off_compressed.txt')
+                    #os.remove(GlobalSettings.CSPR_DB + '/temp_off.txt')
 
             
 
@@ -189,18 +173,18 @@ class genLibrary(QtWidgets.QDialog):
                     else:
                         self.bool_temp = True
 
-        app_path = GlobalSettings.appdir
-        exe_path = app_path + 'OffTargetFolder\OT'
+        app_path = GlobalSettings.appdir.replace('\\','/')
+        exe_path = app_path + 'OffTargetFolder/OT'
         exe_path = '"' + exe_path + '" '
-        data_path = '"' + GlobalSettings.CSPR_DB.replace('/','\\') + "\\off_compressed.txt" + '" '
-        compressed = r' True '  ##
-        cspr_path = '"' + self.cspr_file.replace('/','\\') + '" '
-        output_path = '"' + GlobalSettings.CSPR_DB.replace('/','\\') + '\\temp_off.txt" '
+        data_path = '"' + GlobalSettings.CSPR_DB + "/off_compressed.txt" + '" '
+        cspr_path = '"' + self.cspr_file + '" '
+        db_path = '"' + self.db_file + '" '
+        output_path = '"' + GlobalSettings.CSPR_DB + '/temp_off.txt" '
         filename = output_path
         filename = filename[:len(filename) - 1]
         filename = filename[1:]
         filename = filename.replace('"', '')
-        CASPER_info_path = app_path + 'CASPERinfo'
+        CASPER_info_path = '"' + app_path + 'CASPERinfo' +'" '
         num_of_mismathes = self.off_max_misMatch
         tolerance = self.off_tol  # create command string
 
@@ -208,14 +192,15 @@ class genLibrary(QtWidgets.QDialog):
         avg_output = "True"
         # set the off_target_running to true, to keep the user from closing the window while it is running
         self.off_target_running = True
-        cmd = exe_path + data_path + compressed + cspr_path + output_path + CASPER_info_path + str(
+
+        cmd = exe_path + data_path + cspr_path + db_path + output_path + CASPER_info_path + str(
             num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
 
-        #print(cmd)
         self.process.readyReadStandardOutput.connect(partial(progUpdate, self.process))
         self.progressBar.setValue(0)
         QtCore.QTimer.singleShot(100, partial(self.process.start, cmd))
         self.process.finished.connect(finished)
+
 
     # submit function
     # this function takes all of the input from the window, and calls the generate function
@@ -310,6 +295,7 @@ class genLibrary(QtWidgets.QDialog):
             if did_work != -1:
                 self.cancel_function()
 
+
     # cancel function
     # clears everything and hides the window
     def cancel_function(self):
@@ -378,6 +364,7 @@ class genLibrary(QtWidgets.QDialog):
                 for i in range(len(self.anno_data[search][gene])):
                     self.gen_lib_dict[gene] = [self.anno_data[search][gene][i][0], self.anno_data[search][gene][i][2], self.anno_data[search][gene][i][3], self.anno_data[search][gene][i][1]]
 
+
     # this function builds the dictionary that is used in the generate function
     # this is the version that builds it from data from feature_table, gbff, or gff
     # builds it exactly as Brian built it in the files given
@@ -423,7 +410,7 @@ class genLibrary(QtWidgets.QDialog):
                 deletedDict[gene] = list()
             for i in range(len(target_list) - 1, -1, -1):
                 # check the target_range here
-                if target_list[i][3] < score_limit:
+                if int(target_list[i][3]) < int(score_limit):
                     if self.modifyParamscheckBox.isChecked():
                         deletedDict[gene].append(target_list[i])
                     target_list.pop(i)
@@ -470,7 +457,7 @@ class genLibrary(QtWidgets.QDialog):
                 # select the first five targets with the score and space filter that is set in the beginning
                 if len(target_list) == 0 or vec_index >= len(target_list):
                     break
-                while abs(target_list[vec_index][0] - prev_target[0]) < space:
+                while abs(int(target_list[vec_index][0]) - int(prev_target[0])) < int(space):
                     if target_list[vec_index][3] > prev_target[3] and prev_target != (0,"xyz", "abc", 1, "-"):
                         self.Output[gene].remove(prev_target)
                         self.Output[gene].append(target_list[vec_index])

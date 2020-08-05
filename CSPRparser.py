@@ -308,7 +308,6 @@ class CSPRparser:
 
 
     def read_targets(self, genename, pos_tuple, endo):
-        print('read targets')
         i = 0
         retList = []
         header = False
@@ -321,6 +320,9 @@ class CSPRparser:
                     if '>' in line and '(' + pos_tuple[0] + ')' in line:
                         header = True
                     elif header == True:
+
+                        if line.find('>') != -1:
+                            break
                         line = line.split(';')
                         if int(line[0]) >= int(pos_tuple[1]) and int(line[0]) < int(pos_tuple[2]):
                             retList.append((line[0], line[1], line[2], line[3], line[4], line[5]))
@@ -329,7 +331,6 @@ class CSPRparser:
                     elif line == 'REPEATS':
                         break
                 i += 1
-
         return retList
 
 

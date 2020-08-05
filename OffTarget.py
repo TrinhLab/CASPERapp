@@ -131,18 +131,16 @@ class OffTarget(QtWidgets.QDialog):
             detailed_output = r' True '
 
         #setup arguments for C++ .exe
-        app_path = GlobalSettings.appdir
-        #exe_path = app_path + r'\OffTargetFolder\CasperOffTargetWindows '
-        exe_path = app_path + r'OffTargetFolder\OT'
+        app_path = GlobalSettings.appdir.replace('\\','/')
+        exe_path = app_path + r'OffTargetFolder/OT'
         exe_path = '"' +  exe_path + '"'
-        data_path = ' "' + app_path + 'OffTargetFolder\\temp.txt' + '"' ##
+        data_path = ' "' + app_path + 'OffTargetFolder/temp.txt' + '"' ##
         cspr_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.cspr_file + '"'
         db_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.db_file + '"'
         self.output_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.FileName.text() + '_OffTargetResults.txt"'
         filename = self.output_path
         filename = filename[:len(filename) - 1]
         filename = filename[1:]
-        filename = filename.replace(r'\\', '\\')
         filename = filename.replace('"', '')
         exists = os.path.isfile(filename)
         CASPER_info_path = r' "' + app_path + 'CASPERinfo' + '" '
