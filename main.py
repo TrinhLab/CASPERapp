@@ -366,10 +366,34 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
+        self.rec_files_q.clicked.connect(self.fill_rec_files_q_box)
+
+
+    def fill_recommended_files(self, file):
+        with gzip.open(file) as f:
+            i = 0
+            for line in f:
+                if i == 2:
+                    buf = str(line)
+                    buf = buf.strip("'b")
+                    buf = buf[:len(buf) - 4]
+                    #buf = buf.replace(" ","")
+                    buf = buf.split(': ')
+                    files = buf[1]
+                    files = files.split('|')
+                    break
+                i += 1
+        for file in files:
+            if file != "":
+                self.rec_files.addItem(file)
+
+
+    def fill_rec_files_q_box(self):
+        info = "The recommended files are the GCA/GCF files that are recommended for the CSPR file you have selected based on the information within the CSPR file."
+        QtWidgets.QMessageBox.information(self, "Recommended File Information", info, QtWidgets.QMessageBox.Ok)
 
 
     def endo_Changed(self):
-        i = 3
         self.add_orgo.clear()
         self.Add_Orgo_Combo.clear()
         self.Added_Org_Combo.clear()
@@ -1384,8 +1408,12 @@ class CMainWindow(QtWidgets.QMainWindow):
         onlyfiles = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
         orgsandendos = {}
         shortName = {}
+        first = True
         for file in onlyfiles:
             if file.find('.cspr') != -1:
+                if first == True:
+                    self.fill_recommended_files(file)
+                    first = False
                 found = True
                 newname = file[0:-4]
                 s = newname.split('_')
@@ -1418,6 +1446,9 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def changeEndos(self):
         self.endoChoice.clear()
+        self.rec_files.clear()
+        file = str(self.shortHand[str(self.orgChoice.currentText())]) + '_' + str(self.data[str(self.orgChoice.currentText())][0]) + '.cspr'
+        self.fill_recommended_files(file)
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
         self.Search_Input.setText(self.orgChoice.currentText())
 
@@ -1648,6 +1679,7 @@ class StartupWindow(QtWidgets.QDialog):
             self.re_write_dir()
             GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
             GlobalSettings.mainWindow.show()
+
             # Tanner - still setup data for MT
             GlobalSettings.MTWin.launch(self.gdirectory)
             self.close()

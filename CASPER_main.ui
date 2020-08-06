@@ -358,46 +358,7 @@
         <layout class="QGridLayout" name="gridLayout_5">
          <item row="1" column="0" rowspan="2" colspan="3">
           <layout class="QGridLayout" name="gridLayout_14">
-           <item row="8" column="0">
-            <widget class="QLabel" name="ncbi_ret_max_label">
-             <property name="text">
-              <string>NCBI Return Max:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="8" column="1">
-            <widget class="QLineEdit" name="ncbi_ret_max_line_edit">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This allows you to set the maximum number of results returned from Entrez.&lt;/p&gt;&lt;p&gt;No value above 100 is allowed.&lt;/p&gt;&lt;p&gt;Note: The larger the number entered, the longer the search could take.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item row="9" column="0" colspan="2">
-            <widget class="QComboBox" name="Annotations_Organism">
-             <property name="minimumSize">
-              <size>
-               <width>320</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <family>Sans Serif</family>
-               <pointsize>11</pointsize>
-               <weight>50</weight>
-               <italic>false</italic>
-               <bold>false</bold>
-              </font>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="0" colspan="2">
-            <widget class="QLineEdit" name="Search_Input"/>
-           </item>
-           <item row="7" column="2">
+           <item row="9" column="2">
             <widget class="QPushButton" name="Search_Button">
              <property name="maximumSize">
               <size>
@@ -456,29 +417,6 @@
               </widget>
              </item>
             </layout>
-           </item>
-           <item row="2" column="2">
-            <widget class="QPushButton" name="Confused_Button">
-             <property name="maximumSize">
-              <size>
-               <width>80</width>
-               <height>23</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>?</string>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="0" colspan="3" alignment="Qt::AlignLeft|Qt::AlignBottom">
-            <widget class="QLabel" name="Search_Label">
-             <property name="text">
-              <string>KEGG Database Search:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
            </item>
            <item row="3" column="0" colspan="2">
             <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -570,7 +508,69 @@
              </item>
             </layout>
            </item>
-           <item row="5" column="1">
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>Recommended Files:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="0" colspan="3" alignment="Qt::AlignLeft|Qt::AlignBottom">
+            <widget class="QLabel" name="Search_Label">
+             <property name="text">
+              <string>KEGG Database Search:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="1">
+            <widget class="QLineEdit" name="ncbi_ret_max_line_edit">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This allows you to set the maximum number of results returned from Entrez.&lt;/p&gt;&lt;p&gt;No value above 100 is allowed.&lt;/p&gt;&lt;p&gt;Note: The larger the number entered, the longer the search could take.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="0" colspan="2">
+            <widget class="QLineEdit" name="Search_Input"/>
+           </item>
+           <item row="2" column="2">
+            <widget class="QPushButton" name="Confused_Button">
+             <property name="maximumSize">
+              <size>
+               <width>80</width>
+               <height>23</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>?</string>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="0" colspan="2">
+            <widget class="QComboBox" name="Annotations_Organism">
+             <property name="minimumSize">
+              <size>
+               <width>320</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>Sans Serif</family>
+               <pointsize>11</pointsize>
+               <weight>50</weight>
+               <italic>false</italic>
+               <bold>false</bold>
+              </font>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
             <spacer name="verticalSpacer">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
@@ -582,6 +582,33 @@
               </size>
              </property>
             </spacer>
+           </item>
+           <item row="10" column="0">
+            <widget class="QLabel" name="ncbi_ret_max_label">
+             <property name="text">
+              <string>NCBI Return Max:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="2">
+            <widget class="QPushButton" name="rec_files_q">
+             <property name="text">
+              <string>?</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QComboBox" name="rec_files">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>300</width>
+               <height>0</height>
+              </size>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
@@ -642,7 +669,7 @@
      <x>0</x>
      <y>0</y>
      <width>1267</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
