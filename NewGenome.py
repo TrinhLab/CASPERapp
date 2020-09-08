@@ -4,7 +4,6 @@ from bioservices import KEGG
 import GlobalSettings
 from functools import partial
 from Algorithms import SeqTranslate
-from NCBI_Search_Window import NCBI_Search_File
 from PyQt5.QtWidgets import *
 import webbrowser
 

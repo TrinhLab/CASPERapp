@@ -3,21 +3,18 @@ import os, platform
 import io
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from APIs import Kegg
-from bioservices import KEGG
 from CoTargeting import CoTargeting
 from closingWin import closingWindow
 from Results import Results, geneViewerSettings
-from NewGenome import NewGenome, NCBI_Search_File
+from NewGenome import NewGenome
 from NewEndonuclease import NewEndonuclease
 from genomeBrowser import createGraph
-
 import gzip
 import webbrowser
 import requests
 import GlobalSettings
 import multitargeting
 from AnnotationParser import Annotation_Parser
-from NCBI_API import Assembly
 from export_to_csv import export_csv_window
 from cspr_chromosome_selection import cspr_chromosome_selection
 from generateLib import genLibrary
@@ -25,6 +22,7 @@ from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
 import populationAnalysis
 import platform
+import ncbi
 
 # =========================================================================================
 # CLASS NAME: AnnotationsWindow
@@ -273,10 +271,10 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.checked_info = {}
         self.check_ntseq_info = {}  # the ntsequences that go along with the checked_info
         self.annotation_parser = Annotation_Parser()
-        self.ncbi_searcher = Assembly()
         self.link_list = list()  # the list of the downloadable links from the NCBI search
         self.organismDict = dict()  # the dictionary for the links to download. Key is the description of the organism, value is the ID that can be found in link_list
         self.organismData = list()
+        self.ncbi = ncbi.NCBI_search_tool()
 
         # --- Style Modifications --- #
         groupbox_style = """
@@ -304,10 +302,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.radioButton_Gene.clicked.connect(self.toggle_annotation)
         self.radioButton_Position.clicked.connect(self.toggle_annotation)
         self.radioButton_Sequence.clicked.connect(self.toggle_annotation)
-        self.Search_Button.clicked.connect(self.search_kegg_ncbi_browse_own)
-        self.Annotation_Kegg.clicked.connect(self.change_annotation)
-        self.Annotation_Ownfile.clicked.connect(self.change_annotation)
-        self.NCBI_Select.clicked.connect(self.change_annotation)
+
+
+
         self.actionUpload_New_Genome.triggered.connect(self.launch_newGenome)
         self.actionUpload_New_Endonuclease.triggered.connect(self.launch_newEndonuclease)
         self.actionOpen_Genome_Browser.triggered.connect(self.launch_newGenomeBrowser)
@@ -317,12 +314,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.GenerateLibrary.clicked.connect(self.prep_genlib)
         self.actionExit.triggered.connect(self.close_app)
         self.visit_repo.triggered.connect(self.visit_repo_func)
-
-        self.Search_Input.setEnabled(False)
-
-        self.change_annotation()
-        # self.test_button.clicked.connect(self.Ann_Window)
-
+        self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
+        self.refresh_button.clicked.connect(self.fill_annotation_dropdown)
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
         self.progressBar.reset()
@@ -341,7 +334,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.actionNCBI_BLAST.triggered.connect(self.open_ncbi_blast_web_page)
 
         self.Question_Button_add_org.clicked.connect(self.add_org_popup)
-        self.Confused_Button.clicked.connect(self.annotation_information)
+
 
         # --- Setup for Gene Entry Field --- #
         self.geneEntryField.setPlainText("Example Inputs: \n"
@@ -350,12 +343,9 @@ class CMainWindow(QtWidgets.QMainWindow):
                                          "Sequence: *Pure sequence. CASPER will search for targets and report off"
                                          "targets based on the genome selected, if any*")
 
-        # self.Kegg_Search_Imput.setPlainText("test")
         # show functionalities on window
-        ############################self.view_my_results = Results()
         self.newGenome = NewGenome(info_path)
         self.newEndonuclease = NewEndonuclease()
-        self.ncbi_search_dialog = NCBI_Search_File()
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
         self.gene_viewer_settings = geneViewerSettings()
@@ -363,34 +353,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.cspr_selector = cspr_chromosome_selection()
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
-
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
-        self.rec_files_q.clicked.connect(self.fill_rec_files_q_box)
-
-
-    def fill_recommended_files(self, file):
-        with gzip.open(file) as f:
-            i = 0
-            for line in f:
-                if i == 2:
-                    buf = str(line)
-                    buf = buf.strip("'b")
-                    buf = buf[:len(buf) - 4]
-                    #buf = buf.replace(" ","")
-                    buf = buf.split(': ')
-                    files = buf[1]
-                    files = files.split('|')
-                    break
-                i += 1
-        for file in files:
-            if file != "":
-                self.rec_files.addItem(file)
-
-
-    def fill_rec_files_q_box(self):
-        info = "The recommended files are the GCA/GCF files that are recommended for the CSPR file you have selected based on the information within the CSPR file."
-        QtWidgets.QMessageBox.information(self, "Recommended File Information", info, QtWidgets.QMessageBox.Ok)
 
 
     def endo_Changed(self):
@@ -621,13 +585,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             else:
                 return False
 
-        # jsut testing as of now
-        # for i in self.searches:
-        #  print(i)
-        # for j in self.searches[i]:
-        #     print("\t", j)
-        #    for k in self.searches[i][j]:
-        #      print("\t\t", k)
         # if we get to this point, that means that the search yieleded results, so fill the table
         self.progressBar.setValue(80)
         # check whether this function call is for Annotation Window, or for generate Lib
@@ -638,9 +595,6 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def run_results(self, inputtype, inputstring, openAnnoWindow=True):
-        kegginfo = Kegg()
-        org = str(self.orgChoice.currentText())
-        endo = str(self.endoChoice.currentText())
         progvalue = 15
         self.searches = {}
         self.gene_list = {}
@@ -658,142 +612,18 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         if inputtype == "gene":
             # make sure an annotation file has been selected
-            if self.Annotations_Organism.currentText() == "":
-                error = QtWidgets.QMessageBox.question(self, "No Annotation",
-                                                       "Please select an annotation from either KEGG, NCBI, or provide you own annotation file"
-                                                       , QtWidgets.QMessageBox.Ok)
+            if self.annotation_files.currentText() == "":
+                error = QtWidgets.QMessageBox.question(self, "No Annotation", "Please select an annotation from either KEGG, NCBI, or provide you own annotation file", QtWidgets.QMessageBox.Ok)
                 self.progressBar.setValue(0)
                 return
-
-            # ncbi file search code
-            if self.NCBI_Select.isChecked():
-                type_of_annotation_file = ""
-                compressed_file = ""
-
-                # make sure they select a type of file
-                if not self.gbff_button.isChecked() and not self.gff_button.isChecked() and not self.feature_table_button.isChecked():
-                    QtWidgets.QMessageBox.question(self, "Error",
-                                                   "Please select a type of annotation file to download. (Ex: Feature_Table, GFF, GBFF)"
-                                                   , QtWidgets.QMessageBox.Ok)
-                    self.progressBar.setValue(0)
-                    return
-
-                # check to see which file type they selected, and then make sure the program
-                # downloads that file
-                if self.gbff_button.isChecked():
-                    type_of_annotation_file = "_genomic.gbff.gz"
-                elif self.gff_button.isChecked():
-                    type_of_annotation_file = "_genomic.gff.gz"
-                elif self.feature_table_button.isChecked():
-                    type_of_annotation_file = "_feature_table.txt.gz"
-
-                # go through and find the link that works, and download that compressed file
-
-                compressed_file = self.ncbi_searcher.download_compressed_annotation_file(self.link_list[self.Annotations_Organism.currentIndex()], type_of_annotation_file)
-
-                # decompress that file, and then delete the compressed version
-                if compressed_file:
-                    self.progressBar.setValue(25)
-                    storeFileName = self.ncbi_searcher.decompress_annotation_file(compressed_file,
-                                                                                  type_of_annotation_file)
-                    file_names = [f for f in os.listdir(GlobalSettings.CSPR_DB) if
-                                  os.path.isfile(os.path.join(GlobalSettings.CSPR_DB, f))]
-                    for file in file_names:
-                        if ".gz" in file:
-                            os.remove(file)
-
-                    # now run results
-                    self.progressBar.setValue(35)
-                    myBool = self.run_results_own_ncbi_file(inputstring, storeFileName, openAnnoWindow=openAnnoWindow)
-                    if not openAnnoWindow:
-                        return myBool
-                else:
-                    QtWidgets.QMessageBox.question(self, "Error",
-                                                   "The database does not have the type of file you have requested. Please try another type of file."
-                                                   , QtWidgets.QMessageBox.Ok)
-                    self.progressBar.setValue(0)
-                    return
-
-            # own annotation file code
-            if self.Annotation_Ownfile.isChecked():
-                # this now just goes onto the other version of run_results
-                myBool = self.run_results_own_ncbi_file(inputstring, self.Annotations_Organism.currentText(),
-                                                        openAnnoWindow=openAnnoWindow)
-                if not openAnnoWindow:
-                    return myBool
-            # KEGG's code
-            elif self.Annotation_Kegg.isChecked():
-                # check to make sure that both the annotation file and the cspr files have the same version
-                # IE both have bsu or otherwise. Just warn the user that the program could crash, or that targets may not be found
-                checkList = self.Annotations_Organism.currentText().split(" ")
-                if (checkList[1] != self.shortHand[self.orgChoice.currentText()]):
-                    error = QtWidgets.QMessageBox.question(self, "Mismatched Annotation File",
-                                                           "The annotation file you have selected does not match the .cspr file selected. Continuing could result in the program crashing. "
-                                                           "Targets may not be found as well.\n\n"
-                                                           "Do you wish to continue?",
-                                                           QtWidgets.QMessageBox.Yes |
-                                                           QtWidgets.QMessageBox.No,
-                                                           QtWidgets.QMessageBox.No)
-
-                    if (error == QtWidgets.QMessageBox.No):
-                        self.progressBar.setValue(0)
-                        return
-
-                self.make_dictonary()
-                self.Results.displayGeneViewer.setEnabled(True)
-                self.Results.lineEditStart.setEnabled(True)
-                self.Results.lineEditEnd.setEnabled(True)
-                self.gene_viewer_settings.kegg_radio_button.setEnabled(True)
-                self.Results.change_start_end_button.setEnabled(True)
-                self.gene_viewer_settings.file_type = "kegg"
-                list_sVal = self.separate_line(inputstring[0])
-                for sValue in list_sVal:
-                    sValue = self.removeWhiteSpace(sValue)
-                    if len(sValue) == 0:
-                        continue
-                    self.searches[sValue] = {}
-                    for defin in self.gene_list:
-                        # set a string equal to a string version of defin lowercased. That way the case of user input does not matter
-                        checkString = str(defin).lower()
-                        if sValue in checkString or (sValue in self.gene_list[defin]):
-                            if defin in self.searches[sValue]:
-                                if self.gene_list[defin] not in self.searches[sValue][defin]:
-                                    self.searches[sValue][defin].append(self.gene_list[defin])
-                            else:
-                                self.searches[sValue][defin] = self.gene_list[defin]
-                            # print(self.searches[sValue][defin][0])
-                if openAnnoWindow:
-                    did_work = self.Annotation_Window.fill_Table(self)
-                    if did_work == -1:
-                        QtWidgets.QMessageBox.question(self, "Gene Database Error",
-                                                       "The gene you entered could not be found in the KEGG database. "
-                                                       "Please make sure you entered everything correctly and try again.",
-                                                       QtWidgets.QMessageBox.Ok)
-                        self.progressBar.setValue(0)
-                    elif did_work == -2:  # if the user selects 'no' from the warning of a large file
-                        self.progressBar.setValue(0)
-                    else:
-                        self.progressBar.setValue(100)
-                else:
-                    # if this function call is for generateLib and not for Annotation Window
-
-                    # get the start/end/chrom data
-                    self.searches = self.getKeggDataForGenLib()
-                    # see if there's matches
-                    if len(self.searches) == 0:
-                        QtWidgets.QMessageBox.question(self, "Gene Database Error",
-                                                       "The gene you entered could not be found in the KEGG database. "
-                                                       "Please make sure you entered everything correctly and try again.",
-                                                       QtWidgets.QMessageBox.Ok)
-                        self.progressBar.setValue(0)
-                        return False
-                    else:
-                        self.progressBar.setValue(100)
-                        return True
-
+            # this now just goes onto the other version of run_results
+            myBool = self.run_results_own_ncbi_file(inputstring, self.annotation_files.currentText(), openAnnoWindow=openAnnoWindow)
+            if not openAnnoWindow:
+                return myBool
             else:
                 self.progressBar.setValue(0)
                 return
+
         # position code below
         if inputtype == "position":
             inputstring = inputstring.replace(' ', '')
@@ -804,7 +634,6 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             for item in searchInput:
                 searchIndicies = item.split(',')
-
                 # make sure the right amount of arguments were passed
                 if len(searchIndicies) != 3:
                     QtWidgets.QMessageBox.question(self, "Position Error: Invalid Input",
@@ -814,8 +643,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     return
 
                 # make sure user inputs digits
-                if not searchIndicies[0].isdigit() or not searchIndicies[1].isdigit() or not searchIndicies[
-                    2].isdigit():
+                if not searchIndicies[0].isdigit() or not searchIndicies[1].isdigit() or not searchIndicies[2].isdigit():
                     QtWidgets.QMessageBox.question(self, "Position Error: Invalid Input",
                                                    "The positions given must be integers. Please try again.",
                                                    QtWidgets.QMessageBox.Ok)
@@ -829,16 +657,14 @@ class CMainWindow(QtWidgets.QMainWindow):
                     self.progressBar.setValue(0)
                     return
                 # append the data into the checked_info
-                tempString = 'chrom: ' + str(searchIndicies[0]) + ' start: ' + str(searchIndicies[1]) + ' end: ' + str(
-                    searchIndicies[2])
+                tempString = 'chrom: ' + str(searchIndicies[0]) + ' start: ' + str(searchIndicies[1]) + ' end: ' + str(searchIndicies[2])
                 self.checked_info[tempString] = (int(searchIndicies[0]), int(searchIndicies[1]), int(searchIndicies[2]))
 
             self.progressBar.setValue(50)
-
-            self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
-                                       self.checked_info, self.check_ntseq_info, "")
+            self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, "")
             self.progressBar.setValue(100)
             self.pushButton_ViewTargets.setEnabled(True)
+
         # sequence code below
         if inputtype == "sequence":
             checkString = 'AGTCN'
@@ -969,6 +795,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         createGraph(self)
 
 
+    def launch_ncbi(self):
+        self.ncbi.show()
+
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
     def collect_table_data_nonkegg(self):
         # start out the same as the other collect_table_data
@@ -1002,45 +831,6 @@ class CMainWindow(QtWidgets.QMainWindow):
                                    self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
-
-
-    # this function is very similar for the Kegg version of collect_table_data
-    # difference is that it doesn't use the checkboxes from Annotation Window, just the search values
-    def getKeggDataForGenLib(self):
-        # variables
-        k = Kegg()
-        full_org = self.orgChoice.currentText()
-        organism = self.Annotations_Organism.currentText().split(" ")[1]
-        nameFull = ""
-        holder = ()
-        temp_dict = dict()
-
-        # for each search value
-        for item in self.searches:
-            # for each gene in the search results
-            for gene in self.searches[item]:
-                # name is the ID tag from KEGG
-                name = self.searches[item][gene][0]
-
-                gene_info = k.gene_locator(organism + ":" + name)
-
-                if gene_info != -1:
-                    if gene_info[1] == False:
-                        holder = (gene_info[0], '-', gene_info[2], gene_info[3])
-                    elif gene_info[1] == True:
-                        holder = (gene_info[0], '+', gene_info[2], gene_info[3])
-                    # append the data
-                    if item not in temp_dict:
-                        temp_dict[item] = dict()
-                        if gene not in temp_dict[item]:
-                            temp_dict[item][gene] = [holder]
-                        else:
-                            temp_dict[item][gene].append(holder)
-                    else:
-                        temp_dict[item][gene] = [holder]
-
-        # return this new dict
-        return temp_dict
 
 
     def collect_table_data(self):
@@ -1124,20 +914,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         else:
             seq_checker = True
             self.changeEndos()
-        current = self.selected_annotation()
-        # print(current)
-        if current == "Own":
-            self.Search_Button.setText("Browse")
-            self.Search_Button.setEnabled(s)
-            self.Search_Label.setText("Select an annotation file...")
-        elif current == "Kegg":
-            self.Search_Button.setText("Search")
-            self.Search_Button.setEnabled(s)
-            self.Search_Label.setText("Search KEGG Database for genes")
-        else:
-            self.Search_Button.setText("Search")
-            self.Search_Button.setEnabled(s)
-            self.Search_Label.setText("Search NCBI Database for genes")
+
         self.Annotations_Organism.setEnabled(s)
         self.Annotation_Ownfile.setEnabled(s)
         self.Annotation_Kegg.setEnabled(s)
@@ -1145,188 +922,11 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.NCBI_Select.setEnabled(s)
 
 
-
-    def selected_annotation(self):
-        if self.Annotation_Ownfile.isChecked():
-            return "Own"
-        elif self.Annotation_Kegg.isChecked():
-            return "Kegg"
-        else:
-            return "NCBI"
-
-
-    def change_annotation(self):
-        if self.Annotation_Ownfile.isChecked():
-            self.refseq_button.hide()
-            self.genbank_button.hide()
-            self.feature_table_button.hide()
-            self.gff_button.hide()
-            self.gbff_button.hide()
-            self.ncbi_ret_max_line_edit.hide()
-            self.ncbi_ret_max_label.hide()
-            self.Search_Input.setEnabled(False)
-            self.Search_Button.setText("Browse")
-            self.Search_Label.setText("Select an annotation file...")
-        elif self.Annotation_Kegg.isChecked():
-            self.refseq_button.hide()
-            self.genbank_button.hide()
-            self.feature_table_button.hide()
-            self.gff_button.hide()
-            self.gbff_button.hide()
-            self.ncbi_ret_max_line_edit.hide()
-            self.ncbi_ret_max_label.hide()
-            self.Search_Input.setEnabled(False)
-            self.Search_Button.setText("Search")
-            self.Search_Label.setText("Search KEGG Database for genome annotation")
-            self.Search_Input.setText(self.orgChoice.currentText())
-        elif self.NCBI_Select.isChecked():
-            self.refseq_button.show()
-            self.genbank_button.show()
-            self.feature_table_button.show()
-            self.gff_button.show()
-            self.gbff_button.show()
-            self.ncbi_ret_max_line_edit.show()
-            self.ncbi_ret_max_label.show()
-            self.Search_Input.setEnabled(True)
-            self.Search_Button.setText("Search")
-            self.Search_Label.setText("Search NCBI Database for genome annotation")
-            self.Search_Input.setText(self.orgChoice.currentText())
-
-
-    # This function works as a way to look up a search term in the Kegg database to potentially get the code
-    # for the gene
-    def search_kegg_ncbi_browse_own(self):
-        # code that lets the user input their own Annotation File
-        if self.Annotation_Ownfile.isChecked():
-            # have the user choose an annotaiton file, set Search_Input's text to that file
-            filed = QtWidgets.QFileDialog()
-            myFile = QtWidgets.QFileDialog.getOpenFileName(filed, "Choose an Annotation File")
-            if (myFile[0] != ""):
-                self.Annotations_Organism.clear()
-                self.Search_Input.setText(myFile[0])
-                self.Annotations_Organism.addItem(myFile[0])
-
-        # code that uses Kegg
-        elif self.Annotation_Kegg.isChecked():
-            # make sure user actually inputs something
-            if (self.Search_Input.text() == ""):
-                QtWidgets.QMessageBox.question(self, "Error",
-                                               "Please eneter a search parameter.",
-                                               QtWidgets.QMessageBox.Ok)
-            else:
-                self.Annotations_Organism.clear()
-                k = KEGG()
-
-                print("Searching Kegg for: ", self.Search_Input.text())
-
-                # search the kegg database. If the orignal search input returns nothing, split it up on spaces and search each individual term
-                All_org = k.lookfor_organism(self.Search_Input.text())
-                """ self.lineEdit_search.text()"""
-                for item in All_org:
-                    hold = self.organism_finder(item)
-                    self.Annotations_Organism.addItem(hold)
-                    self.TNumbers[hold] = item[:6]
-                # if the main string returned nothing, split it up and search each individual term
-                if (len(self.Annotations_Organism) <= 0):
-                    stringList = self.Search_Input.text().split(" ")
-                    for i in range(len(stringList)):
-                        print("Searching Kegg for: ", stringList[i])
-                        if stringList[i] != "":
-                            All_org = k.lookfor_organism(stringList[i])
-                            for item in All_org:
-                                hold = self.organism_finder(item)
-                                # make sure that there are no repeats
-                                if (self.Annotations_Organism.findText(hold) == -1):
-                                    self.Annotations_Organism.addItem(hold)
-                                    self.TNumbers[hold] = item[:6]
-
-                # print("Done searching.\n")
-                if (len(self.Annotations_Organism) <= 0):
-                    QtWidgets.QMessageBox.question(self, "Error",
-                                                   "No matches found with that search parameter.",
-                                                   QtWidgets.QMessageBox.Ok)
-
-        # code that uses NCBI
-        elif self.NCBI_Select.isChecked():
-            # error check
-            if not self.refseq_button.isChecked() and not self.genbank_button.isChecked():
-                QtWidgets.QMessageBox.question(self, "Error", "Please select either RefSeq or GenBank databases.",
-                                               QtWidgets.QMessageBox.Ok)
-                return
-
-            # if there is nothing set in the line edit, set the ret max to 20
-            if self.ncbi_ret_max_line_edit.displayText() != "":
-
-                # if the string is only digits (and non negative), set ret max to that, otherwise just set it to 20
-                if self.ncbi_ret_max_line_edit.displayText().isdigit() and int(
-                        self.ncbi_ret_max_line_edit.displayText()) > 0:
-                    ret_max = int(self.ncbi_ret_max_line_edit.displayText())
-                else:
-                    ret_max = 20
-            else:
-                ret_max = 20
-
-            # make sure that the retmax value is not too large
-            if ret_max > 100:
-                QtWidgets.QMessageBox.question(self, "Error",
-                                               "Return Max number is too high, please set it to something below 100.",
-                                               QtWidgets.QMessageBox.Ok)
-                return
-
-            # clear all the things
-            self.link_list = list()
-            self.organismDict = dict()
-            self.Annotations_Organism.clear()
-
-            # now we can finally search NCBI
-            database_type = ""
-            if self.refseq_button.isChecked():
-                database_type = "RefSeq"
-            else:
-                database_type = "GenBank"
-
-            # actually search, if nothing is returned, break out
-            # self.link_list, self.organismDict = self.ncbi_searcher.getDataBaseURL(self.Search_Input.displayText(), database_type, ret_max)
-            # if len(self.link_list) == 0 and len(self.organismDict) == 0:
-            #     QtWidgets.QMessageBox.question(self, "Error", "Search yielded 0 results. Please try again.", QtWidgets.QMessageBox.Ok)
-            #     return
-            #
-            # # add each item found into the dropdown menu
-            # for item in self.organismDict:
-            #     self.Annotations_Organism.addItem(item)
-
-            #fills in the nbci dropdown when the gbff option is chosen
-            if (self.gbff_button.isChecked()):
-                self.link_list, self.organismData = self.ncbi_searcher.getDataBaseURL(self.Search_Input.displayText(), database_type, ret_max)
-
-                if self.organismData == -1:
-                    QtWidgets.QMessageBox.question(self, "Error", "Search yielded 0 results. Please try again.",
-                                                   QtWidgets.QMessageBox.Ok)
-                    return
-
-
-                for item in self.organismData:
-                    #org_item = item['Organism'] + ' ' + item['AssemblyAccession']
-                    #self.Annotations_Organism.addItem(org_item)
-                    self.Annotations_Organism.addItem(item)
-
-            ###fills in drop down for every other option
-            else:
-                # actually search, if nothing is returned, break out
-                self.link_list, self.organismDict = self.ncbi_searcher.getDataBaseURL(self.Search_Input.displayText(),
-                                                                                      database_type, ret_max)
-
-                if len(self.link_list) == 0 and len(self.organismDict) == 0:
-                    QtWidgets.QMessageBox.question(self, "Error", "Search yielded 0 results. Please try again.",
-                                                   QtWidgets.QMessageBox.Ok)
-                    return
-
-                # add each item found into the dropdown menu
-                for item in self.organismDict:
-                    #print(item)
-                    self.Annotations_Organism.addItem(item)
-
-            print("Done searching NCBI")
+    def fill_annotation_dropdown(self):
+        self.annotation_files.clear()
+        for file in os.listdir(GlobalSettings.CSPR_DB):
+            if ".gbff" in file or ".gff" in file:
+                self.annotation_files.addItem(file)
 
 
     def make_dictonary(self):
@@ -1373,10 +973,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         return long_str[:semi - index]
 
 
-    def search_own_file(self):
-        print("searching for own file")
-
-
     # This method is for testing the execution of a button call to make sure the button is linked properly
     def testexe(self):
         choice = QtWidgets.QMessageBox.question(self, "Extract!", "Are you sure you want to quit?",
@@ -1386,11 +982,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             sys.exit()
         else:
             pass
-
-
-    # This method checks if a check button or radio button works appropriately by printing the current organism
-    def testcheckandradio(self):
-        print(str(self.orgChoice.currentText()))
 
 
     def addOrgoCombo(self):
@@ -1403,7 +994,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     # ----- CALLED IN STARTUP WINDOW ------ #
     def getData(self):
         mypath = os.getcwd()
-        found = False;
+        found = False
         self.dbpath = mypath
         onlyfiles = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
         orgsandendos = {}
@@ -1412,7 +1003,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         for file in onlyfiles:
             if file.find('.cspr') != -1:
                 if first == True:
-                    self.fill_recommended_files(file)
                     first = False
                 found = True
                 newname = file[0:-4]
@@ -1434,7 +1024,6 @@ class CMainWindow(QtWidgets.QMainWindow):
                         self.orgChoice.addItem(species)
 
         # auto fill the kegg search bar with the first choice in orgChoice
-        self.Search_Input.setText(self.orgChoice.currentText())
         if found == False:
             return False
         self.data = orgsandendos
@@ -1670,6 +1259,7 @@ class StartupWindow(QtWidgets.QDialog):
 
             os.chdir(self.gdirectory)
             found = GlobalSettings.mainWindow.getData()
+            GlobalSettings.mainWindow.fill_annotation_dropdown()
             if found == False:
                 QtWidgets.QMessageBox.question(self, "No .cspr files",
                                                "Please select a directory that contains cspr files.",
