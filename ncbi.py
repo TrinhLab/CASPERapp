@@ -5,15 +5,21 @@ from ftplib import FTP
 import gzip
 import pandas as pd
 import shutil
+import threading
 from multiprocessing import Pool
+import os
+import sys
 Entrez.email = "casper2informatics@gmail.com"
 
 #decompress file function - has to be global to run in sub-processes
 def decompress_file(filename):
     print('Starting Decompress: ' + filename)
     with gzip.open(str(filename), 'rb') as f_in:
-        with open(str(filename).replace('.gz', '.txt'), 'wb') as f_out:
+        with open(str(filename).replace('.gz',''), 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
+
+    os.remove(filename)
+    QtWidgets.QApplication.processEvents()
     print('Finished Decompressing: ' + filename)
 
 #model for filtering columns in ncbi table
@@ -113,14 +119,15 @@ class NCBI_search_tool(QtWidgets.QWidget):
         super(NCBI_search_tool, self).__init__()
         uic.loadUi('ncbi.ui', self)
         self.logicalIndex = 0
-        self.search_button.clicked.connect(self.query_db)
         self.filters = dict()
         self.organism_line_edit.setText('bacillus subtilis')
-        self.download_button.clicked.connect(self.download_files)
+        self.download_button.clicked.connect(self.download_files_wrapper)
+        self.search_button.clicked.connect(self.query_db)
         self.ncbi_table.verticalHeader().hide()
         self.all_rows.clicked.connect(self.select_all)
         self.ncbi_table.setFocusPolicy(QtCore.Qt.NoFocus)
 
+    @QtCore.pyqtSlot()
     def query_db(self):
         #setup table
         self.comboBox = QtWidgets.QComboBox(self)
@@ -144,7 +151,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
         content = "".join(content)
         bs_content = BeautifulSoup(content, "lxml")
 
-
         #Extract IDs
         idlist = bs_content.find('idlist')
         ids = idlist.find_all('id')
@@ -156,6 +162,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
         handle.close()
         content = "".join(content)
         bs_content = BeautifulSoup(content, 'lxml')
+
         #print(bs_content.prettify())
 
         #Prep Data for Table
@@ -197,7 +204,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 self.refseq_ftp_dict[ids[i]] = ''
             else:
                 self.refseq_ftp_dict[ids[i]] = refseq_links[i] + '/'
-
 
 
         #Build dataframe
@@ -296,6 +302,10 @@ class NCBI_search_tool(QtWidgets.QWidget):
             self.proxy.setFilter(stringAction, filterColumn)
 
     @QtCore.pyqtSlot()
+    def download_files_wrapper(self):
+        thread = threading.Thread(target=self.download_files)
+        thread.start()
+
     def download_files(self):
         print('downloading files')
         ftp = FTP('ftp.ncbi.nlm.nih.gov')
@@ -312,6 +322,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
             if self.refseq_checkbox.isChecked():
                 refseq_ftp = self.refseq_ftp_dict[int(id)]
                 dirs.append(refseq_ftp)
+            QtWidgets.QApplication.processEvents()
 
             for dir in dirs:
                 link = str(dir).replace('ftp://ftp.ncbi.nlm.nih.gov', '')
@@ -333,23 +344,13 @@ class NCBI_search_tool(QtWidgets.QWidget):
                             with open(file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(file)
-
+                    QtWidgets.QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
+            QtWidgets.QApplication.processEvents()
 
         print('starting decompression')
         p = Pool(3)
         p.map(decompress_file, files)
-
-
-
-                # processes = []
-                # for file in files:
-                #     P = multiprocessing.Process(target=decompress_file, args=(file, ))
-                #     P.start()
-                #     P.join()
-
-                # print(processes)
-                # for p in processes:
-                #     p.join()
 
     @QtCore.pyqtSlot()
     def select_all(self):

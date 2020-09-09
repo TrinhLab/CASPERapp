@@ -276,6 +276,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.organismData = list()
         self.ncbi = ncbi.NCBI_search_tool()
 
+
         # --- Style Modifications --- #
         groupbox_style = """
         QGroupBox:title{subcontrol-origin: margin;
@@ -1035,7 +1036,6 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def changeEndos(self):
         self.endoChoice.clear()
-        self.rec_files.clear()
         file = str(self.shortHand[str(self.orgChoice.currentText())]) + '_' + str(self.data[str(self.orgChoice.currentText())][0]) + '.cspr'
         self.fill_recommended_files(file)
         self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
@@ -1134,11 +1134,13 @@ class CMainWindow(QtWidgets.QMainWindow):
     #       3. Results
     #       4. Multitargetting
     def closeFunction(self):
+        self.ncbi.close()
         self.myClosingWindow.get_files()
         self.myClosingWindow.show()
 
 
     def close_app(self):
+        self.ncbi.close()
         self.closeFunction()
         self.close()
 

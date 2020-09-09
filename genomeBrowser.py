@@ -18,6 +18,7 @@ def splitStringNCBI(longString):
 		print(longString.split(':'))
 		print("Please search for a genome")
 
+
 def splitStringLocal(longString):
 	try:
 		print(longString)
@@ -26,6 +27,7 @@ def splitStringLocal(longString):
 	except:
 		print(longString.split('/').pop()).split('.')[0]
 		print("Please search for a genome")
+
 
 def ncbiAPI(filename):
 
@@ -38,7 +40,7 @@ def ncbiAPI(filename):
 
 
 def createHtml(genomeList):
-
+	print(genomeList)
 	htmlString1 = """
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 	<ihtml>
@@ -100,18 +102,18 @@ def createGraph(self):
 	NCBIFileBoolean = self.findChild(QtWidgets.QRadioButton, 'NCBI_Select')
 	localFileBoolean = self.findChild(QtWidgets.QRadioButton, 'Annotation_Ownfile')
 
-	selectedGenome = annotationWindow.currentText()
+	selectedGenome = self.annotation_files.currentText()
 
 	#returns gci String value that can be used to retrieve the file
 	print("selected Genome is ", selectedGenome)
 	gciVariable = ""
 
-	if(localFileBoolean.isChecked() == True):
-		print("local")
-		gciVariable = splitStringLocal(selectedGenome)
-	elif(NCBIFileBoolean.isChecked() == True):
-		print("NCBI")
-		gciVariable = splitStringNCBI(selectedGenome)
+	# if(localFileBoolean.isChecked() == True):
+	# 	print("local")
+	gciVariable = splitStringLocal(selectedGenome)
+	# elif(NCBIFileBoolean.isChecked() == True):
+	# 	print("NCBI")
+	# 	gciVariable = splitStringNCBI(selectedGenome)
 
 	print("gci variable is ", gciVariable)
 
