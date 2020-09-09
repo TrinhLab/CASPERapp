@@ -317,7 +317,7 @@ class CSPRparser:
                 line = line.strip("'b")
                 line = line[:len(line) - 4]
                 if i > 2:
-                    if '>' in line and '(' + pos_tuple[0] + ')' in line:
+                    if '>' in line and '(' + str(pos_tuple[0]) + ')' in line:
                         header = True
                     elif header == True:
 
