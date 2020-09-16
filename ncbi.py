@@ -9,6 +9,10 @@ import threading
 from multiprocessing import Pool
 import os
 import sys
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
 Entrez.email = "casper2informatics@gmail.com"
 
 #decompress file function - has to be global to run in sub-processes
