@@ -302,9 +302,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.pushButton_ViewTargets.setEnabled(False)
         self.radioButton_Gene.clicked.connect(self.toggle_annotation)
         self.radioButton_Position.clicked.connect(self.toggle_annotation)
-        self.radioButton_Sequence.clicked.connect(self.toggle_annotation)
 
-
+        self.seq_label.hide()
 
         self.actionUpload_New_Genome.triggered.connect(self.launch_newGenome)
         self.actionUpload_New_Endonuclease.triggered.connect(self.launch_newEndonuclease)
@@ -900,27 +899,26 @@ class CMainWindow(QtWidgets.QMainWindow):
     # Function to enable and disable the Annotation function if searching by position or sequence
     def toggle_annotation(self):
         if self.radioButton_Gene.isChecked():
-            s = True
+            self.Step2.setEnabled(True)
         else:
-            s = False
+            self.Step2.setEnabled(False)
 
-        # check to see if the sequence button is pressed, and act accordingly
-        if self.radioButton_Sequence.isChecked():
-            mySeq = SeqTranslate()
-            seq_checker = False
-            # time to reset the endo's
-            self.endoChoice.clear()
-            for item in mySeq.endo_info:
-                self.endoChoice.addItem(item)
-        else:
-            seq_checker = True
-            self.changeEndos()
+        # check to see if the sequence button is pressed, and act accordingly -- OLD code
+        # elif self.radioButton_Sequence.isChecked():
+        #     self.Step2.setEnabled(False)
+        #     mySeq = SeqTranslate()
+        #     seq_checker = False
+        #     # time to reset the endo's
+        #     self.endoChoice.clear()
+        #     for item in mySeq.endo_info:
+        #         self.endoChoice.addItem(item)
+        # else:
+        #     self.Step2.setEnabled(False)
+        #     seq_checker = True
+        #     self.changeEndos()
 
-        self.Annotations_Organism.setEnabled(s)
-        self.Annotation_Ownfile.setEnabled(s)
-        self.Annotation_Kegg.setEnabled(s)
-        self.orgChoice.setEnabled(seq_checker)
-        self.NCBI_Select.setEnabled(s)
+        #self.orgChoice.setEnabled(seq_checker)
+
 
 
     def fill_annotation_dropdown(self):
@@ -1024,6 +1022,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     if self.orgChoice.findText(species) == -1:
                         self.orgChoice.addItem(species)
 
+        self.orgChoice.addItem("Custom Input Sequences")
         # auto fill the kegg search bar with the first choice in orgChoice
         if found == False:
             return False
@@ -1035,11 +1034,22 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def changeEndos(self):
-        self.endoChoice.clear()
-        file = str(self.shortHand[str(self.orgChoice.currentText())]) + '_' + str(self.data[str(self.orgChoice.currentText())][0]) + '.cspr'
-        self.fill_recommended_files(file)
-        self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
-        self.Search_Input.setText(self.orgChoice.currentText())
+        if self.orgChoice.currentText() != "Custom Input Sequences":
+            self.Step2.setEnabled(True)
+            self.endoChoice.setEnabled(True)
+            self.seq_label.hide()
+            self.radioButton_Gene.show()
+            self.radioButton_Position.show()
+            self.endoChoice.clear()
+            file = str(self.shortHand[str(self.orgChoice.currentText())]) + '_' + str(self.data[str(self.orgChoice.currentText())][0]) + '.cspr'
+            self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
+        else:
+            self.Step2.setEnabled(False)
+            self.endoChoice.clear()
+            self.endoChoice.setEnabled(False)
+            self.radioButton_Gene.hide()
+            self.radioButton_Position.hide()
+            self.seq_label.show()
 
 
     def change_directory(self):

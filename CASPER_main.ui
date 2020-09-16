@@ -199,37 +199,7 @@
          <string>Step 3: Search and view targets</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_4">
-         <item row="1" column="0" colspan="3">
-          <widget class="QPlainTextEdit" name="geneEntryField">
-           <property name="maximumSize">
-            <size>
-             <width>1000</width>
-             <height>400</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QPushButton" name="pushButton_FindTargets">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>Find Targets</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QCheckBox" name="Show_All_Results">
-           <property name="text">
-            <string>Show all results </string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
+         <item row="1" column="0">
           <widget class="QRadioButton" name="radioButton_Gene">
            <property name="text">
             <string>Gene (Locus ID)</string>
@@ -239,35 +209,41 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
-          <widget class="QRadioButton" name="radioButton_Position">
-           <property name="text">
-            <string>Position</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QRadioButton" name="radioButton_Sequence">
-           <property name="text">
-            <string>Sequence</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0" colspan="3">
-          <widget class="QProgressBar" name="progressBar">
-           <property name="value">
-            <number>24</number>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0" colspan="3">
+         <item row="6" column="0" colspan="3">
           <widget class="QPushButton" name="pushButton_ViewTargets">
            <property name="text">
             <string>View Targets</string>
            </property>
           </widget>
          </item>
-         <item row="6" column="0" colspan="3">
+         <item row="3" column="0">
+          <widget class="QPushButton" name="pushButton_FindTargets">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Find Targets</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QRadioButton" name="radioButton_Position">
+           <property name="text">
+            <string>Position</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="3">
+          <widget class="QPlainTextEdit" name="geneEntryField">
+           <property name="maximumSize">
+            <size>
+             <width>1000</width>
+             <height>400</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0" colspan="3">
           <widget class="QPushButton" name="GenerateLibrary">
            <property name="maximumSize">
             <size>
@@ -277,6 +253,33 @@
            </property>
            <property name="text">
             <string>Generate Library</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0" colspan="3">
+          <widget class="QProgressBar" name="progressBar">
+           <property name="value">
+            <number>24</number>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QCheckBox" name="Show_All_Results">
+           <property name="text">
+            <string>Show all results </string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="3">
+          <widget class="QLabel" name="seq_label">
+           <property name="text">
+            <string>Input Custom Sequences Below</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -318,7 +321,7 @@
               <widget class="QLabel" name="label_2">
                <property name="maximumSize">
                 <size>
-                 <width>75</width>
+                 <width>150</width>
                  <height>16777215</height>
                 </size>
                </property>
@@ -387,7 +390,7 @@
               <widget class="QLabel" name="label">
                <property name="maximumSize">
                 <size>
-                 <width>100</width>
+                 <width>150</width>
                  <height>16777215</height>
                 </size>
                </property>
@@ -523,7 +526,7 @@
      <x>0</x>
      <y>0</y>
      <width>1440</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

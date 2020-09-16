@@ -148,7 +148,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
             term += ' AND "Complete Genome"[Assembly Level]'
         if self.infra_name_line_edit.text() != "":
             term += ' AND "' + self.infra_name_line_edit.text() + '"[Infraspecific name]'
-        print(term)
+
         #Search DB for IDs
         handle = Entrez.esearch(db="assembly", retmax=retmax, term=term)
         content = handle.readlines()
@@ -273,9 +273,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
     @QtCore.pyqtSlot(int)
     def on_signalMapper_mapped(self, i):
         indexes = self.ncbi_table.selectionModel().selectedRows()
-        print('ind')
-        for index in indexes:
-            print(index.row())
         #stringAction = self.signalMapper.mapping(i).text()
         if self.logicalIndex == 0:
             if i == 0:
@@ -311,7 +308,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
         thread.start()
 
     def download_files(self):
-        print('downloading files')
         ftp = FTP('ftp.ncbi.nlm.nih.gov')
         ftp.login()
         indexes = self.ncbi_table.selectionModel().selectedRows()
