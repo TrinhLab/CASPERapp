@@ -78,6 +78,6 @@ suds-jurko==0.6
 tornado==6.0.4
 typing-extensions==3.7.4.2
 urllib3==1.24.3
-Werkzeug==0.15.2
+Werkzeug==0.15.3
 wrapt==1.11.1
 xmltodict==0.12.0
