@@ -329,6 +329,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 ftp.cwd(link)
                 dir_files = ftp.nlst()
                 for file in dir_files:
+                    print(file)
                     if self.feature_table_checkbox.isChecked():
                         if file.find('feature_table.txt') != -1:
                             with open(file, 'wb') as f:

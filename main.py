@@ -901,7 +901,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         if self.radioButton_Gene.isChecked():
             self.Step2.setEnabled(True)
         else:
-            self.Step2.setEnabled(False)
+            self.Step2.setEnabled(True)
 
         # check to see if the sequence button is pressed, and act accordingly -- OLD code
         # elif self.radioButton_Sequence.isChecked():
