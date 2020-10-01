@@ -152,7 +152,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
         #Search DB for IDs
         handle = Entrez.esearch(db="assembly", retmax=retmax, term=term)
         content = handle.readlines()
-        content = "".join(content)
+        content = "".join(str(content))
         bs_content = BeautifulSoup(content, "lxml")
 
         #Extract IDs
@@ -164,7 +164,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
         handle = Entrez.esummary(db="assembly", id=','.join(ids))
         content = handle.readlines()
         handle.close()
-        content = "".join(content)
+        content = "".join(str(content))
         bs_content = BeautifulSoup(content, 'lxml')
 
         #print(bs_content.prettify())
