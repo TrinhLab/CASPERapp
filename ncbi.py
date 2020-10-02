@@ -15,16 +15,15 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 Entrez.email = "casper2informatics@gmail.com"
 
+
 #decompress file function - has to be global to run in sub-processes
 def decompress_file(filename):
-    print('Starting Decompress: ' + filename)
     with gzip.open(str(filename), 'rb') as f_in:
         with open(str(filename).replace('.gz',''), 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
-
     os.remove(filename)
     QtWidgets.QApplication.processEvents()
-    print('Finished Decompressing: ' + filename)
+
 
 #model for filtering columns in ncbi table
 class CustomProxyModel(QtCore.QSortFilterProxyModel):
@@ -53,6 +52,7 @@ class CustomProxyModel(QtCore.QSortFilterProxyModel):
             if regex.indexIn(text) == -1:
                 return False
         return True
+
 
 #model for the data in the ncbi search table
 class PandasModel(QtCore.QAbstractTableModel):
@@ -116,6 +116,7 @@ class PandasModel(QtCore.QAbstractTableModel):
         self._df.reset_index(inplace=True, drop=True)
         self.layoutChanged.emit()
 
+
 #ncbi
 class NCBI_search_tool(QtWidgets.QWidget):
 
@@ -130,6 +131,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.ncbi_table.verticalHeader().hide()
         self.all_rows.clicked.connect(self.select_all)
         self.ncbi_table.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.loading_window = loading_window()
 
     @QtCore.pyqtSlot()
     def query_db(self):
@@ -304,13 +306,19 @@ class NCBI_search_tool(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def download_files_wrapper(self):
+        self.loading_window.loading_bar.setValue(0)
+        self.loading_window.info_label.setText("Downloading Files")
+        self.loading_window.show()
         thread = threading.Thread(target=self.download_files)
         thread.start()
 
     def download_files(self):
+        print("Downloading Files")
         ftp = FTP('ftp.ncbi.nlm.nih.gov')
         ftp.login()
         indexes = self.ncbi_table.selectionModel().selectedRows()
+        increment = 50 / len(indexes)
+        progress_val = 0
         files = []
         for index in indexes:
             NewIndex = self.ncbi_table.model().index(index.row(), 0)
@@ -329,7 +337,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 ftp.cwd(link)
                 dir_files = ftp.nlst()
                 for file in dir_files:
-                    print(file)
                     if self.feature_table_checkbox.isChecked():
                         if file.find('feature_table.txt') != -1:
                             with open(file, 'wb') as f:
@@ -348,13 +355,31 @@ class NCBI_search_tool(QtWidgets.QWidget):
                     QtWidgets.QApplication.processEvents()
                 QtWidgets.QApplication.processEvents()
             QtWidgets.QApplication.processEvents()
+            progress_val += increment
+            self.loading_window.loading_bar.setValue(progress_val)
+
 
         print('starting decompression')
+        self.loading_window.info_label.setText("Decompressing Files")
+        self.loading_window.loading_bar.setValue(50)
+        QtWidgets.QApplication.processEvents()
         p = Pool(3)
         p.map(decompress_file, files)
+        self.loading_window.hide()
+        print('Finished')
 
     @QtCore.pyqtSlot()
     def select_all(self):
         for i in range(self.df.shape[0]):
             self.ncbi_table.selectRow(i)
 
+
+#progress bar gui
+class loading_window(QtWidgets.QWidget):
+    def __init__(self):
+        super(loading_window, self).__init__()
+        uic.loadUi("loading_data_form.ui", self)
+        self.loading_bar.setValue(0)
+        self.setWindowTitle("Downloading Files")
+        self.info_label.setText("Downloading Files")
+        self.hide()
