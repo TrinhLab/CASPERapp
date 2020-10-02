@@ -6,7 +6,7 @@
 O = OffTargetAlgorithm()"""
 
 
-import os
+import os, platform
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from functools import partial
 import GlobalSettings
@@ -124,11 +124,11 @@ class OffTarget(QtWidgets.QDialog):
         file_name = str(file_name_1) + '_' + str(file_name_2[0]) + 'cspr'
 
         if (self.AVG.isChecked()):
-            avg_output = r' True '
-            detailed_output = r' False '
+            avg_output = r'TRUE'
+            detailed_output = r' FALSE '
         else:
-            avg_output = r' False '
-            detailed_output = r' True '
+            avg_output = r'FALSE'
+            detailed_output = r' TRUE '
 
         #setup arguments for C++ .exe
         app_path = GlobalSettings.appdir.replace('\\','/')
@@ -149,6 +149,8 @@ class OffTarget(QtWidgets.QDialog):
 
         #create command string
         cmd = exe_path + data_path + cspr_path + db_path + self.output_path + CASPER_info_path + str(num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
+        if platform.system() == 'Windows':
+            cmd = cmd.replace('/', '\\')
 
         #used to know when the process is done
         def finished():

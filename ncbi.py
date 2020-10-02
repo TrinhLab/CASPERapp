@@ -10,6 +10,7 @@ from multiprocessing import Pool
 import os
 import sys
 import ssl
+import GlobalSettings
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -19,10 +20,10 @@ Entrez.email = "casper2informatics@gmail.com"
 #decompress file function - has to be global to run in sub-processes
 def decompress_file(filename):
     with gzip.open(str(filename), 'rb') as f_in:
-        with open(str(filename).replace('.gz',''), 'wb') as f_out:
+        with open(str(filename).replace('.gz', ''), 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
-    os.remove(filename)
-    QtWidgets.QApplication.processEvents()
+    os.remove(str(filename))
+    #QtWidgets.QApplication.processEvents()
 
 
 #model for filtering columns in ncbi table
@@ -330,7 +331,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
             if self.refseq_checkbox.isChecked():
                 refseq_ftp = self.refseq_ftp_dict[int(id)]
                 dirs.append(refseq_ftp)
-            QtWidgets.QApplication.processEvents()
 
             for dir in dirs:
                 link = str(dir).replace('ftp://ftp.ncbi.nlm.nih.gov', '')
@@ -352,9 +352,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
                             with open(file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(file)
-                    QtWidgets.QApplication.processEvents()
-                QtWidgets.QApplication.processEvents()
-            QtWidgets.QApplication.processEvents()
             progress_val += increment
             self.loading_window.loading_bar.setValue(progress_val)
 
@@ -362,7 +359,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
         print('starting decompression')
         self.loading_window.info_label.setText("Decompressing Files")
         self.loading_window.loading_bar.setValue(50)
-        QtWidgets.QApplication.processEvents()
         p = Pool(3)
         p.map(decompress_file, files)
         self.loading_window.hide()
