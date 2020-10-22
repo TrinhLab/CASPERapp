@@ -125,8 +125,11 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 return
 
             orgName = selectedList[0].text()
+            print(self.fna_files)
             self.cspr_file = str(self.fna_files[orgName])
-            self.db_file = self.cspr_file.strip('.cspr') + '_repeats.db'
+            print(self.cspr_file)
+            self.db_file = self.cspr_file.replace(".cspr","")
+            self.db_file = self.db_file + "_repeats.db"
             self.fill_data()
 
 
@@ -311,6 +314,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.table2.setRowCount(0)
         self.loading_window.loading_bar.setValue(10)
         index = 0
+        print(self.db_file)
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         for seeds in c.execute("select * from repeats"):
