@@ -8,7 +8,7 @@ from closingWin import closingWindow
 from Results import Results, geneViewerSettings
 from NewGenome import NewGenome
 from NewEndonuclease import NewEndonuclease
-from genomeBrowser import createGraph
+import genomeBrowser
 import gzip
 import webbrowser
 import requests
@@ -357,7 +357,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
         self.actionUpload_New_Genome.setEnabled(False)
-
+        self.genomebrowser = genomeBrowser.genomebrowser()
         #GlobalSettings.mainWindow.ncbi = ncbi.NCBI_search_tool()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
@@ -797,7 +797,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def launch_newGenomeBrowser(self):
         print("creating graph")
-        createGraph(self)
+        self.genomebrowser.createGraph(self)
 
 
     def launch_ncbi(self):
