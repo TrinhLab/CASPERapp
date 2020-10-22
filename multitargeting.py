@@ -155,6 +155,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         endo = self.endo_drop.currentText()
         short = self.shortHand[str(self.organism_drop.currentText())]
         file = short + '_' + endo + '_' + 'repeats.db'
+        self. cspr_file = short + '_' + endo + '.cspr'
         self.filename = file
 
 
@@ -202,9 +203,17 @@ class Multitargeting(QtWidgets.QMainWindow):
         conn = sqlite3.connect(self.filename)
         c = conn.cursor()
         kstats = []
-        for k in c.execute("SELECT * FROM kstats"):
-            k = list(k)
-            kstats.append(k[0])
+        with gzip.open(self.cspr_file, "r") as f:
+            for line in f:
+                buf = str(line)
+                buf = buf.strip("'b")
+                buf = buf[:len(buf) - 4]
+                if buf.find("KARYSTATS") != -1:
+                    buf = buf.replace("KARYSTATS: ", "")
+                    kstats = buf.split(',')
+                    kstats = kstats[:-1]
+                    break
+
         #seed = self.chromo_seed.currentText()
         data = c.execute("SELECT chromosome, location FROM repeats WHERE seed = ? ", (seed,)).fetchone()
         c.close()
