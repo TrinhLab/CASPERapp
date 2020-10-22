@@ -33,3 +33,8 @@ Any problems please email Brian Mendoza at bmendoz1@vols.utk.edu
 - webbrowser
 - gzip
 - sqlite3
+
+### Sample CSPR Files to use with the CASPERapp
+- At the Google Drive link below, simply download the entire folder, extract all of the files to your CASPERapp database folder on your computer. Then when you launch
+CASPERapp, provide the appropriate database folder path.
+https://drive.google.com/drive/folders/16HPXOM0k1wfNn1gnbFcMSOFQZHBghGty?usp=sharing
