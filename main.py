@@ -274,7 +274,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.link_list = list()  # the list of the downloadable links from the NCBI search
         self.organismDict = dict()  # the dictionary for the links to download. Key is the description of the organism, value is the ID that can be found in link_list
         self.organismData = list()
-        self.ncbi = ncbi.NCBI_search_tool()
+        #self.ncbi = ncbi.NCBI_search_tool()
+
+
 
 
         # --- Style Modifications --- #
@@ -314,7 +316,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.GenerateLibrary.clicked.connect(self.prep_genlib)
         self.actionExit.triggered.connect(self.close_app)
         self.visit_repo.triggered.connect(self.visit_repo_func)
-        self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
         self.refresh_button.clicked.connect(self.fill_annotation_dropdown)
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
@@ -355,6 +356,10 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.myClosingWindow = closingWindow()
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
+        self.actionUpload_New_Genome.setEnabled(False)
+
+        #GlobalSettings.mainWindow.ncbi = ncbi.NCBI_search_tool()
+        self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
 
     def endo_Changed(self):
@@ -796,6 +801,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def launch_ncbi(self):
+        self.ncbi = ncbi.NCBI_search_tool()
         self.ncbi.show()
 
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
@@ -1183,8 +1189,11 @@ class StartupWindow(QtWidgets.QDialog):
 
         self.pushButton_3.clicked.connect(self.changeDir)
         self.pushButton_2.clicked.connect(self.show_window)
-        self.pushButton.clicked.connect(self.errormsgmulti)
+        #self.pushButton.clicked.connect(self.errormsgmulti)
+
         self.show()
+        self.pushButton.setEnabled(False)
+
 
 
     ####---FUNCTIONS TO RUN EACH BUTTON---####
@@ -1284,6 +1293,7 @@ class StartupWindow(QtWidgets.QDialog):
 
             # Tanner - still setup data for MT
             GlobalSettings.MTWin.launch(self.gdirectory)
+
             self.close()
         else:
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",

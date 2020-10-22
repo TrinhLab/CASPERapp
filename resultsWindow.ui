@@ -419,7 +419,7 @@
      <x>0</x>
      <y>0</y>
      <width>1249</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -431,16 +431,6 @@
     <addaction name="actionOpen_Recent"/>
     <addaction name="actionSave"/>
     <addaction name="actionReset"/>
-   </widget>
-   <widget class="QMenu" name="menuEdit">
-    <property name="title">
-     <string>Edit</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuGenome">
-    <property name="title">
-     <string>Genome</string>
-    </property>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -470,8 +460,6 @@
     <addaction name="actionDocumentation"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuEdit"/>
-   <addaction name="menuGenome"/>
    <addaction name="menuTools"/>
    <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>

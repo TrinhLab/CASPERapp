@@ -532,7 +532,7 @@ class Multitargeting(QtWidgets.QMainWindow):
 class loading_window(QtWidgets.QWidget):
     def __init__(self):
         super(loading_window, self).__init__()
-        uic.loadUi("loading_data_form.ui", self)
+        uic.loadUi(GlobalSettings.appdir + "loading_data_form.ui", self)
         self.loading_bar.setValue(0)
         self.setWindowTitle("Loading Data")
         self.hide()

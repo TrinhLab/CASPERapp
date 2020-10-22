@@ -22,8 +22,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.goBackButton.clicked.connect(self.go_back)
         self.analyze_button.clicked.connect(self.pre_analyze)
         self.clear_Button.clicked.connect(self.clear)
-        self.ncbi_search_button.clicked.connect(self.launch_ncbi_seacher)
-        self.meta_genomic_cspr_checkbox.stateChanged.connect(self.get_data)
+        #self.ncbi_search_button.clicked.connect(self.launch_ncbi_seacher)
+        self.ncbi_search_button.hide()
+        #self.meta_genomic_cspr_checkbox.stateChanged.connect(self.get_data)
         self.parser = CSPRparser("")
         self.Endos = dict()
         self.fna_files = dict()
@@ -101,10 +102,17 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         self.loading_window = loading_window()
 
+        self.meta_genomic_cspr_checkbox.setChecked(True)
 
-    def launch_ncbi_seacher(self):
-        GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
-        GlobalSettings.mainWindow.ncbi_search_dialog.show()
+        self.meta_genomic_cspr_checkbox.toggled.connect(self.prevent_toggle)
+
+    def prevent_toggle(self):
+        self.meta_genomic_cspr_checkbox.setChecked(QtCore.Qt.Checked)
+
+
+    # def launch_ncbi_seacher(self):
+    #     GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
+    #     GlobalSettings.mainWindow.ncbi_search_dialog.show()
 
 
     # launches the chromesome selector window
@@ -191,12 +199,12 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         # show/hide the stuff that isn't needed
         if self.meta_genomic_cspr_checkbox.isChecked():
             self.endoBox.hide()
-            self.ncbi_search_button.hide()
+            #self.ncbi_search_button.hide()
             self.label_3.hide()
             self.label_2.setText('Select a Metagenomic CSPR File')
         elif not self.meta_genomic_cspr_checkbox.isChecked():
             self.endoBox.show()
-            self.ncbi_search_button.show()
+            #self.ncbi_search_button.show()
             self.label_3.show()
             self.label_2.setText('Select organism(s) and endonuclease:')
 
@@ -979,7 +987,7 @@ class fna_and_cspr_combiner(QtWidgets.QDialog):
 class loading_window(QtWidgets.QWidget):
     def __init__(self):
         super(loading_window, self).__init__()
-        uic.loadUi("loading_data_form.ui", self)
+        uic.loadUi(GlobalSettings.appdir + "loading_data_form.ui", self)
         self.loading_bar.setValue(0)
         self.setWindowTitle("Loading Data")
         self.hide()

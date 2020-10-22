@@ -151,6 +151,7 @@ class OffTarget(QtWidgets.QDialog):
         cmd = exe_path + data_path + cspr_path + db_path + self.output_path + CASPER_info_path + str(num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
         if platform.system() == 'Windows':
             cmd = cmd.replace('/', '\\')
+        print(cmd)
 
         #used to know when the process is done
         def finished():
