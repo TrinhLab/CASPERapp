@@ -10,8 +10,8 @@ If this does not work and you have a dependency issue, please use pip or anacond
 the warnings.
 4) Download the executables for OffTarget and SeqFinder for your operating system from the Google Drive links below (note: SeqFinder is not available currently):
   
-Windows: https://drive.google.com/drive/folders/1n45GwEN4glZ5M3apBDNXlPLvw3q5-7YT?usp=sharing
-Mac: https://drive.google.com/drive/folders/1EuX9KnQEW2AHQSty9fzZYfYwYbkNmdiE?usp=sharing
+Windows: https://drive.google.com/drive/folders/1n45GwEN4glZ5M3apBDNXlPLvw3q5-7YT?usp=sharing <br />
+Mac: https://drive.google.com/drive/folders/1EuX9KnQEW2AHQSty9fzZYfYwYbkNmdiE?usp=sharing <br />
 Linux: https://drive.google.com/drive/folders/1y3z-ty_C7YnpY73iw4zYdYFvvZvJNYDO?usp=sharing
 
 5) Place the OffTarget executable in the OffTargetFolder folder within the CASPERapp directory.
