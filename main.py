@@ -361,6 +361,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         #GlobalSettings.mainWindow.ncbi = ncbi.NCBI_search_tool()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
+        self.GenerateLibrary.setEnabled(False)
+        self.checkBox.setEnabled(False)
 
     def endo_Changed(self):
         self.add_orgo.clear()
@@ -438,10 +440,8 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 # get whether its Kegg or not
                 kegg_non = ''
-                if self.Annotation_Kegg.isChecked():
-                    kegg_non = 'kegg'
-                else:
-                    kegg_non = 'non_kegg'
+
+                kegg_non = 'non_kegg'
 
                 # launch generateLib
                 self.progressBar.setValue(100)
@@ -600,6 +600,13 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def run_results(self, inputtype, inputstring, openAnnoWindow=True):
+        if(str(self.annotation_files.currentText()).find('.gbff') == -1):
+            QtWidgets.QMessageBox.information(self, "Genomebrowser Error", "Filetype must be GBFF.",
+                                              QtWidgets.QMessageBox.Ok)
+            self.progressBar.setValue(0)
+            return
+
+
         progvalue = 15
         self.searches = {}
         self.gene_list = {}
@@ -1028,7 +1035,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     if self.orgChoice.findText(species) == -1:
                         self.orgChoice.addItem(species)
 
-        self.orgChoice.addItem("Custom Input Sequences")
+        #self.orgChoice.addItem("Custom Input Sequences")
         # auto fill the kegg search bar with the first choice in orgChoice
         if found == False:
             return False

@@ -104,6 +104,13 @@ class Results(QtWidgets.QMainWindow):
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
 
+
+        #disable unused buttons
+        self.menuFile.setEnabled(False)
+        self.menuWindow.setEnabled(False)
+        self.actionScore_Settings.setEnabled(False)
+        self.actionDesign_Repair_Oligos.setEnabled(False)
+
     # this function opens the export_to_csv window
     # first it makes sure that the user actually has some highlighted targets that they want exported
     def open_export_to_csv(self):

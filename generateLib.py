@@ -71,10 +71,7 @@ class genLibrary(QtWidgets.QDialog):
         self.output_path.setText(GlobalSettings.CSPR_DB + "/")
 
         # depending on the type of file, build the dictionary accordingly
-        if self.kegg_nonKegg == 'kegg':
-            self.build_dict_kegg_version()
-        else:
-            self.build_dict_non_kegg()
+        self.build_dict_non_kegg()
 
         #print(self.gen_lib_dict)
         # get the data from the cspr file
@@ -314,7 +311,6 @@ class genLibrary(QtWidgets.QDialog):
 
         self.cspr_file = ''
         self.anno_data = dict()
-        self.kegg_nonKegg = ''
 
         self.filename_input.setText('')
         self.output_path.setText('')
@@ -353,16 +349,6 @@ class genLibrary(QtWidgets.QDialog):
 
         # make sure to append the '/' to the folder path
         self.output_path.setText(mydir + "/")
-
-
-    # this function builds the dictionary that is used in the generate function
-    # this is the version that builds it from the KEGG data
-    # builds it exactly as Brian built it in the files given
-    def build_dict_kegg_version(self):
-        for search in self.anno_data:
-            for gene in self.anno_data[search]:
-                for i in range(len(self.anno_data[search][gene])):
-                    self.gen_lib_dict[gene] = [self.anno_data[search][gene][i][0], self.anno_data[search][gene][i][2], self.anno_data[search][gene][i][3], self.anno_data[search][gene][i][1]]
 
 
     # this function builds the dictionary that is used in the generate function

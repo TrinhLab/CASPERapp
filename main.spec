@@ -1,13 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
-
+import sys
+sys.setrecursionlimit(5000)
 block_cipher = None
 
 
 a = Analysis(['main.py'],
              pathex=['C:/Users/Tfry/Desktop/CASPERapp'],
-             binaries=[
-				('Casper_Seq_Finder_Windows.exe', '.')
-			 ],
              datas=[
 				('OffTargetFolder', 'OffTargetFolder'),
 				('CASPERinfo', '.'),
@@ -20,12 +18,12 @@ a = Analysis(['main.py'],
 				('CASPER_main.ui', '.'),
 				('closingWindow.ui', '.'),
 				('co_targeting.ui', '.'),
-				('cspr_chromesome_selection.ui', '.'),
+				('cspr_chromosome_selection.ui', '.'),
 				('export_to_csv_window.ui', '.'),
 				('geneViewerSettings.ui', '.'),
 				('library_prompt.ui', '.'),
 				('multitargetingwindow.ui', '.'),
-				('NCBI_File_Search.ui', '.'),
+				('ncbi.ui', '.'),
 				('NewGenome.ui', '.'),
 				('OffTargetAnalysis.ui', '.'),
 				('OffTargetProgress.ui', '.'),
@@ -36,7 +34,9 @@ a = Analysis(['main.py'],
 				('name_form.ui', '.'),
 				('name_form2.ui', '.'),
 				('newendonuclease.ui', '.'),
-				('CASPER-logo.jpg', '.')
+				('CASPER-logo.jpg', '.'),
+				('loading_data_form.ui', '.'),
+				('genomeBrowserTemplate.html', '.')
 			 ],
              hiddenimports=[
 				'repeats_vs_seeds_line', 
@@ -68,7 +68,7 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=True)
+          console=False)
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
