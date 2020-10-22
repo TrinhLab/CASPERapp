@@ -16,16 +16,16 @@ def splitStringNCBI(longString):
 		return (longString).split(':')[2]
 	except:
 		print(longString.split(':'))
-		print("Please search for a genome")
+		#print("Please search for a genome")
 
 
 def splitStringLocal(longString):
 	try:
-		print(longString)
-		print(longString.split('/'))
+		#print(longString)
+		#print(longString.split('/'))
 		return (longString.split('/').pop()).split('.')[0]
 	except:
-		print(longString.split('/').pop()).split('.')[0]
+		#print(longString.split('/').pop()).split('.')[0]
 		print("Please search for a genome")
 
 
@@ -105,7 +105,7 @@ def createGraph(self):
 	selectedGenome = self.annotation_files.currentText()
 
 	#returns gci String value that can be used to retrieve the file
-	print("selected Genome is ", selectedGenome)
+	#print("selected Genome is ", selectedGenome)
 	gciVariable = ""
 
 	# if(localFileBoolean.isChecked() == True):
@@ -115,7 +115,7 @@ def createGraph(self):
 	# 	print("NCBI")
 	# 	gciVariable = splitStringNCBI(selectedGenome)
 
-	print("gci variable is ", gciVariable)
+	#print("gci variable is ", gciVariable)
 
 	if(gciVariable == None):
 		print("Please select NCBI Genome")
@@ -124,20 +124,26 @@ def createGraph(self):
 	directory = GlobalSettings.CSPR_DB
 	print('*****')
 	print(directory)
-	onlyfiles = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
-	for file in onlyfiles:
-		print("One file is ",file)
-		if gciVariable in file and ".fna" not in file:
-			fileToSearch = file
-			print("searching file:", fileToSearch)
-			break
+	# onlyfiles = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+	# for file in onlyfiles:
+	# 	print("One file is ",file)
+	# 	if gciVariable in file and ".fna" not in file:
+	# 		fileToSearch = file
+	# 		print("searching file:", fileToSearch)
+	# 		break
+
+	fileToSearch = GlobalSettings.mainWindow.annotation_files.currentText()
+	print(fileToSearch)
+	if(str(fileToSearch).find(".gbff") == -1):
+		return
+
 
 	try:
-		print("file to search is ", fileToSearch)
+		#print("file to search is ", fileToSearch)
 		genomeList = ncbiAPI(fileToSearch)
 
 	except:
-		print("No gbff file found")
+		#print("No gbff file found")
 		QtWidgets.QMessageBox.question(self, "GBFF_FileNotFound", "GBFF file is not in selected directory", QtWidgets.QMessageBox.Ok)
 		return
 

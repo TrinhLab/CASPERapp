@@ -198,11 +198,17 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     #fill in chromo bar visualization
     def fill_Chromo_Text(self, seed):
+        endo = self.endo_drop.currentText()
+        short = self.shortHand[str(self.organism_drop.currentText())]
+        file = short + '_' + endo + '_' + 'repeats.db'
+        self.cspr_file = short + '_' + endo + '.cspr'
+        self.filename = file
         chromo_pos = {}
         # get kstats
         conn = sqlite3.connect(self.filename)
         c = conn.cursor()
         kstats = []
+        print(self.cspr_file)
         with gzip.open(self.cspr_file, "r") as f:
             for line in f:
                 buf = str(line)
@@ -214,7 +220,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                     kstats = kstats[:-1]
                     break
 
-        #seed = self.chromo_seed.currentText()
+        seed = self.chromo_seed.currentText()
         data = c.execute("SELECT chromosome, location FROM repeats WHERE seed = ? ", (seed,)).fetchone()
         c.close()
         if data != None:
