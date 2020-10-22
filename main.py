@@ -1150,13 +1150,20 @@ class CMainWindow(QtWidgets.QMainWindow):
     #       3. Results
     #       4. Multitargetting
     def closeFunction(self):
-        self.ncbi.close()
+        try:
+            self.ncbi.close()
+        except:
+            print("no ncbi window to close")
         self.myClosingWindow.get_files()
         self.myClosingWindow.show()
 
 
     def close_app(self):
-        self.ncbi.close()
+        try:
+            self.ncbi.close()
+        except:
+            print("no ncbi window to close")
+
         self.closeFunction()
         self.close()
 
