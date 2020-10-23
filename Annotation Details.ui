@@ -80,7 +80,7 @@
          <string notr="true">font: 12pt &quot;Sans Serif&quot;;</string>
         </property>
         <property name="text">
-         <string>V 1.1 CRISPR Associated Software for Pathway Engineering and Research</string>
+         <string>V 2.0(Beta) CRISPR Associated Software for Pathway Engineering and Research</string>
         </property>
        </widget>
       </item>
@@ -156,7 +156,7 @@
      <x>0</x>
      <y>0</y>
      <width>1030</width>
-     <height>23</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
