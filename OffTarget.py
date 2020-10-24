@@ -152,7 +152,6 @@ class OffTarget(QtWidgets.QDialog):
         if platform.system() == 'Windows':
             cmd = cmd.replace('/', '\\')
         print(cmd)
-
         #used to know when the process is done
         def finished():
             self.running = False
@@ -168,18 +167,30 @@ class OffTarget(QtWidgets.QDialog):
 
             line = line[2:]
             line = line[:len(line)-1]
-            for lines in filter(None, line.split(r'\r\n')):
-                #print(line)
-                if(lines.find("Running Off Target Algorithm for") != -1 and self.perc == False):
-                    self.perc = True
-                if(self.perc == True and self.bool_temp == False and lines.find("Running Off Target Algorithm for") == -1):
-                    lines = lines[32:]
-                    lines = lines.replace("%","")
-                    if(float(lines) <= 99.5):
-                        num = float(lines)
-                        self.progressBar.setValue(num)
-                    else:
-                        self.bool_temp = True
+            if platform.system() == 'Windows':
+                for lines in filter(None, line.split(r'\r\n')):
+                    if(lines.find("Running Off Target Algorithm for") != -1 and self.perc == False):
+                        self.perc = True
+                    if(self.perc == True and self.bool_temp == False and lines.find("Running Off Target Algorithm for") == -1):
+                        lines = lines[32:]
+                        lines = lines.replace("%","")
+                        if(float(lines) <= 99.5):
+                            num = float(lines)
+                            self.progressBar.setValue(num)
+                        else:
+                            self.bool_temp = True
+            else:
+                for lines in filter(None, line.split(r'\n')):
+                    if(lines.find("Running Off Target Algorithm for") != -1 and self.perc == False):
+                        self.perc = True
+                    if(self.perc == True and self.bool_temp == False and lines.find("Running Off Target Algorithm for") == -1):
+                        lines = lines[32:]
+                        lines = lines.replace("%","")
+                        if(float(lines) <= 99.5):
+                            num = float(lines)
+                            self.progressBar.setValue(num)
+                        else:
+                            self.bool_temp = True
 
 
         #connect QProcess to the dataReady func, and finished func, reset progressBar only if the outputfile name
