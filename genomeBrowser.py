@@ -6,6 +6,7 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QDir, QUrl
 from Bio import Entrez, SeqIO
 from bioservices.kegg import KEGG
+import platform
 
 class genomebrowser():
 	def __init__(self, parent=None):
@@ -32,6 +33,10 @@ class genomebrowser():
 	def ncbiAPI(self, filename):
 
 		gb_file = filename
+		gb_file = GlobalSettings.filedir + "/" + gb_file
+		if platform.system() == 'Windows':
+			gb_file = str(gb_file).replace("/","\\")
+		print(gb_file)
 		genomeList = []
 		for gb_record in SeqIO.parse(open(gb_file, "r"), "genbank"):
 			genomeList.append(gb_record.id)
