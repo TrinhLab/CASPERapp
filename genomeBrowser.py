@@ -82,8 +82,7 @@ class genomebrowser():
 
 		# Find file path for template
 		# seek to beginning and truncate
-		genomeBrowserTemplateFilePath = os.path.abspath(os.path.join(os.path.dirname(__file__), "genomeBrowserTemplate.html"))
-
+		genomeBrowserTemplateFilePath = GlobalSettings.appdir + "genomeBrowserTemplate.html"
 		raw = open(genomeBrowserTemplateFilePath, "r+")
 		raw.seek(0)
 		raw.truncate()
@@ -155,7 +154,7 @@ class genomebrowser():
 
 		self.createHtml(genomeList)
 		self.browser = QWebEngineView()
-		file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "genomeBrowserTemplate.html"))
+		file_path = GlobalSettings.appdir + "genomeBrowserTemplate.html"
 		local_url = QUrl.fromLocalFile(file_path)
 		self.browser.load(local_url)
 		self.browser.show()
