@@ -13,6 +13,7 @@ import GlobalSettings
 import os
 from APIs import Kegg
 import OffTarget
+import platform
 # =========================================================================================
 # CLASS NAME: Results
 # Inputs: Takes information from the main application window and displays the gRNA results
@@ -783,7 +784,10 @@ class Results(QtWidgets.QMainWindow):
     #linked to when the user pushes tools->off target analysis
     def Off_Target_Analysis(self):
         #build temp file for offtarget to read from
-        f = open(GlobalSettings.appdir + 'OffTargetFolder' + '\\temp.txt','w+')
+        if platform.system() == 'Windows':
+            f = open(GlobalSettings.appdir + 'OffTargetFolder' + '\\temp.txt','w+')
+        else:
+            f = open(GlobalSettings.appdir + 'OffTargetFolder' + '/temp.txt', 'w+')
         self.OTA.clear()
         for row in range(self.targetTable.rowCount()):
             if(self.targetTable.cellWidget(row,6).isChecked()):
