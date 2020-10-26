@@ -11,7 +11,7 @@ import os
 import sys
 import ssl
 import GlobalSettings
-
+import platform
 ssl._create_default_https_context = ssl._create_unverified_context
 
 Entrez.email = "casper2informatics@gmail.com"
@@ -337,21 +337,25 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 ftp.cwd(link)
                 dir_files = ftp.nlst()
                 for file in dir_files:
+                    output_file = GlobalSettings.CSPR_DB + "/" + file
+                    #print(output_file)
+                    if platform.system() == "Windows":
+                        output_file = output_file.replace("/", "\\")
                     if self.feature_table_checkbox.isChecked():
                         if file.find('feature_table.txt') != -1:
-                            with open(file, 'wb') as f:
+                            with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
-                            files.append(file)
+                            files.append(output_file)
                     if self.gbff_checkbox.isChecked():
                         if file.find('genomic.gbff') != -1:
-                            with open(file, 'wb') as f:
+                            with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
-                            files.append(file)
+                            files.append(output_file)
                     if self.gff_checkbox.isChecked():
                         if file.find('genomic.gff') != -1:
-                            with open(file, 'wb') as f:
+                            with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
-                            files.append(file)
+                            files.append(output_file)
             progress_val += increment
             #self.loading_window.loading_bar.setValue(progress_val)
 
