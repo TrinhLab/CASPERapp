@@ -19,6 +19,7 @@ Entrez.email = "casper2informatics@gmail.com"
 
 #decompress file function - has to be global to run in sub-processes
 def decompress_file(filename):
+    print(filename)
     with gzip.open(str(filename), 'rb') as f_in:
         with open(str(filename).replace('.gz', ''), 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
@@ -363,8 +364,10 @@ class NCBI_search_tool(QtWidgets.QWidget):
         print('starting decompression')
         #self.loading_window.info_label.setText("Decompressing Files")
         #self.loading_window.loading_bar.setValue(50)
-        p = Pool(3)
-        p.map(decompress_file, files)
+        #p = Pool(3)
+        #p.map(decompress_file, files)
+        for file in files:
+            decompress_file(file)
         self.loading_window.hide()
         print('Finished')
 
