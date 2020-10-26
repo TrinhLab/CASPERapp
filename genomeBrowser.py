@@ -8,7 +8,7 @@ from Bio import Entrez, SeqIO
 from bioservices.kegg import KEGG
 import platform
 
-class genomebrowser():
+class genomebrowser(QtWidgets.QWidget):
 	def __init__(self, parent=None):
 		self.loadingWindow = loading_window()
 
