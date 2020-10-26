@@ -133,7 +133,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.ncbi_table.verticalHeader().hide()
         self.all_rows.clicked.connect(self.select_all)
         self.ncbi_table.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.loading_window = loading_window()
+        self.progress_browser.ensureCursorVisible()
 
     @QtCore.pyqtSlot()
     def query_db(self):
@@ -310,12 +310,14 @@ class NCBI_search_tool(QtWidgets.QWidget):
     def download_files_wrapper(self):
         #self.loading_window.loading_bar.setValue(0)
         #self.loading_window.info_label.setText("Downloading Files")
-        self.loading_window.show()
-        thread = threading.Thread(target=self.download_files)
-        thread.start()
+        #thread = threading.Thread(target=self.download_files)
+        #thread.start()
+        self.download_files()
 
     def download_files(self):
         print("Downloading Files")
+        self.progress_browser.append("Downloading Files")
+        QtWidgets.QApplication.processEvents()
         ftp = FTP('ftp.ncbi.nlm.nih.gov')
         ftp.login()
         indexes = self.ncbi_table.selectionModel().selectedRows()
@@ -362,28 +364,20 @@ class NCBI_search_tool(QtWidgets.QWidget):
 
 
         print('starting decompression')
+        self.progress_browser.append("Decompressing Files")
+        QtWidgets.QApplication.processEvents()
         #self.loading_window.info_label.setText("Decompressing Files")
         #self.loading_window.loading_bar.setValue(50)
         #p = Pool(3)
         #p.map(decompress_file, files)
         for file in files:
             decompress_file(file)
-        self.loading_window.hide()
         print('Finished')
+        self.progress_browser.append("Finished")
+        QtWidgets.QApplication.processEvents()
 
     @QtCore.pyqtSlot()
     def select_all(self):
         for i in range(self.df.shape[0]):
             self.ncbi_table.selectRow(i)
 
-
-#progress bar gui
-class loading_window(QtWidgets.QWidget):
-    def __init__(self):
-        super(loading_window, self).__init__()
-        uic.loadUi(GlobalSettings.appdir + "loading_data_form.ui", self)
-        #self.loading_bar.setValue(0)
-        self.loading_bar.hide()
-        self.setWindowTitle("Downloading/Decompressing Files")
-        self.info_label.setText("Downloading/Decompressing Files")
-        self.hide()
