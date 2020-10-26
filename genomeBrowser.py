@@ -8,6 +8,9 @@ from Bio import Entrez, SeqIO
 from bioservices.kegg import KEGG
 import platform
 
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 class genomebrowser(QtWidgets.QWidget):
 	def __init__(self, parent=None):
 		self.loadingWindow = loading_window()
