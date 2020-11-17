@@ -361,7 +361,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         #GlobalSettings.mainWindow.ncbi = ncbi.NCBI_search_tool()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
-        self.GenerateLibrary.setEnabled(False)
         self.checkBox.setEnabled(False)
 
     def endo_Changed(self):
@@ -437,9 +436,6 @@ class CMainWindow(QtWidgets.QMainWindow):
                 # get the cspr file name
                 fileName = self.shortHand[self.orgChoice.currentText()]
                 fileName = GlobalSettings.CSPR_DB + '/' + fileName + '_' + self.endoChoice.currentText() + '.cspr'
-
-                # get whether its Kegg or not
-                kegg_non = ''
 
                 kegg_non = 'non_kegg'
 
@@ -1313,9 +1309,7 @@ class StartupWindow(QtWidgets.QDialog):
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
                                            QtWidgets.QMessageBox.Ok)
 
-
-
-if __name__ == '__main__':
+def main():
     if hasattr(sys, 'frozen'):
         GlobalSettings.appdir = sys.executable
         if platform.system() == 'Windows':
@@ -1338,3 +1332,11 @@ if __name__ == '__main__':
     GlobalSettings.MTWin = multitargeting.Multitargeting()
     GlobalSettings.pop_Analysis = populationAnalysis.Pop_Analysis()
     sys.exit(app.exec_())
+
+if __name__ == '__main__':
+
+    try:
+        main()
+    except Exception as e:
+        with open("debug.txt", "w") as f:
+            f.write(e)

@@ -5,6 +5,7 @@ from Algorithms import SeqTranslate
 from functools import partial
 from CSPRparser import CSPRparser
 import re
+import platform
 
 ########################################################################################################################
 # Class Name: genLibrary
@@ -154,21 +155,35 @@ class genLibrary(QtWidgets.QDialog):
 
         # as off-targeting outputs things, update the off-target progress bar
         def progUpdate(p):
-            line = str(p.readAllStandardOutput())
+            line = str(self.process.readAllStandardOutput())
             line = line[2:]
             line = line[:len(line) - 1]
-            for lines in filter(None, line.split(r'\r\n')):
-                if (lines.find("Running Off Target Algorithm for") != -1 and self.perc == False):
-                    self.perc = True
-                if (self.perc == True and self.bool_temp == False and lines.find(
-                        "Running Off Target Algorithm for") == -1):
-                    lines = lines[32:]
-                    lines = lines.replace("%", "")
-                    if (float(lines) <= 99.5):
-                        num = float(lines)
-                        self.progressBar.setValue(num)
-                    else:
-                        self.bool_temp = True
+            if platform.system() == 'Windows':
+                for lines in filter(None, line.split(r'\r\n')):
+                    if (lines.find("Running Off Target Algorithm for") != -1 and self.perc == False):
+                        self.perc = True
+                    if (self.perc == True and self.bool_temp == False and lines.find(
+                            "Running Off Target Algorithm for") == -1):
+                        lines = lines[32:]
+                        lines = lines.replace("%", "")
+                        if (float(lines) <= 99.5):
+                            num = float(lines)
+                            self.progressBar.setValue(num)
+                        else:
+                            self.bool_temp = True
+            else:
+                for lines in filter(None, line.split(r'\n')):
+                    if (lines.find("Running Off Target Algorithm for") != -1 and self.perc == False):
+                        self.perc = True
+                    if (self.perc == True and self.bool_temp == False and lines.find(
+                            "Running Off Target Algorithm for") == -1):
+                        lines = lines[32:]
+                        lines = lines.replace("%", "")
+                        if (float(lines) <= 99.5):
+                            num = float(lines)
+                            self.progressBar.setValue(num)
+                        else:
+                            self.bool_temp = True
 
         app_path = GlobalSettings.appdir.replace('\\','/')
         exe_path = app_path + 'OffTargetFolder/OT'
@@ -193,7 +208,10 @@ class genLibrary(QtWidgets.QDialog):
         cmd = exe_path + data_path + cspr_path + db_path + output_path + CASPER_info_path + str(
             num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
 
+        if platform.system() == 'Windows':
+            cmd = cmd.replace('/', '\\')
         self.process.readyReadStandardOutput.connect(partial(progUpdate, self.process))
+        self.process.readyReadStandardError.connect(partial(progUpdate, self.process))
         self.progressBar.setValue(0)
         QtCore.QTimer.singleShot(100, partial(self.process.start, cmd))
         self.process.finished.connect(finished)
