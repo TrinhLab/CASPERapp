@@ -1180,8 +1180,6 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
 class StartupWindow(QtWidgets.QDialog):
-
-
     def __init__(self):
         super(StartupWindow, self).__init__()
         uic.loadUi(GlobalSettings.appdir + 'startupCASPER.ui', self)
@@ -1205,21 +1203,31 @@ class StartupWindow(QtWidgets.QDialog):
         self.pushButton.setEnabled(False)
 
 
-
     ####---FUNCTIONS TO RUN EACH BUTTON---####
     def changeDir(self):
         filed = QtWidgets.QFileDialog()
         mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a Folder",
                                                            self.gdirectory, QtWidgets.QFileDialog.ShowDirsOnly)
+
+
         if (os.path.isdir(mydir) == False):
+            QtWidgets.QMessageBox.critical(self, "Invalid Directory!", "Invalid Directory!", QtWidgets.QMessageBox.Ok)
+            return
+
+        found = False
+        for file in os.listdir(mydir):
+            if(file.find(".cspr") != -1):
+                found = True
+                break
+
+        if(found == False):
+            QtWidgets.QMessageBox.critical(self, "Directory is invalid!", "You must select a directory with CSPR Files!",
+                                           QtWidgets.QMessageBox.Ok)
             return
 
         self.lineEdit.setText(mydir)
-        cdir = self.lineEdit.text()
         self.gdirectory = mydir
-        GlobalSettings.CSPR_DB = cdir
-        # print(mydir)
-        # print(cdir)
+        GlobalSettings.CSPR_DB = mydir
 
 
     def errormsgmulti(self):
@@ -1308,6 +1316,7 @@ class StartupWindow(QtWidgets.QDialog):
         else:
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
                                            QtWidgets.QMessageBox.Ok)
+
 
 def main():
     if hasattr(sys, 'frozen'):
