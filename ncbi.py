@@ -133,7 +133,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.ncbi_table.verticalHeader().hide()
         self.all_rows.clicked.connect(self.select_all)
         self.ncbi_table.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.progress_browser.ensureCursorVisible()
+        self.progressBar.setValue(0)
 
     @QtCore.pyqtSlot()
     def query_db(self):
@@ -308,15 +308,14 @@ class NCBI_search_tool(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def download_files_wrapper(self):
-        #self.loading_window.loading_bar.setValue(0)
-        #self.loading_window.info_label.setText("Downloading Files")
-        #thread = threading.Thread(target=self.download_files)
-        #thread.start()
+        # thread = threading.Thread(target=self.download_files)
+        # thread.start()
+        self.progressBar.setValue(0)
         self.download_files()
 
     def download_files(self):
         print("Downloading Files")
-        self.progress_browser.append("Downloading Files")
+        #self.progress_browser.append("Downloading Files")
         QtWidgets.QApplication.processEvents()
         ftp = FTP('ftp.ncbi.nlm.nih.gov')
         ftp.login()
@@ -341,39 +340,43 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 dir_files = ftp.nlst()
                 for file in dir_files:
                     output_file = GlobalSettings.CSPR_DB + "/" + file
-                    #print(output_file)
                     if platform.system() == "Windows":
                         output_file = output_file.replace("/", "\\")
                     if self.feature_table_checkbox.isChecked():
                         if file.find('feature_table.txt') != -1:
+                            #self.progress_browser.append("Downloading File: " + str(file))
                             with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(output_file)
                     if self.gbff_checkbox.isChecked():
                         if file.find('genomic.gbff') != -1:
+                            #self.progress_browser.append("Downloading File: " + str(file))
                             with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(output_file)
                     if self.gff_checkbox.isChecked():
                         if file.find('genomic.gff') != -1:
+                            #self.progress_browser.append("Downloading File: " + str(file))
                             with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(output_file)
             progress_val += increment
-            #self.loading_window.loading_bar.setValue(progress_val)
+            self.progressBar.setValue(progress_val)
 
 
         print('starting decompression')
-        self.progress_browser.append("Decompressing Files")
+        #self.progress_browser.append("Decompressing Files")
         QtWidgets.QApplication.processEvents()
-        #self.loading_window.info_label.setText("Decompressing Files")
-        #self.loading_window.loading_bar.setValue(50)
         #p = Pool(3)
         #p.map(decompress_file, files)
         for file in files:
+            #self.progress_browser.append("Decompressing File: " + str(file))
             decompress_file(file)
+            progress_val += increment
+            self.progressBar.setValue(progress_val)
         print('Finished')
-        self.progress_browser.append("Finished")
+        self.progressBar.setValue(100)
+        #self.progress_browser.append("Finished")
         QtWidgets.QApplication.processEvents()
 
     @QtCore.pyqtSlot()
