@@ -1212,6 +1212,9 @@ class StartupWindow(QtWidgets.QDialog):
 
         if (os.path.isdir(mydir) == False):
             QtWidgets.QMessageBox.critical(self, "Invalid Directory!", "Invalid Directory!", QtWidgets.QMessageBox.Ok)
+            self.lineEdit.setText("")
+            self.gdirectory = ""
+            GlobalSettings.CSPR_DB = ""
             return
 
         found = False
@@ -1223,6 +1226,9 @@ class StartupWindow(QtWidgets.QDialog):
         if(found == False):
             QtWidgets.QMessageBox.critical(self, "Directory is invalid!", "You must select a directory with CSPR Files!",
                                            QtWidgets.QMessageBox.Ok)
+            self.lineEdit.setText("")
+            self.gdirectory = ""
+            GlobalSettings.CSPR_DB = ""
             return
 
         self.lineEdit.setText(mydir)
