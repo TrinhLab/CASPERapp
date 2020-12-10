@@ -16,17 +16,6 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 Entrez.email = "casper2informatics@gmail.com"
 
-
-#decompress file function - has to be global to run in sub-processes
-def decompress_file(filename):
-    print(filename)
-    with gzip.open(str(filename), 'rb') as f_in:
-        with open(str(filename).replace('.gz', ''), 'wb') as f_out:
-            shutil.copyfileobj(f_in, f_out)
-    os.remove(str(filename))
-    #QtWidgets.QApplication.processEvents()
-
-
 #model for filtering columns in ncbi table
 class CustomProxyModel(QtCore.QSortFilterProxyModel):
 
@@ -134,6 +123,9 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.all_rows.clicked.connect(self.select_all)
         self.ncbi_table.setFocusPolicy(QtCore.Qt.NoFocus)
         self.progressBar.setValue(0)
+        self.rename_window = rename_window()
+        self.rename_window.submit_button.clicked.connect(self.submit_rename)
+        self.df = pd.DataFrame()
 
     @QtCore.pyqtSlot()
     def query_db(self):
@@ -308,18 +300,23 @@ class NCBI_search_tool(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def download_files_wrapper(self):
-        # thread = threading.Thread(target=self.download_files)
-        # thread.start()
         self.progressBar.setValue(0)
-        self.download_files()
+        if self.df.shape[0] != 0:
+            self.download_files()
 
     def download_files(self):
-        print("Downloading Files")
-        #self.progress_browser.append("Downloading Files")
+        indexes = self.ncbi_table.selectionModel().selectedRows()
+        if len(indexes) == 0:
+            return
+        if self.feature_table_checkbox.isChecked() == False and self.gbff_checkbox.isChecked() == False and self.gff_checkbox.isChecked() == False:
+            return
+        if self.genbank_checkbox.isChecked() == False and self.refseq_checkbox.isChecked() == False:
+            return
+
+        self.progressBar.setValue(5)
         QtWidgets.QApplication.processEvents()
         ftp = FTP('ftp.ncbi.nlm.nih.gov')
         ftp.login()
-        indexes = self.ncbi_table.selectionModel().selectedRows()
         increment = 50 / len(indexes)
         progress_val = 0
         files = []
@@ -344,43 +341,93 @@ class NCBI_search_tool(QtWidgets.QWidget):
                         output_file = output_file.replace("/", "\\")
                     if self.feature_table_checkbox.isChecked():
                         if file.find('feature_table.txt') != -1:
-                            #self.progress_browser.append("Downloading File: " + str(file))
                             with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(output_file)
                     if self.gbff_checkbox.isChecked():
                         if file.find('genomic.gbff') != -1:
-                            #self.progress_browser.append("Downloading File: " + str(file))
                             with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(output_file)
                     if self.gff_checkbox.isChecked():
                         if file.find('genomic.gff') != -1:
-                            #self.progress_browser.append("Downloading File: " + str(file))
                             with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(output_file)
             progress_val += increment
             self.progressBar.setValue(progress_val)
 
-
-        print('starting decompression')
-        #self.progress_browser.append("Decompressing Files")
         QtWidgets.QApplication.processEvents()
-        #p = Pool(3)
-        #p.map(decompress_file, files)
         for file in files:
-            #self.progress_browser.append("Decompressing File: " + str(file))
-            decompress_file(file)
+            self.decompress_file(file)
             progress_val += increment
             self.progressBar.setValue(progress_val)
-        print('Finished')
+
         self.progressBar.setValue(100)
-        #self.progress_browser.append("Finished")
         QtWidgets.QApplication.processEvents()
+
+        for i in range(len(files)):
+            files[i] = files[i].replace('.gz', '')
+            files[i] = files[i][files[i].rfind("\\")+1:]
+
+        self.rename_files(files)
 
     @QtCore.pyqtSlot()
     def select_all(self):
         for i in range(self.df.shape[0]):
             self.ncbi_table.selectRow(i)
+
+    # decompress file function
+    def decompress_file(self, filename):
+        with gzip.open(str(filename), 'rb') as f_in:
+            with open(str(filename).replace('.gz', ''), 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        os.remove(str(filename))
+
+    def rename_files(self, files):
+        ans = QtWidgets.QMessageBox.question(self, "Rename Files", "Would you like to rename the downloaded files?", QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+        if ans == QtWidgets.QMessageBox.Yes:
+            self.rename_window.rename_table.setRowCount(len(files))
+            cnt = 0
+            for file in files:
+                self.rename_window.rename_table.setItem(cnt, 0, QtWidgets.QTableWidgetItem(file))
+                self.rename_window.rename_table.setCellWidget(cnt, 1, QtWidgets.QLineEdit())
+                cnt += 1
+
+            header = self.rename_window.rename_table.horizontalHeader()
+            #header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+            self.rename_window.rename_table.resizeColumnsToContents()
+            self.rename_window.rename_table.setColumnWidth(1, self.rename_window.rename_table.columnWidth(0))
+            self.rename_window.resize(self.rename_window.sizeHint())
+            self.rename_window.show()
+
+    def submit_rename(self):
+        #loop through columns and rename the files
+        for row in range(self.rename_window.rename_table.rowCount()):
+            orig = str(self.rename_window.rename_table.item(row, 0).text()).replace(" ", "")
+            new = str(self.rename_window.rename_table.cellWidget(row, 1).text()).replace(" ", "")
+            if new != "":
+                if new.find(".gbff") == -1 and new.find(".gff") == -1 and new.find(".txt") == -1:
+                    if orig.find(".gbff") != -1:
+                        new = new + ".gbff"
+                    elif orig.find(".gff") != -1:
+                        new = new + ".gff"
+                    elif orig.find(".txt") != -1:
+                        new = new + ".txt"
+
+                os.rename(GlobalSettings.CSPR_DB + "/" + orig, GlobalSettings.CSPR_DB + "/" + new)
+
+        self.rename_window.rename_table.setRowCount(0)
+        self.rename_window.close()
+
+
+class rename_window(QtWidgets.QWidget):
+    def __init__(self):
+        super(rename_window, self).__init__()
+        uic.loadUi(GlobalSettings.appdir + "rename_window.ui", self)
+        self.setWindowTitle("Rename Files")
+        self.rename_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.rename_table.setColumnCount(2)
+        self.rename_table.setHorizontalHeaderLabels(['Original Filename', 'New Filename'])
+        self.hide()
 
