@@ -368,7 +368,10 @@ class NCBI_search_tool(QtWidgets.QWidget):
 
         for i in range(len(files)):
             files[i] = files[i].replace('.gz', '')
-            files[i] = files[i][files[i].rfind("\\")+1:]
+            if platform.system() == 'Windows':
+                files[i] = files[i][files[i].rfind("\\")+1:]
+            else:
+                files[i] = files[i][files[i].rfind("/") + 1:]
 
         self.rename_files(files)
 
@@ -406,6 +409,8 @@ class NCBI_search_tool(QtWidgets.QWidget):
         for row in range(self.rename_window.rename_table.rowCount()):
             orig = str(self.rename_window.rename_table.item(row, 0).text()).replace(" ", "")
             new = str(self.rename_window.rename_table.cellWidget(row, 1).text()).replace(" ", "")
+            print(orig)
+            print(new)
             if new != "":
                 if new.find(".gbff") == -1 and new.find(".gff") == -1 and new.find(".txt") == -1:
                     if orig.find(".gbff") != -1:
