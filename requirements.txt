@@ -51,7 +51,7 @@ ptyprocess==0.6.0
 py2app==0.19
 pyasn1==0.4.6
 pyfaidx==0.5.5.2
-PyInstaller==3.5
+PyInstaller==3.6
 pymongo==3.8.0
 pyparsing==2.4.0
 PyQt5==5.14.2
