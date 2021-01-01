@@ -1,11 +1,11 @@
 import sys, os
 from PyQt5 import QtWidgets, uic, QtGui, QtCore, Qt
-from bioservices import KEGG
 import GlobalSettings
 from functools import partial
 from Algorithms import SeqTranslate
 from PyQt5.QtWidgets import *
 import webbrowser
+import platform
 
 def iter_except(function, exception):
     """Works like builtin 2-argument `iter()`, but stops on `exception`."""
@@ -16,12 +16,13 @@ def iter_except(function, exception):
         return
 
 class NewGenome(QtWidgets.QMainWindow):
+
+
     def __init__(self, info_path):
         super(NewGenome, self).__init__()
         uic.loadUi(GlobalSettings.appdir + 'NewGenome.ui', self)
         self.setWindowTitle('New Genome')
         self.setWindowTitle('New Genome')
-        self.k = KEGG()
         self.info_path = info_path
 
         #---Style Modifications---#
@@ -44,18 +45,16 @@ class NewGenome(QtWidgets.QMainWindow):
 
         self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.png"))
         self.whatsthisButton.clicked.connect(self.whatsthisclicked)
-        self.KeggSearchButton.clicked.connect(self.updatekegglist)
         self.resetButton.clicked.connect(self.reset)
         self.submitButton.clicked.connect(self.submit)
         self.browseForFile.clicked.connect(self.selectFasta)
-        self.NCBI_File_Search.clicked.connect(self.prep_ncbi_search)
         self.remove_job.clicked.connect(self.remove_from_queue)
         self.output_browser.setText("Waiting for program initiation...")
         self.contButton.clicked.connect(self.continue_to_main)
 
         self.comboBoxEndo.currentIndexChanged.connect(self.endo_settings)
 
-        self.runButton.clicked.connect(self.run_jobs)
+        self.runButton.clicked.connect(self.run_jobs_wrapper)
         self.clearButton.clicked.connect(self.clear_job_queue)
 
         self.viewStatButton.setEnabled(False)
@@ -71,7 +70,6 @@ class NewGenome(QtWidgets.QMainWindow):
         self.exit = False
 
 
-
         self.first = False
         #show functionalities on window
         self.fillEndo()
@@ -81,12 +79,12 @@ class NewGenome(QtWidgets.QMainWindow):
 
 
         #Jobs Table
-        self.job_Table.setColumnCount(3)
+        #self.job_Table.setColumnCount(3)
         self.job_Table.setShowGrid(False)
-        self.job_Table.setHorizontalHeaderLabels(["Job Queue","Job in Progress", "Completed Jobs"])
+        #self.job_Table.setHorizontalHeaderLabels(["Job Queue","Job in Progress", "Completed Jobs"])
         self.job_Table.horizontalHeader().setSectionsClickable(True)
-        self.job_Table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.job_Table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        #self.job_Table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        #self.job_Table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
         self.job_Table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.job_Table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.job_Table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
@@ -95,27 +93,31 @@ class NewGenome(QtWidgets.QMainWindow):
 
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
-
+        self.total_chrom_count = 0
+        self.perc_increase = 0
+        self.progress = 0
 
         #toolbar button actions
         self.visit_repo.triggered.connect(self.visit_repo_func)
         self.go_ncbi.triggered.connect(self.open_ncbi_web_page)
 
+        #ncbi tool
+        self.NCBI_File_Search.clicked.connect(self.open_ncbi_tool)
+
+        self.comboBoxEndo.currentIndexChanged.connect(self.changeEndos)
+
+        #some defaults pams for testing
+        # self.orgName.setText("Bacillus Coagulans")
+        # self.orgCode.setText("testing")
+
 
     ####---FUNCTIONS TO RUN EACH BUTTON---####
     def remove_from_queue(self):
-        if len(self.JobsQueue) != 0:
-            for i in range(len(self.JobsQueue)): # Update job queue column
-                if not i == len(self.JobsQueue)-1:
-                    job_name = self.job_Table.item(i+1,0).text()
-                    the_job = QtWidgets.QTableWidgetItem(str(job_name))
-                    self.job_Table.setItem(i,0,the_job)
-                else:
-                    self.job_Table.item(i,0).setText("")
-            self.JobsQueue.pop(0)
-            self.job_Table.setRowCount(len(self.JobsQueue))
-        else:
-            return
+        while(True):
+            indexes = self.job_Table.selectionModel().selectedRows()
+            if len(indexes) == 0:
+                break
+            self.job_Table.removeRow(indexes[0].row())
 
 
     def selectFasta(self):
@@ -140,18 +142,9 @@ class NewGenome(QtWidgets.QMainWindow):
         print(cdir)"""
 
 
-    # this function figures out which type of file the user is searching for, and then shows the
-    # ncbi_search_dialog window
-    # connected to the button: self.NCBI_File_Search
-    def prep_ncbi_search(self):
-        GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
-        GlobalSettings.mainWindow.ncbi_search_dialog.organismLineEdit.setText(self.lineEdit_1.displayText())
-        GlobalSettings.mainWindow.ncbi_search_dialog.show()
-
-
     def submit(self):
         warning = ""
-        if len(self.lineEdit_1.text()) == 0:
+        if len(self.orgName.text()) == 0:
             warning = warning + "\nYou need to include the organism's name."
         if len(self.file) == 0:
             warning = warning + "\nYou need to select a file."
@@ -159,10 +152,10 @@ class NewGenome(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.information(self, "Required Information", warning, QtWidgets.QMessageBox.Ok)
             return
 
-        if len(self.lineEdit_2.text()) == 0:
+        if len(self.strainName.text()) == 0:
             warning = warning + "\nIt is recommended to include the organism's subspecies/strain."
-        if len(self.lineEdit_3.text()) == 0:
-            warning = warning + "\nYou must include an organism code (KEGG code recommended)."
+        if len(self.orgCode.text()) == 0:
+            warning = warning + "\nYou must include an organism code."
         if len(warning) != 0:
             hold = QtWidgets.QMessageBox.question(self, "Missing Information", warning +
                                                   "\n\nDo you wish to continue without including this information?"
@@ -172,14 +165,40 @@ class NewGenome(QtWidgets.QMainWindow):
             if hold == QtWidgets.QMessageBox.No:
                 return
 
-        myjob = CasperJob(self.lineEdit_1.text() + " " + self.lineEdit_2.text(), self.lineEdit_2.text(),
-                          self.Endos[self.comboBoxEndo.currentText()], self.lineEdit_3.text(), self.file,
-                          self.tot_len_box.text(), self.seed_len_box.text(), self.pamBox.isChecked())
-        self.JobsQueue.append(myjob)
-        the_job = QtWidgets.QTableWidgetItem(myjob.name)
-        self.job_Table.insertRow(len(self.JobsQueue) - 1)
-        self.job_Table.setItem(len(self.JobsQueue) - 1, 0, the_job)
-        self.job_Table.resizeColumnsToContents()
+
+
+        #endo, pam, repeats, directionality, five length, seed length, three length, orgcode, output path, CASPERinfo path, fna path, orgName, notes
+        args = self.Endos[self.comboBoxEndo.currentText()][0]
+        args += " " + self.Endos[self.comboBoxEndo.currentText()][1]
+        if self.repeats_box.isChecked():
+            args += " " + "TRUE"
+        else:
+            args += " " + "FALSE"
+        args += " " + "FALSE"
+        args += " " + self.Endos[self.comboBoxEndo.currentText()][2]
+        args += " " + self.Endos[self.comboBoxEndo.currentText()][3]
+        args += " " + self.Endos[self.comboBoxEndo.currentText()][4]
+        args += " " + self.orgCode.text()
+        if platform.system() == 'Windows':
+            args += " " + '"' + GlobalSettings.CSPR_DB.replace("/","\\") + '\\"'
+            args += " " + '"' + GlobalSettings.appdir.replace("/","\\") + "CASPERinfo" + '"'
+            args += " " + '"' + self.file.replace("/","\\") + '"'
+        else:
+            args += " " + '"' + GlobalSettings.CSPR_DB.replace("\\","/") + '/"'
+            args += " " + '"' + GlobalSettings.appdir.replace("\\","/") + "CASPERinfo" + '"'
+            args += " " + '"' + self.file.replace("\\","/") + '"'
+
+        args += " " + '"' + self.orgName.text() + '"'
+        args += " " + '"' + "notes" + '"'
+
+        #name = str(self.Endos[self.comboBoxEndo.currentText()][0] + " targets in " + self.orgName.text())
+        name = self.orgCode.text() + "_" + str(self.Endos[self.comboBoxEndo.currentText()][0])
+        rowPosition = self.job_Table.rowCount()
+        self.job_Table.insertRow(rowPosition)
+        item = QtWidgets.QTableWidgetItem(name)
+        item.setTextAlignment(QtCore.Qt.AlignHCenter)
+        self.job_Table.setItem(rowPosition, 0, item)
+        self.JobsQueue.append(args)
 
 
     def fillEndo(self):
@@ -193,19 +212,31 @@ class NewGenome(QtWidgets.QMainWindow):
                     if (line[0] == "-"):
                         break
                     line_tokened = line.split(";")
-                    endo = line_tokened[0]
-                    # Checking to see if there is more than one pam sequence in the list
-                    if line_tokened[1].find(",") != -1:
-                        p_pam = line_tokened[1].split(",")[0]
-                    else:
-                        p_pam = line_tokened[1]
-                    default_seed_length = line_tokened[2]
-                    default_tot_length = line_tokened[3]
-                    self.Endos[endo + "PAM: " + p_pam] = (endo, p_pam, default_seed_length, default_tot_length)
-
+                    if len(line_tokened) == 8:
+                        endo = line_tokened[0]
+                        # Checking to see if there is more than one pam sequence in the list
+                        if line_tokened[1].find(",") != -1:
+                            p_pam = line_tokened[1].split(",")[0]
+                        else:
+                            p_pam = line_tokened[1]
+                        five_length = line_tokened[2]
+                        seed_length = line_tokened[3]
+                        three_length = line_tokened[4]
+                        self.Endos[endo + " - PAM: " + p_pam] = (endo, p_pam, five_length, seed_length, three_length)
                 break
         f.close()
         self.comboBoxEndo.addItems(self.Endos.keys())
+        key = list(self.Endos.keys())[0]
+        self.seed_length.setText(self.Endos[key][3])
+        self.five_length.setText(self.Endos[key][2])
+        self.three_length.setText(self.Endos[key][4])
+
+
+    def changeEndos(self):
+        key = str(self.comboBoxEndo.currentText())
+        self.seed_length.setText(self.Endos[key][3])
+        self.five_length.setText(self.Endos[key][2])
+        self.three_length.setText(self.Endos[key][4])
 
 
     def endo_settings(self):
@@ -215,9 +246,6 @@ class NewGenome(QtWidgets.QMainWindow):
         elif int(self.seqTrans.endo_info[self.Endos[self.comboBoxEndo.currentText()][0]][3]) == 5:
             self.pamBox.setChecked(1)
 
-        self.tot_len_box.setText(self.Endos[self.comboBoxEndo.currentText()][3])
-        self.seed_len_box.setText(self.Endos[self.comboBoxEndo.currentText()][2])
-
 
     def findFasta(self):
         choice = QtWidgets.QMessageBox.question(self, "Extract!", "Are you sure you want to Quit?",
@@ -225,11 +253,6 @@ class NewGenome(QtWidgets.QMainWindow):
         if choice == QtWidgets.QMessageBox.Yes:
             sys.exit()
         else:
-            pass
-
-
-    def testcheckandradio(self, state):
-        if state == QtCore.Qt.Checked:
             pass
 
 
@@ -242,86 +265,65 @@ class NewGenome(QtWidgets.QMainWindow):
                                                                  " database.", QtWidgets.QMessageBox.Ok)
 
 
-    def updatekegglist(self):
-
-        if len(self.lineEdit_1.text()) == 0:
-            QtWidgets.QMessageBox.question(self, "Error!", "Please enter an organism into the Organism Name!",
-                                           QtWidgets.QMessageBox.Ok)
-            return
-
-        self.keggSuggested.clear()
-        kegg_orglist = self.k.lookfor_organism(self.lineEdit_1.text())
-        holder = 0
-        self.keggSuggested.setColumnCount(2)
-
-        for item in kegg_orglist:
-
-            second_space = item[item.find(" ") + 1:].find(" ") + item.find(" ")
-            code = item[item.find(" ") + 1:second_space + 1]
-            item = item[second_space + 2:]
-            semi = item.find(";")
-            index = 1
-            while True:
-                if item[semi - index] == " ":
-                    break
-                index = index + 1
-            organism = item[:semi - index]
-            self.keggSuggested.setRowCount(holder + 1)
-            table_code = QtWidgets.QTableWidgetItem(code)
-            table_organism = QtWidgets.QTableWidgetItem(organism)
-            self.keggSuggested.setItem(holder, 0, table_organism)
-            self.keggSuggested.setItem(holder, 1, table_code)
-            # self.keggsearchresults.insertPlainText(item)
-            holder += 1
-        self.keggSuggested.resizeColumnsToContents()
+    def run_jobs_wrapper(self):
+        self.indexes = []
+        indexes = self.job_Table.selectionModel().selectedRows()
+        for index in sorted(indexes):
+            if self.job_Table.item(index.row(), 0).text() != "":
+                self.indexes.append(index.row())
+        self.run_job()
 
 
-    def run_jobs(self):
-        if len(self.JobsQueue) > 0:
+    def run_job(self):
+        if len(self.indexes) > 0:
             self.progressBar.setValue(0)
+            self.progress = 0
+            row_index = self.indexes[0]
+            name = self.job_Table.item(row_index, 0).text()
+            item = QtWidgets.QTableWidgetItem(name)
+            item.setTextAlignment(QtCore.Qt.AlignHCenter)
+            self.job_Table.setItem(row_index, 1, item)
+            self.job_Table.setItem(row_index, 0, QtWidgets.QTableWidgetItem(""))
 
             def output_stdout(p):
                 line = str(p.readAll())
                 line = line[2:]
                 line = line[:len(line) - 1]
-                for lines in filter(None, line.split(r'\n')):
-                    lines.strip(r'\n')
-                    if (lines == 'Finished reading in the genome file.'):
-                        self.num_chromo_next = True
-                    elif (self.num_chromo_next == True):
-                        self.num_chromo_next = False
-                        self.num_chromo = int(lines)
-                    elif (lines.find('Chromosome') != -1 and lines.find('complete.') != -1):
-                        temp = lines
-                        temp = temp.replace('Chromosome ', '')
-                        temp = temp.replace(' complete.', '')
-                        temp = temp.strip(r'\\n')
-                        if temp.isnumeric():
-                            if (int(temp) == self.num_chromo):
-                                self.progressBar.setValue(99)
-                            else:
-                                self.progressBar.setValue(int(temp) / self.num_chromo * 100)
-                    elif (lines == 'Finished Creating File.'):
-                        self.progressBar.setValue(100)
+                for lines in line.split(r"\r\n"):
+                    lines = lines.rstrip("\n")
+                    lines = lines.rstrip("\r")
+                    lines = lines.rstrip(r"\n")
+                    lines = lines.rstrip(r"\r")
+                    lines = lines.rstrip("\r\n")
+                    lines = lines.rstrip(r"\r\n")
+                    if lines != "":
+                        if lines.find("Number of Chromosomes/Scaffolds") != -1:
+                            copy = lines
+                            copy = copy.replace(" ","")
+                            copy = copy[copy.find(":")+1:]
+                            self.total_chrom_count = int(copy)
+                            self.perc_increase = ((1 / (2 * self.total_chrom_count)) * 70)
+                            self.progressBar.setValue(20)
+                            self.progress = 20
+                        elif lines.find("complete.") != -1:
+                            self.progress += self.perc_increase
+                            self.progressBar.setValue(self.progress)
+                        elif lines.find("sorting") != -1:
+                            self.progress += self.perc_increase
+                            self.progressBar.setValue(self.progress)
+                        elif lines.find("Printing") != -1:
+                            self.progress = 95
+                            self.progressBar.setValue(self.progress)
+                        elif lines == "Finished Creating File.":
+                            self.progress = 100
+                            self.progressBar.setValue(self.progress)
+                        self.output_browser.append(lines)
 
-                    self.output_browser.append(lines)
+            job_args = self.JobsQueue[row_index]
 
-            # Top layer for loop to go through all of the jobs in the queue:
-            job = self.JobsQueue[0]
-            the_job = QtWidgets.QTableWidgetItem(str(job.name))
-            self.job_Table.setItem(0, 1, the_job)  # Sets job in progress column
-            for i in range(len(self.JobsQueue)):  # Update job queue column
-                if not i == len(self.JobsQueue) - 1:
-                    job_name = self.job_Table.item(i + 1, 0).text()
-                    the_job = QtWidgets.QTableWidgetItem(str(job_name))
-                    self.job_Table.setItem(i, 0, the_job)
-                else:
-                    self.job_Table.item(i, 0).setText("")
-            self.job_Table.resizeColumnsToContents()
-            program = '"' + os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'Casper_Seq_Finder" ')
+            program = '"' + GlobalSettings.appdir + "Casper_Seq_Finder.exe" + '" '
+            program += job_args
             self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
-            program += job.get_arguments()
-            print(program)
             self.process.start(program)
         else:
             error = QtWidgets.QMessageBox.critical(self, "No Jobs To Run",
@@ -330,30 +332,42 @@ class NewGenome(QtWidgets.QMainWindow):
 
 
     def upon_process_finishing(self):
-        if len(self.JobsQueue) > 1:
-            job_name = self.job_Table.item(0, 1).text()  # Get name of job in current job column
-            the_job = QtWidgets.QTableWidgetItem(str(job_name))
-            self.job_Table.setItem(self.fin_index, 2, the_job)  # Pass current into finished
-            self.job_Table.resizeColumnsToContents()
-            self.fin_index += 1
-            self.JobsQueue.pop(0)
-            self.process.close()
-            self.num_chromo = 0
-        elif len(self.JobsQueue) == 1:
-            job_name = self.job_Table.item(0, 1).text()  # Get name of job in current job column
-            the_job = QtWidgets.QTableWidgetItem(str(job_name))
-            self.job_Table.setItem(self.fin_index, 2, the_job)  # Pass current into finished
-            self.fin_index += 1
-            self.job_Table.item(0, 1).setText("")  # Remove last current job entry
-            self.job_Table.resizeColumnsToContents()
-            self.JobsQueue.pop(0)
+        row_index = self.indexes[0]
+        name = self.job_Table.item(row_index, 1).text()
+        item = QtWidgets.QTableWidgetItem(name)
+        item.setTextAlignment(QtCore.Qt.AlignHCenter)
+        self.job_Table.setItem(row_index, 2, item)
+        self.job_Table.setItem(row_index, 1, QtWidgets.QTableWidgetItem(""))
+        self.indexes.pop(0)
+        if len(self.indexes) != 0:
+            self.run_job()
 
-        if len(self.JobsQueue) > 0:
-            self.progressBar.setValue(0)
-            self.run_jobs()
-        else:
-            self.process.close()
-            self.num_chromo = 0
+
+
+        # if len(self.JobsQueue) > 1:
+        #     job_name = self.job_Table.item(0, 1).text()  # Get name of job in current job column
+        #     the_job = QtWidgets.QTableWidgetItem(str(job_name))
+        #     self.job_Table.setItem(self.fin_index, 2, the_job)  # Pass current into finished
+        #     self.job_Table.resizeColumnsToContents()
+        #     self.fin_index += 1
+        #     self.JobsQueue.pop(0)
+        #     self.process.close()
+        #     self.num_chromo = 0
+        # elif len(self.JobsQueue) == 1:
+        #     job_name = self.job_Table.item(0, 1).text()  # Get name of job in current job column
+        #     the_job = QtWidgets.QTableWidgetItem(str(job_name))
+        #     self.job_Table.setItem(self.fin_index, 2, the_job)  # Pass current into finished
+        #     self.fin_index += 1
+        #     self.job_Table.item(0, 1).setText("")  # Remove last current job entry
+        #     self.job_Table.resizeColumnsToContents()
+        #     self.JobsQueue.pop(0)
+        #
+        # if len(self.JobsQueue) > 0:
+        #     self.progressBar.setValue(0)
+        #     self.run_jobs()
+        # else:
+        #     self.process.close()
+        #     self.num_chromo = 0
 
 
     def clear_job_queue(self):
@@ -362,10 +376,9 @@ class NewGenome(QtWidgets.QMainWindow):
         self.job_Table.clearContents()
         self.job_Table.setRowCount(0)
         self.JobsQueue = []
-        self.lineEdit_1.clear()
-        self.lineEdit_2.clear()
-        self.lineEdit_3.clear()
-        self.keggSuggested.setRowCount(0)
+        self.orgName.clear()
+        self.strainName.clear()
+        self.orgCode.clear()
         self.output_browser.clear()
         self.s_file.clear()
         self.progressBar.setValue(0)
@@ -378,9 +391,12 @@ class NewGenome(QtWidgets.QMainWindow):
         self.lineEdit_1.clear()
         self.lineEdit_2.clear()
         self.lineEdit_3.clear()
-        self.keggSuggested.clear()
         self.first = False
         self.s_file.clear()
+
+
+    def open_ncbi_tool(self):
+        GlobalSettings.mainWindow.ncbi.show()
 
 
     def open_ncbi_web_page(self):
@@ -419,10 +435,9 @@ class NewGenome(QtWidgets.QMainWindow):
             self.process.kill()
             self.job_Table.clearContents()
             self.job_Table.setRowCount(0)
-            self.lineEdit_1.clear()
-            self.lineEdit_2.clear()
-            self.lineEdit_3.clear()
-            self.keggSuggested.setRowCount(0)
+            self.orgName.clear()
+            self.strainName.clear()
+            self.orgCode.clear()
             self.output_browser.clear()
             self.s_file.setText("Name of File")
             self.progressBar.setValue(0)
@@ -466,10 +481,9 @@ class NewGenome(QtWidgets.QMainWindow):
         else:
             self.process.kill()
             self.job_Table.clearContents()
-            self.lineEdit_1.clear()
-            self.lineEdit_2.clear()
-            self.lineEdit_3.clear()
-            self.keggSuggested.setRowCount(0)
+            self.orgName.clear()
+            self.strainName.clear()
+            self.orgCode.clear()
             self.output_browser.clear()
             self.s_file.clear()
             self.progressBar.setValue(0)
@@ -483,88 +497,4 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.orgChoice.clear()
             GlobalSettings.mainWindow.endoChoice.clear()
             GlobalSettings.mainWindow.getData()
-            #GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
-            #GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
             self.hide()
-
-
-class CasperJob:
-    def __init__(self, org, suborg, endo, org_code, ref_file, tot_len, seed_len, pamdir):
-        self.name = endo[0] + " targets in " + org
-        self.organism_name = org
-        self.substrain = suborg
-        self.organism_code = org_code
-        self.endo_name = endo[0]
-        self.endo_pam = endo[1]
-        self.reference_file = ref_file
-
-        # These are endonuclease specific settings that should be pulled from CASPERinfo
-        self.anti = pamdir
-        self.sequence_length = tot_len
-        self.seed_length = seed_len
-
-    def get_arguments(self):
-        db_location = GlobalSettings.CSPR_DB
-        ref = str(self.reference_file)
-        if(GlobalSettings.OPERATING_SYSTEM_ID == "Windows"):
-            db_location = db_location.replace('/','\\')
-            ref = ref.replace('/','\\')
-        cmd = str()
-        cmd += '"' + str(self.endo_name) + '" '
-        cmd += '"' + str(self.endo_pam) + '" '
-        if(self.organism_code == ""):
-            cmd += '""'
-        else:
-            cmd += '"' + str(self.organism_code) + '" '
-
-        if self.anti:
-            cmd += '"' + "TRUE" + '" '
-        else:
-            cmd += '"' + "FALSE" + '" '
-
-        if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
-           cmd += '"' + db_location + '" '
-           cmd += '"' + GlobalSettings.CASPER_FOLDER_LOCATION + "\\CASPERinfo" + '" '
-        else:
-            cmd += '"' + db_location + '" '
-            cmd += '"' + GlobalSettings.CASPER_FOLDER_LOCATION + "/CASPERinfo" + '" '
-
-        cmd += '"' + ref + '" '
-        cmd += '"' + self.organism_name + '" '
-        cmd += '"' + self.sequence_length + '" '
-        cmd += '"' + self.seed_length + '" '
-        if(self.substrain == ""):
-            cmd += '" "'
-        else:
-            cmd += '"' + self.substrain + '"'
-
-
-
-
-        if (GlobalSettings.OPERATING_SYSTEM_ID == "Windows"):
-            db_location = db_location.replace('/', '\\')
-            ref = str(self.reference_file).replace('/', '\\')
-        ret_array = [self.endo_name, self.endo_pam, self.organism_code]
-        # attach the 5' or 3' direction
-        if self.anti:
-            ret_array.append("TRUE")
-        else:
-            ret_array.append("FALSE")
-        if GlobalSettings.OPERATING_SYSTEM_ID == "Windows":
-           ret_array.append(db_location)
-           ret_array.append(GlobalSettings.CASPER_FOLDER_LOCATION + "\\CASPERinfo")
-           ret_array.append(ref)
-
-        else:
-            ret_array.append(GlobalSettings.CSPR_DB + "/")
-            ret_array.append(GlobalSettings.CASPER_FOLDER_LOCATION + "/CASPERinfo")
-            ret_array.append(self.reference_file)
-
-        ret_array.append(self.organism_name)
-        ret_array.append(self.sequence_length)
-        ret_array.append(self.seed_length)
-        ret_array.append(self.substrain)
-        #print(ret_array)
-
-        #return ret_array
-        return cmd

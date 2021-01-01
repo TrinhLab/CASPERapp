@@ -274,7 +274,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.link_list = list()  # the list of the downloadable links from the NCBI search
         self.organismDict = dict()  # the dictionary for the links to download. Key is the description of the organism, value is the ID that can be found in link_list
         self.organismData = list()
-        #self.ncbi = ncbi.NCBI_search_tool()
+        self.ncbi = ncbi.NCBI_search_tool()
+        self.ncbi.hide()
 
 
 
@@ -356,7 +357,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.myClosingWindow = closingWindow()
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
-        self.actionUpload_New_Genome.setEnabled(False)
+        #self.actionUpload_New_Genome.setEnabled(False)
         self.genomebrowser = genomeBrowser.genomebrowser()
         #GlobalSettings.mainWindow.ncbi = ncbi.NCBI_search_tool()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
@@ -804,7 +805,6 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def launch_ncbi(self):
-        self.ncbi = ncbi.NCBI_search_tool()
         self.ncbi.show()
 
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
@@ -1197,10 +1197,8 @@ class StartupWindow(QtWidgets.QDialog):
 
         self.pushButton_3.clicked.connect(self.changeDir)
         self.pushButton_2.clicked.connect(self.show_window)
-        #self.pushButton.clicked.connect(self.errormsgmulti)
-
+        self.pushButton.clicked.connect(self.errormsgmulti)
         self.show()
-        self.pushButton.setEnabled(False)
 
 
     ####---FUNCTIONS TO RUN EACH BUTTON---####
@@ -1349,9 +1347,4 @@ def main():
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
-
-    try:
-        main()
-    except Exception as e:
-        with open("debug.txt", "w") as f:
-            f.write(e)
+    main()

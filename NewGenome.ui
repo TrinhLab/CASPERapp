@@ -33,157 +33,38 @@
     </item>
     <item row="0" column="1">
      <layout class="QGridLayout" name="gridLayout_6">
-      <item row="2" column="0">
-       <widget class="QGroupBox" name="Step1">
-        <property name="maximumSize">
-         <size>
-          <width>11111</width>
-          <height>218</height>
-         </size>
-        </property>
-        <property name="title">
-         <string>Step 1: Input Organism Info</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="1" column="0" rowspan="3" colspan="3">
-          <layout class="QGridLayout" name="gridLayout">
-           <item row="3" column="0">
-            <widget class="QLabel" name="Subspecies">
-             <property name="text">
-              <string>Subspecies/Strain</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0">
-            <widget class="QLabel" name="endoNameLabel">
-             <property name="text">
-              <string>Endonuclease*</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="1">
-            <widget class="QComboBox" name="comboBoxEndo"/>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLineEdit" name="lineEdit_2"/>
-           </item>
-           <item row="4" column="1">
-            <widget class="QLineEdit" name="lineEdit_3"/>
-           </item>
-           <item row="2" column="3">
-            <widget class="QPushButton" name="KeggSearchButton">
-             <property name="maximumSize">
-              <size>
-               <width>200</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Search Kegg</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>Organism Code</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="2">
-            <widget class="QPushButton" name="whatsthisButton">
-             <property name="text">
-              <string>What's this?</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="4">
-            <widget class="QLabel" name="keggTitle">
-             <property name="text">
-              <string>KEGG Suggested Organism Codes</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="OrganismName">
-             <property name="text">
-              <string>Organism Name*</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="3" rowspan="2" colspan="2">
-            <widget class="QGroupBox" name="groupBox_3">
-             <property name="title">
-              <string>Endonuclease Features:</string>
-             </property>
-             <layout class="QHBoxLayout" name="horizontalLayout_2">
-              <item>
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>Total gRNA length</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="tot_len_box"/>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_2">
-                <property name="text">
-                 <string>Seed Length</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="seed_len_box"/>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="pamBox">
-                <property name="text">
-                 <string>5' PAM</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="0" column="0" rowspan="2">
-            <widget class="QLabel" name="ReqLabel">
-             <property name="text">
-              <string>*Required</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="4" rowspan="2">
-            <widget class="QTableWidget" name="keggSuggested">
-             <property name="maximumSize">
-              <size>
-               <width>253</width>
-               <height>98</height>
-              </size>
-             </property>
-             <property name="rowCount">
-              <number>2</number>
-             </property>
-             <attribute name="horizontalHeaderVisible">
-              <bool>false</bool>
-             </attribute>
-             <attribute name="verticalHeaderVisible">
-              <bool>false</bool>
-             </attribute>
-             <row/>
-             <row/>
-            </widget>
-           </item>
-           <item row="2" column="1" colspan="2">
-            <widget class="QLineEdit" name="lineEdit_1"/>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </widget>
+      <item row="8" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QPushButton" name="contButton">
+          <property name="text">
+           <string>Exit</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>746</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="viewStatButton">
+          <property name="text">
+           <string>View Statistics</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QGroupBox" name="Step2">
         <property name="maximumSize">
          <size>
@@ -204,7 +85,7 @@
             </size>
            </property>
            <property name="text">
-            <string>RESET</string>
+            <string>Reset Form</string>
            </property>
           </widget>
          </item>
@@ -306,45 +187,120 @@
             </size>
            </property>
            <property name="text">
-            <string>ADD</string>
+            <string>Add Job</string>
            </property>
           </widget>
          </item>
         </layout>
        </widget>
       </item>
-      <item row="7" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QPushButton" name="contButton">
-          <property name="text">
-           <string>Exit</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>746</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="viewStatButton">
-          <property name="text">
-           <string>View Statistics</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+      <item row="3" column="0">
+       <widget class="QGroupBox" name="Step1">
+        <property name="maximumSize">
+         <size>
+          <width>11111</width>
+          <height>218</height>
+         </size>
+        </property>
+        <property name="title">
+         <string>Step 1: Input Organism Info</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="1" column="0" rowspan="3" colspan="3">
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="strainName"/>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="Subspecies">
+             <property name="text">
+              <string>Subspecies/Strain</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="2">
+            <widget class="QPushButton" name="whatsthisButton">
+             <property name="text">
+              <string>?</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QLabel" name="endoNameLabel">
+             <property name="text">
+              <string>Endonuclease*</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Organism Code*</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QComboBox" name="comboBoxEndo"/>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLineEdit" name="orgCode"/>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="OrganismName">
+             <property name="text">
+              <string>Organism Name*</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="3">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>5 Length*</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="3">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>Seed Length*</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="4">
+            <widget class="QLineEdit" name="five_length"/>
+           </item>
+           <item row="3" column="4">
+            <widget class="QLineEdit" name="seed_length"/>
+           </item>
+           <item row="5" column="3">
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>3 Length</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="4">
+            <widget class="QLineEdit" name="three_length"/>
+           </item>
+           <item row="6" column="3" colspan="2">
+            <widget class="QCheckBox" name="repeats_box">
+             <property name="text">
+              <string>Generate Repeats</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLineEdit" name="orgName"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
       </item>
-      <item row="1" column="0">
+      <item row="2" column="0">
        <widget class="Line" name="line_2">
         <property name="lineWidth">
          <number>2</number>
@@ -380,7 +336,7 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
+      <item row="7" column="0">
        <widget class="QGroupBox" name="Step3">
         <property name="title">
          <string>Step 3: Run Jobs</string>
@@ -388,16 +344,6 @@
         <layout class="QGridLayout" name="gridLayout_8">
          <item row="0" column="0">
           <layout class="QGridLayout" name="gridLayout_5">
-           <item row="4" column="2" rowspan="2">
-            <widget class="QTextBrowser" name="output_browser"/>
-           </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_4">
-             <property name="text">
-              <string>Progress:</string>
-             </property>
-            </widget>
-           </item>
            <item row="6" column="2">
             <widget class="QProgressBar" name="progressBar">
              <property name="minimumSize">
@@ -408,22 +354,6 @@
              </property>
              <property name="value">
               <number>0</number>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0" rowspan="3" colspan="2">
-            <widget class="QTableWidget" name="job_Table">
-             <property name="minimumSize">
-              <size>
-               <width>500</width>
-               <height>250</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>650</width>
-               <height>16777215</height>
-              </size>
              </property>
             </widget>
            </item>
@@ -452,9 +382,97 @@
              </item>
             </layout>
            </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>Progress:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2" rowspan="2">
+            <widget class="QTextBrowser" name="output_browser">
+             <property name="verticalScrollBarPolicy">
+              <enum>Qt::ScrollBarAsNeeded</enum>
+             </property>
+             <property name="horizontalScrollBarPolicy">
+              <enum>Qt::ScrollBarAsNeeded</enum>
+             </property>
+             <property name="sizeAdjustPolicy">
+              <enum>QAbstractScrollArea::AdjustIgnored</enum>
+             </property>
+             <property name="lineWrapMode">
+              <enum>QTextEdit::NoWrap</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0" rowspan="3" colspan="2">
+            <widget class="QTableWidget" name="job_Table">
+             <property name="minimumSize">
+              <size>
+               <width>500</width>
+               <height>250</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>650</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <attribute name="horizontalHeaderDefaultSectionSize">
+              <number>165</number>
+             </attribute>
+             <attribute name="horizontalHeaderMinimumSectionSize">
+              <number>50</number>
+             </attribute>
+             <column>
+              <property name="text">
+               <string>Job Queue</string>
+              </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Job in Progress</string>
+              </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Completed Jobs</string>
+              </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
+              </property>
+             </column>
+            </widget>
+           </item>
           </layout>
          </item>
         </layout>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="ReqLabel">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>15</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>15</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>*Required</string>
+        </property>
        </widget>
       </item>
      </layout>
