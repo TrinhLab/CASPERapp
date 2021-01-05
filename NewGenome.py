@@ -110,6 +110,10 @@ class NewGenome(QtWidgets.QMainWindow):
         # self.orgName.setText("Bacillus Coagulans")
         # self.orgCode.setText("testing")
 
+        self.seed_length.setEnabled(False)
+        self.five_length.setEnabled(False)
+        self.three_length.setEnabled(False)
+        self.repeats_box.setEnabled(False)
 
     ####---FUNCTIONS TO RUN EACH BUTTON---####
     def remove_from_queue(self):

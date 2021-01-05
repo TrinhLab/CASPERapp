@@ -116,7 +116,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
         uic.loadUi(GlobalSettings.appdir + 'ncbi.ui', self)
         self.logicalIndex = 0
         self.filters = dict()
-        self.organism_line_edit.setText(GlobalSettings.mainWindow.orgChoice.currentText())
+        #self.organism_line_edit.setText(GlobalSettings.mainWindow.orgChoice.currentText())
         self.download_button.clicked.connect(self.download_files_wrapper)
         self.search_button.clicked.connect(self.query_db)
         self.ncbi_table.verticalHeader().hide()
@@ -335,6 +335,8 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 link = str(dir).replace('ftp://ftp.ncbi.nlm.nih.gov', '')
                 ftp.cwd(link)
                 dir_files = ftp.nlst()
+                # if(dir_files.count("GO_TO_CURRENT_VERSION") != 0):
+                #     print(dir_files)
                 for file in dir_files:
                     output_file = GlobalSettings.CSPR_DB + "/" + file
                     if platform.system() == "Windows":
@@ -354,6 +356,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
                             with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(output_file)
+
             progress_val += increment
             self.progressBar.setValue(progress_val)
 
