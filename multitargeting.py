@@ -208,7 +208,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         conn = sqlite3.connect(self.filename)
         c = conn.cursor()
         kstats = []
-        print(self.cspr_file)
         with gzip.open(self.cspr_file, "r") as f:
             for line in f:
                 buf = str(line)
@@ -230,7 +229,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.event_data = {}
             for i in range(len(chromo)):
                 c = int(chromo[i])
-                p = int(pos[i])
+                p = abs(int(pos[i]))
                 k = int(kstats[c - 1])
                 new_pos = int((p / k) * 485)
                 if c in chromo_pos.keys():
@@ -291,19 +290,32 @@ class Multitargeting(QtWidgets.QMainWindow):
         c.close()
         chromo = data[1].split(',')
         loc = data[2].split(',')
-        tail = data[3].split(',')
-        score = data[4].split(',')
+        three = data[3].split(',')
+        five = data[4].split(',')
+        pam = data[5].split(',')
+        score = data[6].split(',')
+        five_bool = True
+        three_bool = True
+        if five[0] == '':
+            five_bool = False
+        if three[0] == '':
+            three_bool = False
+
         self.event_data = {}
         for i in range(len(chromo)):
-            if tail[i].find('-') != -1:
-                t = tail[i].split('-')
+            if int(loc[i]) < 0:
                 dira = '-'
             else:
-                t = tail[i].split('+')
                 dira = '+'
-            pam = t[1]
-            seq = t[0] + seed
-            self.event_data[i] = [loc[i], seq, pam, score[i], dira]
+
+            if five_bool and not three_bool:
+                seq = five[i] + seed
+            elif not five_bool and three_bool:
+                seq = seed + three[i]
+            else:
+                seq = five[i] + seed + three[i]
+
+            self.event_data[i] = [str(abs(int(loc[i]))), seq, pam[i], score[i], dira]
 
 
     # creates bar graph num of repeats vs. chromsome
