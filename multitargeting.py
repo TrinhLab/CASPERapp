@@ -212,11 +212,12 @@ class Multitargeting(QtWidgets.QMainWindow):
             for line in f:
                 buf = str(line)
                 buf = buf.strip("'b")
-                buf = buf[:len(buf) - 4]
+                buf = buf[:len(buf) - 2]
                 if buf.find("KARYSTATS") != -1:
                     buf = buf.replace("KARYSTATS: ", "")
                     kstats = buf.split(',')
                     kstats = kstats[:-1]
+
                     break
 
         seed = self.chromo_seed.currentText()

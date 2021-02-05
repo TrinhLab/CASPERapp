@@ -22,13 +22,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.goBackButton.clicked.connect(self.go_back)
         self.analyze_button.clicked.connect(self.pre_analyze)
         self.clear_Button.clicked.connect(self.clear)
-        #self.ncbi_search_button.clicked.connect(self.launch_ncbi_seacher)
-        self.ncbi_search_button.hide()
-        #self.meta_genomic_cspr_checkbox.stateChanged.connect(self.get_data)
-        self.parser = CSPRparser("")
-        self.Endos = dict()
-        self.fna_files = dict()
-        self.cspr_files = {}
         self.sq = Algorithms.SeqTranslate()
         self.ref_para_list = list()
         self.mode = 0
@@ -41,7 +34,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.show_names_2.clicked.connect(self.show_names_func2)
         self.name_form = show_names_ui.show_names_table()
         self.name_form2 = show_names2_ui.show_names_table2()
-
 
         #organism table
         self.org_Table.setColumnCount(1)
@@ -83,11 +75,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loc_finder_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.loc_finder_table.resizeColumnsToContents()
 
-        # action buttons
-        self.actionMetaGenome_Parser.triggered.connect(self.launch_chrom_selector)
-
-        self.combinerWindow = fna_and_cspr_combiner()
-
         self.total_org_number = 0
 
         self.switcher_table2 = [1, 1, 1, 1, 1, 1, 1, 1,
@@ -97,90 +84,47 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.mwfg = self.frameGeometry()
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()
 
-        self.cspr_file = ""
-        self.db_file = ""
+        self.index_to_cspr = {}
+        self.index_to_db = {}
+        self.name_to_db = {}
+        self.cspr_files = []
+        self.db_files = []
+        self.Endos = {}
+        self.seeds = []
 
         self.loading_window = loading_window()
 
-        self.meta_genomic_cspr_checkbox.setChecked(True)
-
-        self.meta_genomic_cspr_checkbox.toggled.connect(self.prevent_toggle)
 
     def prevent_toggle(self):
         self.meta_genomic_cspr_checkbox.setChecked(QtCore.Qt.Checked)
 
 
-    # def launch_ncbi_seacher(self):
-    #     GlobalSettings.mainWindow.ncbi_search_dialog.searchProgressBar.setValue(0)
-    #     GlobalSettings.mainWindow.ncbi_search_dialog.show()
-
-
-    # launches the chromesome selector window
-    def launch_chrom_selector(self):
-        GlobalSettings.mainWindow.cspr_selector.launch(self.cspr_files)
-
-
     # this function calls the popParser function and fills all the tables
     def pre_analyze(self):
-        # if the user is wanting to go with 1 meta genomic cspr file
-        if self.meta_genomic_cspr_checkbox.isChecked():
-            selectedList = self.org_Table.selectedItems()
-            # error check
-            if len(selectedList) == 0 or len(selectedList) > 1:
-                QtWidgets.QMessageBox.question(self, "Error",
-                                               "Please select no more than 1 CSPR file for analysis.",
-                                               QtWidgets.QMessageBox.Ok)
-                return
+        #clear graphs
+        self.pop_analysis_repeats_graph.canvas.axes.clear()
 
-            orgName = selectedList[0].text()
-            print(self.fna_files)
-            self.cspr_file = str(self.fna_files[orgName])
-            print(self.cspr_file)
-            self.db_file = self.cspr_file.replace(".cspr","")
-            self.db_file = self.db_file + "_repeats.db"
-            self.fill_data()
+        #clear saved filenames
+        self.cspr_files = []
+        self.db_files = []
 
+        #get selected indexes
+        selected_indexes = self.org_Table.selectionModel().selectedRows()
 
+        # error check
+        if len(selected_indexes) == 0:
+            QtWidgets.QMessageBox.question(self, "Error",
+                                           "Please select CSPR file(s) for analysis.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
 
-        # if the user is wanting to go with creating a new meta genomic cspr file
-        else:
-            selectedList = self.org_Table.selectedItems()
+        #get cspr and db filenames
+        for index in sorted(selected_indexes):
+            self.cspr_files.append(self.index_to_cspr[index.row()])
+            self.db_files.append(self.index_to_db[index.row()])
 
-            # if the table is showing only fna/fasta files
-            if not self.meta_genomic_cspr_checkbox.isChecked():
-                # rules for selecting FNA/Fasta files
-                # check to make sure that the user selected at least 2 organisms, and 1 endonuclease
-                if len(selectedList) < 1 or self.endoBox.currentText() == 'None Selected':
-                    QtWidgets.QMessageBox.question(self, "Nothing Seleted",
-                                                   "No items selected. Please select at least 1 organism and only 1 endonuclease.",
-                                                   QtWidgets.QMessageBox.Ok)
-                    return
-                if len(selectedList) == 1:
-                    error = QtWidgets.QMessageBox.question(self, "Only 1 Organism Selected",
-                                                           "Population Analysis works with multiple organisms, or a metagenome. If the file selected is not a metagenome, the program may not function correctly. Do you wish to continue? \n\n"
-                                                           "Do you wish to continue?",
-                                                           QtWidgets.QMessageBox.Yes |
-                                                           QtWidgets.QMessageBox.No,
-                                                           QtWidgets.QMessageBox.No)
-                    if (error == QtWidgets.QMessageBox.No):
-                        return
-
-                submitList = list()
-                for item in selectedList:
-                    submitList.append(self.fna_files[item.text()])
-                self.combinerWindow.launch(submitList)
-            # rules for selecting cspr files
-            elif self.meta_genomic_cspr_checkbox.isChecked():
-                if len(selectedList) == 0:
-                    QtWidgets.QMessageBox.question(self, "Nothing Seleted",
-                                                   "No items selected. Please select one metagenome for Population Analysis.",
-                                                   QtWidgets.QMessageBox.Ok)
-                    return
-                elif len(selectedList) > 1:
-                    QtWidgets.QMessageBox.question(self, "Too Many Selected",
-                                                   "Only 1 metagenomic CSPR file is allowed to be selected.",
-                                                   QtWidgets.QMessageBox.Ok)
-                    return
+        self.get_org_names()
+        self.fill_data()
 
 
     def launch(self, path):
@@ -193,80 +137,12 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         if self.directory == '':
             return
 
-        onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
-        self.fna_files.clear()
-
-        # show/hide the stuff that isn't needed
-        if self.meta_genomic_cspr_checkbox.isChecked():
-            self.endoBox.hide()
-            #self.ncbi_search_button.hide()
-            self.label_3.hide()
-            self.label_2.setText('Select a Metagenomic CSPR File')
-        elif not self.meta_genomic_cspr_checkbox.isChecked():
-            self.endoBox.show()
-            #self.ncbi_search_button.show()
-            self.label_3.show()
-            self.label_2.setText('Select organism(s) and endonuclease:')
-
-        # if the user wants the FNA/Fast files to be sown
-        if not self.meta_genomic_cspr_checkbox.isChecked():
-            index = 0
-            for file in onlyfiles:
-                if file.find('.fna') != -1 or file.find('.fasta') != -1:
-                    # find the organism name
-                    f = open(file, 'r')
-                    hold = f.readline()
-                    f.close()
-                    hold = str(hold)
-                    hold = hold[:len(hold) - 4]
-                    # get the organism name
-                    spaceIndex = hold.find(' ') + 1
-                    commaIndex = hold.find(',')
-                    buf = hold[spaceIndex:commaIndex]
-
-                    # store the name in the dict of fna_files, that keys the name with the file path
-                    self.fna_files[buf] = file
-
-                    # store the data in the table
-                    tabWidget = QtWidgets.QTableWidgetItem(buf)
-                    self.org_Table.setRowCount(index + 1)
-                    self.org_Table.setItem(index, 0, tabWidget)
-                    index += 1
-        # if the user wants the metagenomic cspr files to be shown
-        else:
-            index = 0
-            for file in onlyfiles:
-                if file.find('.cspr') != -1:
-                    f = gzip.open(file, 'r')
-                    hold = f.readline()
-                    f.close()
-                    hold = str(hold)
-                    hold = hold.strip("'b")
-                    hold = hold[:len(hold) - 4]
-                    # only show the files that are metagenomic
-                    if '(meta)' in hold:
-                        colonIndex = hold.find(':') + 1
-                        commaIndex = hold.find(',')
-                        orgName = hold[colonIndex:commaIndex]
-
-                        self.fna_files[orgName] = file
-
-                        tabWidget = QtWidgets.QTableWidgetItem(orgName)
-                        self.org_Table.setRowCount(index + 1)
-                        self.org_Table.setItem(index, 0, tabWidget)
-                        index += 1
-            if index == 0:
-                self.org_Table.clearContents()
-                self.org_Table.setRowCount(0)
-
-        #        self.org_Table.resizeColumnsToContents() ##Commenting this out allows the header to remain full sized
-
         self.fillEndo()
-        # self.changeEndos()
 
 
     # this function opens CASPERinfo and builds the dropdown menu of selectable endonucleases
     def fillEndo(self):
+        self.Endos = {}
         f = open(GlobalSettings.appdir + 'CASPERinfo')
         while True:
             line = f.readline()
@@ -282,194 +158,196 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         p_pam = line_tokened[1].split(",")[0]
                     else:
                         p_pam = line_tokened[1]
-                    default_seed_length = line_tokened[2]
-                    default_tot_length = line_tokened[3]
-                    self.Endos[endo + " PAM: " + p_pam] = (endo, p_pam, default_seed_length, default_tot_length)
+                    default_five_length = line_tokened[2]
+                    default_seed_length = line_tokened[3]
+                    default_three_length = line_tokened[4]
+                    self.Endos[endo + " PAM: " + p_pam] = (endo, p_pam, default_five_length, default_seed_length, default_three_length)
 
                 break
         f.close()
-        self.endoBox.addItem("None Selected")
         self.endoBox.addItems(self.Endos.keys())
-        # self.endoBox.currentIndexChanged.connect(self.changeEndos)
+        self.endoBox.currentIndexChanged.connect(self.change_endo)
+        self.change_endo()
+
+
+    def change_endo(self):
+        onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
+
+        index = 0
+        for file in onlyfiles:
+            if file.find('.cspr') != -1:
+                endo = file[file.find('_') + 1:file.find('.cspr')]
+                if endo == self.Endos[self.endoBox.currentText()][0]:
+
+                    # increase row count
+                    self.org_Table.setRowCount(index + 1)
+
+                    # open .cspr file and get genome name
+                    f = gzip.open(file, 'r')
+                    line = f.readline()
+                    f.close()
+                    line = str(line)
+                    line = line[:len(line) - 3]
+                    line = line[2:]
+                    colonIndex = line.find(':') + 2
+                    orgName = line[colonIndex:]
+
+                    # add genome name to table
+                    tabWidget = QtWidgets.QTableWidgetItem(orgName)
+                    tabWidget.setTextAlignment(QtCore.Qt.AlignVCenter)
+                    self.org_Table.setItem(index, 0, tabWidget)
+
+                    # store cspr and db file information for later
+                    self.index_to_cspr[index] = file
+                    db_file = file.replace(".cspr", "")
+                    db_file += "_repeats.db"
+                    self.index_to_db[index] = db_file
+
+                    # incrase row index
+                    index += 1
+
+        if index == 0:
+            self.org_Table.clearContents()
+            self.org_Table.setRowCount(0)
+
+        self.org_Table.resizeColumnsToContents()
 
 
     def fill_data(self):
+        #update progress bar
         self.loading_window.loading_bar.setValue(5)
         self.loading_window.show()
         QtCore.QCoreApplication.processEvents()
-        #get misc line from cspr file to know the number of orgs in file
-        with gzip.open(self.cspr_file,'r') as f:
-            i = 0
-            self.org_list = {}
-            for line in f:
-                line = str(line).strip(r"'b\r\n")
-                if i == 2:
-                    colonIndex = line.find(':') + 2
-                    usefulData = line[colonIndex:]
-                    usefulData = usefulData.split('|')
-                    usefulData.pop()
-                    j = 0
-                    while j < len(usefulData):
-                        temp = usefulData[j].split(',')
-                        if temp[0] not in self.org_list.keys():
-                            self.org_list[temp[0]] = 1
-                        else:
-                            self.org_list[temp[0]] += 1
-                        j += 1
-                    break
-                i += 1
-        self.total_org_number = len(self.org_list.keys())
+
+        #prep table
+        self.total_org_number = len(self.cspr_files)
         self.table2.setRowCount(0)
         self.loading_window.loading_bar.setValue(10)
         index = 0
-        print(self.db_file)
-        conn = sqlite3.connect(self.db_file)
-        c = conn.cursor()
-        for seeds in c.execute("select * from repeats"):
+
+        #get seeds shared between files
+        self.get_shared_seeds()
+        increase_val = float(15 / len(self.seeds))
+        running_val = self.loading_window.loading_bar.value()
+        self.loading_window.info_label.setText("Parsing Seed Data")
+        QtCore.QCoreApplication.processEvents()
+
+        #retrieve data on shared seeds
+        self.counts = []
+        for seed in self.seeds:
+            # increase row count
             self.table2.setRowCount(index + 1)
-            seeds = list(seeds)
 
-            #seed
-            seed = QtWidgets.QTableWidgetItem()
-            s = seeds[0]
-            seed.setData(QtCore.Qt.EditRole, str(s))
-            seed.setTextAlignment(QtCore.Qt.AlignHCenter)
+            # push seed to table
+            table_seed = QtWidgets.QTableWidgetItem()
+            table_seed.setData(QtCore.Qt.EditRole, seed)
+            table_seed.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table2.setItem(index, 0, table_seed)
 
-            #total repeats
-            total_repeats = QtWidgets.QTableWidgetItem()
-            count = seeds[-1]
-            total_repeats.setData(QtCore.Qt.EditRole, count)
-            total_repeats.setTextAlignment(QtCore.Qt.AlignHCenter)
+            total_count = 0
+            org_count = 0
+            threes = []
+            fives = []
+            scores = []
+            pams = []
+            locs = []
 
-            #score
-            score = QtWidgets.QTableWidgetItem()
-            sc = str(seeds[4])
-            sc = sc.split(',')
-            c = Counter(sc)
-            score.setData(QtCore.Qt.EditRole, list(c.most_common(1)[0])[0])
-            score.setTextAlignment(QtCore.Qt.AlignHCenter)
+            for db_file in self.db_files:
+                conn = sqlite3.connect(db_file)
+                c = conn.cursor()
+                data = c.execute("SELECT count, three, five, pam, score, location FROM repeats WHERE seed = ? ",(seed,)).fetchone()
+                if data != None:
+                    data = list(data)
+                    org_count += 1
+                    total_count += int(data[0])
+                    threes += data[1].split(",")
+                    fives += data[2].split(",")
+                    pams += data[3].split(",")
+                    scores += data[4].split(",")
+                    locs += data[5].split(",")
 
-            #PAM and Strand
-            tail = str(seeds[3])
-            tail = tail.split(',')[0]
-            if tail.find('+') != -1:
-                st = '+'
-                tail = tail.split('+')
-                p = tail[1]
+            self.counts.append(total_count)
+
+
+            if len(threes) < len(fives):
+                for i in range(len(fives) - len(threes)):
+                    threes.append('')
+
+            elif len(fives) < len(threes):
+                for i in range(len(threes) - len(fives)):
+                    fives.append('')
+
+            majority_index = 0
+            if threes[0] == '':
+                majority = max(set(fives), key=fives.count)
+                majority_index = fives.index(majority)
             else:
-                st = '-'
-                tail = tail.split('-')
-                p = tail[1]
-            strand = QtWidgets.QTableWidgetItem()
-            pam = QtWidgets.QTableWidgetItem()
-            strand.setData(QtCore.Qt.EditRole, st)
-            pam.setData(QtCore.Qt.EditRole, p)
-            pam.setTextAlignment(QtCore.Qt.AlignHCenter)
-            strand.setTextAlignment(QtCore.Qt.AlignHCenter)
+                majority = max(set(threes), key=threes.count)
+                majority_index = threes.index(majority)
 
-
-            #location counts
-            counts = {}
-            locs = str(seeds[1])
-            locs = locs.split(',')
-            if locs.count(locs[0]) == len(locs):
-                ind = int(locs[0])
-                cnt = 0
-                org = ""
-                for k in self.org_list.keys():
-                    cnt += self.org_list[k]
-                    if ind <= cnt:
-                        org = k
-                        break
-                counts[org] = len(locs)
-            else:
-                for loc in locs:
-                    ind = int(loc)
-                    cnt = 0
-                    org = ""
-                    for k in self.org_list.keys():
-                        cnt += self.org_list[k]
-                        if ind <= cnt:
-                            org = k
-                            break
-                    if org not in counts.keys():
-                        counts[org] = 1
-                    else:
-                        counts[org] += 1
-
-            #avg repeats per scaffold
-            scaffold_count = 0
-            rep_count = 0
-            for key in counts.keys():
-                scaffold_count += 1
-                rep_count += counts[key]
-            avg_rep_per_scaff = rep_count / scaffold_count
-            avg_rep_per_scaff = float("%.2f" % avg_rep_per_scaff)
-            avg_rep = QtWidgets.QTableWidgetItem()
-            avg_rep.setData(QtCore.Qt.EditRole, str(avg_rep_per_scaff))
-            avg_rep.setTextAlignment(QtCore.Qt.AlignHCenter)
-
-
-            #% coverage
-            coverage = (len(counts) / len(self.org_list.keys())) * 100
+            # push percent coverage
+            perc_cov = QtWidgets.QTableWidgetItem()
+            coverage = (org_count / len(self.db_files)) * 100
             coverage = float("%.2f" % coverage)
-            perc_coverage = QtWidgets.QTableWidgetItem(str(coverage) + '%')
-            perc_coverage.setTextAlignment(QtCore.Qt.AlignHCenter)
+            perc_cov.setData(QtCore.Qt.EditRole, str(coverage) + '%')
+            perc_cov.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table2.setItem(index, 1, perc_cov)
 
+            # push total count
+            table_count = QtWidgets.QTableWidgetItem()
+            table_count.setData(QtCore.Qt.EditRole, total_count)
+            table_count.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table2.setItem(index, 2, table_count)
 
-            #%consensus
-            tails = str(seeds[3]).split(',')
-            pam_counts = {}
-            for tail in tails:
-                if tail.find('+') != -1:
-                    tail = tail.split('+')
-                    p = tail[1]
-                else:
-                    tail = tail.split('-')
-                    p = tail[1]
-                if p not in pam_counts.keys():
-                    pam_counts[p] = 1
-                else:
-                    pam_counts[p] += 1
-
-            perc_cons = (max(pam_counts.values()) / sum(pam_counts.values())) * 100
-            perc_cons = float("%.2f" % perc_cons)
-            consensus = QtWidgets.QTableWidgetItem(str(perc_cons) + '%')
-            consensus.setTextAlignment(QtCore.Qt.AlignHCenter)
-
-            #consensus seq
-            temp = ""
-            cnt = 0
-            for p in pam_counts.keys():
-                if pam_counts[p] > cnt:
-                    cnt = pam_counts[p]
-                    temp = p
-            for tail in tails:
-                if tail.find('+') != -1:
-                    tail = tail.split('+')
-                else:
-                    tail = tail.split('-')
-                if temp == tail[1]:
-                    temp = tail[0]
-                    break
-
-
-            cons_seq = temp + s
-            consensus_seq = QtWidgets.QTableWidgetItem()
-            consensus_seq.setData(QtCore.Qt.EditRole, cons_seq)
-            consensus_seq.setTextAlignment(QtCore.Qt.AlignHCenter)
-
-            self.table2.setItem(index, 0, seed)
-            self.table2.setItem(index, 1, perc_coverage)
-            self.table2.setItem(index, 2, total_repeats)
+            # push avg repeat
+            avg_rep = QtWidgets.QTableWidgetItem()
+            avg_rep_per_scaff = total_count / org_count
+            avg_rep_per_scaff = float("%.2f" % avg_rep_per_scaff)
+            avg_rep.setData(QtCore.Qt.EditRole, avg_rep_per_scaff)
+            avg_rep.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             self.table2.setItem(index, 3, avg_rep)
-            self.table2.setItem(index, 4, consensus_seq)
-            self.table2.setItem(index, 5, consensus)
+
+            # push seq
+            seq = QtWidgets.QTableWidgetItem()
+            seq.setData(QtCore.Qt.EditRole, fives[majority_index] + seed + threes[majority_index])
+            seq.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table2.setItem(index, 4, seq)
+
+            # push percent consensus
+            perc_cons = QtWidgets.QTableWidgetItem()
+            percent_consensus = (pams.count(pams[majority_index]) / len(pams)) * 100
+            percent_consensus = float("%.2f" % percent_consensus)
+            perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
+            perc_cons.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table2.setItem(index, 5, perc_cons)
+
+            # push score
+            score = QtWidgets.QTableWidgetItem()
+            score.setData(QtCore.Qt.EditRole, scores[majority_index])
+            score.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             self.table2.setItem(index, 6, score)
+
+            # push PAM
+            pam = QtWidgets.QTableWidgetItem()
+            pam.setData(QtCore.Qt.EditRole, pams[majority_index])
+            pam.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             self.table2.setItem(index, 7, pam)
+
+            # push strand
+            strand_val = ""
+            if int(locs[majority_index]) < 0:
+                strand_val = "-"
+            else:
+                strand_val = "+"
+
+            strand = QtWidgets.QTableWidgetItem()
+            strand.setData(QtCore.Qt.EditRole, strand_val)
+            strand.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             self.table2.setItem(index, 8, strand)
 
             index += 1
+            running_val += increase_val
+            self.loading_window.loading_bar.setValue(running_val)
 
         self.table2.resizeColumnsToContents()
         self.loading_window.loading_bar.setValue(25)
@@ -482,23 +360,93 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loading_window.hide()
 
 
+    def get_shared_seeds(self):
+        self.loading_window.info_label.setText("Retrieving Seeds")
+        QtCore.QCoreApplication.processEvents()
+        self.seeds = []
+        for i in range(len(self.db_files)):
+            # setup db connection
+            conn = sqlite3.connect(self.db_files[i])
+            c = conn.cursor()
+            for seeds in c.execute("select seed from repeats limit 0,100;"):
+                seeds = list(seeds)
+                seed = seeds[0]
+                self.seeds.append(seed)
+            c.close()
+            conn.close()
+
+        # cnt = 0
+        #
+        # for i in range(len(self.db_files)):
+        #     # setup db connection
+        #     conn = sqlite3.connect(self.db_files[i])
+        #     c = conn.cursor()
+        #
+        #     # get all seeds
+        #     for seeds in c.execute("select seed from repeats;"):
+        #         seeds = list(seeds)
+        #         seed = seeds[0]
+        #         found = 1
+        #         for j in range(len(self.db_files)):
+        #             if j != i:
+        #                 conn2 = sqlite3.connect(self.db_files[j])
+        #                 c2 = conn2.cursor()
+        #                 data = c2.execute("SELECT count FROM repeats WHERE seed = ? ", (seed,)).fetchone()
+        #                 c2.close()
+        #                 conn2.close()
+        #                 if data == None:
+        #                     break
+        #                 else:
+        #                     found += 1
+        #                     break
+        #
+        #         if found > 1:
+        #             if seed not in self.seeds:
+        #                 self.seeds.append(seed)
+        #                 cnt += 1
+        #
+        #         if cnt >= 100:
+        #             break
+        #
+        #     if cnt >= 100:
+        #         break
+        #     # close db connections
+        #     c.close()
+        #     conn.close()
+
+
+    def get_org_names(self):
+        self.org_names = {}
+        for file in self.cspr_files:
+            with gzip.open(file, "r") as f:
+                line = f.readline()
+                buf = str(line)
+                buf = buf.strip("'b")
+                buf = buf[:len(buf) - 2]
+                org_name = buf.replace("GENOME: ", "")
+
+                line = f.readline()
+                buf = str(line)
+                buf = buf.strip("'b")
+                buf = buf[:len(buf) - 2]
+                kstats = buf.replace("KARYSTATS: ", "")
+                kstats = kstats.split(",")
+                self.org_names[org_name] = len(kstats) - 1
+
+
     def plot_repeats_vs_seeds(self):
         self.pop_analysis_repeats_graph.canvas.axes.clear()
-        conn = sqlite3.connect(self.db_file)
-        c = conn.cursor()
-        data = c.execute("SELECT seed, count from repeats").fetchall()
-        c.close()
-        x1 = list(range(0, len(data)))
+        x1 = list(range(0, len(self.seeds)))
         y1 = []
-        for obj in data:
-            y1.append(int(list(obj)[1]))
+        for val in self.counts:
+            y1.append(val)
         y1.sort(reverse=True)
 
         # get stats
         self.average = statistics.mean(y1)
         self.mode = statistics.mode(y1)
         self.median = statistics.median(y1)
-        self.repeat_count = len(data)
+        self.repeat_count = len(self.seeds)
 
         # clear axes
         self.pop_analysis_repeats_graph.canvas.axes.clear()
@@ -519,34 +467,35 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         y3 = []
         z3 = np.zeros(int((self.total_org_number * (self.total_org_number - 1)) / 2))
         dz = []
-        self.names = list(self.org_list.keys())
+        self.names = list(self.org_names.keys())
         dx = np.ones(int((self.total_org_number * (self.total_org_number - 1)) / 2))
         dy = np.ones(int((self.total_org_number * (self.total_org_number - 1)) / 2))
-        conn = sqlite3.connect(self.db_file)
-        c = conn.cursor()
-        for seeds in c.execute("select * from repeats"):
-            seeds = list(seeds)
-            temp_names = []
-            chroms = str(seeds[1]).split(',')
-            for c in chroms:
-                ind = int(c)
-                cnt = 0
-                c_name = ""
-                for k in self.org_list.keys():
-                    cnt += self.org_list[k]
-                    if ind <= cnt:
-                        c_name = k
-                        break
-                if c_name not in temp_names:
-                    temp_names.append(c_name)
+        for db_file in self.db_files:
+            conn = sqlite3.connect(db_file)
+            c = conn.cursor()
+            for seeds in c.execute("select chromosome from repeats"):
+                seeds = list(seeds)
+                temp_names = []
+                chroms = str(seeds[0]).split(',')
+                for c in chroms:
+                    ind = int(c)
+                    cnt = 0
+                    c_name = ""
+                    for k in self.org_names.keys():
+                        cnt += self.org_names[k]
+                        if ind <= cnt:
+                            c_name = k
+                            break
+                    if c_name not in temp_names:
+                        temp_names.append(c_name)
 
-            if len(temp_names) >= 2:
-                for i in range(len(temp_names)-1):
-                    j = i + 1
-                    while j != len(temp_names):
-                        arr[self.names.index(temp_names[i])][self.names.index(temp_names[j])] += 1
-                        arr[self.names.index(temp_names[j])][self.names.index(temp_names[i])] += 1
-                        j += 1
+                if len(temp_names) >= 2:
+                    for i in range(len(temp_names)-1):
+                        j = i + 1
+                        while j != len(temp_names):
+                            arr[self.names.index(temp_names[i])][self.names.index(temp_names[j])] += 1
+                            arr[self.names.index(temp_names[j])][self.names.index(temp_names[i])] += 1
+                            j += 1
 
         for j in range(cols):
             i = len(self.names)-1
@@ -577,47 +526,46 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     def plot_venn(self):
         self.pop_analysis_venn_diagram.canvas.figure.clf()
-        rows, cols = (self.total_org_number, self.total_org_number)
-        arr = [[0 for i in range(cols)] for j in range(rows)]
+        arr = [[0 for i in range(3)] for j in range(3)]
         all_3 = 0
-        singles = [0 for i in range(cols)]
-        self.names_venn = list(self.org_list.keys())
+        singles = [0 for i in range(3)]
+        if (len(self.org_names.keys()) >= 3):
 
-        if len(self.names_venn) >= 3:
-            conn = sqlite3.connect(self.db_file)
-            c = conn.cursor()
-            for seeds in c.execute("select * from repeats"):
-                seeds = list(seeds)
-                temp_names = []
-                chroms = str(seeds[1]).split(',')
-                for c in chroms:
-                    ind = int(c)
-                    cnt = 0
-                    c_name = ""
-                    for k in self.org_list.keys():
-                        cnt += self.org_list[k]
-                        if ind <= cnt:
-                            c_name = k
-                            break
-                    if c_name not in temp_names:
-                        temp_names.append(c_name)
+            self.names_venn = list(self.org_names.keys())[0:3]
+            for db_file in self.db_files[0:3]:
+                conn = sqlite3.connect(db_file)
+                c = conn.cursor()
+                for seeds in c.execute("select chromosome from repeats;"):
+                    seeds = list(seeds)
+                    temp_names = []
+                    chroms = str(seeds[0]).split(',')
+                    for c in chroms:
+                        ind = int(c)
+                        cnt = 0
+                        c_name = ""
+                        for k in self.org_names.keys():
+                            cnt += self.org_names[k]
+                            if ind <= cnt:
+                                c_name = k
+                                break
+                        if c_name not in temp_names:
+                            temp_names.append(c_name)
+                    if len(temp_names) >= 2:
+                        for i in range(len(temp_names) - 1):
+                            j = i + 1
+                            while j != len(temp_names):
+                                arr[self.names_venn.index(temp_names[i])][self.names_venn.index(temp_names[j])] += 1
+                                arr[self.names_venn.index(temp_names[j])][self.names_venn.index(temp_names[i])] += 1
+                                j += 1
+                    else:
+                        singles[self.names_venn.index(temp_names[0])] += 1
 
-                if len(temp_names) >= 2:
-                    for i in range(len(temp_names) - 1):
-                        j = i + 1
-                        while j != len(temp_names):
-                            arr[self.names_venn.index(temp_names[i])][self.names_venn.index(temp_names[j])] += 1
-                            arr[self.names_venn.index(temp_names[j])][self.names_venn.index(temp_names[i])] += 1
-                            j += 1
-                else:
-                    singles[self.names_venn.index(temp_names[0])] += 1
-
-                if all(x in temp_names for x in [self.names_venn[0], self.names_venn[1], self.names_venn[2]]):
-                    all_3 += 1
-
+                    if all(x in temp_names for x in [self.names_venn[0], self.names_venn[1], self.names_venn[2]]):
+                        all_3 += 1
             venn3_unweighted(subsets=(singles[0], singles[1], arr[0][1], singles[2], arr[0][2],
                                       arr[1][2], all_3), set_labels=('0', '1', '2'))
             self.pop_analysis_venn_diagram.canvas.draw()
+
 
         else:
             self.pop_analysis_venn_diagram.canvas.figure.clf()
@@ -633,60 +581,65 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.loc_finder_table.setRowCount(0)
             return
 
-        #get data from sql table on seeds selected and fill in locations table
+        #get seeds from selected rows in table
         seeds = []
-        i = 0
-        for item in self.table2.selectedItems():
-            if i % 9 == 0:
-                seeds.append(item.text())
-            i += 1
-        conn = sqlite3.connect(self.db_file)
-        c = conn.cursor()
+        for i in self.table2.selectionModel().selectedRows():
+            item = self.table2.item(i.row(), 0)
+            seeds.append(item.text())
+
         index = 0
-        for seed in seeds:
-            data = c.execute("SELECT * FROM repeats WHERE seed = ? ", (seed,)).fetchone()
-            data = list(data)
-            chroms = str(data[1]).split(',')
-            locs = str(data[2]).split(',')
-            tails = str(data[3]).split(',')
-            tail_data = []
-            for tail in tails:
-                if tail.find('+') != -1:
-                    tail = tail.split('+')
-                    tail_data.append(tail[0])
-                else:
-                    tail = tail.split('-')
-                    tail_data.append(tail[0])
-            i = 0
-            for chrom in chroms:
-                ind = int(chrom)
-                cnt = 0
-                org = ""
-                for k in self.org_list.keys():
-                    cnt += self.org_list[k]
-                    if ind <= cnt:
-                        org = k
-                        break
+        #loop through each db table looking for the seed, if found, insert data in to locations table
+        for db_file in self.db_files:
+            conn = sqlite3.connect(db_file)
+            c = conn.cursor()
+            for seed in seeds:
+                data = c.execute("SELECT chromosome, location, five, three FROM repeats WHERE seed = ? ", (seed,)).fetchone()
+                #make sure seed was found in table, then parse and store in table
+                if data != None:
+                    data = list(data)
+                    chroms = data[0].split(',')
+                    locs = data[1].split(',')
+                    fives = data[2].split(',')
+                    threes = data[3].split(',')
+                    if threes[0] == '':
+                        threes = []
+                    if fives[0] == '':
+                        fives = []
+                    i = 0
+                    for chrom in chroms:
+                        ind = int(chrom)
+                        cnt = 0
+                        org = ""
+                        for k in self.org_names.keys():
+                            cnt += self.org_names[k]
+                            if ind <= cnt:
+                                org = k
+                                break
 
-                self.loc_finder_table.setRowCount(index + 1)
-                seed_table = QtWidgets.QTableWidgetItem()
-                sequence_table = QtWidgets.QTableWidgetItem()
-                organism_table = QtWidgets.QTableWidgetItem()
-                chromsome_table = QtWidgets.QTableWidgetItem()
-                location_table = QtWidgets.QTableWidgetItem()
+                        self.loc_finder_table.setRowCount(index + 1)
+                        seed_table = QtWidgets.QTableWidgetItem()
+                        sequence_table = QtWidgets.QTableWidgetItem()
+                        organism_table = QtWidgets.QTableWidgetItem()
+                        chromsome_table = QtWidgets.QTableWidgetItem()
+                        location_table = QtWidgets.QTableWidgetItem()
 
-                seed_table.setData(QtCore.Qt.EditRole, seed)
-                sequence_table.setData(QtCore.Qt.EditRole, tail_data[i] + seed)
-                organism_table.setData(QtCore.Qt.EditRole, org)
-                chromsome_table.setData(QtCore.Qt.EditRole, chrom)
-                location_table.setData(QtCore.Qt.EditRole, locs[i])
-                self.loc_finder_table.setItem(index, 0, seed_table)
-                self.loc_finder_table.setItem(index, 1, sequence_table)
-                self.loc_finder_table.setItem(index, 2, organism_table)
-                self.loc_finder_table.setItem(index, 3, chromsome_table)
-                self.loc_finder_table.setItem(index, 4, location_table)
-                i += 1
-                index += 1
+                        seed_table.setData(QtCore.Qt.EditRole, seed)
+                        if len(fives) == 0 and len(threes) != 0:
+                            sequence_table.setData(QtCore.Qt.EditRole, seed + threes[i])
+                        elif len(threes) == 0 and len(fives) != 0:
+                            sequence_table.setData(QtCore.Qt.EditRole, fives[i] + seed)
+                        else:
+                            sequence_table.setData(QtCore.Qt.EditRole, fives[i] + seed + threes[i])
+                        organism_table.setData(QtCore.Qt.EditRole, org)
+                        chromsome_table.setData(QtCore.Qt.EditRole, chrom)
+                        location_table.setData(QtCore.Qt.EditRole, locs[i])
+                        self.loc_finder_table.setItem(index, 0, seed_table)
+                        self.loc_finder_table.setItem(index, 1, sequence_table)
+                        self.loc_finder_table.setItem(index, 2, organism_table)
+                        self.loc_finder_table.setItem(index, 3, chromsome_table)
+                        self.loc_finder_table.setItem(index, 4, location_table)
+                        i += 1
+                        index += 1
 
         self.loc_finder_table.resizeColumnsToContents()
 
@@ -752,236 +705,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         GlobalSettings.mainWindow.closeFunction()
         event.accept()
-
-
-
-
-
-
-
-
-
-class fna_and_cspr_combiner(QtWidgets.QDialog):
-    def __init__(self):
-        # Qt init stuff
-        super(fna_and_cspr_combiner, self).__init__()
-        uic.loadUi(GlobalSettings.appdir + "pop_analysis_fna_combiner.ui", self)
-        self.sequencer_prog_bar.setValue(0)
-
-        # button connections
-        self.cancel_button.clicked.connect(self.cancel_function)
-        self.start_button.clicked.connect(self.run_analysis)
-
-        # variables below
-        self.ref_para_list = list()
-        self.fna_file_names = list()
-        self.sq = Algorithms.SeqTranslate()
-        self.proc_running = False
-        self.combined_fna_file = ''
-        self.cancelled = False
-
-    # for when the user clicks the 'x' button
-    def closeEvent(self, event):
-        closeWindow = self.cancel_function()
-
-        # if the user is doing OT and does not decide to cancel it ignore the event
-        if closeWindow == -2:
-            event.ignore()
-        else:
-            event.accept()
-
-    # this is the function that will eventually run the analysis. For now, it is just running the combine/build new cspr function
-    def run_analysis(self):
-        # make sure the process isn't already running
-        if self.proc_running:
-            return
-
-        # make sure the user inputs whats needed
-        if self.orgName_line_edit.text() == '' or self.org_code_line_edit.text() == '' or self.orgNum_lineEdit.text() == '':
-            QtWidgets.QMessageBox.question(self, "Missing Information",
-                                           "Please input an organism name, an organism code, and the number of organisms you are analyzing.",
-                                           QtWidgets.QMessageBox.Ok)
-            return
-
-        # make sure the user inputs an integer for the number of organisms
-        if not self.orgNum_lineEdit.text().isdigit():
-            QtWidgets.QMessageBox.question(self, "Error",
-                                           "Organism number must be integers only!",
-                                           QtWidgets.QMessageBox.Ok)
-            return
-
-        self.combine_fna_files()
-        self.build_new_cspr_file()
-
-    # cancel function, just clears everything and closes the window
-    def cancel_function(self):
-        # check to see if the sequencer is running. If so ask the user if they wish to close out
-        if self.proc_running:
-            error = QtWidgets.QMessageBox.question(self, "Sequencer Is Running",
-                                                   "Sequencer is running. Closing this window will cancel that process and return to the Population Analysis window. \n\n"
-                                                   "Do you wish to continue?",
-                                                   QtWidgets.QMessageBox.Yes |
-                                                   QtWidgets.QMessageBox.No,
-                                                   QtWidgets.QMessageBox.No)
-            if (error == QtWidgets.QMessageBox.No):
-                return -2
-            else:
-                self.cancelled = True
-                self.process.kill()
-
-        # close out and leave
-        self.orgName_line_edit.setText('')
-        self.org_code_line_edit.setText('')
-        self.sequencer_prog_bar.setValue(0)
-        self.hide()
-
-    # open the window and get the fna files that the user wishes to use
-    def launch(self, filenames):
-        self.fna_file_names = filenames
-        self.process = QtCore.QProcess()
-        self.show()
-
-    # this function takes a list of file paths, which are FNA or Fasta files, and combines them into one file
-    # this function also builds a parallel/reference list of the chromosomes
-    def combine_fna_files(self):
-        self.ref_para_list.clear()
-
-        # open the output file (currently just a test file)
-        self.combined_fna_file = GlobalSettings.CSPR_DB + '/' + 'temp.fna'
-        out_stream = open(self.combined_fna_file, 'w')
-
-        # for each file in the list
-        for file in self.fna_file_names:
-            file_stream = open(file, 'r')
-
-            buf = file_stream.readline()
-
-            spaceIndex = buf.find(' ') + 1
-            commaIndex = buf.find(',')
-            orgName = buf[spaceIndex:commaIndex]
-
-            # read the whole file
-            while buf != "":
-
-                # if buf is empty, break out
-                if buf == '' or buf == '\n':
-                    break
-
-                # if buf starts with a '>', it's a chromosome so make sure to store it in the ref_para list
-                if buf.startswith('>'):
-                    self.ref_para_list.append((orgName, buf))
-                # right the buf to the new file, and re-read it
-                out_stream.write(buf)
-                buf = file_stream.readline()
-            file_stream.close()
-        out_stream.close()
-
-    # this function builds a new cspr file from the combined FNA file
-    # very similar to New Genome
-    def build_new_cspr_file(self):
-        self.num_chromo_next = False
-        self.num_chromo = 0
-
-        # this function reads output. Just used to populate the progress bar
-        def output_stdout(p):
-            line = str(p.readAll())
-            line = line[2:]
-            line = line[:len(line) - 1]
-            line = line.strip('\\n')
-            line = line.strip('\n')
-            for lines in filter(None, line.split(r'\n')):
-                lines = lines.strip('\n')
-                lines = lines.strip('\\n')
-                if (lines == 'Finished reading in the genome file.'):
-                    self.num_chromo_next = True
-                elif (self.num_chromo_next == True):
-                    lines = lines.strip('\\n')
-                    self.num_chromo_next = False
-                    self.num_chromo = int(lines)
-                elif (lines.find('Chromosome') != -1 and lines.find('complete.') != -1):
-                    temp = lines
-                    temp = temp.replace('Chromosome ', '')
-                    temp = temp.replace(' complete.', '')
-                    temp = temp.strip('\n')
-                    if (int(temp) == self.num_chromo):
-                        self.sequencer_prog_bar.setValue(99)
-                    else:
-                        self.sequencer_prog_bar.setValue(int(temp) / self.num_chromo * 100)
-                elif (lines == 'Finished Creating File.'):
-                    self.sequencer_prog_bar.setValue(100)
-
-        # this function will end up doing stuff when the process is finished.
-        def finished():
-            self.proc_running = False
-
-            if self.cancelled == False:
-                # get the file name
-                cspr_file_name = GlobalSettings.CSPR_DB + '/' + self.org_code_line_edit.text() + '_' + \
-                                 GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0] + '.cspr'
-                self.process.kill()
-                endoChoice = GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0]
-                GlobalSettings.pop_Analysis.total_org_number, GlobalSettings.pop_Analysis.ref_para_list = GlobalSettings.pop_Analysis.parser.popParser(
-                    cspr_file_name, endoChoice)
-                GlobalSettings.pop_Analysis.fill_data()
-            os.remove(self.combined_fna_file)
-            self.cancelled = False
-            self.cancel_function()
-
-        # --------------getting the arugments---------------------------------
-        # get the file path to the combined fna file
-        fna_file_path = self.combined_fna_file
-        path_to_fna = fna_file_path
-        # get the endo_choice, hard coded for now, will eventually from with the user
-        endo_choice = GlobalSettings.pop_Analysis.endoBox.currentText().split(' ')[0]
-        # get the pam itself, taken from the endo_choice. Also, if there's multiple, always take the first one
-        pam = self.sq.endo_info[endo_choice][0].split(',')[0]
-        # get the code. currently hard coded to test_code until I know what to put it to later one
-        code = self.org_code_line_edit.text()
-        # check to see if the seq_finder should do 5' prime or no
-        if int(self.sq.endo_info[endo_choice][3]) == 3:
-            pamdir = False
-        else:
-            pamdir = True
-        # get the output folder location
-        output_location = GlobalSettings.CSPR_DB
-        # get the path to CASPERinfo
-        path_to_info = GlobalSettings.appdir + 'CASPERinfo'
-        # make org name something that will make more sense, this is just for testing right now
-        orgName = self.orgName_line_edit.text() + '  , (meta), ' + self.orgNum_lineEdit.text()
-        # get the seed and RNA length, based on the endo choice
-        gRNA_length = self.sq.endo_info[endo_choice][2]
-        seed_length = self.sq.endo_info[endo_choice][1]
-
-        secondCode = ''
-        # get the notes here
-        for i in range(len(self.ref_para_list)):
-            secondCode = secondCode + self.ref_para_list[i][0] + ',' + self.ref_para_list[i][1] + '|'
-            secondCode = secondCode.replace('\n', '')
-        #------------------done getting the arguments------------------------------
-
-        # get the program path
-        program = '"' + GlobalSettings.appdir + 'Casper_Seq_Finder' + '" '
-
-        # compile all of the arguments into one line
-        args = '"' + endo_choice + '" '
-        args = args + '"' + pam + '" '
-        args = args + '"' + code + '" '
-        args = args + str(pamdir) + ' '
-        args = args + '"' + output_location + '/" '
-        args = args + '"' + path_to_info + '" '
-        args = args + '"' + path_to_fna + '" '
-        args = args + '"' + orgName + '" '
-        args = args + gRNA_length + ' '
-        args = args + seed_length + ' '
-        # combine the program and arguments into 1
-        program = program + args
-
-        self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
-        self.proc_running = True
-        self.process.start(program)
-        self.process.finished.connect(finished)
-
-
 
 
 class loading_window(QtWidgets.QWidget):

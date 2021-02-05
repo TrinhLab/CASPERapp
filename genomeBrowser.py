@@ -1,19 +1,28 @@
 import sys, os
 import GlobalSettings
 from PyQt5 import QtWidgets, uic, QtGui, QtCore, Qt
+import PyQt5.QtWebEngineWidgets
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QDir, QUrl
 from Bio import Entrez, SeqIO
 from bioservices.kegg import KEGG
+import PyQt5.QtNetwork as QtNetwork
 import platform
 
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
+class WebEnginePage(PyQt5.QtWebEngineWidgets.QWebEnginePage):
+	def certificateError(self, certificateError):
+		print("ssl error")
+
 class genomebrowser(QtWidgets.QWidget):
 	def __init__(self, parent=None):
 		self.loadingWindow = loading_window()
+		default_config = QtNetwork.QSslConfiguration.defaultConfiguration()
+		default_config.setProtocol(QtNetwork.QSsl.TlsV1_2)
+		QtNetwork.QSslConfiguration.setDefaultConfiguration(default_config)
 
 	def splitStringNCBI(self, longString):
 		try:
@@ -162,6 +171,7 @@ class genomebrowser(QtWidgets.QWidget):
 
 		self.createHtml(genomeList)
 		self.browser = QWebEngineView()
+
 		file_path = GlobalSettings.appdir + "genomeBrowserTemplate.html"
 		local_url = QUrl.fromLocalFile(file_path)
 		self.browser.load(local_url)
