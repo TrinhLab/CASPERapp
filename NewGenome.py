@@ -174,11 +174,19 @@ class NewGenome(QtWidgets.QMainWindow):
         #endo, pam, repeats, directionality, five length, seed length, three length, orgcode, output path, CASPERinfo path, fna path, orgName, notes
         args = self.Endos[self.comboBoxEndo.currentText()][0]
         args += " " + self.Endos[self.comboBoxEndo.currentText()][1]
+        if self.mt.isChecked():
+            args += " " + "TRUE"
+        else:
+            args += " " + "FALSE"
+        if self.directionality.isChecked():
+            args += " " + "TRUE"
+        else:
+            args += " " + "FALSE"
         if self.repeats_box.isChecked():
             args += " " + "TRUE"
         else:
             args += " " + "FALSE"
-        args += " " + "FALSE"
+
         args += " " + self.Endos[self.comboBoxEndo.currentText()][2]
         args += " " + self.Endos[self.comboBoxEndo.currentText()][3]
         args += " " + self.Endos[self.comboBoxEndo.currentText()][4]
@@ -195,6 +203,7 @@ class NewGenome(QtWidgets.QMainWindow):
         args += " " + '"' + self.orgName.text() + '"'
         args += " " + '"' + "notes" + '"'
 
+        print(args)
         #name = str(self.Endos[self.comboBoxEndo.currentText()][0] + " targets in " + self.orgName.text())
         name = self.orgCode.text() + "_" + str(self.Endos[self.comboBoxEndo.currentText()][0])
         rowPosition = self.job_Table.rowCount()
@@ -312,20 +321,23 @@ class NewGenome(QtWidgets.QMainWindow):
                         elif lines.find("complete.") != -1:
                             self.progress += self.perc_increase
                             self.progressBar.setValue(self.progress)
-                        elif lines.find("sorting") != -1:
-                            self.progress += self.perc_increase
+                        elif lines.find("Processing Targets.") != -1:
+                            self.progress = 70
                             self.progressBar.setValue(self.progress)
-                        elif lines.find("Printing") != -1:
+                        elif lines.find("Writing out uniques.") != -1:
+                            self.progress = 90
+                            self.progressBar.setValue(self.progress)
+                        elif lines.find("Writing out repeats.") != -1:
                             self.progress = 95
                             self.progressBar.setValue(self.progress)
-                        elif lines == "Finished Creating File.":
+                        elif lines == "Finished.":
                             self.progress = 100
                             self.progressBar.setValue(self.progress)
                         self.output_browser.append(lines)
 
             job_args = self.JobsQueue[row_index]
 
-            program = '"' + GlobalSettings.appdir + "Casper_Seq_Finder.exe" + '" '
+            program = '"' + GlobalSettings.appdir + "Playground.exe" + '" '
             program += job_args
             self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
             self.process.start(program)
