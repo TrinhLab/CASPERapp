@@ -337,7 +337,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
             job_args = self.JobsQueue[row_index]
 
-            program = '"' + GlobalSettings.appdir + "Playground.exe" + '" '
+            program = '"' + GlobalSettings.appdir + "Casper_Seq_Finder.exe" + '" '
             program += job_args
             self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
             self.process.start(program)
