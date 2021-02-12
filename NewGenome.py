@@ -204,7 +204,6 @@ class NewGenome(QtWidgets.QMainWindow):
         args += " " + '"' + "notes" + '"'
 
         print(args)
-        #name = str(self.Endos[self.comboBoxEndo.currentText()][0] + " targets in " + self.orgName.text())
         name = self.orgCode.text() + "_" + str(self.Endos[self.comboBoxEndo.currentText()][0])
         rowPosition = self.job_Table.rowCount()
         self.job_Table.insertRow(rowPosition)
@@ -302,7 +301,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 line = str(p.readAll())
                 line = line[2:]
                 line = line[:len(line) - 1]
-                for lines in line.split(r"\r\n"):
+                for lines in line.split(r"\n"):
                     lines = lines.rstrip("\n")
                     lines = lines.rstrip("\r")
                     lines = lines.rstrip(r"\n")
