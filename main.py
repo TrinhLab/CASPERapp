@@ -804,7 +804,6 @@ class CMainWindow(QtWidgets.QMainWindow):
                     for i in range(len(self.annotation_parser.para_dict[item[0]])):
                         # now go through the matches in the normal dict's data
                         for match in self.annotation_parser.reg_dict[self.annotation_parser.para_dict[item[0]][i]]:
-                            print(match)
                             # if they match, store it in holder
                             if item[1] == match:
                                 holder = (match[1], match[3], match[4])
@@ -995,8 +994,8 @@ class CMainWindow(QtWidgets.QMainWindow):
                 buf = (hold.readline())
                 buf = str(buf)
                 buf = buf.strip("'b")
-                buf = buf[:len(buf) - 4]
-                species = buf[8:]
+                buf = buf[:len(buf) - 2]
+                species = buf.replace("GENOME: ",'')
                 endo = str(s[1][:len(s[1]) - 1])
                 if species not in shortName:
                     shortName[species] = s[0]

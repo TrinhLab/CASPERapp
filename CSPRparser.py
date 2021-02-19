@@ -44,7 +44,6 @@ class CSPRparser:
 
 
     def read_first_lines(self):
-        print('read first lines')
         with gzip.open(self.fileName, 'r') as f:
             i = 0
             for line in f:
@@ -53,7 +52,7 @@ class CSPRparser:
                 else:
                     line = str(line)
                     line = line.strip("'b")
-                    line = line[:len(line) - 5]
+                    line = line[:len(line) - 2]
                     if i == 0:
                         colonIndex = line.find(':') + 2
                         buffer1 = line[colonIndex:]
@@ -62,6 +61,7 @@ class CSPRparser:
                         colonIndex = line.find(':') + 2
                         k_data = line[colonIndex:]
                         k_data = k_data.split(',')
+                        k_data = k_data[:-1]
                         for k in k_data:
                             self.karystatsList.append(int(k))
                     else:
@@ -310,8 +310,6 @@ class CSPRparser:
     def read_targets(self, genename, pos_tuple, endo):
         i = 0
         retList = []
-        print(pos_tuple)
-        print(self.fileName)
         header = False
         with gzip.open(self.fileName, 'r') as f:
             for line in f:
