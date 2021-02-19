@@ -131,8 +131,8 @@ class Multitargeting(QtWidgets.QMainWindow):
                 hold.close()
                 buf = str(buf)
                 buf = buf.strip("'b")
-                buf = buf[:len(buf) - 4]
-                species = buf[8:buf.find('\n')]
+                buf = buf[:len(buf) - 2]
+                species = buf.replace("GENOME: ", "")
                 endo = str(s[1])
                 endo = endo.strip('.')
                 if species not in shortName:
