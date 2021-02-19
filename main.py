@@ -45,18 +45,11 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
 
     def submit(self):
-        if self.type == "kegg":
-            self.mainWindow.collect_table_data()
-            self.hide()
-            self.mainWindow.mwfg.moveCenter(self.mainWindow.cp)  ##Center window
-            self.mainWindow.move(self.mainWindow.mwfg.topLeft())  ##Center window
-            self.mainWindow.show()
-        elif self.type == "nonkegg":
-            self.mainWindow.collect_table_data_nonkegg()
-            self.hide()
-            self.mainWindow.mwfg.moveCenter(self.mainWindow.cp)  ##Center window
-            self.mainWindow.move(self.mainWindow.mwfg.topLeft())  ##Center window
-            self.mainWindow.show()
+        self.mainWindow.collect_table_data_nonkegg()
+        self.hide()
+        self.mainWindow.mwfg.moveCenter(self.mainWindow.cp)  ##Center window
+        self.mainWindow.move(self.mainWindow.mwfg.topLeft())  ##Center window
+        self.mainWindow.show()
 
 
     def go_Back(self):
@@ -81,14 +74,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.tableWidget.setHorizontalHeaderLabels("Description;Chromosome #;Type;Gene ID;Select".split(";"))
         mainWindow.checkBoxes = []
         self.type = "nonkegg"
-
-        # below chain of loops goes through and figures out how many rows are needed
-        # for searchValue in mainWindow.searches:
-        #    for definition in mainWindow.searches[searchValue]:
-        #        for gene in mainWindow.searches[searchValue][definition]:
-        #            index += 1
-        # self.tableWidget.setRowCount(index)
-
         index = 0
         for searchValue in mainWindow.searches:
             for definition in mainWindow.searches[searchValue]:
@@ -131,10 +116,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             if index >= 1000:
                 break
 
-
-
-
-
         index = 0
         self.tableWidget.resizeColumnsToContents()
 
@@ -170,12 +151,8 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             select_all = False
 
         # go through and do the selection
-        if self.type == 'kegg':
-            for i in range(self.tableWidget.rowCount()):
-                self.tableWidget.cellWidget(i, 2).setChecked(select_all)
-        elif self.type == 'nonkegg':
-            for i in range(self.tableWidget.rowCount()):
-                self.tableWidget.cellWidget(i, 4).setChecked(select_all)
+        for i in range(self.tableWidget.rowCount()):
+            self.tableWidget.cellWidget(i, 4).setChecked(select_all)
 
 
     def fill_Table(self, mainWindow):
@@ -186,7 +163,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.tableWidget.setColumnCount(3)
         self.mainWindow.progressBar.setValue(25)
         self.tableWidget.setHorizontalHeaderLabels("Description;Gene ID;Select".split(";"))
-        self.type = "kegg"
 
         mainWindow.checkBoxes = []
 
@@ -814,7 +790,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.check_ntseq_info.clear()
         full_org = str(self.orgChoice.currentText())
         holder = ()
-
         for item in self.checkBoxes:
             if item[2].isChecked():
                 # if they searched base on Locus Tag
@@ -829,6 +804,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     for i in range(len(self.annotation_parser.para_dict[item[0]])):
                         # now go through the matches in the normal dict's data
                         for match in self.annotation_parser.reg_dict[self.annotation_parser.para_dict[item[0]][i]]:
+                            print(match)
                             # if they match, store it in holder
                             if item[1] == match:
                                 holder = (match[1], match[3], match[4])

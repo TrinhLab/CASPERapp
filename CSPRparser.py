@@ -310,12 +310,14 @@ class CSPRparser:
     def read_targets(self, genename, pos_tuple, endo):
         i = 0
         retList = []
+        print(pos_tuple)
+        print(self.fileName)
         header = False
         with gzip.open(self.fileName, 'r') as f:
             for line in f:
                 line = str(line)
                 line = line.strip("'b")
-                line = line[:len(line) - 4]
+                line = line[:len(line) - 2]
                 if i > 2:
                     if '>' in line and '(' + str(pos_tuple[0]) + ')' in line:
                         header = True
@@ -323,9 +325,13 @@ class CSPRparser:
 
                         if line.find('>') != -1:
                             break
-                        line = line.split(';')
-                        if int(line[0]) >= int(pos_tuple[1]) and int(line[0]) < int(pos_tuple[2]):
-                            retList.append((line[0], line[1], line[2], line[3], line[4], line[5]))
+                        line = line.split(',')
+                        if abs(int(line[0])) >= int(pos_tuple[1]) and abs(int(line[0])) < int(pos_tuple[2]):
+                            if int(line[0]) < 0:
+                                strand = "-"
+                            else:
+                                strand = "+"
+                            retList.append((line[0], line[1], line[2], line[3], strand))
                         elif int(line[0]) >= int(pos_tuple[2]):
                             break
                     elif line == 'REPEATS':
