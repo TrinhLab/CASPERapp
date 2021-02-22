@@ -119,7 +119,7 @@
               <x>0</x>
               <y>0</y>
               <width>323</width>
-              <height>77</height>
+              <height>76</height>
              </rect>
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -155,24 +155,10 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_6">
-             <property name="text">
-              <string>NCBI File Selection</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="0">
             <widget class="QPushButton" name="browseForFile">
              <property name="text">
               <string>Browse for a File</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QPushButton" name="NCBI_File_Search">
-             <property name="text">
-              <string>Search NCBI</string>
              </property>
             </widget>
            </item>
@@ -314,13 +300,6 @@
              </property>
              <property name="checked">
               <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="0" colspan="2">
-            <widget class="QCheckBox" name="directionality">
-             <property name="text">
-              <string>Directionality</string>
              </property>
             </widget>
            </item>
@@ -521,6 +500,7 @@
     </item>
    </layout>
   </widget>
+  <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
@@ -535,12 +515,6 @@
      <string>File</string>
     </property>
     <addaction name="actionExisting_Organism"/>
-   </widget>
-   <widget class="QMenu" name="menuEdit">
-    <property name="title">
-     <string>Edit</string>
-    </property>
-    <addaction name="actionAdd_Endonuclease"/>
    </widget>
    <widget class="QMenu" name="menuPath">
     <property name="title">
@@ -562,12 +536,10 @@
     <addaction name="go_ncbi"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuEdit"/>
    <addaction name="menuPath"/>
    <addaction name="menuStatistics"/>
    <addaction name="menuHelp"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <action name="actionExisting_Organism">
    <property name="text">
     <string>Existing Organism</string>

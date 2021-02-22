@@ -101,9 +101,6 @@ class NewGenome(QtWidgets.QMainWindow):
         self.visit_repo.triggered.connect(self.visit_repo_func)
         self.go_ncbi.triggered.connect(self.open_ncbi_web_page)
 
-        #ncbi tool
-        self.NCBI_File_Search.clicked.connect(self.open_ncbi_tool)
-
         self.comboBoxEndo.currentIndexChanged.connect(self.changeEndos)
 
         #some defaults pams for testing
@@ -178,10 +175,12 @@ class NewGenome(QtWidgets.QMainWindow):
             args += " " + "TRUE"
         else:
             args += " " + "FALSE"
-        if self.directionality.isChecked():
-            args += " " + "TRUE"
-        else:
+
+        if self.Endos[self.comboBoxEndo.currentText()][5] == "3":
             args += " " + "FALSE"
+        else:
+            args += " " + "TRUE"
+
         if self.repeats_box.isChecked():
             args += " " + "TRUE"
         else:
@@ -203,7 +202,6 @@ class NewGenome(QtWidgets.QMainWindow):
         args += " " + '"' + self.orgName.text() + '"'
         args += " " + '"' + "notes" + '"'
 
-        print(args)
         name = self.orgCode.text() + "_" + str(self.Endos[self.comboBoxEndo.currentText()][0])
         rowPosition = self.job_Table.rowCount()
         self.job_Table.insertRow(rowPosition)
@@ -234,7 +232,8 @@ class NewGenome(QtWidgets.QMainWindow):
                         five_length = line_tokened[2]
                         seed_length = line_tokened[3]
                         three_length = line_tokened[4]
-                        self.Endos[endo + " - PAM: " + p_pam] = (endo, p_pam, five_length, seed_length, three_length)
+                        dir = line_tokened[5]
+                        self.Endos[endo + " - PAM: " + p_pam] = (endo, p_pam, five_length, seed_length, three_length, dir)
                 break
         f.close()
         self.comboBoxEndo.addItems(self.Endos.keys())
@@ -408,10 +407,6 @@ class NewGenome(QtWidgets.QMainWindow):
         self.lineEdit_3.clear()
         self.first = False
         self.s_file.clear()
-
-
-    def open_ncbi_tool(self):
-        GlobalSettings.mainWindow.ncbi.show()
 
 
     def open_ncbi_web_page(self):
