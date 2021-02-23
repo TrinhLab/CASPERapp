@@ -52,9 +52,9 @@ spCas9;NGG;4;16;0;3;Streptococcus pyogenes;II-A
 saCas9;NNGRRT;4;16;0;3;Staphylococcus aureus;II-A
 spCas9-VRER;NGCG;4;16;0;3;Streptococcus pyogenes engineered variant;II-A
 st1Cas9;NNAGAAW;8;16;0;3;Streptococcus thermophilus;II-C
-nmeCas9;NNNNGATT;16;24;3;Neisseria meningitidis;II-C
-asCas12;TTTV;16;24;5;Acidimonaccocus;V-A
-LbCpf1;TTTV,TCTN;16;24;5;Lachnospiraceae bacterium;V-A
+nmeCas9;NNNNGATT;8;16;0;3;Neisseria meningitidis;II-C
+asCas12;TTTV;0;16;8;5;Acidimonaccocus;V-A
+LbCpf1;TTTV,TCTN;0;16;8;5;Lachnospiraceae bacterium;V-A
 LbuCas13a;HN;4;12;4;5;Leptospirae buccalis;VI-A
 -----------------------------------------------------------
 CRISPRSCAN_DATA
