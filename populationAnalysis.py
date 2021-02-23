@@ -13,6 +13,8 @@ import gzip
 import sqlite3
 from collections import Counter
 import statistics
+from itertools import combinations
+
 
 class Pop_Analysis(QtWidgets.QMainWindow):
     def __init__(self):
@@ -94,6 +96,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         self.loading_window = loading_window()
 
+        self.show_names.hide()
+        self.show_names_2.hide()
 
 
 
@@ -228,11 +232,16 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         index = 0
 
         #get seeds shared between files
-        self.get_shared_seeds()
+        self.seeds = self.get_shared_seeds(self.db_files, True)
+
+        if(len(self.seeds) == 0):
+            self.loading_window.hide()
+            return
+
         increase_val = float(15 / len(self.seeds))
         running_val = self.loading_window.loading_bar.value()
         self.loading_window.info_label.setText("Parsing Seed Data")
-        QtCore.QCoreApplication.processEvents()
+        #QtCore.QCoreApplication.processEvents()
 
         #retrieve data on shared seeds
         self.counts = []
@@ -353,74 +362,83 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         self.table2.resizeColumnsToContents()
         self.loading_window.loading_bar.setValue(25)
-        self.plot_repeats_vs_seeds()
-        self.loading_window.loading_bar.setValue(50)
         if len(self.db_files) > 1:
             self.plot_3D_graph()
+        else:
+            self.pop_analysis_3dgraph.canvas.figure.set_visible(False)
+            self.show_names.hide()
 
-        self.loading_window.loading_bar.setValue(75)
+        self.loading_window.loading_bar.setValue(50)
         if len(self.db_files) > 2:
             self.plot_venn()
+        else:
+            self.pop_analysis_venn_diagram.canvas.figure.set_visible(False)
+            self.show_names_2.hide()
+
+        self.loading_window.loading_bar.setValue(75)
+        self.plot_repeats_vs_seeds()
 
         self.loading_window.loading_bar.setValue(100)
         self.loading_window.hide()
         QtCore.QCoreApplication.processEvents()
 
 
+    #db_files is an array of database files for the organisms that will be looked at for shared seeds
+    def get_shared_seeds(self, db_files, limit=False):
+        #vars
+        aliases = []
 
-    def get_shared_seeds(self):
-        self.loading_window.info_label.setText("Retrieving Seeds")
-        QtCore.QCoreApplication.processEvents()
-        self.seeds = []
-        for i in range(len(self.db_files)):
-            # setup db connection
-            conn = sqlite3.connect(self.db_files[i])
-            c = conn.cursor()
-            for seeds in c.execute("select seed from repeats limit 0,100;"):
-                seeds = list(seeds)
-                seed = seeds[0]
-                self.seeds.append(seed)
-            c.close()
-            conn.close()
+        #get db attachment aliases
+        for i in range(1, len(db_files) + 1):
+            aliases.append("main" + str(i))
 
-        # cnt = 0
-        #
-        # for i in range(len(self.db_files)):
-        #     # setup db connection
-        #     conn = sqlite3.connect(self.db_files[i])
-        #     c = conn.cursor()
-        #
-        #     # get all seeds
-        #     for seeds in c.execute("select seed from repeats;"):
-        #         seeds = list(seeds)
-        #         seed = seeds[0]
-        #         found = 1
-        #         for j in range(len(self.db_files)):
-        #             if j != i:
-        #                 conn2 = sqlite3.connect(self.db_files[j])
-        #                 c2 = conn2.cursor()
-        #                 data = c2.execute("SELECT count FROM repeats WHERE seed = ? ", (seed,)).fetchone()
-        #                 c2.close()
-        #                 conn2.close()
-        #                 if data == None:
-        #                     break
-        #                 else:
-        #                     found += 1
-        #                     break
-        #
-        #         if found > 1:
-        #             if seed not in self.seeds:
-        #                 self.seeds.append(seed)
-        #                 cnt += 1
-        #
-        #         if cnt >= 100:
-        #             break
-        #
-        #     if cnt >= 100:
-        #         break
-        #     # close db connections
-        #     c.close()
-        #     conn.close()
+        #memory connections for inner join on db files to hold what seeds are shared
+        new_conn = sqlite3.connect('temp_join.db')
+        new_c = new_conn.cursor()
+        new_c.execute("PRAGMA synchronous = OFF;")
+        new_c.execute("PRAGMA journal_mode = OFF;")
+        new_c.execute("PRAGMA locking_mode = EXCLUSIVE;")
+        new_c.execute("DROP TABLE IF EXISTS repeats;")
+        new_c.execute("VACUUM;")
+        new_c.execute("DROP TABLE IF EXISTS join_results;")
+        new_c.execute("CREATE table join_results (seed TEXT PRIMARY KEY);")
+
+        #attach each db file with an alias
+        for i in range(len(db_files)):
+            new_c.execute("ATTACH DATABASE '" + db_files[i] + "' AS " + aliases[i] + ";")
+
+        # start transaction
+        new_c.execute("BEGIN TRANSACTION;")
+
+        sql_inner_join = "INSERT into main.join_results select main1.repeats.seed from main1.repeats "
+
+        for i in range(len(aliases[:-1])):
+            sql_inner_join += "inner join " + aliases[i + 1] + ".repeats on "
+            sql_inner_join += aliases[i] + ".repeats.seed = " + aliases[i + 1] + ".repeats.seed "
+
+        #execute inner join
+        new_c.execute(sql_inner_join)
+
+        #get shared data
+        if limit == False:
+            shared_seeds = new_c.execute("select count(*) from join_results").fetchall()
+            return shared_seeds
+        else:
+            shared_seeds = new_c.execute("select * from join_results limit 0,100").fetchall()
+
+        #end transaction
+        new_c.execute("END TRANSACTION;")
+
+        #close memory db
+        new_c.close()
+        new_conn.close()
+
+        #parse shared seeds into self.seeds
+        seeds = []
+        for tup in shared_seeds:
+            seeds.append(tup[0])
+
+        return seeds
 
 
     def get_org_names(self):
@@ -443,6 +461,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
 
     def plot_repeats_vs_seeds(self):
+        self.pop_analysis_repeats_graph.canvas.figure.set_visible(True)
         self.pop_analysis_repeats_graph.canvas.axes.clear()
         x1 = list(range(0, len(self.seeds)))
         y1 = []
@@ -465,9 +484,13 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.pop_analysis_repeats_graph.canvas.axes.set_title('Number of Repeats per Seed ID Number')
         # always redraw at the end
         self.pop_analysis_repeats_graph.canvas.draw()
+        QtCore.QCoreApplication.processEvents()
 
 
     def plot_3D_graph(self):
+        self.pop_analysis_3dgraph.canvas.figure.set_visible(True)
+        self.show_names.show()
+
         rows, cols = (self.total_org_number, self.total_org_number)
         arr = [[0 for i in range(cols)] for j in range(rows)]
 
@@ -478,32 +501,12 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.names = list(self.org_names.keys())
         dx = np.ones(int((self.total_org_number * (self.total_org_number - 1)) / 2))
         dy = np.ones(int((self.total_org_number * (self.total_org_number - 1)) / 2))
-        for db_file in self.db_files:
-            conn = sqlite3.connect(db_file)
-            c = conn.cursor()
-            for seeds in c.execute("select chromosome from repeats"):
-                seeds = list(seeds)
-                temp_names = []
-                chroms = str(seeds[0]).split(',')
-                for c in chroms:
-                    ind = int(c)
-                    cnt = 0
-                    c_name = ""
-                    for k in self.org_names.keys():
-                        cnt += self.org_names[k]
-                        if ind <= cnt:
-                            c_name = k
-                            break
-                    if c_name not in temp_names:
-                        temp_names.append(c_name)
 
-                if len(temp_names) >= 2:
-                    for i in range(len(temp_names)-1):
-                        j = i + 1
-                        while j != len(temp_names):
-                            arr[self.names.index(temp_names[i])][self.names.index(temp_names[j])] += 1
-                            arr[self.names.index(temp_names[j])][self.names.index(temp_names[i])] += 1
-                            j += 1
+        for pair in list(combinations(self.db_files, 2)):
+            shared_seeds = list(self.get_shared_seeds(list(pair), False)[0])[0]
+
+            arr[self.db_files.index(pair[0])][self.db_files.index(pair[1])] += int(shared_seeds)
+            arr[self.db_files.index(pair[1])][self.db_files.index(pair[0])] += int(shared_seeds)
 
         for j in range(cols):
             i = len(self.names)-1
@@ -533,55 +536,54 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.pop_analysis_3dgraph.canvas.axes.set_xticklabels(new_names, rotation=45)
         self.pop_analysis_3dgraph.canvas.axes.set_yticklabels(new_names, rotation=-45)
         self.pop_analysis_3dgraph.canvas.draw()
-        self.pop_analysis_3dgraph.show()
 
 
     def plot_venn(self):
+        self.pop_analysis_venn_diagram.canvas.figure.set_visible(True)
+        self.show_names_2.show()
+
         self.pop_analysis_venn_diagram.canvas.figure.clf()
         arr = [[0 for i in range(3)] for j in range(3)]
         all_3 = 0
         singles = [0 for i in range(3)]
-        if (len(self.org_names.keys()) >= 3):
 
-            self.names_venn = list(self.org_names.keys())[0:3]
-            for db_file in self.db_files[0:3]:
-                conn = sqlite3.connect(db_file)
-                c = conn.cursor()
-                for seeds in c.execute("select chromosome from repeats;"):
-                    seeds = list(seeds)
-                    temp_names = []
-                    chroms = str(seeds[0]).split(',')
-                    for c in chroms:
-                        ind = int(c)
-                        cnt = 0
-                        c_name = ""
-                        for k in self.org_names.keys():
-                            cnt += self.org_names[k]
-                            if ind <= cnt:
-                                c_name = k
-                                break
-                        if c_name not in temp_names:
-                            temp_names.append(c_name)
-                    if len(temp_names) >= 2:
-                        for i in range(len(temp_names) - 1):
-                            j = i + 1
-                            while j != len(temp_names):
-                                arr[self.names_venn.index(temp_names[i])][self.names_venn.index(temp_names[j])] += 1
-                                arr[self.names_venn.index(temp_names[j])][self.names_venn.index(temp_names[i])] += 1
-                                j += 1
-                    else:
-                        singles[self.names_venn.index(temp_names[0])] += 1
+        self.names_venn = list(self.org_names.keys())[0:3]
+        for db_file in self.db_files[0:3]:
+            conn = sqlite3.connect(db_file)
+            c = conn.cursor()
+            for seeds in c.execute("select chromosome from repeats;"):
+                seeds = list(seeds)
+                temp_names = []
+                chroms = str(seeds[0]).split(',')
+                for c in chroms:
+                    ind = int(c)
+                    cnt = 0
+                    c_name = ""
+                    for k in self.org_names.keys():
+                        cnt += self.org_names[k]
+                        if ind <= cnt:
+                            c_name = k
+                            break
+                    if c_name not in temp_names:
+                        temp_names.append(c_name)
+                if len(temp_names) >= 2:
+                    for i in range(len(temp_names) - 1):
+                        j = i + 1
+                        while j != len(temp_names):
+                            arr[self.names_venn.index(temp_names[i])][self.names_venn.index(temp_names[j])] += 1
+                            arr[self.names_venn.index(temp_names[j])][self.names_venn.index(temp_names[i])] += 1
+                            j += 1
+                else:
+                    singles[self.names_venn.index(temp_names[0])] += 1
 
-                    if all(x in temp_names for x in [self.names_venn[0], self.names_venn[1], self.names_venn[2]]):
-                        all_3 += 1
-            venn3_unweighted(subsets=(singles[0], singles[1], arr[0][1], singles[2], arr[0][2],
-                                      arr[1][2], all_3), set_labels=('0', '1', '2'))
-            self.pop_analysis_venn_diagram.canvas.draw()
+                if all(x in temp_names for x in [self.names_venn[0], self.names_venn[1], self.names_venn[2]]):
+                    all_3 += 1
 
 
-        else:
-            self.pop_analysis_venn_diagram.canvas.figure.clf()
-            self.pop_analysis_venn_diagram.canvas.draw()
+        venn3_unweighted(subsets=(singles[0], singles[1], arr[0][1], singles[2], arr[0][2],
+                                  arr[1][2], all_3), set_labels=('0', '1', '2'))
+        self.pop_analysis_venn_diagram.canvas.draw()
+        self.show_names_2.show()
 
 
     def find_locations(self):
@@ -600,6 +602,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             seeds.append(item.text())
 
         index = 0
+        org_names = list(self.org_names.keys())
         #loop through each db table looking for the seed, if found, insert data in to locations table
         for db_file in self.db_files:
             conn = sqlite3.connect(db_file)
@@ -619,14 +622,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         fives = []
                     i = 0
                     for chrom in chroms:
-                        ind = int(chrom)
-                        cnt = 0
-                        org = ""
-                        for k in self.org_names.keys():
-                            cnt += self.org_names[k]
-                            if ind <= cnt:
-                                org = k
-                                break
 
                         self.loc_finder_table.setRowCount(index + 1)
                         seed_table = QtWidgets.QTableWidgetItem()
@@ -642,7 +637,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                             sequence_table.setData(QtCore.Qt.EditRole, fives[i] + seed)
                         else:
                             sequence_table.setData(QtCore.Qt.EditRole, fives[i] + seed + threes[i])
-                        organism_table.setData(QtCore.Qt.EditRole, org)
+                        organism_table.setData(QtCore.Qt.EditRole, org_names[self.db_files.index(db_file)])
                         chromsome_table.setData(QtCore.Qt.EditRole, chrom)
                         location_table.setData(QtCore.Qt.EditRole, locs[i])
                         self.loc_finder_table.setItem(index, 0, seed_table)
