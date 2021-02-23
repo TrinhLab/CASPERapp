@@ -95,6 +95,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loading_window = loading_window()
 
 
+
+
     def prevent_toggle(self):
         self.meta_genomic_cspr_checkbox.setChecked(QtCore.Qt.Checked)
 
@@ -353,11 +355,17 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loading_window.loading_bar.setValue(25)
         self.plot_repeats_vs_seeds()
         self.loading_window.loading_bar.setValue(50)
-        self.plot_3D_graph()
+        if len(self.db_files) > 1:
+            self.plot_3D_graph()
+
         self.loading_window.loading_bar.setValue(75)
-        self.plot_venn()
+        if len(self.db_files) > 2:
+            self.plot_venn()
+
         self.loading_window.loading_bar.setValue(100)
         self.loading_window.hide()
+        QtCore.QCoreApplication.processEvents()
+
 
 
     def get_shared_seeds(self):
@@ -512,6 +520,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         for n in range(len(self.names)):
             new_names.append(n)
 
+        for x, y, z in zip(x3, y3, dz):
+            label = '%d' % (z)
+            self.pop_analysis_3dgraph.canvas.axes.text(x + 0.5, y + 0.5, z, label)
 
         self.pop_analysis_3dgraph.canvas.axes.set_xlabel('x')
         self.pop_analysis_3dgraph.canvas.axes.set_ylabel('y')
@@ -522,6 +533,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.pop_analysis_3dgraph.canvas.axes.set_xticklabels(new_names, rotation=45)
         self.pop_analysis_3dgraph.canvas.axes.set_yticklabels(new_names, rotation=-45)
         self.pop_analysis_3dgraph.canvas.draw()
+        self.pop_analysis_3dgraph.show()
 
 
     def plot_venn(self):
