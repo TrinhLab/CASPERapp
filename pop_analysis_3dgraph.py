@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import *
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from mpl_toolkits.mplot3d import Axes3D
 
 
 
