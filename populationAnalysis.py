@@ -667,7 +667,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         ax = self.pop_analysis_3dgraph.canvas.axes
 
-        im = self.pop_analysis_3dgraph.canvas.axes.imshow(arr, cmap='summer')
+        im = self.pop_analysis_3dgraph.canvas.axes.imshow(arr, cmap='summer', interpolation='none', aspect='equal')
 
         self.pop_analysis_3dgraph.canvas.cbar = self.pop_analysis_3dgraph.canvas.axes.figure.colorbar(im, ax=self.pop_analysis_3dgraph.canvas.axes)
         self.pop_analysis_3dgraph.canvas.cbar.ax.set_ylabel("", rotation=-90, va="bottom")
@@ -679,9 +679,13 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             i,j = sel.target.index
             sel.annotation.set_text(arr[i][j])
 
+        ax.set_xticks(np.arange(0.5, len(arr)-1, 1), minor=True)
+        ax.set_yticks(np.arange(0.5, len(arr)-1, 1), minor=True)
         ax.set_xticks(np.arange(len(arr)))
-        ax.set_yticks(np.arange(len(arr[0])))
-
+        ax.set_yticks(np.arange(len(arr)))
+        ax.grid(which='minor', color='w', linestyle='-', linewidth=2)
+        ax.set_frame_on(False)
+        #ax.set_aspect('equal')
 #        for i in range(len(arr)):
 #            for j in range(len(arr)):
 #                text = ax.text(j, i, arr[i][j],
