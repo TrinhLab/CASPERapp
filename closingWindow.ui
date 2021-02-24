@@ -14,7 +14,7 @@
    <string>Keep or Delete Files</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
+   <string notr="true">font: 14pt &quot;Arial&quot;;</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="1" column="0" colspan="2">
@@ -69,6 +69,12 @@
      </item>
      <item row="0" column="0">
       <widget class="QPushButton" name="submit_button">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>32</height>
+        </size>
+       </property>
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Once pressed, this button will delete any and all selected/highlighted files in the table.&lt;/p&gt;&lt;p&gt;If no files are selected/highlighted, no files will be deleted.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;After this process is done, the program will close.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>

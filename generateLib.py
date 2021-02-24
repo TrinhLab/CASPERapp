@@ -1,7 +1,6 @@
 import GlobalSettings
 import os
 from PyQt5 import QtWidgets, Qt, uic, QtCore
-from Algorithms import SeqTranslate
 from functools import partial
 from CSPRparser import CSPRparser
 import re
@@ -34,7 +33,6 @@ class genLibrary(QtWidgets.QDialog):
         self.anno_data = dict()
         self.kegg_nonKegg = ''
         self.gen_lib_dict = dict()
-        self.S = SeqTranslate()
         self.cspr_data = dict()
         self.Output = dict()
         self.off_tol = .05

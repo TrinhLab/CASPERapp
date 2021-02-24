@@ -6,13 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>596</width>
-    <height>490</height>
+    <width>522</width>
+    <height>408</height>
    </rect>
   </property>
   <property name="font">
    <font>
-    <pointsize>11</pointsize>
+    <family>Arial</family>
+    <pointsize>14</pointsize>
    </font>
   </property>
   <property name="windowTitle">
@@ -21,20 +22,36 @@
   <property name="autoFillBackground">
    <bool>true</bool>
   </property>
+  <property name="styleSheet">
+   <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="3" column="4" alignment="Qt::AlignLeft">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetFixedSize</enum>
+   </property>
+   <item row="7" column="3" alignment="Qt::AlignLeft">
+    <widget class="QLabel" name="label_7">
+     <property name="text">
+      <string>Ouptut File Name:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="3" alignment="Qt::AlignLeft">
     <widget class="QLabel" name="label_4">
      <property name="font">
       <font>
-       <family>Sans Serif</family>
-       <pointsize>11</pointsize>
+       <family>Arial</family>
+       <pointsize>14</pointsize>
        <weight>50</weight>
        <italic>false</italic>
        <bold>false</bold>
       </font>
      </property>
      <property name="styleSheet">
-      <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
+      <string notr="true">font: 14pt &quot;Arial&quot;;</string>
      </property>
      <property name="text">
       <string>Endonuclease:</string>
@@ -44,7 +61,7 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="4">
+   <item row="4" column="3">
     <widget class="QLabel" name="label_2">
      <property name="minimumSize">
       <size>
@@ -54,43 +71,49 @@
      </property>
      <property name="font">
       <font>
-       <family>Sans Serif</family>
-       <pointsize>11</pointsize>
+       <family>Arial</family>
+       <pointsize>14</pointsize>
        <weight>50</weight>
        <italic>false</italic>
        <bold>false</bold>
       </font>
      </property>
      <property name="styleSheet">
-      <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
+      <string notr="true">font: 14pt &quot;Arial&quot;;</string>
      </property>
      <property name="text">
       <string>Max No. Mismatches:</string>
      </property>
     </widget>
    </item>
-   <item row="14" column="1" colspan="2">
-    <widget class="QProgressBar" name="progressBar">
-     <property name="value">
-      <number>24</number>
-     </property>
-    </widget>
-   </item>
-   <item row="11" column="4" rowspan="2">
+   <item row="10" column="3" rowspan="2" alignment="Qt::AlignRight">
     <widget class="QPushButton" name="submitButton">
+     <property name="minimumSize">
+      <size>
+       <width>150</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>150</width>
+       <height>16777215</height>
+      </size>
+     </property>
      <property name="text">
       <string>Submit</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="1" colspan="4" alignment="Qt::AlignLeft">
+   <item row="0" column="0" colspan="4" alignment="Qt::AlignLeft">
     <widget class="QLabel" name="label_5">
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>24</pointsize>
-       <weight>75</weight>
-       <bold>true</bold>
+       <pointsize>14</pointsize>
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
       </font>
      </property>
      <property name="autoFillBackground">
@@ -107,28 +130,14 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="1" colspan="4">
+   <item row="1" column="0" colspan="4">
     <widget class="Line" name="line">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
-   <item row="6" column="3">
-    <widget class="QPushButton" name="pushButton">
-     <property name="text">
-      <string>Change</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="1">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Tolerance:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="1" colspan="2">
+   <item row="8" column="0" colspan="2">
     <widget class="QLineEdit" name="altpamlistline">
      <property name="maximumSize">
       <size>
@@ -138,19 +147,42 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
+   <item row="5" column="2">
+    <widget class="QPushButton" name="pushButton">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Change</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label">
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>Tolerance:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
     <widget class="QLabel" name="label_3">
      <property name="font">
       <font>
-       <family>Sans Serif</family>
-       <pointsize>11</pointsize>
+       <family>Arial</family>
+       <pointsize>14</pointsize>
        <weight>50</weight>
        <italic>false</italic>
        <bold>false</bold>
       </font>
      </property>
      <property name="styleSheet">
-      <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
+      <string notr="true">font: 14pt &quot;Arial&quot;;</string>
      </property>
      <property name="text">
       <string>Organism:</string>
@@ -160,14 +192,17 @@
      </property>
     </widget>
    </item>
-   <item row="11" column="1" rowspan="2" colspan="2">
-    <widget class="QPushButton" name="Run">
-     <property name="text">
-      <string>Run</string>
+   <item row="3" column="0" colspan="2">
+    <widget class="QComboBox" name="OrgcomboBox">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>32</height>
+      </size>
      </property>
     </widget>
    </item>
-   <item row="8" column="1" colspan="2">
+   <item row="7" column="0" colspan="2">
     <widget class="QCheckBox" name="checkBox">
      <property name="minimumSize">
       <size>
@@ -186,54 +221,63 @@
      </property>
     </widget>
    </item>
-   <item row="13" column="1">
+   <item row="12" column="0">
     <widget class="QLabel" name="label_6">
      <property name="text">
-      <string>Progress</string>
+      <string>Progress:</string>
      </property>
     </widget>
    </item>
-   <item row="6" column="0">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
+   <item row="5" column="3">
+    <widget class="QComboBox" name="mismatchcomboBox">
+     <property name="minimumSize">
       <size>
-       <width>40</width>
-       <height>20</height>
+       <width>0</width>
+       <height>32</height>
       </size>
      </property>
-    </spacer>
+    </widget>
    </item>
-   <item row="4" column="1" colspan="2">
-    <widget class="QComboBox" name="OrgcomboBox"/>
-   </item>
-   <item row="7" column="4">
+   <item row="6" column="3">
     <widget class="QCheckBox" name="AVG">
      <property name="text">
-      <string>Average Output
-          Only</string>
+      <string>Average Output</string>
      </property>
     </widget>
    </item>
-   <item row="14" column="4">
+   <item row="8" column="3">
+    <widget class="QLineEdit" name="FileName">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>32</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="3" alignment="Qt::AlignRight">
     <widget class="QPushButton" name="cancelButton">
+     <property name="minimumSize">
+      <size>
+       <width>150</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>150</width>
+       <height>16777215</height>
+      </size>
+     </property>
      <property name="text">
       <string>Cancel</string>
      </property>
     </widget>
    </item>
-   <item row="6" column="4">
-    <widget class="QComboBox" name="mismatchcomboBox"/>
-   </item>
-   <item row="9" column="4">
-    <widget class="QLineEdit" name="FileName"/>
-   </item>
-   <item row="6" column="2">
+   <item row="5" column="1">
     <widget class="QLineEdit" name="tolerancelineEdit"/>
    </item>
-   <item row="10" column="1" colspan="4">
+   <item row="9" column="0" colspan="4">
     <widget class="Line" name="line_2">
      <property name="lineWidth">
       <number>2</number>
@@ -243,64 +287,54 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="4">
-    <widget class="QComboBox" name="EndocomboBox"/>
-   </item>
-   <item row="0" column="1">
-    <spacer name="verticalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
+   <item row="3" column="3">
+    <widget class="QComboBox" name="EndocomboBox">
+     <property name="minimumSize">
       <size>
-       <width>20</width>
-       <height>40</height>
+       <width>0</width>
+       <height>32</height>
       </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="8" column="4">
-    <widget class="QLabel" name="label_7">
-     <property name="text">
-      <string>Ouptut File Name:</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
      </property>
     </widget>
    </item>
-   <item row="7" column="1" colspan="2">
+   <item row="13" column="0" colspan="3">
+    <widget class="QProgressBar" name="progressBar">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="value">
+      <number>24</number>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0" colspan="2">
     <widget class="QSlider" name="tolerancehorizontalSlider">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
-   <item row="15" column="1">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
+   <item row="10" column="0" rowspan="2" colspan="3">
+    <widget class="QPushButton" name="Run">
+     <property name="minimumSize">
       <size>
-       <width>20</width>
-       <height>40</height>
+       <width>0</width>
+       <height>32</height>
       </size>
      </property>
-    </spacer>
-   </item>
-   <item row="5" column="5">
-    <spacer name="horizontalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
+     <property name="maximumSize">
       <size>
-       <width>40</width>
-       <height>20</height>
+       <width>16777215</width>
+       <height>16777215</height>
       </size>
      </property>
-    </spacer>
+     <property name="text">
+      <string>Run</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

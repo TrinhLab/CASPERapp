@@ -33,7 +33,7 @@ class NewGenome(QtWidgets.QMainWindow):
                         padding: 0 5px 0 5px;}
         QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 11pt "Sans Serif";
+                        font: 15pt "Sans Serif";
                         font: bold;
                         margin-top: 10px;}"""
 
@@ -91,6 +91,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.job_Table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.fin_index=0
 
+
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
         self.total_chrom_count = 0
@@ -130,7 +131,7 @@ class NewGenome(QtWidgets.QMainWindow):
             if not myFile[0].endswith(".fa") and not myFile[0].endswith(".fna") and not myFile[0].endswith(".gbff") and not myFile[0].endswith(".fasta"):
                 QtWidgets.QMessageBox.question(self, "File Selection Error",
                                                "You have selected an incorrect type of file. "
-                                               "Please choose a genbank, fasta, gbff, or a fna file.",
+                                               "Please choose a FASTA/FNA file.",
                                                QtWidgets.QMessageBox.Ok)
                 return
             else:
@@ -259,7 +260,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
 
     def findFasta(self):
-        choice = QtWidgets.QMessageBox.question(self, "Extract!", "Are you sure you want to Quit?",
+        choice = QtWidgets.QMessageBox.question(self, "Extract!", "Are you sure you want to quit?",
                                             QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
             sys.exit()
@@ -270,10 +271,7 @@ class NewGenome(QtWidgets.QMainWindow):
     def whatsthisclicked(self):
         QtWidgets.QMessageBox.information(self, "Organism Code", "The organism code is the manner in which CASPER will"
                                                                  " label its data files and references for the organism"
-                                                                 " you are importing here. It is HIGHLY RECOMMENDED that"
-                                                                 " you use the 3-4 letter code used by KEGG as this will"
-                                                                 " aid in automatic accession of annotations from the"
-                                                                 " database.", QtWidgets.QMessageBox.Ok)
+                                                                 " you are importing here.", QtWidgets.QMessageBox.Ok)
 
 
     def run_jobs_wrapper(self):
@@ -341,7 +339,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.process.start(program)
         else:
             error = QtWidgets.QMessageBox.critical(self, "No Jobs To Run",
-                                                   "No jobs are in the Queue to run. Please submit a job before Running.",
+                                                   "No jobs are in the queue to run. Please add a job before running.",
                                                    QtWidgets.QMessageBox.Ok)
 
 
@@ -355,34 +353,6 @@ class NewGenome(QtWidgets.QMainWindow):
         self.indexes.pop(0)
         if len(self.indexes) != 0:
             self.run_job()
-
-
-
-        # if len(self.JobsQueue) > 1:
-        #     job_name = self.job_Table.item(0, 1).text()  # Get name of job in current job column
-        #     the_job = QtWidgets.QTableWidgetItem(str(job_name))
-        #     self.job_Table.setItem(self.fin_index, 2, the_job)  # Pass current into finished
-        #     self.job_Table.resizeColumnsToContents()
-        #     self.fin_index += 1
-        #     self.JobsQueue.pop(0)
-        #     self.process.close()
-        #     self.num_chromo = 0
-        # elif len(self.JobsQueue) == 1:
-        #     job_name = self.job_Table.item(0, 1).text()  # Get name of job in current job column
-        #     the_job = QtWidgets.QTableWidgetItem(str(job_name))
-        #     self.job_Table.setItem(self.fin_index, 2, the_job)  # Pass current into finished
-        #     self.fin_index += 1
-        #     self.job_Table.item(0, 1).setText("")  # Remove last current job entry
-        #     self.job_Table.resizeColumnsToContents()
-        #     self.JobsQueue.pop(0)
-        #
-        # if len(self.JobsQueue) > 0:
-        #     self.progressBar.setValue(0)
-        #     self.run_jobs()
-        # else:
-        #     self.process.close()
-        #     self.num_chromo = 0
-
 
     def clear_job_queue(self):
         self.process.kill()
@@ -399,7 +369,6 @@ class NewGenome(QtWidgets.QMainWindow):
         self.s_file.setText("Name of File")
         self.first = False
         self.s_file.clear()
-
 
     def reset(self):
         self.lineEdit_1.clear()
@@ -427,7 +396,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 break
         if noCSPRFiles == True:
             if self.exit == False:
-                error = QtWidgets.QMessageBox.question(self, "No CSPR File generated",
+                error = QtWidgets.QMessageBox.question(self, "No CSPR file generated",
                                                         "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
                                                         "Alternatively, you could quit the program. Would you like to quit?",
                                                         QtWidgets.QMessageBox.Yes |
@@ -477,7 +446,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 break
         if noCSPRFiles == True:
 
-            error = QtWidgets.QMessageBox.question(self, "No CSPR File generated",
+            error = QtWidgets.QMessageBox.question(self, "No CSPR file generated",
                                                    "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
                                                    "Alternatively, you could quit the program. Would you like to quit?",
                                                    QtWidgets.QMessageBox.Yes |

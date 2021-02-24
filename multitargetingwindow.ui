@@ -6,27 +6,149 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1352</width>
-    <height>1001</height>
+    <width>1429</width>
+    <height>979</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Arial</family>
+    <pointsize>14</pointsize>
+    <weight>50</weight>
+    <italic>false</italic>
+    <bold>false</bold>
+   </font>
   </property>
   <property name="windowTitle">
    <string>Multitargeting Analysis</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
+   <string notr="true">font: 14pt &quot;Arial&quot;;</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_8">
+    <item row="0" column="1">
+     <widget class="QLabel" name="label">
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>28</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font: 28pt &quot;Arial&quot;;</string>
+      </property>
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Multitargeting Analysis&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QLabel" name="label_7">
+      <property name="minimumSize">
+       <size>
+        <width>50</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>50</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="3">
+     <widget class="QLabel" name="label_8">
+      <property name="minimumSize">
+       <size>
+        <width>50</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>50</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
     <item row="3" column="1" colspan="2">
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="3" column="0">
-       <layout class="QFormLayout" name="formLayout">
-        <property name="labelAlignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      <item row="4" column="0" rowspan="6" colspan="2">
+       <widget class="QTabWidget" name="tabWidget">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
         </property>
-        <property name="formAlignment">
-         <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>500</height>
+         </size>
+        </property>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="tab">
+         <attribute name="title">
+          <string>Repeats per ID Number</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0">
+           <widget class="repeats_vs_seeds_line" name="repeats_vs_seeds_line" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>600</width>
+              <height>410</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>400</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_2">
+         <attribute name="title">
+          <string>Sequences per Number Repeats </string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="0" column="0">
+           <widget class="seeds_vs_repeats_bar" name="seeds_vs_repeats_bar" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="2">
+       <layout class="QGridLayout" name="gridLayout_6">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMinimumSize</enum>
         </property>
         <item row="0" column="0">
          <widget class="QLabel" name="label_10">
@@ -36,13 +158,19 @@
             <height>15</height>
            </size>
           </property>
+          <property name="styleSheet">
+           <string notr="true">font: 12pt &quot;Arial&quot;;</string>
+          </property>
           <property name="text">
-           <string>Statistics Overview</string>
+           <string>Statistics Overview:</string>
           </property>
          </widget>
         </item>
         <item row="1" column="0">
          <widget class="QLabel" name="label_4">
+          <property name="styleSheet">
+           <string notr="true">font: 12pt &quot;Arial&quot;;</string>
+          </property>
           <property name="text">
            <string>Number of Repeat Sequences :</string>
           </property>
@@ -57,6 +185,9 @@
         </item>
         <item row="2" column="0">
          <widget class="QLabel" name="label_6">
+          <property name="styleSheet">
+           <string notr="true">font: 12pt &quot;Arial&quot;;</string>
+          </property>
           <property name="text">
            <string>Average Repeat :</string>
           </property>
@@ -77,6 +208,9 @@
         </item>
         <item row="3" column="0">
          <widget class="QLabel" name="label_22">
+          <property name="styleSheet">
+           <string notr="true">font: 12pt &quot;Arial&quot;;</string>
+          </property>
           <property name="text">
            <string>Median Number of Repeats :</string>
           </property>
@@ -91,6 +225,9 @@
         </item>
         <item row="4" column="0">
          <widget class="QLabel" name="label_24">
+          <property name="styleSheet">
+           <string notr="true">font: 12pt &quot;Arial&quot;;</string>
+          </property>
           <property name="text">
            <string>Mode Number of Repeats :</string>
           </property>
@@ -105,77 +242,161 @@
         </item>
        </layout>
       </item>
-      <item row="9" column="1">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Scaffold Viewer&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <item row="0" column="2" rowspan="3">
+       <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0" columnstretch="0,0,0">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetDefaultConstraint</enum>
         </property>
-       </widget>
+        <property name="spacing">
+         <number>8</number>
+        </property>
+        <item row="2" column="0">
+         <widget class="QTextEdit" name="seed">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>31</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>100000</width>
+            <height>31</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QComboBox" name="chromo_seed">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>32</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>10000</width>
+            <height>32</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_19">
+          <property name="maximumSize">
+           <size>
+            <width>79</width>
+            <height>15</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Seed ID:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="label_17">
+          <property name="text">
+           <string>Min:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="label_18">
+          <property name="text">
+           <string>Max:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QTextEdit" name="min_chromo">
+          <property name="minimumSize">
+           <size>
+            <width>81</width>
+            <height>31</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>31</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QTextEdit" name="max_chromo">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>81</width>
+            <height>31</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>31</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1" colspan="2">
+         <widget class="QPushButton" name="update_min_max">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>32</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>32</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Update</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
-      <item row="7" column="1">
-       <widget class="QGraphicsView" name="graphicsView">
+      <item row="10" column="0">
+       <widget class="QPushButton" name="back_button">
         <property name="minimumSize">
          <size>
-          <width>504</width>
-          <height>297</height>
+          <width>101</width>
+          <height>32</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>1111</width>
-          <height>297</height>
+          <width>101</width>
+          <height>32</height>
          </size>
+        </property>
+        <property name="text">
+         <string>Go Back</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0" rowspan="4">
-       <widget class="QTabWidget" name="tabWidget">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>400</height>
-         </size>
-        </property>
-        <property name="currentIndex">
-         <number>0</number>
-        </property>
-        <widget class="QWidget" name="tab">
-         <attribute name="title">
-          <string>Repeats per ID Number</string>
-         </attribute>
-         <layout class="QGridLayout" name="gridLayout_3">
-          <item row="0" column="0">
-           <widget class="repeats_vs_seeds_line" name="repeats_vs_seeds_line" native="true">
-            <property name="minimumSize">
-             <size>
-              <width>481</width>
-              <height>301</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="tab_2">
-         <attribute name="title">
-          <string>Sequences per Number Repeats </string>
-         </attribute>
-         <layout class="QGridLayout" name="gridLayout_5">
-          <item row="0" column="0">
-           <widget class="seeds_vs_repeats_bar" name="seeds_vs_repeats_bar" native="true">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>301</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </widget>
-      </item>
-      <item row="0" column="0">
+      <item row="0" column="0" rowspan="3" colspan="2">
        <layout class="QGridLayout" name="gridLayout">
         <item row="0" column="0">
          <widget class="QLabel" name="label_3">
@@ -187,53 +408,21 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>220</width>
+            <width>300</width>
             <height>200</height>
            </size>
           </property>
           <property name="font">
            <font>
-            <family>Sans Serif</family>
-            <pointsize>11</pointsize>
+            <family>Arial</family>
+            <pointsize>14</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
            </font>
           </property>
           <property name="text">
-           <string>Organism</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QComboBox" name="endo_drop">
-          <property name="minimumSize">
-           <size>
-            <width>219</width>
-            <height>23</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>219</width>
-            <height>23</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QComboBox" name="organism_drop">
-          <property name="minimumSize">
-           <size>
-            <width>220</width>
-            <height>23</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>220</width>
-            <height>23</height>
-           </size>
+           <string>Organism:</string>
           </property>
          </widget>
         </item>
@@ -253,76 +442,117 @@
           </property>
           <property name="font">
            <font>
-            <family>Sans Serif</family>
-            <pointsize>11</pointsize>
+            <family>Arial</family>
+            <pointsize>14</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
            </font>
           </property>
           <property name="text">
-           <string>Endonuclease</string>
+           <string>Endonuclease:</string>
           </property>
          </widget>
         </item>
-       </layout>
-      </item>
-      <item row="3" column="1" rowspan="3">
-       <layout class="QGridLayout" name="gridLayout_7">
-        <item row="0" column="0">
-         <widget class="repeats_vs_chromo" name="repeats_vs_chromo" native="true">
+        <item row="1" column="0" rowspan="2">
+         <widget class="QComboBox" name="organism_drop">
           <property name="minimumSize">
            <size>
-            <width>504</width>
+            <width>220</width>
+            <height>32</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>300</width>
+            <height>300</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1" rowspan="2">
+         <widget class="QComboBox" name="endo_drop">
+          <property name="minimumSize">
+           <size>
+            <width>219</width>
+            <height>2</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>219</width>
+            <height>300</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0" colspan="2">
+         <widget class="QPushButton" name="Analyze_Button">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
             <height>0</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>11111</width>
-            <height>11111</height>
+            <width>539</width>
+            <height>32</height>
            </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+          </property>
+          <property name="text">
+           <string>Analyze</string>
+          </property>
+          <property name="checkable">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
        </layout>
       </item>
-      <item row="1" column="0">
-       <widget class="QPushButton" name="Analyze_Button">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
+      <item row="3" column="2" rowspan="2">
+       <widget class="repeats_vs_chromo" name="repeats_vs_chromo" native="true">
         <property name="minimumSize">
          <size>
-          <width>0</width>
-          <height>0</height>
+          <width>612</width>
+          <height>275</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>1000</width>
-          <height>41</height>
+          <width>11111</width>
+          <height>11111</height>
          </size>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">font: 14pt &quot;Sans Serif&quot;;</string>
-        </property>
-        <property name="text">
-         <string>Analyze</string>
-        </property>
-        <property name="checkable">
-         <bool>false</bool>
         </property>
        </widget>
       </item>
-      <item row="6" column="1">
+      <item row="5" column="2">
+       <widget class="QLabel" name="label_5">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Scaffold Viewer:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="2">
        <widget class="QGraphicsView" name="graphicsView_2">
         <property name="minimumSize">
          <size>
-          <width>504</width>
+          <width>40</width>
           <height>41</height>
          </size>
         </property>
@@ -334,207 +564,23 @@
         </property>
        </widget>
       </item>
-      <item row="9" column="0">
-       <widget class="QPushButton" name="back_button">
+      <item row="7" column="2" rowspan="3">
+       <widget class="QGraphicsView" name="graphicsView">
         <property name="minimumSize">
          <size>
-          <width>101</width>
-          <height>23</height>
+          <width>612</width>
+          <height>297</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>101</width>
-          <height>23</height>
+          <width>1111</width>
+          <height>5000</height>
          </size>
-        </property>
-        <property name="text">
-         <string>Go Back</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1" rowspan="2">
-       <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0" columnstretch="0,0,0,0">
-        <property name="sizeConstraint">
-         <enum>QLayout::SetDefaultConstraint</enum>
-        </property>
-        <property name="spacing">
-         <number>8</number>
-        </property>
-        <item row="2" column="0">
-         <widget class="QTextEdit" name="seed">
-          <property name="minimumSize">
-           <size>
-            <width>200</width>
-            <height>31</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>81</width>
-            <height>31</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QTextEdit" name="min_chromo">
-          <property name="minimumSize">
-           <size>
-            <width>81</width>
-            <height>31</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>81</width>
-            <height>31</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QTextEdit" name="max_chromo">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>81</width>
-            <height>31</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>81</width>
-            <height>31</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QLabel" name="label_17">
-          <property name="text">
-           <string>Min</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QComboBox" name="chromo_seed">
-          <property name="minimumSize">
-           <size>
-            <width>200</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>200</width>
-            <height>31</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QLabel" name="label_18">
-          <property name="text">
-           <string>Max</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_19">
-          <property name="maximumSize">
-           <size>
-            <width>79</width>
-            <height>15</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Seed ID</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2" colspan="2">
-         <widget class="QPushButton" name="update_min_max">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>31</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Update</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
      </layout>
-    </item>
-    <item row="4" column="2">
-     <spacer name="verticalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="3" column="3">
-     <spacer name="horizontalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="3" column="0">
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="0" column="2">
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
     </item>
     <item row="2" column="1" colspan="2">
      <widget class="Line" name="line">
@@ -549,25 +595,6 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="1">
-     <widget class="QLabel" name="label">
-      <property name="font">
-       <font>
-        <family>Sans Serif</family>
-        <pointsize>28</pointsize>
-        <weight>50</weight>
-        <italic>false</italic>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">font: 28pt &quot;Sans Serif&quot;;</string>
-      </property>
-      <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Multitargeting Analysis&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-     </widget>
-    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -575,7 +602,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1352</width>
+     <width>1429</width>
      <height>24</height>
     </rect>
    </property>

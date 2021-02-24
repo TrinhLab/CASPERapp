@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QDir, QUrl
 from Bio import Entrez, SeqIO
-from bioservices.kegg import KEGG
 import PyQt5.QtNetwork as QtNetwork
 import platform
 

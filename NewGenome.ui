@@ -6,30 +6,36 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1151</width>
-    <height>938</height>
+    <width>1053</width>
+    <height>901</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Arial</family>
+    <pointsize>14</pointsize>
+   </font>
   </property>
   <property name="windowTitle">
    <string>New Genome</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
-    <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
+    <string notr="true">font: 14pt &quot;Arial&quot;;</string>
    </property>
    <layout class="QGridLayout" name="gridLayout_9">
-    <item row="0" column="3">
-     <spacer name="horizontalSpacer_4">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
+    <item row="0" column="2">
+     <widget class="QLabel" name="label_6">
+      <property name="minimumSize">
        <size>
-        <width>40</width>
-        <height>20</height>
+        <width>50</width>
+        <height>0</height>
        </size>
       </property>
-     </spacer>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
     </item>
     <item row="0" column="1">
      <layout class="QGridLayout" name="gridLayout_6">
@@ -37,6 +43,18 @@
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
          <widget class="QPushButton" name="contButton">
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <pointsize>14</pointsize>
+            <weight>50</weight>
+            <italic>false</italic>
+            <bold>false</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+          </property>
           <property name="text">
            <string>Exit</string>
           </property>
@@ -57,6 +75,18 @@
         </item>
         <item>
          <widget class="QPushButton" name="viewStatButton">
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <pointsize>14</pointsize>
+            <weight>50</weight>
+            <italic>false</italic>
+            <bold>false</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+          </property>
           <property name="text">
            <string>View Statistics</string>
           </property>
@@ -72,35 +102,36 @@
           <height>153</height>
          </size>
         </property>
+        <property name="styleSheet">
+         <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+        </property>
         <property name="title">
          <string>Step 2: Select File and Add to Queue</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_3">
-         <item row="2" column="3">
-          <widget class="QPushButton" name="resetButton">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>50</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Reset Form</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label_7">
-           <property name="maximumSize">
-            <size>
-             <width>325</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Selected File:</string>
-           </property>
-          </widget>
+         <item row="0" column="0" rowspan="3">
+          <layout class="QGridLayout" name="gridLayout_7">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Manual File Selection* (FASTA/FNA)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QPushButton" name="browseForFile">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>32</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Browse for a File</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item row="1" column="1" rowspan="2">
           <widget class="QScrollArea" name="scrollArea">
@@ -127,8 +158,8 @@
               <widget class="QLabel" name="s_file">
                <property name="font">
                 <font>
-                 <family>Sans Serif</family>
-                 <pointsize>11</pointsize>
+                 <family>Arial</family>
+                 <pointsize>14</pointsize>
                  <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
@@ -146,23 +177,31 @@
            </widget>
           </widget>
          </item>
-         <item row="0" column="0" rowspan="3">
-          <layout class="QGridLayout" name="gridLayout_7">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_5">
-             <property name="text">
-              <string>Manual File Selection* (.genbank, .fasta, .gbff, or .fna)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QPushButton" name="browseForFile">
-             <property name="text">
-              <string>Browse for a File</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
+         <item row="2" column="3">
+          <widget class="QPushButton" name="resetButton">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>50</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Reset Form</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_7">
+           <property name="maximumSize">
+            <size>
+             <width>325</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Selected File:</string>
+           </property>
+          </widget>
          </item>
          <item row="0" column="3" rowspan="2">
           <widget class="QPushButton" name="submitButton">
@@ -187,6 +226,18 @@
           <width>11111</width>
           <height>218</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>14</pointsize>
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">font: 14pt &quot;Arial&quot;;</string>
         </property>
         <property name="title">
          <string>Step 1: Input Organism Info</string>
@@ -231,7 +282,7 @@
            <item row="4" column="3">
             <widget class="QLabel" name="label_3">
              <property name="text">
-              <string>5 Length</string>
+              <string>5' Length</string>
              </property>
             </widget>
            </item>
@@ -289,7 +340,7 @@
            <item row="5" column="3">
             <widget class="QLabel" name="label_9">
              <property name="text">
-              <string>3 Length</string>
+              <string>3' Length</string>
              </property>
             </widget>
            </item>
@@ -335,9 +386,17 @@
           <height>44</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>28</pointsize>
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
+         </font>
+        </property>
         <property name="styleSheet">
-         <string notr="true">font: 28pt &quot;Sans Serif&quot;;
-</string>
+         <string notr="true">font: 28pt &quot;Arial&quot;;</string>
         </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#000000;&quot;&gt;New Genome&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -346,8 +405,20 @@
       </item>
       <item row="7" column="0">
        <widget class="QGroupBox" name="Step3">
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>14</pointsize>
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+        </property>
         <property name="title">
-         <string>Step 3: Run Jobs</string>
+         <string>Step 3: Select and Run Jobs</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_8">
          <item row="0" column="0">
@@ -370,21 +441,21 @@
              <item>
               <widget class="QPushButton" name="remove_job">
                <property name="text">
-                <string>REMOVE JOB</string>
+                <string>Remove Job</string>
                </property>
               </widget>
              </item>
              <item>
               <widget class="QPushButton" name="clearButton">
                <property name="text">
-                <string>CLEAR ALL</string>
+                <string>Clear All</string>
                </property>
               </widget>
              </item>
              <item>
               <widget class="QPushButton" name="runButton">
                <property name="text">
-                <string>RUN</string>
+                <string>Run</string>
                </property>
               </widget>
              </item>
@@ -399,6 +470,12 @@
            </item>
            <item row="4" column="2" rowspan="2">
             <widget class="QTextBrowser" name="output_browser">
+             <property name="minimumSize">
+              <size>
+               <width>367</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="verticalScrollBarPolicy">
               <enum>Qt::ScrollBarAsNeeded</enum>
              </property>
@@ -415,6 +492,12 @@
            </item>
            <item row="4" column="0" rowspan="3" colspan="2">
             <widget class="QTableWidget" name="job_Table">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
                <width>500</width>
@@ -423,7 +506,7 @@
              </property>
              <property name="maximumSize">
               <size>
-               <width>650</width>
+               <width>1000</width>
                <height>16777215</height>
               </size>
              </property>
@@ -486,17 +569,17 @@
      </layout>
     </item>
     <item row="0" column="0">
-     <spacer name="horizontalSpacer_3">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
+     <widget class="QLabel" name="label_10">
+      <property name="minimumSize">
        <size>
-        <width>40</width>
-        <height>20</height>
+        <width>50</width>
+        <height>0</height>
        </size>
       </property>
-     </spacer>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -506,8 +589,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1151</width>
-     <height>21</height>
+     <width>1053</width>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

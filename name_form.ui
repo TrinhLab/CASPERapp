@@ -12,15 +12,26 @@
   </property>
   <property name="font">
    <font>
-    <pointsize>11</pointsize>
+    <family>Arial</family>
+    <pointsize>14</pointsize>
    </font>
   </property>
   <property name="windowTitle">
    <string>Show Names</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetFixedSize</enum>
+   </property>
    <item row="0" column="0">
-    <widget class="QTableWidget" name="name_table"/>
+    <widget class="QTableWidget" name="name_table">
+     <property name="minimumSize">
+      <size>
+       <width>558</width>
+       <height>290</height>
+      </size>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

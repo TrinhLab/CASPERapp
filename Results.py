@@ -3,13 +3,9 @@ from PyQt5 import QtWidgets, uic, QtCore, QtGui, Qt
 from bs4 import BeautifulSoup
 import requests
 import webbrowser
-from Scoring import OnTargetScore
-import Algorithms
-from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
 import GlobalSettings
 import os
-from APIs import Kegg
 import OffTarget
 import platform
 # =========================================================================================
@@ -27,9 +23,6 @@ class Results(QtWidgets.QMainWindow):
 
         self.setWindowTitle('Results')
         self.geneViewer.setReadOnly(True)
-        # Scoring Class object #
-        self.onscore = OnTargetScore()
-        self.S = SeqTranslate()
         self.dbpath = ""
         # Main Data container
         # Keys: Gene names
@@ -150,69 +143,8 @@ class Results(QtWidgets.QMainWindow):
             return
 
 
-        # if the user is using kegg
-        if GlobalSettings.mainWindow.gene_viewer_settings.file_type == "kegg":
-            tempTuple = (self.geneDict[self.comboBoxGene.currentText()][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()), self.geneDict[self.comboBoxGene.currentText()][3])
-            self.geneDict[self.comboBoxGene.currentText()] = tempTuple
-            # build the URL string
-            # build the URL one way if the chrom from KEGG is -1
-            if tempTuple[3] == -1:
-                url = "https://www.genome.jp/dbget-bin/cut_sequence_genes.pl?FROM="
-                url = url + str(self.geneDict[self.comboBoxGene.currentText()][1])
-                url = url + "&TO="
-                url = url + str(self.geneDict[self.comboBoxGene.currentText()][2])
-                url = url + "&VECTOR=1&ORG="
-                url = url + GlobalSettings.mainWindow.Annotations_Organism.currentText().split(" ")[1]
-            # build it a different way if the chrom is not -1
-            else:
-                url = "https://www.genome.jp/dbget-bin/cut_sequence_genes.pl?FROM="
-                url = url + str(self.geneDict[self.comboBoxGene.currentText()][1])
-                url = url + "&TO="
-                url = url + str(self.geneDict[self.comboBoxGene.currentText()][2])
-                url = url + "&VECTOR=1&ORG="
-                url = url + GlobalSettings.mainWindow.Annotations_Organism.currentText().split(" ")[1]
-                url = url + '&CHR=' + tempTuple[3]
-
-
-            # soup time
-            source = requests.get(url)
-            plain_text = source.text
-            soup = BeautifulSoup(plain_text, "html.parser")
-
-
-            buffer = ""
-
-            # use the try in case user gives bad input
-            try:
-                for item in soup.find('pre'):
-                    # get the first line
-                    if ">" in item.string:
-                        temp = item.string.replace("\n", "")
-                        temp = temp.replace(" ", "")
-                        newLineIndex = temp.find(")") + 1
-
-                        if buffer == "":
-                            buffer = temp[newLineIndex:]
-                        else:
-                            buffer = buffer + temp[newLineIndex:]
-                    # get every other lie
-                    else:
-                        if buffer == "":
-                            buffer = item.string
-                        else:
-                            buffer = buffer + item.string
-
-                buffer = buffer.replace("\n", "")
-                self.geneNTDict[self.comboBoxGene.currentText()] = buffer
-            except:
-                QtWidgets.QMessageBox.question(self, "Error",
-                                               'An error has occured. It is possible that KEGG does not allow for NT Sequence changes for this organism.',
-                                               QtWidgets.QMessageBox.Ok)
-                self.lineEditStart.setText(str(self.geneDict[self.comboBoxGene.currentText()][1]))
-                self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
-                return
         # if the user is using gbff
-        elif GlobalSettings.mainWindow.gene_viewer_settings.file_type == "gbff":
+        if GlobalSettings.mainWindow.gene_viewer_settings.file_type == "gbff":
             self.geneDict[self.comboBoxGene.currentText()] = tempTuple
             sequence = GlobalSettings.mainWindow.gene_viewer_settings.gbff_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
             self.geneNTDict[self.comboBoxGene.currentText()] = sequence
@@ -272,7 +204,6 @@ class Results(QtWidgets.QMainWindow):
             return
 
         # variables needed
-        k = Kegg()
         cursor = self.geneViewer.textCursor()
         format = QtGui.QTextCharFormat()
         noMatchString = ""
@@ -898,26 +829,6 @@ class Results(QtWidgets.QMainWindow):
         msg.exec()
 
 
-    # Function for displaying the target in the gene viewer
-    """def displayGene(self,fastafile=None, Kegg=False, NCBI=False):
-        organism_genome = list()  # list of chromosomes/scaffolds
-        if fastafile:
-            f = open(fastafile)
-            chr_string = str()
-            for line in f:
-                if not line.startswith(">"):
-                    chr_string += line[:-1]
-                else:
-                    organism_genome.append(chr_string)
-                    chr_string = ""
-            return organism_genome
-        elif Kegg:
-            # Get the gene from the Kegg database
-        elif NCBI:
-            # Get the gene from NCBI database (RefSeq)
-        else:
-            return "Error: Cannot find reference sequence.  Search Kegg, NCBI, or download a FASTA file to create a genome reference."""""
-
     # -----------------------------------------------------------------------------------------------------#
     # ---- All Filter functions below ---------------------------------------------------------------------#
     # -----------------------------------------------------------------------------------------------------#
@@ -1015,7 +926,6 @@ class geneViewerSettings(QtWidgets.QDialog):
         self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.png"))
 
         # button connections
-        self.kegg_radio_button.clicked.connect(self.change_file_type)
         self.gbff_radio_button.clicked.connect(self.change_file_type)
         self.fna_radio_button.clicked.connect(self.change_file_type)
         self.browse_button.clicked.connect(self.browseForFile)
@@ -1029,9 +939,7 @@ class geneViewerSettings(QtWidgets.QDialog):
     # this function is called when the user changes the file type
     # it just sets a class variable to the type of file selected
     def change_file_type(self):
-        if self.kegg_radio_button.isChecked():
-            self.file_type = "kegg"
-        elif self.gbff_radio_button.isChecked():
+        if self.gbff_radio_button.isChecked():
             self.file_type = "gbff"
         elif self.fna_radio_button.isChecked():
             self.file_type = "fna"
@@ -1040,10 +948,6 @@ class geneViewerSettings(QtWidgets.QDialog):
     # this function is only called when the user selects browse for a file option
     # it opens a window such that the user can search for a file to use for the gene viewer sequence
     def browseForFile(self):
-        # return out if the user has selected Kegg
-        if self.kegg_radio_button.isChecked():
-            return
-
         # make sure that either GBFF or FNA is checked
         if not self.gbff_radio_button.isChecked() and not self.fna_radio_button.isChecked():
             QtWidgets.QMessageBox.question(self, "Nothing Selected",
@@ -1075,7 +979,6 @@ class geneViewerSettings(QtWidgets.QDialog):
         self.file_name_edit.setText("Please choose a file!")
 
         # setting them to False does not seem to work, no idea why
-        self.kegg_radio_button.setChecked(False)
         self.gbff_radio_button.setChecked(False)
         self.fna_radio_button.setChecked(False)
         self.hide()
@@ -1084,23 +987,10 @@ class geneViewerSettings(QtWidgets.QDialog):
     # it will find all of the sequences for all of the genes in the comboGeneBox in the results window
     # It will go based on the lengths stored in the comboGeneBox dictionary
     def submitFunction(self):
-        if not self.kegg_radio_button.isChecked() and self.file == "":
-            #print("No file chosen")
-            return
-
         sequence = ""
 
         # for each gene selected from the results window
         for item in GlobalSettings.mainWindow.Results.geneDict:
-            if self.file_type == "kegg":
-                k = Kegg()
-                organism = GlobalSettings.mainWindow.Annotations_Organism.currentText().split(" ")[1]
-                nameFull = item.split(" ")
-                name = nameFull[len(nameFull) - 1]
-                # get kegg's ntsequence and store it
-                nt_sequence = k.get_nt_sequence(organism + ":" + name)
-                print(nt_sequence)
-                GlobalSettings.mainWindow.Results.geneNTDict[item] = nt_sequence
             if self.file_type == "fna":
                 sequence = self.fna_sequence_finder(GlobalSettings.mainWindow.Results.geneDict[item])
                 GlobalSettings.mainWindow.Results.geneNTDict[item] = sequence

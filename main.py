@@ -2,7 +2,6 @@ import sys
 import os, platform
 import io
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
-from APIs import Kegg
 from CoTargeting import CoTargeting
 from closingWin import closingWindow
 from Results import Results, geneViewerSettings
@@ -16,7 +15,6 @@ import GlobalSettings
 import multitargeting
 from AnnotationParser import Annotation_Parser
 from export_to_csv import export_csv_window
-from cspr_chromosome_selection import cspr_chromosome_selection
 from generateLib import genLibrary
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
@@ -243,7 +241,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.gene_list = {}  # list of genes (no ides what they pertain to
         self.searches = {}
         self.checkBoxes = []
-        self.add_orgo = []
+#        self.add_orgo = []
         self.checked_info = {}
         self.check_ntseq_info = {}  # the ntsequences that go along with the checked_info
         self.annotation_parser = Annotation_Parser()
@@ -263,7 +261,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                         padding: 0 5px 0 5px;}
         QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 11pt "Sans Serif";
+                        font: 15pt "Arial";
                         font: bold;
                         margin-top: 10px;}"""
 
@@ -287,9 +285,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.actionUpload_New_Genome.triggered.connect(self.launch_newGenome)
         self.actionUpload_New_Endonuclease.triggered.connect(self.launch_newEndonuclease)
         self.actionOpen_Genome_Browser.triggered.connect(self.launch_newGenomeBrowser)
-        self.Add_Orgo_Button.clicked.connect(self.add_Orgo)
-        self.Remove_Organism_Button.clicked.connect(self.remove_Orgo)
-        self.endoChoice.currentIndexChanged.connect(self.endo_Changed)
+#        self.Add_Orgo_Button.clicked.connect(self.add_Orgo)
+#        self.Remove_Organism_Button.clicked.connect(self.remove_Orgo)
+#        self.endoChoice.currentIndexChanged.connect(self.endo_Changed)
         self.GenerateLibrary.clicked.connect(self.prep_genlib)
         self.actionExit.triggered.connect(self.close_app)
         self.visit_repo.triggered.connect(self.visit_repo_func)
@@ -300,9 +298,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Annotation_Window = AnnotationsWindow(info_path)
 
         # Hide Added orgo boxes
-        self.Added_Org_Combo.hide()
-        self.Remove_Organism_Button.hide()
-        self.Added_Org_Label.hide()
+#        self.Added_Org_Combo.hide()
+#        self.Remove_Organism_Button.hide()
+#        self.Added_Org_Label.hide()
         # --- Menubar commands --- #
         self.actionChange_Directory.triggered.connect(self.change_directory)
         self.actionMultitargeting.triggered.connect(self.changeto_multitargeting)
@@ -311,16 +309,16 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.actionCasper2.triggered.connect(self.open_casper2_web_page)
         self.actionNCBI_BLAST.triggered.connect(self.open_ncbi_blast_web_page)
 
-        self.Question_Button_add_org.clicked.connect(self.add_org_popup)
+#        self.Question_Button_add_org.clicked.connect(self.add_org_popup)
 
 
         # --- Setup for Gene Entry Field --- #
-        self.geneEntryField.setPlainText("Example Inputs: \n"
-                                         "Gene (LocusID): YOL086C  *for Saccharomyces Cerevisiae ADH1 gene* \n"
-                                         "Position: chromosome,start,stop\n chromosome,start,stop...\n"
-                                         "Sequence: *Pure sequence. CASPER will search for targets and report off"
-                                         "targets based on the genome selected, if any*")
-
+        self.geneEntryField.setPlainText("Example Inputs: \n\n"
+                                         "Gene (LocusID): YOL086C  *for Saccharomyces Cerevisiae ADH1 gene* \n\n"
+                                         "Position: chromosome,start,stop\n\n"
+                                         "Sequence: Pure sequence. CASPER will search for targets and report off-"
+                                         "targets based on the genome selected, if any\n\n"
+                                         "*Note: multiple entries must be separated by new lines*")
         # show functionalities on window
         self.newGenome = NewGenome(info_path)
         self.newEndonuclease = NewEndonuclease()
@@ -328,7 +326,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Results = Results()
         self.gene_viewer_settings = geneViewerSettings()
         self.export_csv_window = export_csv_window()
-        self.cspr_selector = cspr_chromosome_selection()
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
         self.mwfg = self.frameGeometry()  ##Center window
@@ -338,42 +335,42 @@ class CMainWindow(QtWidgets.QMainWindow):
         #GlobalSettings.mainWindow.ncbi = ncbi.NCBI_search_tool()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
-        self.checkBox.setEnabled(False)
+#        self.checkBox.setEnabled(False)
 
-    def endo_Changed(self):
-        self.add_orgo.clear()
-        self.Add_Orgo_Combo.clear()
-        self.Added_Org_Combo.clear()
-        self.addOrgoCombo()
-        self.Added_Org_Combo.hide()
-        self.Added_Org_Label.hide()
-        self.Remove_Organism_Button.hide()
+#    def endo_Changed(self):
+#        self.add_orgo.clear()
+#        self.Add_Orgo_Combo.clear()
+#        self.Added_Org_Combo.clear()
+#        self.addOrgoCombo()
+#        self.Added_Org_Combo.hide()
+#        self.Added_Org_Label.hide()
+#        self.ganism_Button.hide()
 
 
     ####---FUNCTIONS TO RUN EACH BUTTON---####
-    def remove_Orgo(self):
-        self.add_orgo.remove(self.Added_Org_Combo.currentText())
-        self.Add_Orgo_Combo.addItem(self.Added_Org_Combo.currentText())
-        self.Added_Org_Combo.removeItem(self.Added_Org_Combo.currentIndex())
-        if len(self.add_orgo) == 0:
-            self.Added_Org_Combo.hide()
-            self.Added_Org_Label.hide()
-            self.Remove_Organism_Button.hide()
+#    def remove_Orgo(self):
+#        self.add_orgo.remove(self.Added_Org_Combo.currentText())
+#        self.Add_Orgo_Combo.addItem(self.Added_Org_Combo.currentText())
+#        self.Added_Org_Combo.removeItem(self.Added_Org_Combo.currentIndex())
+#        if len(self.add_orgo) == 0:
+#            self.Added_Org_Combo.hide()
+#            self.Added_Org_Label.hide()
+#            self.Remove_Organism_Button.hide()
 
 
-    def add_Orgo(self):
-        if self.Add_Orgo_Combo.currentText() == "Select Organism":
-            QtWidgets.QMessageBox.question(self, "Must Select Organism",
-                                           "You must select an organism to add.",
-                                           QtWidgets.QMessageBox.Ok)
-            return
-
-        self.add_orgo.append(self.Add_Orgo_Combo.currentText())
-        self.Added_Org_Combo.addItem(self.Add_Orgo_Combo.currentText())
-        self.Add_Orgo_Combo.removeItem(self.Add_Orgo_Combo.currentIndex())
-        self.Added_Org_Combo.show()
-        self.Added_Org_Label.show()
-        self.Remove_Organism_Button.show()
+#    def add_Orgo(self):
+#        if self.Add_Orgo_Combo.currentText() == "Select Organism":
+#            QtWidgets.QMessageBox.question(self, "Must Select Organism",
+#                                           "You must select an organism to add.",
+#                                           QtWidgets.QMessageBox.Ok)
+#            return
+#
+#        self.add_orgo.append(self.Add_Orgo_Combo.currentText())
+#        self.Added_Org_Combo.addItem(self.Add_Orgo_Combo.currentText())
+#        self.Add_Orgo_Combo.removeItem(self.Add_Orgo_Combo.currentIndex())
+#        self.Added_Org_Combo.show()
+#        self.Added_Org_Label.show()
+#        self.Remove_Organism_Button.show()
 
 
     # this function prepares everything for the generate library function
@@ -397,7 +394,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 ginput = inputstring.split(',')
                 found_matches_bool = self.run_results("gene", ginput, openAnnoWindow=False)
             elif self.radioButton_Position.isChecked() or self.radioButton_Sequence.isChecked():
-                QtWidgets.QMessageBox.question(self, "Error", "Generate Library can only work with gene (Locus ID).",
+                QtWidgets.QMessageBox.question(self, "Error", "Generate Library can only work with gene names (Locus ID).",
                                                QtWidgets.QMessageBox.Ok)
                 return
             """
@@ -427,7 +424,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 # warn the user if the number is greater than 50
                 if tempSum > 50:
                     error = QtWidgets.QMessageBox.question(self, "Many Matches Found",
-                                                           "More than 50 matches have been found. Continuing could cause a slow down. .\n\n"
+                                                           "More than 50 matches have been found. Continuing could cause a slow down...\n\n"
                                                            "Do you wish to continue?",
                                                            QtWidgets.QMessageBox.Yes |
                                                            QtWidgets.QMessageBox.No,
@@ -591,14 +588,14 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Results.displayGeneViewer.setEnabled(False)
         self.Results.lineEditStart.setEnabled(False)
         self.Results.lineEditEnd.setEnabled(False)
-        self.gene_viewer_settings.kegg_radio_button.setEnabled(False)
+#        self.gene_viewer_settings.kegg_radio_button.setEnabled(False)
         self.Results.change_start_end_button.setEnabled(False)
         self.Results.displayGeneViewer.setChecked(0)
 
         if inputtype == "gene":
             # make sure an annotation file has been selected
             if self.annotation_files.currentText() == "":
-                error = QtWidgets.QMessageBox.question(self, "No Annotation", "Please select an annotation from either KEGG, NCBI, or provide you own annotation file", QtWidgets.QMessageBox.Ok)
+                error = QtWidgets.QMessageBox.question(self, "No Annotation", "Please select an annotation from NCBI or provide you own annotation file", QtWidgets.QMessageBox.Ok)
                 self.progressBar.setValue(0)
                 return
             # this now just goes onto the other version of run_results
@@ -767,7 +764,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     def launch_newGenome(self):
         self.hide()
         self.newGenome.mwfg.moveCenter(self.newGenome.cp)  ##Center window
-        self.newGenome.move(self.mwfg.topLeft())  ##Center window
+        self.newGenome.move(self.newGenome.mwfg.topLeft())  ##Center window
         self.newGenome.show()
 
 
@@ -967,11 +964,11 @@ class CMainWindow(QtWidgets.QMainWindow):
             pass
 
 
-    def addOrgoCombo(self):
-        self.Add_Orgo_Combo.addItem("Select Organism")
-        for item in self.data:
-            if (self.endoChoice.currentText() in self.data[item]) and (item != str(self.orgChoice.currentText())):
-                self.Add_Orgo_Combo.addItem(item)
+#    def addOrgoCombo(self):
+#        self.Add_Orgo_Combo.addItem("Select Organism")
+#        for item in self.data:
+#            if (self.endoChoice.currentText() in self.data[item]) and (item != str(self.orgChoice.currentText())):
+#                self.Add_Orgo_Combo.addItem(item)
 
 
     # ----- CALLED IN STARTUP WINDOW ------ #
@@ -1038,7 +1035,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def change_directory(self):
         filed = QtWidgets.QFileDialog()
-        mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a Folder",
+        mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a folder...",
                                                            self.dbpath, QtWidgets.QFileDialog.ShowDirsOnly)
 
         if (os.path.isdir(mydir)):
@@ -1064,19 +1061,16 @@ class CMainWindow(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.hide()
 
 
-    def add_org_popup(self):
-        info = "This functionality will allow users to use different organisms for off-target analysis in a future " \
-               "version of the software. If you need to run analysis on multiple organisms, please use the Population " \
-               "Analysis feature."
-        QtWidgets.QMessageBox.information(self, "Add Organism Information", info, QtWidgets.QMessageBox.Ok)
+#    def add_org_popup(self):
+#        info = "This functionality will allow users to use different organisms for off-target analysis in a future " \
+#               "version of the software. If you need to run analysis on multiple organisms, please use the Population " \
+#               "Analysis feature."
+#        QtWidgets.QMessageBox.information(self, "Add Organism Information", info, QtWidgets.QMessageBox.Ok)
 
 
     def annotation_information(self):
-        info = "Annotation files for searching for targets on a gene/locus basis can be selected here using either KEGG " \
-               "or NCBI databases, or uploading your own file. Note that KEGG searches are best done with exact matches " \
-               "(e.g include strain designation), whereas NCBI will often return multiple assemblies of the same species. " \
-               "If you have trouble deciding on the search returned annotation, go to the website, download the annotation " \
-               "file to your local computer and choose ‘Choose Annotation File’"
+        info = "Annotation files are used for searching for spacers on a gene/locus basis and can be selected here using either " \
+               "NCBI databases or a local file."
         QtWidgets.QMessageBox.information(self, "Annotation Information", info, QtWidgets.QMessageBox.Ok)
 
 
@@ -1179,7 +1173,7 @@ class StartupWindow(QtWidgets.QDialog):
     ####---FUNCTIONS TO RUN EACH BUTTON---####
     def changeDir(self):
         filed = QtWidgets.QFileDialog()
-        mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a Folder",
+        mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a folder...",
                                                            self.gdirectory, QtWidgets.QFileDialog.ShowDirsOnly)
 
 

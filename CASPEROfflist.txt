@@ -1,3 +1,0 @@
-Write your desired sequences (one per line, not including the PAM) here for Off-Target Analysis. Delete the Example before running.
-TTGCGGAAGGATTTTTCTCA
-END

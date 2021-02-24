@@ -9,97 +9,90 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1030</width>
-    <height>580</height>
+    <width>754</width>
+    <height>589</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Arial</family>
+    <pointsize>14</pointsize>
+    <weight>50</weight>
+    <italic>false</italic>
+    <bold>false</bold>
+   </font>
   </property>
   <property name="windowTitle">
    <string>CASPER</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
+   <string notr="true">font: 14pt &quot;Arial&quot;;</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="5" column="3">
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
+    <item row="5" column="2" colspan="2" alignment="Qt::AlignRight">
+     <widget class="QPushButton" name="Submit_button">
+      <property name="minimumSize">
        <size>
-        <width>20</width>
-        <height>40</height>
+        <width>150</width>
+        <height>32</height>
        </size>
       </property>
-     </spacer>
+      <property name="maximumSize">
+       <size>
+        <width>150</width>
+        <height>32</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Submit</string>
+      </property>
+     </widget>
     </item>
-    <item row="4" column="1">
+    <item row="0" column="0">
+     <widget class="QLabel" name="label_8">
+      <property name="maximumSize">
+       <size>
+        <width>150</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font: 28pt &quot;Arial&quot;;
+</string>
+      </property>
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;CASPER&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0">
      <widget class="QPushButton" name="Go_Back_Button">
+      <property name="minimumSize">
+       <size>
+        <width>150</width>
+        <height>32</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>150</width>
+        <height>32</height>
+       </size>
+      </property>
       <property name="text">
        <string>Return</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="0">
-     <spacer name="horizontalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="2" column="1">
+    <item row="3" column="0">
      <widget class="QCheckBox" name="select_all_checkbox">
       <property name="text">
        <string>Select All</string>
       </property>
      </widget>
     </item>
-    <item row="1" column="1" colspan="3">
-     <layout class="QGridLayout" name="gridLayout_10">
-      <item row="0" column="0" rowspan="2" alignment="Qt::AlignBottom">
-       <widget class="QLabel" name="label_8">
-        <property name="styleSheet">
-         <string notr="true">font: 28pt &quot;Sans Serif&quot;;
-</string>
-        </property>
-        <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;CASPER&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLabel" name="label_7">
-        <property name="styleSheet">
-         <string notr="true">font: 12pt &quot;Sans Serif&quot;;</string>
-        </property>
-        <property name="text">
-         <string>V 2.0(Beta) CRISPR Associated Software for Pathway Engineering and Research</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2" rowspan="2">
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
-    </item>
-    <item row="3" column="1" colspan="3">
+    <item row="4" column="0" colspan="4">
      <widget class="QTableWidget" name="tableWidget">
       <property name="minimumSize">
        <size>
@@ -109,42 +102,26 @@
       </property>
       <property name="maximumSize">
        <size>
-        <width>800</width>
+        <width>1000000</width>
         <height>16777215</height>
        </size>
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
-     <spacer name="verticalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="4" column="4">
-     <spacer name="horizontalSpacer_3">
+    <item row="1" column="0" colspan="4">
+     <widget class="Line" name="line">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
+     </widget>
     </item>
-    <item row="4" column="3">
-     <widget class="QPushButton" name="Submit_button">
+    <item row="0" column="1" colspan="3">
+     <widget class="QLabel" name="label_7">
+      <property name="styleSheet">
+       <string notr="true">font: 16pt &quot;Arial&quot;;</string>
+      </property>
       <property name="text">
-       <string>Submit</string>
+       <string>V2.0 (Beta) CRISPR Associated Software for Pathway Engineering and Research</string>
       </property>
      </widget>
     </item>
@@ -155,7 +132,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1030</width>
+     <width>754</width>
      <height>24</height>
     </rect>
    </property>

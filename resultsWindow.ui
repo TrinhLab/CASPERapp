@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1249</width>
-    <height>768</height>
+    <width>1180</width>
+    <height>698</height>
    </rect>
   </property>
   <property name="font">
    <font>
-    <pointsize>11</pointsize>
+    <pointsize>14</pointsize>
    </font>
   </property>
   <property name="windowTitle">
@@ -20,19 +20,6 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
-    <item row="0" column="0">
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
     <item row="2" column="2">
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="1" column="3">
@@ -49,13 +36,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>68</width>
+          <width>100</width>
           <height>23</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>68</width>
+          <width>100000</width>
           <height>23</height>
          </size>
         </property>
@@ -68,14 +55,14 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>110</width>
+          <width>200</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>140</width>
-          <height>23</height>
+          <width>200</width>
+          <height>32</height>
          </size>
         </property>
         <property name="toolTip">
@@ -91,9 +78,15 @@
         <property name="enabled">
          <bool>false</bool>
         </property>
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>67</width>
+          <width>100000</width>
           <height>23</height>
          </size>
         </property>
@@ -144,22 +137,28 @@
        <widget class="QLabel" name="geneviewerLabel">
         <property name="font">
          <font>
-          <pointsize>11</pointsize>
+          <pointsize>14</pointsize>
           <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
         <property name="text">
-         <string>Gene Viewer</string>
+         <string>Gene Viewer:</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1" colspan="5">
+      <item row="0" column="1" colspan="5" alignment="Qt::AlignRight">
        <widget class="QPushButton" name="gene_viewer_settings_button">
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>112312</width>
-          <height>23</height>
+          <width>200</width>
+          <height>32</height>
          </size>
         </property>
         <property name="text">
@@ -171,15 +170,21 @@
     </item>
     <item row="0" column="2" rowspan="2">
      <widget class="QGroupBox" name="groupBox">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>150</height>
+       </size>
+      </property>
       <property name="maximumSize">
        <size>
-        <width>450</width>
-        <height>156</height>
+        <width>100000</width>
+        <height>3000</height>
        </size>
       </property>
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <pointsize>14</pointsize>
         <italic>true</italic>
        </font>
       </property>
@@ -203,6 +208,12 @@
        </item>
        <item row="3" column="1">
         <widget class="QPushButton" name="pushButton_Deselect_All">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>32</height>
+          </size>
+         </property>
          <property name="text">
           <string>Deselect All</string>
          </property>
@@ -212,6 +223,12 @@
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
           <widget class="QLabel" name="label_12">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>32</height>
+            </size>
+           </property>
            <property name="text">
             <string>Minimum Score:</string>
            </property>
@@ -221,6 +238,18 @@
           <widget class="QLineEdit" name="minScoreLine">
            <property name="enabled">
             <bool>false</bool>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>1000000</width>
+             <height>16777215</height>
+            </size>
            </property>
           </widget>
          </item>
@@ -253,30 +282,17 @@
       </layout>
      </widget>
     </item>
-    <item row="2" column="3">
-     <spacer name="horizontalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
     <item row="1" column="1" rowspan="3">
      <widget class="QTableWidget" name="targetTable">
       <property name="minimumSize">
        <size>
-        <width>600</width>
+        <width>400</width>
         <height>400</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
-        <width>600</width>
+        <width>100000</width>
         <height>100000</height>
        </size>
       </property>
@@ -292,13 +308,13 @@
      <widget class="QTextEdit" name="geneViewer">
       <property name="minimumSize">
        <size>
-        <width>411</width>
+        <width>200</width>
         <height>0</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
-        <width>1112</width>
+        <width>100000</width>
         <height>121212</height>
        </size>
       </property>
@@ -322,15 +338,15 @@
         </property>
         <property name="font">
          <font>
-          <family>Sans Serif</family>
-          <pointsize>11</pointsize>
+          <family>Arial</family>
+          <pointsize>14</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
+         <string notr="true"/>
         </property>
         <property name="text">
          <string>Gene:</string>
@@ -341,8 +357,8 @@
        <widget class="QComboBox" name="comboBoxGene">
         <property name="maximumSize">
          <size>
-          <width>201</width>
-          <height>23</height>
+          <width>4000</width>
+          <height>32</height>
          </size>
         </property>
        </widget>
@@ -350,7 +366,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="endoLabel">
         <property name="styleSheet">
-         <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
+         <string notr="true"/>
         </property>
         <property name="text">
          <string>Endonuclease:</string>
@@ -361,18 +377,30 @@
        <widget class="QComboBox" name="endonucleaseBox">
         <property name="maximumSize">
          <size>
-          <width>201</width>
-          <height>23</height>
+          <width>4000</width>
+          <height>32</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>14</pointsize>
+         </font>
         </property>
        </widget>
       </item>
       <item row="0" column="2">
        <widget class="QPushButton" name="changeEndoButton">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>32</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>175</width>
-          <height>16777215</height>
+          <width>300</width>
+          <height>32</height>
          </size>
         </property>
         <property name="text">
@@ -382,10 +410,16 @@
       </item>
       <item row="1" column="2">
        <widget class="QPushButton" name="highlight_gene_viewer_button">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>32</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>175</width>
-          <height>16777215</height>
+          <width>300</width>
+          <height>32</height>
          </size>
         </property>
         <property name="toolTip">
@@ -400,14 +434,58 @@
     </item>
     <item row="4" column="1">
      <widget class="QPushButton" name="back_button">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>32</height>
+       </size>
+      </property>
       <property name="maximumSize">
        <size>
         <width>90</width>
-        <height>16777215</height>
+        <height>32</height>
        </size>
       </property>
       <property name="text">
        <string>Back</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="label">
+      <property name="minimumSize">
+       <size>
+        <width>50</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>50</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="3">
+     <widget class="QLabel" name="label_2">
+      <property name="minimumSize">
+       <size>
+        <width>50</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>50</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string/>
       </property>
      </widget>
     </item>
@@ -418,8 +496,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1249</width>
-     <height>21</height>
+     <width>1180</width>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

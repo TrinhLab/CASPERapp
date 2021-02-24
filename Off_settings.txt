@@ -1,3 +1,0 @@
-CSPRFile:/Users/brianmendoza/Dropbox/JGI_CASPER/kfdspCas9.cspr
-QueryFile:/Users/brianmendoza/Dropbox/kfdconcisedata.csv
-QueryFileStatus:Concise
