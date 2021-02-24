@@ -13,8 +13,10 @@ class pop_analysis_3dgraph(QWidget):
         self.canvas = FigureCanvasQTAgg(Figure(figsize=(0.6, 1.4)))
         vertical_layout = QVBoxLayout()
         vertical_layout.addWidget(self.canvas)
-        self.canvas.axes = self.canvas.figure.add_subplot(111, projection='3d')
+        #self.canvas.axes = self.canvas.figure.add_subplot(111, projection='3d')
+        self.canvas.axes = self.canvas.figure.add_subplot()
 
+        #self.canvas.axes = self.canvas.figure.add_subplot()
         self.canvas.figure.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9)
 
         self.canvas.figure.set_visible(False)

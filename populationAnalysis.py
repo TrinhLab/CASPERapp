@@ -13,7 +13,9 @@ import gzip
 import sqlite3
 from collections import Counter
 import statistics
-from itertools import combinations
+import itertools
+from matplotlib import cm
+import matplotlib
 
 
 class Pop_Analysis(QtWidgets.QMainWindow):
@@ -33,7 +35,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.names = []
         self.names_venn = []
         self.show_names.clicked.connect(self.show_names_func)
-        self.show_names_2.clicked.connect(self.show_names_func2)
         self.name_form = show_names_ui.show_names_table()
         self.name_form2 = show_names2_ui.show_names_table2()
 
@@ -77,6 +78,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loc_finder_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.loc_finder_table.resizeColumnsToContents()
 
+        #custom seed search
+        self.query_seed_button.clicked.connect(self.custom_seed_search)
+
         self.total_org_number = 0
 
         self.switcher_table2 = [1, 1, 1, 1, 1, 1, 1, 1,
@@ -97,7 +101,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loading_window = loading_window()
 
         self.show_names.hide()
-        self.show_names_2.hide()
+
+        self.seed_label.hide()
+        self.query_seed_button.hide()
+        self.seed_input.hide()
 
 
 
@@ -107,6 +114,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     # this function calls the popParser function and fills all the tables
     def pre_analyze(self):
+
         #clear graphs
         self.pop_analysis_repeats_graph.canvas.axes.clear()
 
@@ -231,21 +239,182 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loading_window.loading_bar.setValue(10)
         index = 0
 
-        #get seeds shared between files
         self.seeds = self.get_shared_seeds(self.db_files, True)
 
+        no_seeds = False
+
         if(len(self.seeds) == 0):
+            no_seeds = True
+
+        #QtCore.QCoreApplication.processEvents()
+
+        #retrieve data on shared seeds
+        if no_seeds == False:
+            increase_val = float(15 / len(self.seeds))
+            running_val = self.loading_window.loading_bar.value()
+            self.loading_window.info_label.setText("Parsing Seed Data")
+            self.counts = []
+            for seed in self.seeds:
+                # increase row count
+                self.table2.setRowCount(index + 1)
+
+                # push seed to table
+                table_seed = QtWidgets.QTableWidgetItem()
+                table_seed.setData(QtCore.Qt.EditRole, seed)
+                table_seed.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 0, table_seed)
+
+                total_count = 0
+                org_count = 0
+                threes = []
+                fives = []
+                scores = []
+                pams = []
+                locs = []
+
+                for db_file in self.db_files:
+                    conn = sqlite3.connect(db_file)
+                    c = conn.cursor()
+                    data = c.execute("SELECT count, three, five, pam, score, location FROM repeats WHERE seed = ? ",(seed,)).fetchone()
+                    if data != None:
+                        data = list(data)
+                        org_count += 1
+                        total_count += int(data[0])
+                        threes += data[1].split(",")
+                        fives += data[2].split(",")
+                        pams += data[3].split(",")
+                        scores += data[4].split(",")
+                        locs += data[5].split(",")
+
+                self.counts.append(total_count)
+
+                if len(threes) < len(fives):
+                    for i in range(len(fives) - len(threes)):
+                        threes.append('')
+
+                elif len(fives) < len(threes):
+                    for i in range(len(threes) - len(fives)):
+                        fives.append('')
+
+                majority_index = 0
+                if threes[0] == '':
+                    majority = max(set(fives), key=fives.count)
+                    majority_index = fives.index(majority)
+                else:
+                    majority = max(set(threes), key=threes.count)
+                    majority_index = threes.index(majority)
+
+                # push percent coverage
+                perc_cov = QtWidgets.QTableWidgetItem()
+                coverage = (org_count / len(self.db_files)) * 100
+                coverage = float("%.2f" % coverage)
+                perc_cov.setData(QtCore.Qt.EditRole, str(coverage) + '%')
+                perc_cov.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 1, perc_cov)
+
+                # push total count
+                table_count = QtWidgets.QTableWidgetItem()
+                table_count.setData(QtCore.Qt.EditRole, total_count)
+                table_count.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 2, table_count)
+
+                # push avg repeat
+                avg_rep = QtWidgets.QTableWidgetItem()
+                avg_rep_per_scaff = total_count / org_count
+                avg_rep_per_scaff = float("%.2f" % avg_rep_per_scaff)
+                avg_rep.setData(QtCore.Qt.EditRole, avg_rep_per_scaff)
+                avg_rep.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 3, avg_rep)
+
+                # push seq
+                seq = QtWidgets.QTableWidgetItem()
+                seq.setData(QtCore.Qt.EditRole, fives[majority_index] + seed + threes[majority_index])
+                seq.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 4, seq)
+
+                # push percent consensus
+                perc_cons = QtWidgets.QTableWidgetItem()
+                percent_consensus = (pams.count(pams[majority_index]) / len(pams)) * 100
+                percent_consensus = float("%.2f" % percent_consensus)
+                perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
+                perc_cons.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 5, perc_cons)
+
+                # push score
+                score = QtWidgets.QTableWidgetItem()
+                score.setData(QtCore.Qt.EditRole, scores[majority_index])
+                score.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 6, score)
+
+                # push PAM
+                pam = QtWidgets.QTableWidgetItem()
+                pam.setData(QtCore.Qt.EditRole, pams[majority_index])
+                pam.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 7, pam)
+
+                # push strand
+                strand_val = ""
+                if int(locs[majority_index]) < 0:
+                    strand_val = "-"
+                else:
+                    strand_val = "+"
+
+                strand = QtWidgets.QTableWidgetItem()
+                strand.setData(QtCore.Qt.EditRole, strand_val)
+                strand.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 8, strand)
+
+                index += 1
+                running_val += increase_val
+                self.loading_window.loading_bar.setValue(running_val)
+
+        self.table2.resizeColumnsToContents()
+        self.loading_window.loading_bar.setValue(25)
+        if len(self.db_files) > 1:
+            self.plot_3D_graph()
+        else:
+            self.pop_analysis_3dgraph.canvas.figure.set_visible(False)
+            self.show_names.hide()
+
+        self.loading_window.loading_bar.setValue(75)
+        if no_seeds == False:
+            self.plot_repeats_vs_seeds()
+        self.loading_window.loading_bar.setValue(100)
+        self.loading_window.hide()
+        QtCore.QCoreApplication.processEvents()
+        self.seed_label.show()
+        self.query_seed_button.show()
+        self.seed_input.show()
+
+
+    def custom_seed_search(self):
+        seeds = str(self.seed_input.text())
+        seeds = seeds.upper()
+        seeds = seeds.split(",")
+
+        # update progress bar
+        self.loading_window.loading_bar.setValue(5)
+        self.loading_window.show()
+        QtCore.QCoreApplication.processEvents()
+
+        # prep table
+        self.total_org_number = len(self.cspr_files)
+        self.table2.setRowCount(0)
+        self.loading_window.loading_bar.setValue(10)
+        index = 0
+
+        if (len(seeds) == 0):
             self.loading_window.hide()
             return
 
         increase_val = float(15 / len(self.seeds))
         running_val = self.loading_window.loading_bar.value()
         self.loading_window.info_label.setText("Parsing Seed Data")
-        #QtCore.QCoreApplication.processEvents()
+        # QtCore.QCoreApplication.processEvents()
 
-        #retrieve data on shared seeds
+        # retrieve data on shared seeds
         self.counts = []
-        for seed in self.seeds:
+        for seed in seeds:
             # increase row count
             self.table2.setRowCount(index + 1)
 
@@ -266,7 +435,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             for db_file in self.db_files:
                 conn = sqlite3.connect(db_file)
                 c = conn.cursor()
-                data = c.execute("SELECT count, three, five, pam, score, location FROM repeats WHERE seed = ? ",(seed,)).fetchone()
+                data = c.execute("SELECT count, three, five, pam, score, location FROM repeats WHERE seed = ? ",
+                                 (seed,)).fetchone()
                 if data != None:
                     data = list(data)
                     org_count += 1
@@ -278,7 +448,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     locs += data[5].split(",")
 
             self.counts.append(total_count)
-
 
             if len(threes) < len(fives):
                 for i in range(len(fives) - len(threes)):
@@ -361,24 +530,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.loading_window.loading_bar.setValue(running_val)
 
         self.table2.resizeColumnsToContents()
-        self.loading_window.loading_bar.setValue(25)
-        if len(self.db_files) > 1:
-            self.plot_3D_graph()
-        else:
-            self.pop_analysis_3dgraph.canvas.figure.set_visible(False)
-            self.show_names.hide()
-
-        self.loading_window.loading_bar.setValue(50)
-        if len(self.db_files) > 2:
-            self.plot_venn()
-        else:
-            self.pop_analysis_venn_diagram.canvas.figure.set_visible(False)
-            self.show_names_2.hide()
-
-        self.loading_window.loading_bar.setValue(75)
-        self.plot_repeats_vs_seeds()
-
-        self.loading_window.loading_bar.setValue(100)
         self.loading_window.hide()
         QtCore.QCoreApplication.processEvents()
 
@@ -418,7 +569,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         #execute inner join
         new_c.execute(sql_inner_join)
-
         #get shared data
         if limit == False:
             shared_seeds = new_c.execute("select count(*) from join_results").fetchall()
@@ -467,7 +617,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         y1 = []
         for val in self.counts:
             y1.append(val)
-        y1.sort(reverse=True)
+        #y1.sort(reverse=True)
 
         # get stats
         self.average = statistics.mean(y1)
@@ -488,103 +638,48 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
 
     def plot_3D_graph(self):
+        self.pop_analysis_3dgraph.canvas.axes.clear()
+        try:
+            self.pop_analysis_3dgraph.canvas.cbar.remove()
+        except:
+            None
         self.pop_analysis_3dgraph.canvas.figure.set_visible(True)
         self.show_names.show()
 
         rows, cols = (self.total_org_number, self.total_org_number)
         arr = [[0 for i in range(cols)] for j in range(rows)]
 
-        x3 = []
-        y3 = []
-        z3 = np.zeros(int((self.total_org_number * (self.total_org_number - 1)) / 2))
-        dz = []
         self.names = list(self.org_names.keys())
-        dx = np.ones(int((self.total_org_number * (self.total_org_number - 1)) / 2))
-        dy = np.ones(int((self.total_org_number * (self.total_org_number - 1)) / 2))
 
-        for pair in list(combinations(self.db_files, 2)):
+        for pair in list(itertools.combinations(self.db_files, 2)):
             shared_seeds = list(self.get_shared_seeds(list(pair), False)[0])[0]
 
             arr[self.db_files.index(pair[0])][self.db_files.index(pair[1])] += int(shared_seeds)
             arr[self.db_files.index(pair[1])][self.db_files.index(pair[0])] += int(shared_seeds)
 
-        for j in range(cols):
-            i = len(self.names)-1
-            while i != j:
-                x3.append(i)
-                y3.append(j)
-                dz.append(arr[i][j])
-                i -= 1
-
-        self.pop_analysis_3dgraph.canvas.axes.clear()
-        self.pop_analysis_3dgraph.canvas.axes.bar3d(x3, y3, z3, dx, dy, dz)
-
-        new_names = []
-        for n in range(len(self.names)):
-            new_names.append(n)
-
-        for x, y, z in zip(x3, y3, dz):
-            label = '%d' % (z)
-            self.pop_analysis_3dgraph.canvas.axes.text(x + 0.5, y + 0.5, z, label)
-
-        self.pop_analysis_3dgraph.canvas.axes.set_xlabel('x')
-        self.pop_analysis_3dgraph.canvas.axes.set_ylabel('y')
-        self.pop_analysis_3dgraph.canvas.axes.set_zlabel('z')
-        self.pop_analysis_3dgraph.canvas.axes.set_xticks(np.arange(1, self.total_org_number + 1, 1))
-        self.pop_analysis_3dgraph.canvas.axes.set_yticks(np.arange(0, self.total_org_number, 1))
-        self.pop_analysis_3dgraph.canvas.axes.tick_params(labelsize=8)
-        self.pop_analysis_3dgraph.canvas.axes.set_xticklabels(new_names, rotation=45)
-        self.pop_analysis_3dgraph.canvas.axes.set_yticklabels(new_names, rotation=-45)
-        self.pop_analysis_3dgraph.canvas.draw()
-
-
-    def plot_venn(self):
-        self.pop_analysis_venn_diagram.canvas.figure.set_visible(True)
-        self.show_names_2.show()
-
-        self.pop_analysis_venn_diagram.canvas.figure.clf()
-        arr = [[0 for i in range(3)] for j in range(3)]
-        all_3 = 0
-        singles = [0 for i in range(3)]
-
-        self.names_venn = list(self.org_names.keys())[0:3]
-        for db_file in self.db_files[0:3]:
-            conn = sqlite3.connect(db_file)
+        for i in range(len(arr)):
+            conn = sqlite3.connect(self.db_files[i])
             c = conn.cursor()
-            for seeds in c.execute("select chromosome from repeats;"):
-                seeds = list(seeds)
-                temp_names = []
-                chroms = str(seeds[0]).split(',')
-                for c in chroms:
-                    ind = int(c)
-                    cnt = 0
-                    c_name = ""
-                    for k in self.org_names.keys():
-                        cnt += self.org_names[k]
-                        if ind <= cnt:
-                            c_name = k
-                            break
-                    if c_name not in temp_names:
-                        temp_names.append(c_name)
-                if len(temp_names) >= 2:
-                    for i in range(len(temp_names) - 1):
-                        j = i + 1
-                        while j != len(temp_names):
-                            arr[self.names_venn.index(temp_names[i])][self.names_venn.index(temp_names[j])] += 1
-                            arr[self.names_venn.index(temp_names[j])][self.names_venn.index(temp_names[i])] += 1
-                            j += 1
-                else:
-                    singles[self.names_venn.index(temp_names[0])] += 1
+            arr[i][i] = int(list(c.execute("select count(*) from repeats;").fetchall()[0])[0])
+            c.close()
+            conn.close()
 
-                if all(x in temp_names for x in [self.names_venn[0], self.names_venn[1], self.names_venn[2]]):
-                    all_3 += 1
+        ax = self.pop_analysis_3dgraph.canvas.axes
 
+        im = self.pop_analysis_3dgraph.canvas.axes.imshow(arr, cmap='summer')
 
-        venn3_unweighted(subsets=(singles[0], singles[1], arr[0][1], singles[2], arr[0][2],
-                                  arr[1][2], all_3), set_labels=('0', '1', '2'))
-        self.pop_analysis_venn_diagram.canvas.draw()
-        self.show_names_2.show()
+        self.pop_analysis_3dgraph.canvas.cbar = self.pop_analysis_3dgraph.canvas.axes.figure.colorbar(im, ax=self.pop_analysis_3dgraph.canvas.axes)
+        self.pop_analysis_3dgraph.canvas.cbar.ax.set_ylabel("", rotation=-90, va="bottom")
 
+        ax.set_xticks(np.arange(len(arr)))
+        ax.set_yticks(np.arange(len(arr[0])))
+
+        for i in range(len(arr)):
+            for j in range(len(arr)):
+                text = ax.text(j, i, arr[i][j],
+                               ha="center", va="center", color="black")
+
+        self.pop_analysis_3dgraph.canvas.draw()
 
     def find_locations(self):
 
@@ -661,15 +756,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         # print(self.names)
         self.name_form.fill_table(self.names)
         self.name_form.show()
-
-
-    def show_names_func2(self):
-        # print(self.names)
-        if len(self.names_venn) >= 3:
-            self.name_form2.fill_table(self.names_venn[0:3])
-            self.name_form2.show()
-        else:
-            self.name_form2.name_table2.setRowCount(0)
 
 
     def table_sorting(self, logicalIndex):

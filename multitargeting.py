@@ -368,9 +368,9 @@ class Multitargeting(QtWidgets.QMainWindow):
         x_labels = []
         y = []
         for rep in sorted(repeat_data, key=repeat_data.get, reverse=True):
-            if repeat_data[rep] / max_rep > 0.01:
-                x_labels.append(rep)
-                y.append(repeat_data[rep])
+            #if repeat_data[rep] / max_rep > 0.01:
+            x_labels.append(rep)
+            y.append(repeat_data[rep])
         x = list(range(0, len(x_labels)))
         # the following are plotting / formatting for the graph
         self.seeds_vs_repeats_bar.canvas.axes.bar(x, y)
@@ -424,7 +424,8 @@ class Multitargeting(QtWidgets.QMainWindow):
         y1 = []
         for obj in data:
             y1.append(int(list(obj)[1]))
-        y1.sort(reverse=True)
+
+        #y1.sort(reverse=True)
 
         #get stats
         self.average = statistics.mean(y1)
