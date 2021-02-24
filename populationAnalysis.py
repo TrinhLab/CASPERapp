@@ -666,9 +666,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             conn.close()
 
         ax = self.pop_analysis_3dgraph.canvas.axes
-
-        im = self.pop_analysis_3dgraph.canvas.axes.imshow(arr, cmap='summer', interpolation='none', aspect='equal')
-
+        im = self.pop_analysis_3dgraph.canvas.axes.imshow(arr, cmap='summer')
         self.pop_analysis_3dgraph.canvas.cbar = self.pop_analysis_3dgraph.canvas.axes.figure.colorbar(im, ax=self.pop_analysis_3dgraph.canvas.axes)
         self.pop_analysis_3dgraph.canvas.cbar.ax.set_ylabel("", rotation=-90, va="bottom")
         cursor = mplcursors.cursor(im, hover=True)
@@ -684,7 +682,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         ax.set_xticks(np.arange(len(arr)))
         ax.set_yticks(np.arange(len(arr)))
         ax.grid(which='minor', color='w', linestyle='-', linewidth=2)
-        ax.set_frame_on(False)
+        #ax.set_frame_on(False)
         #ax.set_aspect('equal')
 #        for i in range(len(arr)):
 #            for j in range(len(arr)):
