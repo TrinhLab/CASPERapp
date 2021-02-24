@@ -1,5 +1,7 @@
 .idea
 __pycache__
 CASPERinfo
-Casper_Seq_Finder_Windows.exe
+Casper_Seq_Finder.exe
 OffTargetFolder/OT.exe
+OffTargetFolder/temp.txt
+genomeBrowserTemplate.html
