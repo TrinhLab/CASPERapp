@@ -16,6 +16,7 @@ import statistics
 import itertools
 from matplotlib import cm
 import matplotlib
+import mplcursors
 
 
 class Pop_Analysis(QtWidgets.QMainWindow):
@@ -670,14 +671,21 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         self.pop_analysis_3dgraph.canvas.cbar = self.pop_analysis_3dgraph.canvas.axes.figure.colorbar(im, ax=self.pop_analysis_3dgraph.canvas.axes)
         self.pop_analysis_3dgraph.canvas.cbar.ax.set_ylabel("", rotation=-90, va="bottom")
+        cursor = mplcursors.cursor(im, hover=True)
+        @cursor.connect("add")
+        def on_add(sel):
+            sel.annotation.arrow_patch.set(arrowstyle="simple", fc="white", alpha=.5)
+            sel.annotation.set_bbox(None)
+            i,j = sel.target.index
+            sel.annotation.set_text(arr[i][j])
 
         ax.set_xticks(np.arange(len(arr)))
         ax.set_yticks(np.arange(len(arr[0])))
 
-        for i in range(len(arr)):
-            for j in range(len(arr)):
-                text = ax.text(j, i, arr[i][j],
-                               ha="center", va="center", color="black")
+#        for i in range(len(arr)):
+#            for j in range(len(arr)):
+#                text = ax.text(j, i, arr[i][j],
+#                               ha="center", va="center", color="black")
 
         self.pop_analysis_3dgraph.canvas.draw()
 
