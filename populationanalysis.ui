@@ -23,19 +23,6 @@
     <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="1" column="0">
-     <spacer name="horizontalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
     <item row="0" column="1">
      <spacer name="verticalSpacer_2">
       <property name="orientation">
@@ -49,10 +36,36 @@
       </property>
      </spacer>
     </item>
+    <item row="1" column="2">
+     <spacer name="horizontalSpacer_3">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>40</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="1" column="0">
+     <spacer name="horizontalSpacer_2">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>40</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
     <item row="1" column="1">
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="8" column="5">
-       <widget class="QPushButton" name="find_locs_button">
+      <item row="8" column="6">
+       <widget class="QPushButton" name="clear_loc_button">
         <property name="minimumSize">
          <size>
           <width>159</width>
@@ -66,7 +79,54 @@
          </size>
         </property>
         <property name="text">
-         <string>Find Locations</string>
+         <string>Clear Locations</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLabel" name="seed_label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Seed</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3" colspan="3">
+       <widget class="QLineEdit" name="seed_input">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>225</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>250</width>
+          <height>25</height>
+         </size>
         </property>
        </widget>
       </item>
@@ -172,8 +232,8 @@
         </item>
        </layout>
       </item>
-      <item row="8" column="6">
-       <widget class="QPushButton" name="clear_loc_button">
+      <item row="8" column="5">
+       <widget class="QPushButton" name="find_locs_button">
         <property name="minimumSize">
          <size>
           <width>159</width>
@@ -187,31 +247,46 @@
          </size>
         </property>
         <property name="text">
-         <string>Clear Locations</string>
+         <string>Find Locations</string>
         </property>
        </widget>
       </item>
-      <item row="8" column="2" colspan="3">
-       <widget class="QLabel" name="label_4">
-        <property name="font">
-         <font>
-          <family>Sans Serif</family>
-          <pointsize>11</pointsize>
-          <weight>50</weight>
-          <italic>false</italic>
-          <bold>false</bold>
-         </font>
+      <item row="6" column="0">
+       <layout class="QGridLayout" name="gridLayout_2"/>
+      </item>
+      <item row="10" column="0">
+       <widget class="QPushButton" name="goBackButton">
+        <property name="maximumSize">
+         <size>
+          <width>91</width>
+          <height>22</height>
+         </size>
         </property>
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Location Finder&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         <string>Go Back</string>
         </property>
        </widget>
       </item>
       <item row="3" column="6">
        <widget class="QPushButton" name="clear_Button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="text">
          <string>Clear</string>
         </property>
@@ -258,9 +333,6 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
-       <layout class="QGridLayout" name="gridLayout_2"/>
-      </item>
       <item row="10" column="2" colspan="5">
        <spacer name="horizontalSpacer">
         <property name="orientation">
@@ -276,15 +348,21 @@
       </item>
       <item row="2" column="2" rowspan="2" colspan="4">
        <widget class="QPushButton" name="analyze_button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="minimumSize">
          <size>
-          <width>191</width>
-          <height>51</height>
+          <width>300</width>
+          <height>25</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>310</width>
+          <width>250</width>
           <height>54</height>
          </size>
         </property>
@@ -293,6 +371,28 @@
         </property>
         <property name="text">
          <string>Analyze Organism(s)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="7" alignment="Qt::AlignLeft">
+       <widget class="QLabel" name="label">
+        <property name="font">
+         <font>
+          <family>Sans Serif</family>
+          <pointsize>28</pointsize>
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">font: 28pt &quot;Sans Serif&quot;;</string>
+        </property>
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Population Analysis&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -327,38 +427,47 @@
         </attribute>
        </widget>
       </item>
-      <item row="0" column="0" colspan="7" alignment="Qt::AlignLeft">
-       <widget class="QLabel" name="label">
+      <item row="8" column="2" colspan="3">
+       <widget class="QLabel" name="label_4">
         <property name="font">
          <font>
           <family>Sans Serif</family>
-          <pointsize>28</pointsize>
+          <pointsize>11</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>
         </property>
-        <property name="styleSheet">
-         <string notr="true">font: 28pt &quot;Sans Serif&quot;;</string>
-        </property>
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Population Analysis&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Location Finder&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
-      <item row="10" column="0">
-       <widget class="QPushButton" name="goBackButton">
+      <item row="4" column="6">
+       <widget class="QPushButton" name="query_seed_button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>91</width>
-          <height>22</height>
+          <width>150</width>
+          <height>25</height>
          </size>
         </property>
         <property name="text">
-         <string>Go Back</string>
+         <string>Query Seed</string>
         </property>
        </widget>
       </item>
@@ -406,37 +515,6 @@
           <string>Repeats per Seed ID</string>
          </attribute>
         </widget>
-        <widget class="pop_analysis_venn_diagram" name="pop_analysis_venn_diagram">
-         <attribute name="title">
-          <string>Venn Diagram</string>
-         </attribute>
-         <widget class="QPushButton" name="show_names2">
-          <property name="geometry">
-           <rect>
-            <x>550</x>
-            <y>10</y>
-            <width>80</width>
-            <height>22</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Show Names</string>
-          </property>
-         </widget>
-         <widget class="QPushButton" name="show_names_2">
-          <property name="geometry">
-           <rect>
-            <x>380</x>
-            <y>10</y>
-            <width>101</width>
-            <height>26</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Show Names</string>
-          </property>
-         </widget>
-        </widget>
         <widget class="pop_analysis_3dgraph" name="pop_analysis_3dgraph">
          <attribute name="title">
           <string>3-D Figure</string>
@@ -444,8 +522,8 @@
          <widget class="QPushButton" name="show_names">
           <property name="geometry">
            <rect>
-            <x>380</x>
-            <y>10</y>
+            <x>0</x>
+            <y>0</y>
             <width>101</width>
             <height>26</height>
            </rect>
@@ -458,19 +536,6 @@
        </widget>
       </item>
      </layout>
-    </item>
-    <item row="1" column="2">
-     <spacer name="horizontalSpacer_3">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
     </item>
    </layout>
   </widget>
@@ -496,12 +561,6 @@
    <class>pop_analysis_repeats_graph</class>
    <extends>QWidget</extends>
    <header location="global">pop_analysis_repeats_graph.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>pop_analysis_venn_diagram</class>
-   <extends>QWidget</extends>
-   <header location="global">pop_analysis_venn_diagram.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
