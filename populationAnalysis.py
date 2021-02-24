@@ -6,9 +6,7 @@ import Algorithms
 from functools import partial
 import numpy as np
 from PyQt5.QtWidgets import *
-from matplotlib_venn import venn3_unweighted
 import show_names_ui
-import show_names2_ui
 import gzip
 import sqlite3
 from collections import Counter
