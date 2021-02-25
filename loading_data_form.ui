@@ -50,7 +50,7 @@
      <property name="minimumSize">
       <size>
        <width>400</width>
-       <height>100</height>
+       <height>32</height>
       </size>
      </property>
      <property name="value">

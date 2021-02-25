@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1036</width>
+    <width>1238</width>
     <height>698</height>
    </rect>
   </property>
@@ -27,52 +27,7 @@
     <string notr="true">font: 14pt &quot;Arial&quot;;</string>
    </property>
    <layout class="QGridLayout" name="gridLayout_6">
-    <item row="2" column="0" colspan="2">
-     <widget class="Line" name="line">
-      <property name="maximumSize">
-       <size>
-        <width>1000000</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">color: rgb(0, 0, 0);</string>
-      </property>
-      <property name="lineWidth">
-       <number>2</number>
-      </property>
-      <property name="midLineWidth">
-       <number>1</number>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0">
-     <widget class="QLabel" name="label_8">
-      <property name="minimumSize">
-       <size>
-        <width>170</width>
-        <height>44</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>170</width>
-        <height>44</height>
-       </size>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">font: 28pt &quot;Arial&quot;;
-</string>
-      </property>
-      <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#000000;&quot;&gt;CASPER&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0" rowspan="2" colspan="2">
+    <item row="3" column="1" rowspan="2" colspan="2">
      <layout class="QGridLayout" name="gridLayout_7">
       <property name="sizeConstraint">
        <enum>QLayout::SetDefaultConstraint</enum>
@@ -218,7 +173,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>500</width>
+          <width>650</width>
           <height>500</height>
          </size>
         </property>
@@ -301,8 +256,8 @@
            </property>
            <property name="maximumSize">
             <size>
-             <width>1000000</width>
-             <height>1000000</height>
+             <width>16777215</width>
+             <height>16777215</height>
             </size>
            </property>
           </widget>
@@ -490,7 +445,7 @@
       </item>
      </layout>
     </item>
-    <item row="1" column="1">
+    <item row="1" column="2">
      <widget class="QLabel" name="label_7">
       <property name="minimumSize">
        <size>
@@ -521,6 +476,89 @@
       </property>
      </widget>
     </item>
+    <item row="2" column="1" colspan="2">
+     <widget class="Line" name="line">
+      <property name="maximumSize">
+       <size>
+        <width>1000000</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(0, 0, 0);</string>
+      </property>
+      <property name="lineWidth">
+       <number>2</number>
+      </property>
+      <property name="midLineWidth">
+       <number>1</number>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QLabel" name="label_8">
+      <property name="minimumSize">
+       <size>
+        <width>170</width>
+        <height>44</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>170</width>
+        <height>44</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font: 28pt &quot;Arial&quot;;
+</string>
+      </property>
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#000000;&quot;&gt;CASPER&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="3">
+     <widget class="QLabel" name="label_5">
+      <property name="minimumSize">
+       <size>
+        <width>50</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>50</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="label_6">
+      <property name="minimumSize">
+       <size>
+        <width>50</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>50</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -528,7 +566,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1036</width>
+     <width>1238</width>
      <height>21</height>
     </rect>
    </property>
