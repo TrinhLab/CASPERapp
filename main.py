@@ -153,66 +153,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             self.tableWidget.cellWidget(i, 4).setChecked(select_all)
 
 
-    def fill_Table(self, mainWindow):
-        self.tableWidget.clearContents()
-        self.mainWindow = mainWindow
-        index = 0
-        self.tableWidget.setColumnCount(0)
-        self.tableWidget.setColumnCount(3)
-        self.mainWindow.progressBar.setValue(25)
-        self.tableWidget.setHorizontalHeaderLabels("Description;Gene ID;Select".split(";"))
-
-        mainWindow.checkBoxes = []
-
-        index = 1000
-        self.tableWidget.setRowCount(index)
-        if index == 0:
-            return -1
-        index = 0
-
-
-        for sValues in mainWindow.searches:
-            for definition in mainWindow.searches[sValues]:
-                defin_obj = QtWidgets.QTableWidgetItem(definition)
-                self.tableWidget.setItem(index, 0, defin_obj)
-                for gene in mainWindow.searches[sValues][definition]:
-                    ckbox = QtWidgets.QCheckBox()
-                    mainWindow.checkBoxes.append([definition + " " + gene])
-                    mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(ckbox)
-                    gene_obj = QtWidgets.QTableWidgetItem(gene)
-                    self.tableWidget.setItem(index, 1, gene_obj)
-                    self.tableWidget.setCellWidget(index, 2, ckbox)
-                    index = index + 1
-                    if index >= 1000:
-                        break
-                if index >= 1000:
-                    break
-            if index >= 1000:
-                break
-        self.tableWidget.resizeColumnsToContents()
-        self.mainWindow.progressBar.setValue(50)
-        if mainWindow.Show_All_Results.isChecked():
-            mainWindow.hide()
-            self.mwfg.moveCenter(self.cp)  ##Center window
-            self.move(self.mwfg.topLeft())  ##Center window
-            self.show()
-        else:  # Show all not checked
-            if (len(mainWindow.checkBoxes) > 15):  # check the size, throw an error if it is too large
-                error = QtWidgets.QMessageBox.question(self, "Large File Found",
-                                                       "This annotation file and search parameter yieled many matches and could cause a slow down.\n\n"
-                                                       "Do you wish to continue?",
-                                                       QtWidgets.QMessageBox.Yes |
-                                                       QtWidgets.QMessageBox.No,
-                                                       QtWidgets.QMessageBox.No)
-                if (error == QtWidgets.QMessageBox.No):
-                    return -2
-            self.mainWindow.progressBar.setValue(65)
-            for obj in mainWindow.checkBoxes:  # check every match
-                obj[1].setChecked(True)
-            self.mainWindow.collect_table_data()  # collect the data
-        return 0
-
-
     # this function calls the closingWindow class.
     def closeEvent(self, event):
         GlobalSettings.mainWindow.closeFunction()
@@ -814,41 +754,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.pushButton_ViewTargets.setEnabled(True)
 
 
-    def collect_table_data(self):
-        # need to change this code so that it works with other types of files
-        self.checked_info.clear()
-        self.check_ntseq_info.clear()
-
-        k = Kegg()
-        full_org = str(self.orgChoice.currentText())
-        organism = self.Annotations_Organism.currentText().split(" ")[1]
-        nameFull = ""
-        holder = ()
-        for item in self.checkBoxes:
-            if item[1].isChecked() == True:
-                nameFull = item[0].split(" ")
-                name = nameFull[len(nameFull) - 1]
-                gene_info = k.gene_locator(organism + ":" + name)
-                # print(nameFull)
-
-                # get kegg's ntsequence and store it
-                if gene_info != -1:
-                    nt_sequence = k.get_nt_sequence(organism + ":" + name)
-
-                    # print(item[0])
-                    holder = (gene_info[0], gene_info[2], gene_info[3], gene_info[4])
-                    self.checked_info[item[0]] = holder
-                    self.check_ntseq_info[item[0]] = nt_sequence
-
-        if len(self.checked_info) > 0:
-            self.progressBar.setValue(80)
-            self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
-                                       self.checked_info, self.check_ntseq_info, "")
-            self.progressBar.setValue(100)
-            self.pushButton_ViewTargets.setEnabled(True)
-        else:
-            print("No items were found. Please search again.")
-
     # ------------------------------------------------------------------------------------------------------ #
 
     # ----- Following Code is helper functions for processing input data ----- #
@@ -1047,16 +952,12 @@ class CMainWindow(QtWidgets.QMainWindow):
     # Function launches the multitargeting window and closing the current one
     def changeto_multitargeting(self):
         os.chdir(os.getcwd())
-        GlobalSettings.MTWin.mwfg.moveCenter(GlobalSettings.MTWin.cp)  ##Center window
-        GlobalSettings.MTWin.move(GlobalSettings.MTWin.mwfg.topLeft())  ##Center window
         GlobalSettings.MTWin.show()
         GlobalSettings.mainWindow.hide()
 
 
     def changeto_population_Analysis(self):
         GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
-        GlobalSettings.pop_Analysis.mwfg.moveCenter(GlobalSettings.pop_Analysis.cp)  ##Center window
-        GlobalSettings.pop_Analysis.move(GlobalSettings.pop_Analysis.mwfg.topLeft())  ##Center window
         GlobalSettings.pop_Analysis.show()
         GlobalSettings.mainWindow.hide()
 
