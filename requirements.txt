@@ -35,7 +35,7 @@ Jinja2==2.10.1
 jmespath==0.9.4
 jsonschema==3.0.1
 kiwisolver==1.1.0
-lxml==4.3.3
+lxml==4.6.2
 macholib==1.11
 MarkupSafe==1.1.1
 matplotlib==3.2.1
