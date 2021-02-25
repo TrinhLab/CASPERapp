@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1068</width>
-    <height>672</height>
+    <width>1036</width>
+    <height>698</height>
    </rect>
   </property>
   <property name="font">
@@ -27,57 +27,29 @@
     <string notr="true">font: 14pt &quot;Arial&quot;;</string>
    </property>
    <layout class="QGridLayout" name="gridLayout_6">
-    <item row="1" column="3" rowspan="6">
-     <widget class="QLabel" name="label_6">
-      <property name="minimumSize">
-       <size>
-        <width>50</width>
-        <height>0</height>
-       </size>
-      </property>
+    <item row="2" column="0" colspan="2">
+     <widget class="Line" name="line">
       <property name="maximumSize">
        <size>
-        <width>50</width>
+        <width>1000000</width>
         <height>16777215</height>
        </size>
       </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="2">
-     <widget class="QLabel" name="label_7">
-      <property name="minimumSize">
-       <size>
-        <width>730</width>
-        <height>30</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>730</width>
-        <height>100</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <family>Arial</family>
-        <pointsize>16</pointsize>
-        <weight>50</weight>
-        <italic>false</italic>
-        <bold>false</bold>
-       </font>
-      </property>
       <property name="styleSheet">
-       <string notr="true">font: 16pt &quot;Arial&quot;;</string>
+       <string notr="true">color: rgb(0, 0, 0);</string>
       </property>
-      <property name="text">
-       <string>V2.0 (Beta) CRISPR Associated Software for Pathway Engineering and Research</string>
+      <property name="lineWidth">
+       <number>2</number>
+      </property>
+      <property name="midLineWidth">
+       <number>1</number>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
      </widget>
     </item>
-    <item row="1" column="1">
+    <item row="1" column="0">
      <widget class="QLabel" name="label_8">
       <property name="minimumSize">
        <size>
@@ -100,57 +72,22 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="0" rowspan="6">
-     <widget class="QLabel" name="label_5">
-      <property name="minimumSize">
-       <size>
-        <width>50</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>50</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1" colspan="2">
-     <widget class="Line" name="line">
-      <property name="maximumSize">
-       <size>
-        <width>1000000</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">color: rgb(0, 0, 0);</string>
-      </property>
-      <property name="lineWidth">
-       <number>2</number>
-      </property>
-      <property name="midLineWidth">
-       <number>1</number>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1" rowspan="4" colspan="2">
+    <item row="3" column="0" rowspan="2" colspan="2">
      <layout class="QGridLayout" name="gridLayout_7">
       <property name="sizeConstraint">
        <enum>QLayout::SetDefaultConstraint</enum>
       </property>
       <item row="2" column="0" rowspan="2">
        <widget class="QGroupBox" name="Step2">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>400</width>
+          <width>16777215</width>
           <height>200</height>
          </size>
         </property>
@@ -161,6 +98,9 @@
          <string>Step 2: Choose annotation file</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_5">
+         <property name="topMargin">
+          <number>15</number>
+         </property>
          <item row="4" column="1">
           <widget class="QComboBox" name="annotation_files">
            <property name="minimumSize">
@@ -188,10 +128,16 @@
          </item>
          <item row="3" column="1">
           <widget class="QLabel" name="label_3">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>32</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>1000</width>
-             <height>15</height>
+             <height>103247</height>
             </size>
            </property>
            <property name="text">
@@ -229,6 +175,9 @@
              <height>40</height>
             </size>
            </property>
+           <property name="styleSheet">
+            <string notr="true">font: 12pt &quot;Arial&quot;;</string>
+           </property>
            <property name="text">
             <string>Select local annotation file or use NCBI search tool</string>
            </property>
@@ -239,10 +188,16 @@
          </item>
          <item row="2" column="1" colspan="2">
           <widget class="QPushButton" name="launch_ncbi_button">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>32</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>16777215</width>
-             <height>32</height>
+             <height>16777215</height>
             </size>
            </property>
            <property name="text">
@@ -256,21 +211,21 @@
       <item row="0" column="1" rowspan="4">
        <widget class="QGroupBox" name="Step3">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
          <size>
-          <width>0</width>
+          <width>500</width>
           <height>500</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>100000</width>
-          <height>100000</height>
+          <width>16777215</width>
+          <height>16777215</height>
          </size>
         </property>
         <property name="styleSheet">
@@ -280,8 +235,17 @@
          <string>Step 3: Search and view targets</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_4">
+         <property name="topMargin">
+          <number>15</number>
+         </property>
          <item row="6" column="0">
           <widget class="QPushButton" name="pushButton_ViewTargets">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>32</height>
+            </size>
+           </property>
            <property name="text">
             <string>View Targets</string>
            </property>
@@ -301,6 +265,12 @@
           <widget class="QPushButton" name="pushButton_FindTargets">
            <property name="enabled">
             <bool>true</bool>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>32</height>
+            </size>
            </property>
            <property name="text">
             <string>Find Targets</string>
@@ -323,6 +293,12 @@
          </item>
          <item row="2" column="0" colspan="2">
           <widget class="QPlainTextEdit" name="geneEntryField">
+           <property name="minimumSize">
+            <size>
+             <width>500</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>1000000</width>
@@ -343,10 +319,16 @@
          </item>
          <item row="6" column="1">
           <widget class="QPushButton" name="GenerateLibrary">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>32</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>1000</width>
-             <height>50</height>
+             <height>16777215</height>
             </size>
            </property>
            <property name="text">
@@ -369,9 +351,15 @@
       </item>
       <item row="0" column="0" rowspan="2">
        <widget class="QGroupBox" name="Step1">
+        <property name="minimumSize">
+         <size>
+          <width>450</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>400</width>
+          <width>16777215</width>
           <height>200</height>
          </size>
         </property>
@@ -390,111 +378,148 @@
         <property name="title">
          <string>Step 1: Select organism(s) and endonuclease</string>
         </property>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="0" column="2">
-          <layout class="QGridLayout" name="gridLayout_3">
-           <item row="4" column="0" colspan="2">
-            <layout class="QHBoxLayout" name="horizontalLayout_5">
-             <property name="sizeConstraint">
-              <enum>QLayout::SetMinimumSize</enum>
-             </property>
-             <item>
-              <widget class="QLabel" name="label">
-               <property name="maximumSize">
-                <size>
-                 <width>150</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Arial</family>
-                 <pointsize>16</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">font: 16pt &quot;Arial&quot;;</string>
-               </property>
-               <property name="text">
-                <string>Endonuclease:</string>
-               </property>
-              </widget>
-             </item>
-             <item alignment="Qt::AlignRight">
-              <widget class="QComboBox" name="endoChoice">
-               <property name="minimumSize">
-                <size>
-                 <width>200</width>
-                 <height>50</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>500</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="3" column="0" colspan="2">
-            <layout class="QHBoxLayout" name="horizontalLayout">
-             <property name="sizeConstraint">
-              <enum>QLayout::SetMinimumSize</enum>
-             </property>
-             <item>
-              <widget class="QLabel" name="label_2">
-               <property name="maximumSize">
-                <size>
-                 <width>150</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Arial</family>
-                 <pointsize>16</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">font: 16pt &quot;Arial&quot;;</string>
-               </property>
-               <property name="text">
-                <string>Organism:</string>
-               </property>
-              </widget>
-             </item>
-             <item alignment="Qt::AlignRight">
-              <widget class="QComboBox" name="orgChoice">
-               <property name="minimumSize">
-                <size>
-                 <width>200</width>
-                 <height>50</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>500</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-          </layout>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>150</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Arial</family>
+             <pointsize>16</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">font: 16pt &quot;Arial&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Organism:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" colspan="2">
+          <widget class="QComboBox" name="orgChoice">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>200</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" colspan="2">
+          <widget class="QLabel" name="label">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>150</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Arial</family>
+             <pointsize>16</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">font: 16pt &quot;Arial&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Endonuclease:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QComboBox" name="endoChoice">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>200</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
       </item>
      </layout>
+    </item>
+    <item row="1" column="1">
+     <widget class="QLabel" name="label_7">
+      <property name="minimumSize">
+       <size>
+        <width>730</width>
+        <height>30</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>730</width>
+        <height>100</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>14</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+      </property>
+      <property name="text">
+       <string>V2.0 (Beta) CRISPR Associated Software for Pathway Engineering and Research</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -503,8 +528,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1068</width>
-     <height>24</height>
+     <width>1036</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

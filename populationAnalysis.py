@@ -35,7 +35,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.names_venn = []
         self.show_names.clicked.connect(self.show_names_func)
         self.name_form = show_names_ui.show_names_table()
-        self.name_form2 = show_names2_ui.show_names_table2()
 
         #organism table
         self.org_Table.setColumnCount(1)

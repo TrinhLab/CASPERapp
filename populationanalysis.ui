@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1172</width>
-    <height>957</height>
+    <height>935</height>
    </rect>
   </property>
   <property name="font">
@@ -169,7 +169,7 @@
         <property name="maximumSize">
          <size>
           <width>91</width>
-          <height>22</height>
+          <height>16777215</height>
          </size>
         </property>
         <property name="text">
@@ -244,7 +244,7 @@
         </widget>
         <widget class="pop_analysis_3dgraph" name="pop_analysis_3dgraph">
          <attribute name="title">
-          <string>3-D Figure</string>
+          <string>Shared Seed Heatmap</string>
          </attribute>
          <widget class="QPushButton" name="show_names">
           <property name="geometry">
@@ -278,7 +278,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>50</width>
+          <width>16777215</width>
           <height>25</height>
          </size>
         </property>
@@ -387,7 +387,7 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>100</width>
+            <width>16777215</width>
             <height>16777215</height>
            </size>
           </property>
@@ -404,7 +404,7 @@
           <property name="minimumSize">
            <size>
             <width>100</width>
-            <height>0</height>
+            <height>32</height>
            </size>
           </property>
           <property name="maximumSize">
@@ -546,7 +546,7 @@
      <x>0</x>
      <y>0</y>
      <width>1172</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
