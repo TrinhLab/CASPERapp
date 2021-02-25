@@ -85,8 +85,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                                 1]  # for keeping track of where we are in the sorting clicking for each column
         self.switcher_loc_table = [1, 1, 1, 1, 1]
 
-        self.mwfg = self.frameGeometry()
-        self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()
+        screen = QtGui.QGuiApplication.screenAt(QtGui.QCursor().pos())
+        fg = self.frameGeometry()
+        fg.moveCenter(screen.geometry().center())
+        self.move(fg.topLeft())
 
         self.index_to_cspr = {}
         self.index_to_db = {}
