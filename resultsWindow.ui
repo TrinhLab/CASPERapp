@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1180</width>
-    <height>698</height>
+    <width>1415</width>
+    <height>712</height>
    </rect>
   </property>
   <property name="font">
@@ -355,6 +355,12 @@
       </item>
       <item row="0" column="1">
        <widget class="QComboBox" name="comboBoxGene">
+        <property name="minimumSize">
+         <size>
+          <width>250</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
           <width>4000</width>
@@ -375,6 +381,12 @@
       </item>
       <item row="1" column="1">
        <widget class="QComboBox" name="endonucleaseBox">
+        <property name="minimumSize">
+         <size>
+          <width>250</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
           <width>4000</width>
@@ -393,13 +405,13 @@
        <widget class="QPushButton" name="changeEndoButton">
         <property name="minimumSize">
          <size>
-          <width>0</width>
+          <width>250</width>
           <height>32</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>300</width>
+          <width>16777215</width>
           <height>32</height>
          </size>
         </property>
@@ -412,13 +424,13 @@
        <widget class="QPushButton" name="highlight_gene_viewer_button">
         <property name="minimumSize">
          <size>
-          <width>0</width>
+          <width>250</width>
           <height>32</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>300</width>
+          <width>16777215</width>
           <height>32</height>
          </size>
         </property>
@@ -496,8 +508,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1180</width>
-     <height>24</height>
+     <width>1415</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
