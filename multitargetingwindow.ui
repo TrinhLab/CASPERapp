@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1429</width>
-    <height>979</height>
+    <height>997</height>
    </rect>
   </property>
   <property name="font">
@@ -242,15 +242,15 @@
         </item>
        </layout>
       </item>
-      <item row="0" column="2" rowspan="3">
-       <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0" columnstretch="0,0,0">
+      <item row="0" column="3" rowspan="3">
+       <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0,0" columnstretch="0,0,0,0,0">
         <property name="sizeConstraint">
          <enum>QLayout::SetDefaultConstraint</enum>
         </property>
         <property name="spacing">
          <number>8</number>
         </property>
-        <item row="2" column="0">
+        <item row="3" column="2">
          <widget class="QTextEdit" name="seed">
           <property name="minimumSize">
            <size>
@@ -266,39 +266,7 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QComboBox" name="chromo_seed">
-          <property name="minimumSize">
-           <size>
-            <width>200</width>
-            <height>32</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>10000</width>
-            <height>32</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_19">
-          <property name="maximumSize">
-           <size>
-            <width>79</width>
-            <height>15</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Seed ID:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
+        <item row="0" column="3">
          <widget class="QLabel" name="label_17">
           <property name="text">
            <string>Min:</string>
@@ -308,7 +276,7 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="2">
+        <item row="0" column="4">
          <widget class="QLabel" name="label_18">
           <property name="text">
            <string>Max:</string>
@@ -318,23 +286,7 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QTextEdit" name="min_chromo">
-          <property name="minimumSize">
-           <size>
-            <width>81</width>
-            <height>31</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>200</width>
-            <height>31</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
+        <item row="1" column="4">
          <widget class="QTextEdit" name="max_chromo">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -356,7 +308,23 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="1" colspan="2">
+        <item row="1" column="3">
+         <widget class="QTextEdit" name="min_chromo">
+          <property name="minimumSize">
+           <size>
+            <width>81</width>
+            <height>31</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>31</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3" colspan="2">
          <widget class="QPushButton" name="update_min_max">
           <property name="minimumSize">
            <size>
@@ -372,6 +340,45 @@
           </property>
           <property name="text">
            <string>Update</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLabel" name="label_11">
+          <property name="text">
+           <string>Seed Search:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1" colspan="2">
+         <widget class="QComboBox" name="chromo_seed">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>32</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>10000</width>
+            <height>32</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" colspan="2" alignment="Qt::AlignLeft">
+         <widget class="QLabel" name="label_19">
+          <property name="maximumSize">
+           <size>
+            <width>12893764</width>
+            <height>15</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Seed ID:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
@@ -519,7 +526,7 @@
         </item>
        </layout>
       </item>
-      <item row="3" column="2" rowspan="2">
+      <item row="3" column="3" rowspan="2">
        <widget class="repeats_vs_chromo" name="repeats_vs_chromo" native="true">
         <property name="minimumSize">
          <size>
@@ -535,7 +542,7 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="2">
+      <item row="5" column="3">
        <widget class="QLabel" name="label_5">
         <property name="maximumSize">
          <size>
@@ -548,7 +555,7 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="2">
+      <item row="6" column="3">
        <widget class="QGraphicsView" name="graphicsView_2">
         <property name="minimumSize">
          <size>
@@ -564,7 +571,7 @@
         </property>
        </widget>
       </item>
-      <item row="7" column="2" rowspan="3">
+      <item row="7" column="3" rowspan="3">
        <widget class="QGraphicsView" name="graphicsView">
         <property name="minimumSize">
          <size>
@@ -603,7 +610,7 @@
      <x>0</x>
      <y>0</y>
      <width>1429</width>
-     <height>28</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">
