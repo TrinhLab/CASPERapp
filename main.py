@@ -952,11 +952,15 @@ class CMainWindow(QtWidgets.QMainWindow):
     # Function launches the multitargeting window and closing the current one
     def changeto_multitargeting(self):
         os.chdir(os.getcwd())
+        GlobalSettings.MTWin.mwfg.moveCenter(GlobalSettings.MTWin.cp)  ##Center window
+        GlobalSettings.MTWin.move(GlobalSettings.MTWin.mwfg.topLeft())  ##Center window
         GlobalSettings.MTWin.show()
         GlobalSettings.mainWindow.hide()
 
 
     def changeto_population_Analysis(self):
+        GlobalSettings.pop_Analysis.mwfg.moveCenter(GlobalSettings.pop_Analysis.cp)  ##Center window
+        GlobalSettings.pop_Analysis.move(GlobalSettings.pop_Analysis.mwfg.topLeft())  ##Center window
         GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
         GlobalSettings.pop_Analysis.show()
         GlobalSettings.mainWindow.hide()

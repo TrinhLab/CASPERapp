@@ -110,7 +110,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                     text = self.scene2.addText(output)
                     font = QtGui.QFont()
                     font.setBold(True)
-                    font.setPointSize(9)
+                    font.setPointSize(12)
                     text.setFont(font)
 
         return Qt.QWidget.eventFilter(self, source, event)
