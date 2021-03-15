@@ -37,12 +37,12 @@ class Results(QtWidgets.QMainWindow):
         self.geneDict = dict() # dictionary passed into transfer_data
         self.geneNTDict = dict() #dictionary passed into transfer_data, same key as geneDict, but hols the NTSEQ
 
-        self.switcher = [1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
+        self.switcher = [1,1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
 
         # Target Table settings #
-        self.targetTable.setColumnCount(8)  # hardcoded because there will always be 8 columns
+        self.targetTable.setColumnCount(9)  # hardcoded because there will always be 8 columns
         self.targetTable.setShowGrid(False)
-        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Off-Target;Details".split(";"))
+        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Off-Target;Details;Endonuclease".split(";"))
         self.targetTable.horizontalHeader().setSectionsClickable(True)
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -558,7 +558,7 @@ class Results(QtWidgets.QMainWindow):
             strand = QtWidgets.QTableWidgetItem(str(item[4]))
             PAM = QtWidgets.QTableWidgetItem(item[2])
             num1 = int(item[3])
-            #endonuclease = QtWidgets.QTableWidgetItem(item[5])
+            endonuclease = QtWidgets.QTableWidgetItem(item[5])
             score = QtWidgets.QTableWidgetItem()
             score.setData(QtCore.Qt.EditRole, num1)
             self.targetTable.setItem(index, 0, loc)
@@ -568,7 +568,7 @@ class Results(QtWidgets.QMainWindow):
             self.targetTable.setItem(index, 4, score)
             self.targetTable.setItem(index, 5, QtWidgets.QTableWidgetItem("--.--"))
             self.targetTable.removeCellWidget(index, 7)
-            #self.targetTable.setItem(index, 8, endonuclease)
+            self.targetTable.setItem(index, 8, endonuclease)
             ckbox = QtWidgets.QCheckBox()
             ckbox.clicked.connect(self.search_gene)
             self.targetTable.setCellWidget(index,6,ckbox)
@@ -681,6 +681,7 @@ class Results(QtWidgets.QMainWindow):
             # it is easier than building a new list honestly
             for index in reversed(deletingDict[item]):
                 self.AllData[curgene][item].pop(index)
+
     ########################################## END UPDATING FUNCTION #############################################
 
     def search_gene(self):

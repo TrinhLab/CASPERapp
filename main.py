@@ -41,6 +41,12 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.type = ""
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
+        self.tableWidget.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
+        self.tableWidget.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
+        self.tableWidget.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tableWidget.setAutoScroll(False)
+
 
     def submit(self):
         self.mainWindow.collect_table_data_nonkegg()
@@ -67,9 +73,11 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.tableWidget.clearContents()
         self.mainWindow = mainWindow
         index = 0
-        self.tableWidget.setColumnCount(5)
+        self.tableWidget.setColumnCount(4)
         self.mainWindow.progressBar.setValue(85)
-        self.tableWidget.setHorizontalHeaderLabels("Description;Chromosome #;Type;Gene ID;Select".split(";"))
+        #self.tableWidget.setHorizontalHeaderLabels("Description;Chromosome #;Type;Gene ID;Select".split(";"))
+        self.tableWidget.setHorizontalHeaderLabels("Gene ID;Type;Chromosome #;Description".split(";"))
+
         mainWindow.checkBoxes = []
         self.type = "nonkegg"
         index = 0
@@ -79,32 +87,32 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
                     if (gene[2] == 'gene' or gene[2] == 'tRNA'):
                         self.tableWidget.setRowCount(index + 1)
                         # set the checkbox
-                        ckbox = QtWidgets.QCheckBox()
-                        self.tableWidget.setCellWidget(index, 4, ckbox)
+                        #ckbox = QtWidgets.QCheckBox()
+                        #self.tableWidget.setCellWidget(index, 4, ckbox)
 
                         # set the description part of the window as well as set the correct data for the checkbox
                         if definition != gene[0]:
                             defin_obj = QtWidgets.QTableWidgetItem(definition)
-                            self.tableWidget.setItem(index, 0, defin_obj)
+                            self.tableWidget.setItem(index, 3, defin_obj)
                             mainWindow.checkBoxes.append([definition])
                         else:
                             checkValue = searchValue.upper()
                             defin_obj = QtWidgets.QTableWidgetItem(checkValue)
-                            self.tableWidget.setItem(index, 0, defin_obj)
+                            self.tableWidget.setItem(index, 3, defin_obj)
                             mainWindow.checkBoxes.append([checkValue])
                         mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(gene)
-                        mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(ckbox)
+                        mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(index)
 
                         # set the type in the window
                         type_obj = QtWidgets.QTableWidgetItem(gene[2])
-                        self.tableWidget.setItem(index, 2, type_obj)
+                        self.tableWidget.setItem(index, 1, type_obj)
 
                         # set the gene id in the window
                         gene_id_obj = QtWidgets.QTableWidgetItem(gene[0])
-                        self.tableWidget.setItem(index, 3, gene_id_obj)
+                        self.tableWidget.setItem(index, 0, gene_id_obj)
 
                         chrom_number = QtWidgets.QTableWidgetItem(str(gene[1]))
-                        self.tableWidget.setItem(index, 1, chrom_number)
+                        self.tableWidget.setItem(index, 2, chrom_number)
 
                         index += 1
                     if index >= 1000:
@@ -136,6 +144,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             for obj in mainWindow.checkBoxes:  # check every match
                 obj[2].setChecked(True)
             self.mainWindow.collect_table_data_nonkegg()
+
         return 0
 
 
@@ -148,9 +157,13 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         else:
             select_all = False
 
-        # go through and do the selection
-        for i in range(self.tableWidget.rowCount()):
-            self.tableWidget.cellWidget(i, 4).setChecked(select_all)
+        # # go through and do the selection
+        # for i in range(self.tableWidget.rowCount()):
+        #     #self.tableWidget.cellWidget(i, 4).setChecked(select_all)
+        if select_all == True:
+            self.tableWidget.selectAll()
+        else:
+            self.tableWidget.clearSelection()
 
 
     # this function calls the closingWindow class.
@@ -190,9 +203,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.organismData = list()
         self.ncbi = ncbi.NCBI_search_tool()
         self.ncbi.hide()
-
-
-
 
         # --- Style Modifications --- #
         groupbox_style = """
@@ -727,8 +737,14 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.check_ntseq_info.clear()
         full_org = str(self.orgChoice.currentText())
         holder = ()
+        selected_indices = []
+        selected_rows = self.Annotation_Window.tableWidget.selectionModel().selectedRows()
+        for ind in sorted(selected_rows):
+            selected_indices.append(ind.row())
+
         for item in self.checkBoxes:
-            if item[2].isChecked():
+
+            if item[2] in selected_indices:
                 # if they searched base on Locus Tag
                 if item[0] in self.annotation_parser.reg_dict:
                     # go through the dictionary, and if they match, store the item in holder

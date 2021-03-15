@@ -329,7 +329,7 @@ class CSPRparser:
                                 strand = "-"
                             else:
                                 strand = "+"
-                            retList.append((line[0], line[1], line[2], line[3], strand))
+                            retList.append((line[0], line[1], line[2], line[3], strand, endo))
                         elif int(line[0]) >= int(pos_tuple[2]):
                             break
                     elif line == 'REPEATS':
