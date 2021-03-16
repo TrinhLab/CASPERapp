@@ -332,8 +332,10 @@ class NewGenome(QtWidgets.QMainWindow):
                         self.output_browser.append(lines)
 
             job_args = self.JobsQueue[row_index]
-
-            program = '"' + GlobalSettings.appdir + "Casper_Seq_Finder.exe" + '" '
+            if platform.system() == 'Windows':
+                program = '"' + GlobalSettings.appdir + "Casper_Seq_Finder.exe" + '" '
+            else:
+                program = '"' + GlobalSettings.appdir + "Casper_Seq_Finder" + '" '
             program += job_args
             self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
             self.process.start(program)
