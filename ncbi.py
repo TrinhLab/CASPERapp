@@ -125,7 +125,20 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.progressBar.setValue(0)
         self.rename_window = rename_window()
         self.rename_window.submit_button.clicked.connect(self.submit_rename)
+        self.rename_window.go_back.clicked.connect(self.go_back)
         self.df = pd.DataFrame()
+        groupbox_style = """
+                QGroupBox:title{subcontrol-origin: margin;
+                                left: 10px;
+                                padding: 0 5px 0 5px;}
+                QGroupBox#Step1{border: 2px solid rgb(111,181,110);
+                                border-radius: 9px;
+                                font: 15pt "Arial";
+                                font: bold;
+                                margin-top: 10px;}"""
+        self.Step1.setStyleSheet(groupbox_style)
+        self.Step2.setStyleSheet(groupbox_style.replace("Step1","Step2").replace("rgb(111,181,110)","rgb(77,158,89)"))
+
 
     @QtCore.pyqtSlot()
     def query_db(self):
@@ -222,6 +235,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.proxy.setSourceModel(self.model)
         self.ncbi_table.setModel(self.proxy)
         self.ncbi_table.resizeColumnsToContents()
+        self.ncbi_table.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.Stretch) #Ensures last column goes to the edge of table
         self.comboBox.addItems(["{0}".format(col) for col in self.model._df.columns])
         self.ncbi_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.ncbi_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -402,11 +416,16 @@ class NCBI_search_tool(QtWidgets.QWidget):
 
             header = self.rename_window.rename_table.horizontalHeader()
             #header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+            #self.rename_window.rename_table.setColumnWidth(1, self.rename_window.rename_table.columnWidth(0))
             self.rename_window.rename_table.resizeColumnsToContents()
-            self.rename_window.rename_table.setColumnWidth(1, self.rename_window.rename_table.columnWidth(0))
+            header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
             self.rename_window.resize(self.rename_window.sizeHint())
             self.rename_window.show()
-
+        
+    def go_back(self):
+        self.rename_window.close()
+        
     def submit_rename(self):
         #loop through columns and rename the files
         for row in range(self.rename_window.rename_table.rowCount()):
@@ -427,8 +446,10 @@ class NCBI_search_tool(QtWidgets.QWidget):
 
         self.rename_window.rename_table.setRowCount(0)
         self.rename_window.close()
-
-
+        QtWidgets.QMessageBox.question(self, "Download Completed",
+                                       "Successfully downloaded file(s).  You may close this window or download more files.",
+                                       QtWidgets.QMessageBox.Ok)
+                                       
 class rename_window(QtWidgets.QWidget):
     def __init__(self):
         super(rename_window, self).__init__()

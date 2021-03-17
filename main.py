@@ -331,7 +331,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         inputstring = str(self.geneEntryField.toPlainText())
         if (inputstring.startswith("Example Inputs:") or inputstring == ""):
             QtWidgets.QMessageBox.question(self, "Error",
-                                           "No gene has been entered. Please enter a gene.",
+                                           "No gene has been entered.  Please enter a gene.",
                                            QtWidgets.QMessageBox.Ok)
         else:
             # standardize the input
