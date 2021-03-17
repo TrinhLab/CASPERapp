@@ -184,7 +184,12 @@ class genLibrary(QtWidgets.QDialog):
                             self.bool_temp = True
 
         app_path = GlobalSettings.appdir.replace('\\','/')
-        exe_path = app_path + 'OffTargetFolder/OT'
+        if platform.system() == 'Windows':
+            exe_path = app_path + r'OffTargetFolder/OT_Win.exe'
+        elif platform.system() == 'Linux':
+            exe_path = app_path + r'OffTargetFolder/OT_Lin' 
+        else:
+            exe_path = app_path + r'OffTargetFolder/OT_Mac' 
         exe_path = '"' + exe_path + '" '
         data_path = '"' + GlobalSettings.CSPR_DB + "/off_compressed.txt" + '" '
         cspr_path = '"' + self.cspr_file + '" '

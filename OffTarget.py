@@ -132,7 +132,12 @@ class OffTarget(QtWidgets.QDialog):
 
         #setup arguments for C++ .exe
         app_path = GlobalSettings.appdir.replace('\\','/')
-        exe_path = app_path + r'OffTargetFolder/OT'
+        if platform.system() == 'Windows':
+            exe_path = app_path + r'OffTargetFolder/OT_Win.exe'
+        elif platform.system() == 'Linux':
+            exe_path = app_path + r'OffTargetFolder/OT_Lin' 
+        else:
+            exe_path = app_path + r'OffTargetFolder/OT_Mac' 
         exe_path = '"' +  exe_path + '"'
         data_path = ' "' + app_path + 'OffTargetFolder/temp.txt' + '"' ##
         cspr_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.cspr_file + '"'

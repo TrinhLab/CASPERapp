@@ -804,6 +804,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     def go_back(self):
         GlobalSettings.mainWindow.getData()
+        GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
+        GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
         GlobalSettings.mainWindow.show()
         self.hide()
 

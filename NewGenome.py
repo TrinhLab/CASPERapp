@@ -33,7 +33,7 @@ class NewGenome(QtWidgets.QMainWindow):
                         padding: 0 5px 0 5px;}
         QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 15pt "Sans Serif";
+                        font: 15pt "Arial";
                         font: bold;
                         margin-top: 10px;}"""
 
@@ -333,9 +333,11 @@ class NewGenome(QtWidgets.QMainWindow):
 
             job_args = self.JobsQueue[row_index]
             if platform.system() == 'Windows':
-                program = '"' + GlobalSettings.appdir + "Casper_Seq_Finder.exe" + '" '
+                program = '"' + GlobalSettings.appdir + "SeqFinderFolder/Casper_Seq_Finder_Win.exe" + '" '
+            elif platform.system() == 'Linux':
+                program = '"' + GlobalSettings.appdir + "SeqFinderFolder/Casper_Seq_Finder_Lin" + '" '
             else:
-                program = '"' + GlobalSettings.appdir + "Casper_Seq_Finder" + '" '
+                program = '"' + GlobalSettings.appdir + "SeqFinderFolder/Casper_Seq_Finder_Mac" + '" '
             program += job_args
             self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
             self.process.start(program)

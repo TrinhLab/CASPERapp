@@ -535,12 +535,16 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     #connects to view->CASPER to switch back to the main CASPER window
     def changeto_main(self):
+        GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
+        GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
         GlobalSettings.mainWindow.show()
         self.hide()
 
 
     #connects to go back button in bottom left to switch back to the main CASPER window
     def go_back(self):
+        GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
+        GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
         GlobalSettings.mainWindow.show()
         self.hide()
 
