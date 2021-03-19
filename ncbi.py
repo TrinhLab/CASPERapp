@@ -116,11 +116,14 @@ class NCBI_search_tool(QtWidgets.QWidget):
         uic.loadUi(GlobalSettings.appdir + 'ncbi.ui', self)
         self.logicalIndex = 0
         self.filters = dict()
+        self.output_path = GlobalSettings.CSPR_DB
+        self.output_directory.setText(self.output_path)
         #self.organism_line_edit.setText(GlobalSettings.mainWindow.orgChoice.currentText())
         self.download_button.clicked.connect(self.download_files_wrapper)
         self.search_button.clicked.connect(self.query_db)
         self.ncbi_table.verticalHeader().hide()
         self.all_rows.clicked.connect(self.select_all)
+        self.browse_button.clicked.connect(self.browseForFolder)
         self.ncbi_table.setFocusPolicy(QtCore.Qt.NoFocus)
         self.progressBar.setValue(0)
         self.rename_window = rename_window()
@@ -138,7 +141,18 @@ class NCBI_search_tool(QtWidgets.QWidget):
                                 margin-top: 10px;}"""
         self.Step1.setStyleSheet(groupbox_style)
         self.Step2.setStyleSheet(groupbox_style.replace("Step1","Step2").replace("rgb(111,181,110)","rgb(77,158,89)"))
+        self.Step3.setStyleSheet(groupbox_style.replace("Step1","Step3").replace("rgb(111,181,110)","rgb(53,121,93)"))
 
+    def browseForFolder(self):
+        # get the folder
+        filed = QtWidgets.QFileDialog()
+        self.output_path = QtWidgets.QFileDialog.getExistingDirectory(filed, "Select a Directory",
+                                                       GlobalSettings.CSPR_DB, QtWidgets.QFileDialog.ShowDirsOnly)
+        if(os.path.isdir(self.output_path) == False):
+            return
+
+        # make sure to append the '/' to the folder path
+        self.output_directory.setText(self.output_path)
 
     @QtCore.pyqtSlot()
     def query_db(self):
@@ -322,7 +336,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
         indexes = self.ncbi_table.selectionModel().selectedRows()
         if len(indexes) == 0:
             return
-        if self.feature_table_checkbox.isChecked() == False and self.gbff_checkbox.isChecked() == False and self.gff_checkbox.isChecked() == False:
+        if self.feature_table_checkbox.isChecked() == False and self.gbff_checkbox.isChecked() == False and self.fna_checkbox.isChecked() == False:
             return
         if self.genbank_checkbox.isChecked() == False and self.refseq_checkbox.isChecked() == False:
             return
@@ -352,7 +366,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 # if(dir_files.count("GO_TO_CURRENT_VERSION") != 0):
                 #     print(dir_files)
                 for file in dir_files:
-                    output_file = GlobalSettings.CSPR_DB + "/" + file
+                    output_file = self.output_path + "/" + file
                     if platform.system() == "Windows":
                         output_file = output_file.replace("/", "\\")
                     if self.feature_table_checkbox.isChecked():
@@ -365,8 +379,8 @@ class NCBI_search_tool(QtWidgets.QWidget):
                             with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(output_file)
-                    if self.gff_checkbox.isChecked():
-                        if file.find('genomic.gff') != -1:
+                    if self.fna_checkbox.isChecked():
+                        if file.find('genomic.fna') != -1 and file.find('_cds_') == -1 and file.find('_rna_') == -1:
                             with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(output_file)
@@ -442,12 +456,12 @@ class NCBI_search_tool(QtWidgets.QWidget):
                     elif orig.find(".txt") != -1:
                         new = new + ".txt"
 
-                os.rename(GlobalSettings.CSPR_DB + "/" + orig, GlobalSettings.CSPR_DB + "/" + new)
+                os.rename(self.output_path + "/" + orig, self.output_path + "/" + new)
 
         self.rename_window.rename_table.setRowCount(0)
         self.rename_window.close()
         QtWidgets.QMessageBox.question(self, "Download Completed",
-                                       "Successfully downloaded file(s).  You may close this window or download more files.",
+                                       "Successfully downloaded file(s) to " + self.output_path + "\n\nYou may close this window or download more files.",
                                        QtWidgets.QMessageBox.Ok)
                                        
 class rename_window(QtWidgets.QWidget):

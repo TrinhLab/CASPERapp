@@ -49,6 +49,7 @@ class closingWindow(QtWidgets.QDialog):
         loopCount = 0
         # get the file names from CSPR_DB
         files_names = os.listdir(GlobalSettings.CSPR_DB)
+        files_names.sort(key=str.lower)
         self.files_table.setRowCount(len(files_names))
 
         # loop through and add them to the table
