@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>525</width>
-    <height>166</height>
+    <width>518</width>
+    <height>203</height>
    </rect>
   </property>
   <property name="font">
@@ -41,6 +41,12 @@
     <widget class="QLineEdit" name="fileLocation_line_edit">
      <property name="enabled">
       <bool>true</bool>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>296</width>
+       <height>21</height>
+      </size>
      </property>
     </widget>
    </item>
@@ -76,6 +82,12 @@
    </item>
    <item row="1" column="1" colspan="3">
     <widget class="QLineEdit" name="filename_line_edit">
+     <property name="minimumSize">
+      <size>
+       <width>296</width>
+       <height>21</height>
+      </size>
+     </property>
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Please write the file name you want.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Note: do not add the '.csv'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
