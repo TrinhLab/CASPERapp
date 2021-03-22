@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1238</width>
-    <height>698</height>
+    <width>1058</width>
+    <height>638</height>
    </rect>
   </property>
   <property name="font">
@@ -32,8 +32,14 @@
       <property name="sizeConstraint">
        <enum>QLayout::SetDefaultConstraint</enum>
       </property>
-      <item row="2" column="0" rowspan="2">
-       <widget class="QGroupBox" name="Step2">
+      <item row="0" column="0" rowspan="2">
+       <widget class="QGroupBox" name="Step1">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="minimumSize">
          <size>
           <width>0</width>
@@ -42,7 +48,155 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>16777215</width>
+          <width>398</width>
+          <height>200</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>14</pointsize>
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="title">
+         <string>Step 1: Select Organism and Endonuclease</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Arial</family>
+             <pointsize>14</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Organism:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" colspan="2">
+          <widget class="QComboBox" name="orgChoice">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>200</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QComboBox" name="endoChoice">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>200</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" colspan="2">
+          <widget class="QLabel" name="label">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Arial</family>
+             <pointsize>14</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Endonuclease:</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="0" rowspan="2">
+       <widget class="QGroupBox" name="Step2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>398</width>
           <height>200</height>
          </size>
         </property>
@@ -50,7 +204,7 @@
          <string notr="true"/>
         </property>
         <property name="title">
-         <string>Step 2: Choose annotation file</string>
+         <string>Step 2: Choose Annotation File</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_5">
          <property name="topMargin">
@@ -96,7 +250,7 @@
             </size>
            </property>
            <property name="text">
-            <string>Local Annotation Files</string>
+            <string>Local Annotation Files:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
@@ -130,11 +284,20 @@
              <height>40</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <family>Arial</family>
+             <pointsize>14</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
            <property name="styleSheet">
-            <string notr="true">font: 12pt &quot;Arial&quot;;</string>
+            <string notr="true">font: 14pt &quot;Arial&quot;;</string>
            </property>
            <property name="text">
-            <string>Select local annotation file or use NCBI search tool</string>
+            <string>Select local file or download from NCBI:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -173,7 +336,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>650</width>
+          <width>500</width>
           <height>500</height>
          </size>
         </property>
@@ -187,7 +350,7 @@
          <string notr="true"/>
         </property>
         <property name="title">
-         <string>Step 3: Search and view targets</string>
+         <string>Step 3: Search and Find Targets</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_4">
          <property name="topMargin">
@@ -250,7 +413,7 @@
           <widget class="QPlainTextEdit" name="geneEntryField">
            <property name="minimumSize">
             <size>
-             <width>500</width>
+             <width>400</width>
              <height>0</height>
             </size>
            </property>
@@ -304,148 +467,9 @@
         </layout>
        </widget>
       </item>
-      <item row="0" column="0" rowspan="2">
-       <widget class="QGroupBox" name="Step1">
-        <property name="minimumSize">
-         <size>
-          <width>450</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>200</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <family>Arial</family>
-          <pointsize>14</pointsize>
-          <weight>50</weight>
-          <italic>false</italic>
-          <bold>false</bold>
-         </font>
-        </property>
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
-        <property name="title">
-         <string>Step 1: Select organism(s) and endonuclease</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="minimumSize">
-            <size>
-             <width>150</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>150</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>Arial</family>
-             <pointsize>16</pointsize>
-             <weight>50</weight>
-             <italic>false</italic>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">font: 16pt &quot;Arial&quot;;</string>
-           </property>
-           <property name="text">
-            <string>Organism:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1" colspan="2">
-          <widget class="QComboBox" name="orgChoice">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>200</width>
-             <height>32</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0" colspan="2">
-          <widget class="QLabel" name="label">
-           <property name="minimumSize">
-            <size>
-             <width>150</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>150</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>Arial</family>
-             <pointsize>16</pointsize>
-             <weight>50</weight>
-             <italic>false</italic>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">font: 16pt &quot;Arial&quot;;</string>
-           </property>
-           <property name="text">
-            <string>Endonuclease:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QComboBox" name="endoChoice">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>200</width>
-             <height>32</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
      </layout>
     </item>
-    <item row="1" column="2">
+    <item row="1" column="2" alignment="Qt::AlignLeft">
      <widget class="QLabel" name="label_7">
       <property name="minimumSize">
        <size>
@@ -566,8 +590,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1238</width>
-     <height>21</height>
+     <width>1058</width>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -576,19 +600,6 @@
     </property>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
-   </widget>
-   <widget class="QMenu" name="menuEdit">
-    <property name="title">
-     <string>Edit</string>
-    </property>
-    <addaction name="actionUndo"/>
-    <addaction name="actionCut"/>
-    <addaction name="actionCopy"/>
-    <addaction name="actionPaste"/>
-    <addaction name="separator"/>
-    <addaction name="actionCut_Rev_Com"/>
-    <addaction name="actionCopy_Rev_Com"/>
-    <addaction name="actionPaste_Rev_Com"/>
    </widget>
    <widget class="QMenu" name="menuGenome">
     <property name="title">
@@ -630,7 +641,6 @@
     <addaction name="visit_repo"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuEdit"/>
    <addaction name="menuGenome"/>
    <addaction name="menuTools"/>
    <addaction name="menuWindow"/>
@@ -714,7 +724,7 @@
   </action>
   <action name="actionChange_Directory">
    <property name="text">
-    <string>Change Directory</string>
+    <string>Change Database Directory</string>
    </property>
   </action>
   <action name="actionNCBI_BLAST">

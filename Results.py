@@ -41,7 +41,7 @@ class Results(QtWidgets.QMainWindow):
         # Target Table settings #
         self.targetTable.setColumnCount(9)  # hardcoded because there will always be 8 columns
         self.targetTable.setShowGrid(False)
-        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;Off-Target;Details;Endonuclease".split(";"))
+        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;;Details;Endonuclease".split(";"))
         self.targetTable.horizontalHeader().setSectionsClickable(True)
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -429,6 +429,8 @@ class Results(QtWidgets.QMainWindow):
             self.gene_viewer_settings_button.setEnabled(True)
             GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
             self.seq_finder_cspr_file = ''
+        GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
+        GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
         GlobalSettings.mainWindow.show()
         self.cotarget_checkbox.setChecked(0)
         self.hide()

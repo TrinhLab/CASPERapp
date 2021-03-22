@@ -33,7 +33,7 @@ class NewGenome(QtWidgets.QMainWindow):
                         padding: 0 5px 0 5px;}
         QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 15pt "Sans Serif";
+                        font: 15pt "Arial";
                         font: bold;
                         margin-top: 10px;}"""
 
@@ -44,7 +44,6 @@ class NewGenome(QtWidgets.QMainWindow):
         #---Button Modifications---#
 
         self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.png"))
-        self.whatsthisButton.clicked.connect(self.whatsthisclicked)
         self.resetButton.clicked.connect(self.reset)
         self.submitButton.clicked.connect(self.submit)
         self.browseForFile.clicked.connect(self.selectFasta)
@@ -56,8 +55,6 @@ class NewGenome(QtWidgets.QMainWindow):
 
         self.runButton.clicked.connect(self.run_jobs_wrapper)
         self.clearButton.clicked.connect(self.clear_job_queue)
-
-        self.viewStatButton.setEnabled(False)
 
         self.JobsQueue = []  # holds Job classes.
         self.Endos = dict()
@@ -103,10 +100,9 @@ class NewGenome(QtWidgets.QMainWindow):
         self.go_ncbi.triggered.connect(self.open_ncbi_web_page)
 
         self.comboBoxEndo.currentIndexChanged.connect(self.changeEndos)
-
-        #some defaults pams for testing
-        # self.orgName.setText("Bacillus Coagulans")
-        # self.orgCode.setText("testing")
+        
+        #ncbi tool
+        self.NCBI_File_Search.clicked.connect(self.open_ncbi_tool)
 
         self.seed_length.setEnabled(False)
         self.five_length.setEnabled(False)
@@ -114,6 +110,9 @@ class NewGenome(QtWidgets.QMainWindow):
         self.repeats_box.setEnabled(False)
 
     ####---FUNCTIONS TO RUN EACH BUTTON---####
+    def open_ncbi_tool(self):
+        GlobalSettings.mainWindow.ncbi.show()
+
     def remove_from_queue(self):
         while(True):
             indexes = self.job_Table.selectionModel().selectedRows()
@@ -268,14 +267,9 @@ class NewGenome(QtWidgets.QMainWindow):
             pass
 
 
-    def whatsthisclicked(self):
-        QtWidgets.QMessageBox.information(self, "Organism Code", "The organism code is the manner in which CASPER will"
-                                                                 " label its data files and references for the organism"
-                                                                 " you are importing here.", QtWidgets.QMessageBox.Ok)
-
-
     def run_jobs_wrapper(self):
         self.indexes = []
+        self.job_Table.selectAll()
         indexes = self.job_Table.selectionModel().selectedRows()
         for index in sorted(indexes):
             if self.job_Table.item(index.row(), 0).text() != "":
@@ -333,9 +327,11 @@ class NewGenome(QtWidgets.QMainWindow):
 
             job_args = self.JobsQueue[row_index]
             if platform.system() == 'Windows':
-                program = '"' + GlobalSettings.appdir + "Casper_Seq_Finder.exe" + '" '
+                program = '"' + GlobalSettings.appdir + "SeqFinderFolder/Casper_Seq_Finder_Win.exe" + '" '
+            elif platform.system() == 'Linux':
+                program = '"' + GlobalSettings.appdir + "SeqFinderFolder/Casper_Seq_Finder_Lin" + '" '
             else:
-                program = '"' + GlobalSettings.appdir + "Casper_Seq_Finder" + '" '
+                program = '"' + GlobalSettings.appdir + "SeqFinderFolder/Casper_Seq_Finder_Mac" + '" '
             program += job_args
             self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
             self.process.start(program)
@@ -362,22 +358,15 @@ class NewGenome(QtWidgets.QMainWindow):
         self.job_Table.clearContents()
         self.job_Table.setRowCount(0)
         self.JobsQueue = []
+        self.output_browser.clear()
+        self.progressBar.setValue(0)
+        self.first = False
+
+    def reset(self):
         self.orgName.clear()
         self.strainName.clear()
         self.orgCode.clear()
-        self.output_browser.clear()
-        self.s_file.clear()
-        self.progressBar.setValue(0)
         self.s_file.setText("Name of File")
-        self.first = False
-        self.s_file.clear()
-
-    def reset(self):
-        self.lineEdit_1.clear()
-        self.lineEdit_2.clear()
-        self.lineEdit_3.clear()
-        self.first = False
-        self.s_file.clear()
 
 
     def open_ncbi_web_page(self):

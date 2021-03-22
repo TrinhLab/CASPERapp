@@ -331,7 +331,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         inputstring = str(self.geneEntryField.toPlainText())
         if (inputstring.startswith("Example Inputs:") or inputstring == ""):
             QtWidgets.QMessageBox.question(self, "Error",
-                                           "No gene has been entered. Please enter a gene.",
+                                           "No gene has been entered.  Please enter a gene.",
                                            QtWidgets.QMessageBox.Ok)
         else:
             # standardize the input
@@ -729,6 +729,9 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def launch_ncbi(self):
         self.ncbi.show()
+        QtWidgets.QMessageBox.question(self, "NOTE:",
+                                       "Ensure that the annotation file corresponds to the exact species and strain used for Analyze New Genome.\n\nMismatched annotation files will inhibit downstream analyses.",
+                                       QtWidgets.QMessageBox.Ok)
 
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
     def collect_table_data_nonkegg(self):
@@ -824,11 +827,14 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def fill_annotation_dropdown(self):
+        temp_list = list()
         self.annotation_files.clear()
         for file in os.listdir(GlobalSettings.CSPR_DB):
             if ".gbff" in file or ".gff" in file:
-                self.annotation_files.addItem(file)
-
+                temp_list.append(str(file))
+        temp_list.sort(key=str.lower)
+        for file in temp_list:
+            self.annotation_files.addItem(file)
 
     def make_dictonary(self):
         url = "https://www.genome.jp/dbget-bin/get_linkdb?-t+genes+gn:" + self.TNumbers[
@@ -897,7 +903,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         mypath = os.getcwd()
         found = False
         self.dbpath = mypath
-        onlyfiles = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+        onlyfiles = [str(f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+        onlyfiles.sort(key=str.lower)
         orgsandendos = {}
         shortName = {}
         first = True
