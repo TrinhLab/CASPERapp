@@ -29,7 +29,6 @@ class Results(QtWidgets.QMainWindow):
         # Values: #
         self.AllData = {}
         self.highlighted = {}
-
         self.co_target_endo_list = list()
         self.startpos = 0
         self.endpos = 0
@@ -115,6 +114,7 @@ class Results(QtWidgets.QMainWindow):
             return
         # now launch the window
         GlobalSettings.mainWindow.export_csv_window.launch(select_items)
+
 
     def change_indicies(self):
 
@@ -617,14 +617,28 @@ class Results(QtWidgets.QMainWindow):
         deletingDict = dict()
         endoList = list()
 
-        #print(self.AllData[curgene])
+        #get endo data
+        self.Endos = {}
+        f = open(GlobalSettings.appdir + 'CASPERinfo')
+        while True:
+            line = f.readline()
+            if line.startswith('ENDONUCLEASES'):
+                while True:
+                    line = f.readline()
+                    if (line[0] == "-"):
+                        break
+                    line_tokened = line.split(";")
+                    endo = line_tokened[0]
+                    self.Endos[endo] = line_tokened[5]
+                break
+        f.close()
+
         # get the endo list data
         for i in range(len(self.AllData[curgene])):
             # if one of them is empty, just return because co-targeting is useless for that one
             if len(self.AllData[curgene][i]) == 0:
                 return
             endoList.append(self.AllData[curgene][i][0][5])
-
 
         # for each endoNuclease in the curGene block
         for i in range(len(self.AllData[curgene])):
@@ -659,8 +673,10 @@ class Results(QtWidgets.QMainWindow):
                             storePam = pamData1
 
                         # get the directions
-                        dir1 = self.S.endo_info[endoData1][3]
-                        dir2 = self.S.endo_info[endoData2][3]
+                        # dir1 = self.S.endo_info[endoData1][3]
+                        # dir2 = self.S.endo_info[endoData2][3]
+                        dir1 = self.Endos[endoData1]
+                        dir2 = self.Endos[endoData2]
 
                         # check if can be combined
                         if locationData1 == locationData2 and endoData1 != endoData2 and endoData2 not in endoData1:
