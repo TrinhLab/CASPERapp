@@ -723,7 +723,7 @@ search parameters</string>
       <property name="maximumSize">
        <size>
         <width>16777215</width>
-        <height>33</height>
+        <height>50</height>
        </size>
       </property>
       <property name="font">
@@ -741,6 +741,9 @@ search parameters</string>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#000000;&quot;&gt;New Genome&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
+      <property name="scaledContents">
+       <bool>false</bool>
+      </property>
      </widget>
     </item>
    </layout>
@@ -752,7 +755,7 @@ search parameters</string>
      <x>0</x>
      <y>0</y>
      <width>850</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
