@@ -179,6 +179,11 @@ class Multitargeting(QtWidgets.QMainWindow):
 
 
     def make_graphs(self):
+        endo = self.endo_drop.currentText()
+        short = self.shortHand[str(self.organism_drop.currentText())]
+        file = short + '_' + endo + '_' + 'repeats.db'
+        self.filename = file
+
         self.loading_window.loading_bar.setValue(0)
         self.loading_window.show()
         QtCore.QCoreApplication.processEvents()
