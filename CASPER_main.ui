@@ -614,17 +614,9 @@
     <property name="title">
      <string>Tools</string>
     </property>
-    <widget class="QMenu" name="menuExport_to">
-     <property name="title">
-      <string>Export to...</string>
-     </property>
-     <addaction name="actionExcel_csv"/>
-     <addaction name="actionIDT_Order"/>
-    </widget>
     <addaction name="actionMultitargeting"/>
     <addaction name="actionPopulation_Analysis"/>
     <addaction name="separator"/>
-    <addaction name="menuExport_to"/>
     <addaction name="actionNCBI_BLAST"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
