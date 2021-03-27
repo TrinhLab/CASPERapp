@@ -161,7 +161,13 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     # this function opens CASPERinfo and builds the dropdown menu of selectable endonucleases
     def fillEndo(self):
+        try:
+            self.endoBox.currentIndexChanged.disconnect()
+        except:
+            pass
+
         self.Endos = {}
+        self.endoBox.clear()
         f = open(GlobalSettings.appdir + 'CASPERinfo')
         while True:
             line = f.readline()
@@ -191,7 +197,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     def change_endo(self):
         onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
-
         index = 0
         for file in onlyfiles:
             if file.find('.cspr') != -1:
