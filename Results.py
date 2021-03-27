@@ -633,6 +633,8 @@ class Results(QtWidgets.QMainWindow):
                 break
         f.close()
 
+
+
         # get the endo list data
         for i in range(len(self.AllData[curgene])):
             # if one of them is empty, just return because co-targeting is useless for that one
