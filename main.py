@@ -384,6 +384,9 @@ class CMainWindow(QtWidgets.QMainWindow):
                         self.progressBar.setValue(0)
                         return -2
 
+                # print(self.searches)
+                # print(fileName)
+                # print(kegg_non)
                 self.genLib.launch(self.searches, fileName, kegg_non)
             else:
                 self.progressBar.setValue(0)
@@ -728,10 +731,10 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def launch_ncbi(self):
-        self.ncbi.show()
         QtWidgets.QMessageBox.question(self, "NOTE:",
                                        "Ensure that the annotation file corresponds to the exact species and strain used for Analyze New Genome.\n\nMismatched annotation files will inhibit downstream analyses.",
                                        QtWidgets.QMessageBox.Ok)
+        self.ncbi.show()
 
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
     def collect_table_data_nonkegg(self):
@@ -746,7 +749,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             selected_indices.append(ind.row())
 
         for item in self.checkBoxes:
-
+            print(item)
             if item[2] in selected_indices:
                 # if they searched base on Locus Tag
                 if item[0] in self.annotation_parser.reg_dict:
@@ -765,6 +768,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                                 holder = (match[1], match[3], match[4])
                                 self.checked_info[item[0]] = holder
 
+        print(self.checked_info)
         # now call transfer data
         self.progressBar.setValue(95)
         self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
