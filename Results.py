@@ -3,6 +3,7 @@ from PyQt5 import QtWidgets, uic, QtCore, QtGui, Qt
 from bs4 import BeautifulSoup
 import requests
 import webbrowser
+from Bio.Seq import Seq
 from CSPRparser import CSPRparser
 import GlobalSettings
 import os
@@ -266,7 +267,9 @@ class Results(QtWidgets.QMainWindow):
                     format.setBackground(QtGui.QBrush(QtGui.QColor("green")))
                 elif strandString == "-":
                     format.setBackground(QtGui.QBrush(QtGui.QColor("red")))
-                    sequenceString = k.revcom(sequenceString)
+                    temp = Seq(sequenceString)
+                    sequenceString = temp.reverse_complement()
+                    sequenceString = sequenceString.__str__()
 
                 testSequence = sequenceString.lower()
                 testGeneViewer = self.geneViewer.toPlainText().lower()
