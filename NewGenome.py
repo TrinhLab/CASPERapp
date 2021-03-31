@@ -367,7 +367,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.strainName.clear()
         self.orgCode.clear()
         self.s_file.setText("Name of File")
-
+        self.file = ""
 
     def open_ncbi_web_page(self):
         webbrowser.open('https://www.ncbi.nlm.nih.gov/', new=2)
