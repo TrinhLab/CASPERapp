@@ -15,6 +15,7 @@ import itertools
 from matplotlib import cm
 import matplotlib
 import mplcursors
+import time
 
 
 class Pop_Analysis(QtWidgets.QMainWindow):
@@ -200,7 +201,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         index = 0
         for file in onlyfiles:
             if file.find('.cspr') != -1:
-                endo = file[file.find('_') + 1:file.find('.cspr')]
+                endo = file[file.rfind('_') + 1:file.find('.cspr')]
                 if endo == self.Endos[self.endoBox.currentText()][0]:
 
                     # increase row count
@@ -250,6 +251,11 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         index = 0
 
         self.seeds = self.get_shared_seeds(self.db_files, True)
+
+        try:
+            os.remove(GlobalSettings.appdir + "temp_join.db")
+        except:
+            pass
 
         no_seeds = False
 
@@ -554,7 +560,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             aliases.append("main" + str(i))
 
         #memory connections for inner join on db files to hold what seeds are shared
-        new_conn = sqlite3.connect('temp_join.db')
+        new_conn = sqlite3.connect(GlobalSettings.appdir + "temp_join.db")
         new_c = new_conn.cursor()
         new_c.execute("PRAGMA synchronous = OFF;")
         new_c.execute("PRAGMA journal_mode = OFF;")
@@ -588,6 +594,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         #end transaction
         new_c.execute("END TRANSACTION;")
+        new_conn.commit()
 
         #close memory db
         new_c.close()
