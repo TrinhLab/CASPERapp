@@ -6,7 +6,6 @@ import Algorithms
 from functools import partial
 import numpy as np
 from PyQt5.QtWidgets import *
-import show_names_ui
 import gzip
 import sqlite3
 from collections import Counter
@@ -34,8 +33,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.directory = ""
         self.names = []
         self.names_venn = []
-        self.show_names.clicked.connect(self.show_names_func)
-        self.name_form = show_names_ui.show_names_table()
 
         #organism table
         self.org_Table.setColumnCount(1)
@@ -106,8 +103,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         self.loading_window = loading_window()
 
-        self.show_names.hide()
-
         self.seed_label.hide()
         self.query_seed_button.hide()
         self.seed_input.hide()
@@ -121,12 +116,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     # this function calls the popParser function and fills all the tables
     def pre_analyze(self):
 
-        #clear graphs
-        self.pop_analysis_repeats_graph.canvas.axes.clear()
-
         #clear saved filenames
         self.cspr_files = []
         self.db_files = []
+        self.rows = []
 
         #get selected indexes
         selected_indexes = self.org_Table.selectionModel().selectedRows()
@@ -140,6 +133,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         #get cspr and db filenames
         for index in sorted(selected_indexes):
+            self.rows.append(index.row() + 1)
             self.cspr_files.append(self.index_to_cspr[index.row()])
             self.db_files.append(self.index_to_db[index.row()])
 
@@ -390,11 +384,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.plot_3D_graph()
         else:
             self.pop_analysis_3dgraph.canvas.figure.set_visible(False)
-            self.show_names.hide()
 
-        self.loading_window.loading_bar.setValue(75)
-        if no_seeds == False:
-            self.plot_repeats_vs_seeds()
         self.loading_window.loading_bar.setValue(100)
         self.loading_window.hide()
         QtCore.QCoreApplication.processEvents()
@@ -627,33 +617,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 self.org_names[org_name] = len(kstats) - 1
 
 
-    def plot_repeats_vs_seeds(self):
-        self.pop_analysis_repeats_graph.canvas.figure.set_visible(True)
-        self.pop_analysis_repeats_graph.canvas.axes.clear()
-        x1 = list(range(0, len(self.seeds)))
-        y1 = []
-        for val in self.counts:
-            y1.append(val)
-        #y1.sort(reverse=True)
-
-        # get stats
-        self.average = statistics.mean(y1)
-        self.mode = statistics.mode(y1)
-        self.median = statistics.median(y1)
-        self.repeat_count = len(self.seeds)
-
-        # clear axes
-        self.pop_analysis_repeats_graph.canvas.axes.clear()
-        # the following are for plotting / formatting
-        self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1)
-        self.pop_analysis_repeats_graph.canvas.axes.set_xlabel('Seed ID Number')
-        self.pop_analysis_repeats_graph.canvas.axes.set_ylabel('Number of Repeats')
-        self.pop_analysis_repeats_graph.canvas.axes.set_title('Number of Repeats per Seed ID Number')
-        # always redraw at the end
-        self.pop_analysis_repeats_graph.canvas.draw()
-        QtCore.QCoreApplication.processEvents()
-
-
     def plot_3D_graph(self):
         self.pop_analysis_3dgraph.canvas.axes.clear()
         try:
@@ -661,7 +624,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         except:
             None
         self.pop_analysis_3dgraph.canvas.figure.set_visible(True)
-        self.show_names.show()
 
         rows, cols = (self.total_org_number, self.total_org_number)
         arr = [[0 for i in range(cols)] for j in range(rows)]
@@ -697,10 +659,13 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             i,j = sel.target.index
             sel.annotation.set_text(labels[i][j])
 
-        ax.set_xticks(np.arange(0.5, len(arr)-1, 1), minor=True)
-        ax.set_yticks(np.arange(0.5, len(arr)-1, 1), minor=True)
         ax.set_xticks(np.arange(len(arr)))
         ax.set_yticks(np.arange(len(arr)))
+
+        #get labels based on org table rows
+        ax.set_xticklabels(self.rows)
+        ax.set_yticklabels(self.rows)
+
         ax.grid(which='minor', color='w', linestyle='-', linewidth=2)
         #ax.set_frame_on(False)
         #ax.set_aspect('equal')
@@ -780,12 +745,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     def clear_loc_table(self):
         self.loc_finder_table.clearContents()
         self.loc_finder_table.setRowCount(0)
-
-
-    def show_names_func(self):
-        # print(self.names)
-        self.name_form.fill_table(self.names)
-        self.name_form.show()
 
 
     def table_sorting(self, logicalIndex):
