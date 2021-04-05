@@ -123,14 +123,21 @@ class Multitargeting(QtWidgets.QMainWindow):
 
 
     def get_data(self):
+        #disconnect index changed signal on endo dropdown if there is one
+        try:
+            self.endo_drop.currentIndexChanged.disconnect()
+        except:
+            pass
+
         onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
-        orgsandendos = {}
-        shortName = {}
+        self.organisms_to_files = {}
+        self.organisms_to_endos = {}
+        # shortName = {}
         self.endo_drop.clear()
         for file in onlyfiles:
             if file.find('.cspr') != -1:
                 newname = file[0:-4]
-                s = newname.split('_')
+                endo = newname[newname.rfind("_") + 1:-1]
                 hold = gzip.open(file, 'r')
                 buf = (hold.readline())
                 hold.close()
@@ -138,51 +145,56 @@ class Multitargeting(QtWidgets.QMainWindow):
                 buf = buf.strip("'b")
                 buf = buf[:len(buf) - 2]
                 species = buf.replace("GENOME: ", "")
-                endo = str(s[1])
-                endo = endo.strip('.')
-                if species not in shortName:
-                    shortName[species] = s[0]
-                if species in orgsandendos:
-                    orgsandendos[species].append(endo)
+
+                if species in self.organisms_to_files:
+                    self.organisms_to_files[species][endo] = [file, file.replace(".cspr", "_repeats.db")]
                 else:
-                    orgsandendos[species] = [endo]
+                    self.organisms_to_files[species] = {}
+                    self.organisms_to_files[species][endo] = [file, file.replace(".cspr", "_repeats.db")]
+
+                if species in self.organisms_to_endos:
+                    self.organisms_to_endos[species].append(endo)
+                else:
+                    self.organisms_to_endos[species] = [endo]
                     if self.organism_drop.findText(species) == -1:
                         self.organism_drop.addItem(species)
-        self.data = orgsandendos
-        self.shortHand = shortName
-        temp = self.data[str(self.organism_drop.currentText())]
-        temp1 = []
-        for i in temp:
-            temp1.append(i)
-        self.endo_drop.addItems(temp1)
-        self.organism_drop.currentIndexChanged.connect(self.changeEndos)
 
-        endo = self.endo_drop.currentText()
-        short = self.shortHand[str(self.organism_drop.currentText())]
-        file = short + '_' + endo + '_' + 'repeats.db'
-        self. cspr_file = short + '_' + endo + '.cspr'
-        self.filename = file
+        #fill in endos dropdown based on current organism
+        endos = self.organisms_to_endos[str(self.organism_drop.currentText())]
+        self.endo_drop.addItems(endos)
+        self.organism_drop.currentIndexChanged.connect(self.update_endos)
+        self.endo_drop.currentIndexChanged.connect(self.change_endos)
 
+        #update file names for current org/endo combo
+        self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][endos[0]][0]
+        self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][endos[0]][1]
 
-    def changeEndos(self):
+    def change_endos(self):
+        #update file names based on current org/endo combo
+        self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][str(self.endo_drop.currentText())][0]
+        self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][str(self.endo_drop.currentText())][1]
+
+    def update_endos(self):
+        #try to disconnect index changed signal on endo dropdown if there is one
+        try:
+            self.endo_drop.currentIndexChanged.disconnect()
+        except:
+            pass
+
+        #clear endo dropdown and fill in with endos relative to the current organism
         self.endo_drop.clear()
-        temp = self.data[str(self.organism_drop.currentText())]
-        temp1 = []
-        for i in temp:
-            temp1.append(i)
-        self.endo_drop.addItems(temp1)
+        endos = self.organisms_to_endos[str(self.organism_drop.currentText())]
+        self.endo_drop.addItems(endos)
+        self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][endos[0]][0]
+        self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][endos[0]][1]
 
-        endo = self.endo_drop.currentText()
-        short = self.shortHand[str(self.organism_drop.currentText())]
-        file = short + '_' + endo + '_' + 'repeats.db'
-        self.filename = file
+        #reconnect index changed signal on endo dropdown
+        self.endo_drop.currentIndexChanged.connect(self.change_endos)
 
 
     def make_graphs(self):
-        endo = self.endo_drop.currentText()
-        short = self.shortHand[str(self.organism_drop.currentText())]
-        file = short + '_' + endo + '_' + 'repeats.db'
-        self.filename = file
+        # self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][0]
+        # self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][0]
 
         self.loading_window.loading_bar.setValue(0)
         self.loading_window.show()
@@ -208,14 +220,12 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     #fill in chromo bar visualization
     def fill_Chromo_Text(self, seed):
-        endo = self.endo_drop.currentText()
-        short = self.shortHand[str(self.organism_drop.currentText())]
-        file = short + '_' + endo + '_' + 'repeats.db'
-        self.cspr_file = short + '_' + endo + '.cspr'
-        self.filename = file
+        # self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][0]
+        # self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][0]
+
         chromo_pos = {}
         # get kstats
-        conn = sqlite3.connect(self.filename)
+        conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         kstats = []
         with gzip.open(self.cspr_file, "r") as f:
@@ -294,7 +304,7 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     # get data for chromsome viewer to display
     def generate_event_data(self):
-        conn = sqlite3.connect(self.filename)
+        conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         seed = self.chromo_seed.currentText()
         data = list(c.execute("SELECT * FROM repeats WHERE seed = ? ", (seed,)).fetchone())
@@ -336,7 +346,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.repeats_vs_chromo.canvas.axes.clear()
         y = []
         x_labels = []
-        conn = sqlite3.connect(self.filename)
+        conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         data = c.execute("SELECT chromosome FROM repeats WHERE seed = ? ", (seed,)).fetchone()
         c.close()
@@ -365,7 +375,7 @@ class Multitargeting(QtWidgets.QMainWindow):
     # to represent the wdiget space in the UI file
     def bar_seeds_vs_repeats(self):
         self.seeds_vs_repeats_bar.canvas.axes.clear()
-        conn = sqlite3.connect(self.filename)
+        conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         data = c.execute("SELECT seed, count from repeats").fetchall()
         c.close()
@@ -426,7 +436,7 @@ class Multitargeting(QtWidgets.QMainWindow):
     # to represent the widget space in the UI file
     def plot_repeats_vs_seeds(self):
         self.repeats_vs_seeds_line.canvas.axes.clear()
-        conn = sqlite3.connect(self.filename)
+        conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         data = c.execute("SELECT seed, count from repeats").fetchall()
         c.close()
@@ -459,7 +469,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.update_min_max.clicked.disconnect()
         self.max_chromo.clear()
         self.min_chromo.clear()
-        conn = sqlite3.connect(self.filename)
+        conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         data = c.execute("SELECT MAX(count) from repeats").fetchone()
         c.close()
@@ -473,7 +483,7 @@ class Multitargeting(QtWidgets.QMainWindow):
     #fill_seed_id_chrom will fill the seed ID dropdown, and create the chromosome graph
     def fill_seed_id_chrom(self):
         self.chromo_seed.disconnect()
-        conn = sqlite3.connect(self.filename)
+        conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         min_v = int(self.min_chromo.toPlainText())
         max_v = int(self.max_chromo.toPlainText())
