@@ -681,6 +681,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             c.close()
             conn.close()
 
+        labels = arr.copy()
+        for i in range(len(arr)):
+            arr[i][i] = 0
+
         ax = self.pop_analysis_3dgraph.canvas.axes
         im = self.pop_analysis_3dgraph.canvas.axes.imshow(arr, cmap='summer')
         self.pop_analysis_3dgraph.canvas.cbar = self.pop_analysis_3dgraph.canvas.axes.figure.colorbar(im, ax=self.pop_analysis_3dgraph.canvas.axes)
@@ -691,7 +695,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             sel.annotation.arrow_patch.set(arrowstyle="simple", fc="white", alpha=.5)
             sel.annotation.set_bbox(None)
             i,j = sel.target.index
-            sel.annotation.set_text(arr[i][j])
+            sel.annotation.set_text(labels[i][j])
 
         ax.set_xticks(np.arange(0.5, len(arr)-1, 1), minor=True)
         ax.set_yticks(np.arange(0.5, len(arr)-1, 1), minor=True)
