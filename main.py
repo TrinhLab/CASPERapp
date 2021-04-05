@@ -187,9 +187,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         uic.loadUi(GlobalSettings.appdir + 'CASPER_main.ui', self)
         self.dbpath = ""
         self.info_path = info_path
-        self.data = {}  # each org genome name and the endonucleases along with it
         self.TNumbers = {}  # the T numbers from a kegg search
-        self.shortHand = {}  # each org's short name IE bacillus subtillis is bsu
         self.orgcodes = {}  # Stores the Kegg organism code by the format {full name : organism code}
         self.gene_list = {}  # list of genes (no ides what they pertain to
         self.searches = {}
@@ -358,9 +356,11 @@ class CMainWindow(QtWidgets.QMainWindow):
             # if matches are found
             if found_matches_bool == True:
                 # get the cspr file name
-                fileName = self.shortHand[self.orgChoice.currentText()]
-                fileName = GlobalSettings.CSPR_DB + '/' + fileName + '_' + self.endoChoice.currentText() + '.cspr'
-
+                cspr_file = self.organisms_to_files[self.orgChoice.currentText()][self.endoChoice.currentText()][0]
+                if platform.system() == 'Windows':
+                    cspr_file = GlobalSettings.CSPR_DB + '\\' + cspr_file
+                else:
+                    cspr_file = GlobalSettings.CSPR_DB + '/' + cspr_file
                 kegg_non = 'non_kegg'
 
                 # launch generateLib
@@ -384,10 +384,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                         self.progressBar.setValue(0)
                         return -2
 
-                # print(self.searches)
-                # print(fileName)
-                # print(kegg_non)
-                self.genLib.launch(self.searches, fileName, kegg_non)
+                self.genLib.launch(self.searches,cspr_file, kegg_non)
             else:
                 self.progressBar.setValue(0)
 
@@ -439,9 +436,13 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.progressBar.setValue(60)
 
         # this bit may not be needed here. Just a quick error check to make sure the chromosome numbers match
-        full_org = str(self.orgChoice.currentText())
-        cspr_file = (GlobalSettings.CSPR_DB + "/" + self.shortHand[full_org] + "_" + str(
-            self.endoChoice.currentText()) + ".cspr")
+
+        cspr_file = self.organisms_to_files[self.orgChoice.currentText()][self.endoChoice.currentText()][0]
+        if platform.system() == 'Windows':
+            cspr_file = GlobalSettings.CSPR_DB + '\\' + cspr_file
+        else:
+            cspr_file = GlobalSettings.CSPR_DB + '/' + cspr_file
+
         own_cspr_parser = CSPRparser(cspr_file)
         own_cspr_parser.read_first_lines()
 
@@ -596,7 +597,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.checked_info[tempString] = (int(searchIndicies[0]), int(searchIndicies[1]), int(searchIndicies[2]))
 
             self.progressBar.setValue(50)
-            self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, "")
+            self.Results.transfer_data(full_org, self.organisms_to_files[full_org][str(self.endoChoice.currentText())][0], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, "")
             self.progressBar.setValue(100)
             self.pushButton_ViewTargets.setEnabled(True)
 
@@ -749,7 +750,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             selected_indices.append(ind.row())
 
         for item in self.checkBoxes:
-            print(item)
+            #print(item)
             if item[2] in selected_indices:
                 # if they searched base on Locus Tag
                 if item[0] in self.annotation_parser.reg_dict:
@@ -768,10 +769,9 @@ class CMainWindow(QtWidgets.QMainWindow):
                                 holder = (match[1], match[3], match[4])
                                 self.checked_info[item[0]] = holder
 
-        print(self.checked_info)
         # now call transfer data
         self.progressBar.setValue(95)
-        self.Results.transfer_data(self.shortHand[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
+        self.Results.transfer_data(full_org, self.organisms_to_files[full_org][str(self.endoChoice.currentText())][0], [str(self.endoChoice.currentText())], os.getcwd(),
                                    self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
@@ -897,8 +897,8 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 #    def addOrgoCombo(self):
 #        self.Add_Orgo_Combo.addItem("Select Organism")
-#        for item in self.data:
-#            if (self.endoChoice.currentText() in self.data[item]) and (item != str(self.orgChoice.currentText())):
+#        for item in self.orgnanism_to_endos:
+#            if (self.endoChoice.currentText() in self.organism_to_endos[item]) and (item != str(self.orgChoice.currentText())):
 #                self.Add_Orgo_Combo.addItem(item)
 
 
@@ -909,8 +909,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.dbpath = mypath
         onlyfiles = [str(f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
         onlyfiles.sort(key=str.lower)
-        orgsandendos = {}
-        shortName = {}
+        self.organisms_to_files = {}
+        self.organisms_to_endos = {}
         first = True
         for file in onlyfiles:
             if file.find('.cspr') != -1:
@@ -918,20 +918,24 @@ class CMainWindow(QtWidgets.QMainWindow):
                     first = False
                 found = True
                 newname = file[0:-4]
-                s = newname.split('_')
+                endo = newname[newname.rfind("_")+1:-1]
                 hold = gzip.open(file, 'r')
                 buf = (hold.readline())
                 buf = str(buf)
                 buf = buf.strip("'b")
                 buf = buf[:len(buf) - 2]
                 species = buf.replace("GENOME: ",'')
-                endo = str(s[1][:len(s[1]) - 1])
-                if species not in shortName:
-                    shortName[species] = s[0]
-                if species in orgsandendos:
-                    orgsandendos[species].append(endo)
+
+                if species in self.organisms_to_files:
+                    self.organisms_to_files[species][endo] = [file, file.replace(".cspr", "_repeats.db")]
                 else:
-                    orgsandendos[species] = [endo]
+                    self.organisms_to_files[species] = {}
+                    self.organisms_to_files[species][endo] = [file, file.replace(".cspr", "_repeats.db")]
+
+                if species in self.organisms_to_endos:
+                    self.organisms_to_endos[species].append(endo)
+                else:
+                    self.organisms_to_endos[species] = [endo]
                     if self.orgChoice.findText(species) == -1:
                         self.orgChoice.addItem(species)
 
@@ -939,10 +943,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         # auto fill the kegg search bar with the first choice in orgChoice
         if found == False:
             return False
-        self.data = orgsandendos
-        self.shortHand = shortName
+
         self.endoChoice.clear()
-        self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
+        self.endoChoice.addItems(self.organisms_to_endos[str(self.orgChoice.currentText())])
         self.orgChoice.currentIndexChanged.connect(self.changeEndos)
 
 
@@ -954,8 +957,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.radioButton_Gene.show()
             self.radioButton_Position.show()
             self.endoChoice.clear()
-            file = str(self.shortHand[str(self.orgChoice.currentText())]) + '_' + str(self.data[str(self.orgChoice.currentText())][0]) + '.cspr'
-            self.endoChoice.addItems(self.data[str(self.orgChoice.currentText())])
+            self.endoChoice.addItems(self.organisms_to_endos[str(self.orgChoice.currentText())])
         else:
             self.Step2.setEnabled(False)
             self.endoChoice.clear()
@@ -1032,7 +1034,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         # set the results window endoChoice box menu
         # set the mainWindow's endoChoice first, and then loop through and set the rest of them
         self.Results.endonucleaseBox.addItem(self.endoChoice.currentText())
-        for item in self.data[str(self.orgChoice.currentText())]:
+        for item in self.organisms_to_endos[str(self.orgChoice.currentText())]:
             if item != self.Results.endonucleaseBox.currentText():
                 self.Results.endonucleaseBox.addItem(item)
 

@@ -391,9 +391,10 @@ class Results(QtWidgets.QMainWindow):
 
     # Function that is used to set up the results page.
     # it calls get_targets, which in turn calls display data
-    def transfer_data(self, org, endo, path, geneposdict, geneNTSeqDict, fasta):
+    def transfer_data(self, org, cspr_file, endo, path, geneposdict, geneNTSeqDict, fasta):
         # set all of the classes variables
         self.org = org
+        self.cspr_file = cspr_file
         self.endo = endo
         self.directory = path
         self.fasta_ref = fasta
@@ -472,7 +473,7 @@ class Results(QtWidgets.QMainWindow):
         self.cotarget_checkbox.setChecked(0)
 
         # add it to the endoBox choices, and then call transfer_data
-        self.transfer_data(self.org, self.co_target_endo_list, GlobalSettings.CSPR_DB, self.geneDict, self.geneNTDict, "")
+        self.transfer_data(self.org, self.cspr_file, self.co_target_endo_list, GlobalSettings.CSPR_DB, self.geneDict, self.geneNTDict, "")
 
     # prep function for the checkbox for cotargeting
     # if the checkbox is checked, just go ahead and displayGeneData
@@ -489,10 +490,10 @@ class Results(QtWidgets.QMainWindow):
     def get_targets(self, genename, pos_tuple):
         #get the right files
         for endo in self.endo:
-            if self.directory.find("/") != -1:
-                file = (self.directory+"/" + self.org + "_" + endo + ".cspr")
+            if platform.system() == "Windows":
+                file = self.directory + "\\" + self.cspr_file
             else:
-                file = (self.directory + "\\" + self.org + "_" + endo + ".cspr")
+                file = self.directory + "/" + self.cspr_file
 
             #create the parser, read the targets store it. then display the GeneData screen
             parser = CSPRparser(file)
