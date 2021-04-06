@@ -494,7 +494,7 @@
            <item row="0" column="1" rowspan="4">
             <widget class="QLabel" name="OrganismName">
              <property name="text">
-              <string>Organism Name*:</string>
+              <string>Organism Name:</string>
              </property>
             </widget>
            </item>
@@ -548,7 +548,7 @@
 and references for the organism you are importing here.</string>
              </property>
              <property name="text">
-              <string>Organism Code*:</string>
+              <string>Organism Code:</string>
              </property>
             </widget>
            </item>
@@ -568,7 +568,7 @@ and references for the organism you are importing here.</string>
               <string/>
              </property>
              <property name="text">
-              <string>Subspecies/Strain:</string>
+              <string>Strain:</string>
              </property>
             </widget>
            </item>
@@ -629,7 +629,7 @@ and references for the organism you are importing here.</string>
 search parameters</string>
              </property>
              <property name="text">
-              <string>Endonuclease*</string>
+              <string>Endonuclease:</string>
              </property>
             </widget>
            </item>
@@ -668,6 +668,13 @@ search parameters</string>
            </item>
            <item row="0" column="3" rowspan="4">
             <widget class="QLabel" name="label_15">
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#fc0107;&quot;&gt;*&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_6">
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#fc0107;&quot;&gt;*&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -755,7 +762,7 @@ search parameters</string>
      <x>0</x>
      <y>0</y>
      <width>850</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

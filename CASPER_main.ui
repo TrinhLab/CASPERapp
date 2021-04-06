@@ -372,7 +372,7 @@
          <item row="1" column="0">
           <widget class="QRadioButton" name="radioButton_Gene">
            <property name="text">
-            <string>Gene (Locus ID)</string>
+            <string>Gene</string>
            </property>
            <property name="checked">
             <bool>true</bool>

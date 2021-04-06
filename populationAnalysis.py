@@ -614,7 +614,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 kstats = kstats.split(",")
                 self.org_names[org_name] = len(kstats) - 1
 
-
     def plot_repeats_vs_seeds(self):
         self.pop_analysis_repeats_graph.canvas.figure.set_visible(True)
         self.pop_analysis_repeats_graph.canvas.axes.clear()

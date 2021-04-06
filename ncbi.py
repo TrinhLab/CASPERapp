@@ -336,11 +336,8 @@ class NCBI_search_tool(QtWidgets.QWidget):
         indexes = self.ncbi_table.selectionModel().selectedRows()
         if len(indexes) == 0:
             return
-        if self.feature_table_checkbox.isChecked() == False and self.gbff_checkbox.isChecked() == False and self.fna_checkbox.isChecked() == False:
-            return
         if self.genbank_checkbox.isChecked() == False and self.refseq_checkbox.isChecked() == False:
             return
-
         self.progressBar.setValue(5)
         QtWidgets.QApplication.processEvents()
         ftp = FTP('ftp.ncbi.nlm.nih.gov')
@@ -369,11 +366,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
                     output_file = self.output_path + "/" + file
                     if platform.system() == "Windows":
                         output_file = output_file.replace("/", "\\")
-                    if self.feature_table_checkbox.isChecked():
-                        if file.find('feature_table.txt') != -1:
-                            with open(output_file, 'wb') as f:
-                                ftp.retrbinary(f"RETR {file}", f.write)
-                            files.append(output_file)
                     if self.gbff_checkbox.isChecked():
                         if file.find('genomic.gbff') != -1:
                             with open(output_file, 'wb') as f:
