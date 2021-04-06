@@ -558,7 +558,6 @@
   <tabstop>ncbi_table</tabstop>
   <tabstop>genbank_checkbox</tabstop>
   <tabstop>refseq_checkbox</tabstop>
-  <tabstop>feature_table_checkbox</tabstop>
   <tabstop>gbff_checkbox</tabstop>
   <tabstop>fna_checkbox</tabstop>
   <tabstop>output_directory</tabstop>
