@@ -616,6 +616,32 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 kstats = kstats.split(",")
                 self.org_names[org_name] = len(kstats) - 1
 
+    ###This is deprecated
+    def plot_repeats_vs_seeds(self):
+        self.pop_analysis_repeats_graph.canvas.figure.set_visible(True)
+        self.pop_analysis_repeats_graph.canvas.axes.clear()
+        x1 = list(range(0, len(self.seeds)))
+        y1 = []
+        for val in self.counts:
+            y1.append(val)
+        #y1.sort(reverse=True)
+
+        # get stats
+        self.average = statistics.mean(y1)
+        self.mode = statistics.mode(y1)
+        self.median = statistics.median(y1)
+        self.repeat_count = len(self.seeds)
+
+        # clear axes
+        self.pop_analysis_repeats_graph.canvas.axes.clear()
+        # the following are for plotting / formatting
+        self.pop_analysis_repeats_graph.canvas.axes.plot(x1, y1)
+        self.pop_analysis_repeats_graph.canvas.axes.set_xlabel('Seed ID Number')
+        self.pop_analysis_repeats_graph.canvas.axes.set_ylabel('Number of Repeats')
+        self.pop_analysis_repeats_graph.canvas.axes.set_title('Number of Repeats per Seed ID Number')
+        # always redraw at the end
+        self.pop_analysis_repeats_graph.canvas.draw()
+        QtCore.QCoreApplication.processEvents()
 
     def plot_3D_graph(self):
         self.pop_analysis_3dgraph.canvas.axes.clear()

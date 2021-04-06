@@ -1,6 +1,7 @@
 import sys
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, Qt
 from bs4 import BeautifulSoup
+from Bio.Seq import Seq
 import requests
 import webbrowser
 from Bio.Seq import Seq
@@ -413,10 +414,13 @@ class Results(QtWidgets.QMainWindow):
             detail_output1 = {}
             rows_and_seq2 = {}
             seq_and_avg3 = {}
+            temp_split = gene.split(";")
+            temp_len = len(temp_split)
+            gene_name = temp_split[temp_len-2] + ": " + temp_split[-1]
             self.detail_output_list.append(detail_output1)
             self.seq_and_avg_list.append(seq_and_avg3)
             self.rows_and_seq_list.append(rows_and_seq2)
-            self.comboBoxGene.addItem(gene)
+            self.comboBoxGene.addItem(gene_name)
             self.get_targets(gene, geneposdict[gene])
 
 
@@ -525,9 +529,13 @@ class Results(QtWidgets.QMainWindow):
         # Creates the set object from the list of the current gene:
         if curgene=='' or len(self.AllData)<1:
             return
+        
+        # Loop through dictionary and link org dropdown to dictionary entry
+        for entry in self.AllData.keys():
+            if (curgene.split(":")[-1].strip() in entry or curgene.split(":")[0] in entry):
+                curgene = entry
 
         subset_display = set()
-
         # set the start and end numbers, as well as set the geneViewer text, if the displayGeneViewer is checked
         if self.displayGeneViewer.isChecked():
             self.lineEditStart.setText(str(self.geneDict[self.comboBoxGene.currentText()][1]))
