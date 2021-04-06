@@ -68,6 +68,22 @@ class CoTargeting(QtWidgets.QDialog):
     # then it goes through and returns the endonucleases selected
     # once it gets those, it then calls a function in Results that repopulates the table correctly
     def submission_function(self):
+        #get endo data from CASPERinfo
+        self.Endos = {}
+        f = open(GlobalSettings.appdir + 'CASPERinfo')
+        while True:
+            line = f.readline()
+            if line.startswith('ENDONUCLEASES'):
+                while True:
+                    line = f.readline()
+                    if (line[0] == "-"):
+                        break
+                    line_tokened = line.split(";")
+                    endo = line_tokened[0]
+                    self.Endos[endo] = [line_tokened[2], line_tokened[3], line_tokened[4]]
+                break
+        f.close()
+
         # set the selected_list, and make sure they select at least 2 endonucleases
         selected_list = self.endo_table.selectedItems()
         if len(selected_list) <= 1:
@@ -80,6 +96,13 @@ class CoTargeting(QtWidgets.QDialog):
         for i in range(self.endo_table.rowCount()):
             if self.endo_table.item(i, 0).isSelected():
                 ret_endo_list.append(self.endo_table.item(i, 0).text())
+
+        #invalid_flag = False
+        for endo1 in ret_endo_list:
+            for endo2 in ret_endo_list:
+                if self.Endos[endo1][0] != self.Endos[endo2][0] or self.Endos[endo1][1] != self.Endos[endo2][1] or self.Endos[endo1][2] != self.Endos[endo2][2]:
+                    QtWidgets.QMessageBox.critical(self, "Invalid Endonucleases", "The selected endonucleases are not compatible.",QtWidgets.QMessageBox.Ok)
+                    return
 
         GlobalSettings.mainWindow.Results.co_target_endo_list = ret_endo_list
         GlobalSettings.mainWindow.Results.populate_cotarget_table()

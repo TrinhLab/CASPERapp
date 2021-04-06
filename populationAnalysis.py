@@ -6,7 +6,6 @@ import Algorithms
 from functools import partial
 import numpy as np
 from PyQt5.QtWidgets import *
-import show_names_ui
 import gzip
 import sqlite3
 from collections import Counter
@@ -15,6 +14,7 @@ import itertools
 from matplotlib import cm
 import matplotlib
 import mplcursors
+import time
 
 
 class Pop_Analysis(QtWidgets.QMainWindow):
@@ -33,8 +33,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.directory = ""
         self.names = []
         self.names_venn = []
-        self.show_names.clicked.connect(self.show_names_func)
-        self.name_form = show_names_ui.show_names_table()
 
         #organism table
         self.org_Table.setColumnCount(1)
@@ -105,8 +103,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         self.loading_window = loading_window()
 
-        self.show_names.hide()
-
         self.seed_label.hide()
         self.query_seed_button.hide()
         self.seed_input.hide()
@@ -120,12 +116,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     # this function calls the popParser function and fills all the tables
     def pre_analyze(self):
 
-        #clear graphs
-        self.pop_analysis_repeats_graph.canvas.axes.clear()
-
         #clear saved filenames
         self.cspr_files = []
         self.db_files = []
+        self.rows = []
 
         #get selected indexes
         selected_indexes = self.org_Table.selectionModel().selectedRows()
@@ -139,6 +133,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         #get cspr and db filenames
         for index in sorted(selected_indexes):
+            self.rows.append(index.row() + 1)
             self.cspr_files.append(self.index_to_cspr[index.row()])
             self.db_files.append(self.index_to_db[index.row()])
 
@@ -161,7 +156,13 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     # this function opens CASPERinfo and builds the dropdown menu of selectable endonucleases
     def fillEndo(self):
+        try:
+            self.endoBox.currentIndexChanged.disconnect()
+        except:
+            pass
+
         self.Endos = {}
+        self.endoBox.clear()
         f = open(GlobalSettings.appdir + 'CASPERinfo')
         while True:
             line = f.readline()
@@ -191,11 +192,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     def change_endo(self):
         onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
-
         index = 0
         for file in onlyfiles:
             if file.find('.cspr') != -1:
-                endo = file[file.find('_') + 1:file.find('.cspr')]
+                endo = file[file.rfind('_') + 1:file.find('.cspr')]
                 if endo == self.Endos[self.endoBox.currentText()][0]:
 
                     # increase row count
@@ -245,6 +245,11 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         index = 0
 
         self.seeds = self.get_shared_seeds(self.db_files, True)
+
+        try:
+            os.remove(GlobalSettings.appdir + "temp_join.db")
+        except:
+            pass
 
         no_seeds = False
 
@@ -379,11 +384,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.plot_3D_graph()
         else:
             self.pop_analysis_3dgraph.canvas.figure.set_visible(False)
-            self.show_names.hide()
 
-        self.loading_window.loading_bar.setValue(75)
-        if no_seeds == False:
-            self.plot_repeats_vs_seeds()
         self.loading_window.loading_bar.setValue(100)
         self.loading_window.hide()
         QtCore.QCoreApplication.processEvents()
@@ -549,7 +550,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             aliases.append("main" + str(i))
 
         #memory connections for inner join on db files to hold what seeds are shared
-        new_conn = sqlite3.connect('temp_join.db')
+        new_conn = sqlite3.connect(GlobalSettings.appdir + "temp_join.db")
         new_c = new_conn.cursor()
         new_c.execute("PRAGMA synchronous = OFF;")
         new_c.execute("PRAGMA journal_mode = OFF;")
@@ -583,6 +584,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         #end transaction
         new_c.execute("END TRANSACTION;")
+        new_conn.commit()
 
         #close memory db
         new_c.close()
@@ -614,6 +616,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 kstats = kstats.split(",")
                 self.org_names[org_name] = len(kstats) - 1
 
+    ###This is deprecated
     def plot_repeats_vs_seeds(self):
         self.pop_analysis_repeats_graph.canvas.figure.set_visible(True)
         self.pop_analysis_repeats_graph.canvas.axes.clear()
@@ -640,7 +643,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.pop_analysis_repeats_graph.canvas.draw()
         QtCore.QCoreApplication.processEvents()
 
-
     def plot_3D_graph(self):
         self.pop_analysis_3dgraph.canvas.axes.clear()
         try:
@@ -648,7 +650,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         except:
             None
         self.pop_analysis_3dgraph.canvas.figure.set_visible(True)
-        self.show_names.show()
 
         rows, cols = (self.total_org_number, self.total_org_number)
         arr = [[0 for i in range(cols)] for j in range(rows)]
@@ -668,6 +669,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             c.close()
             conn.close()
 
+        labels = arr.copy()
+        for i in range(len(arr)):
+            arr[i][i] = 0
+
         ax = self.pop_analysis_3dgraph.canvas.axes
         im = self.pop_analysis_3dgraph.canvas.axes.imshow(arr, cmap='summer')
         self.pop_analysis_3dgraph.canvas.cbar = self.pop_analysis_3dgraph.canvas.axes.figure.colorbar(im, ax=self.pop_analysis_3dgraph.canvas.axes)
@@ -678,12 +683,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             sel.annotation.arrow_patch.set(arrowstyle="simple", fc="white", alpha=.5)
             sel.annotation.set_bbox(None)
             i,j = sel.target.index
-            sel.annotation.set_text(arr[i][j])
+            sel.annotation.set_text(labels[i][j])
 
-        ax.set_xticks(np.arange(0.5, len(arr)-1, 1), minor=True)
-        ax.set_yticks(np.arange(0.5, len(arr)-1, 1), minor=True)
         ax.set_xticks(np.arange(len(arr)))
         ax.set_yticks(np.arange(len(arr)))
+
+        #get labels based on org table rows
+        ax.set_xticklabels(self.rows)
+        ax.set_yticklabels(self.rows)
+
         ax.grid(which='minor', color='w', linestyle='-', linewidth=2)
         #ax.set_frame_on(False)
         #ax.set_aspect('equal')
@@ -763,12 +771,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     def clear_loc_table(self):
         self.loc_finder_table.clearContents()
         self.loc_finder_table.setRowCount(0)
-
-
-    def show_names_func(self):
-        # print(self.names)
-        self.name_form.fill_table(self.names)
-        self.name_form.show()
 
 
     def table_sorting(self, logicalIndex):

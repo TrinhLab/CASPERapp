@@ -146,13 +146,16 @@ class NCBI_search_tool(QtWidgets.QWidget):
     def browseForFolder(self):
         # get the folder
         filed = QtWidgets.QFileDialog()
-        self.output_path = QtWidgets.QFileDialog.getExistingDirectory(filed, "Select a Directory",
-                                                       GlobalSettings.CSPR_DB, QtWidgets.QFileDialog.ShowDirsOnly)
-        if(os.path.isdir(self.output_path) == False):
-            return
 
-        # make sure to append the '/' to the folder path
-        self.output_directory.setText(self.output_path)
+        temp_path = QtWidgets.QFileDialog.getExistingDirectory(filed, "Select a Directory",
+                                                       GlobalSettings.CSPR_DB, QtWidgets.QFileDialog.ShowDirsOnly)
+
+        if temp_path != "" and os.path.isdir(self.output_path) == True:
+            self.output_path = temp_path
+
+            # make sure to append the '/' to the folder path
+            self.output_directory.setText(self.output_path)
+
 
     @QtCore.pyqtSlot()
     def query_db(self):
@@ -360,6 +363,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 link = str(dir).replace('ftp://ftp.ncbi.nlm.nih.gov', '')
                 ftp.cwd(link)
                 dir_files = ftp.nlst()
+                print("output path: " + str(self.output_path))
                 # if(dir_files.count("GO_TO_CURRENT_VERSION") != 0):
                 #     print(dir_files)
                 for file in dir_files:
@@ -373,6 +377,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
                             files.append(output_file)
                     if self.fna_checkbox.isChecked():
                         if file.find('genomic.fna') != -1 and file.find('_cds_') == -1 and file.find('_rna_') == -1:
+                            print(output_file)
                             with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(output_file)

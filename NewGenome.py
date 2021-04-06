@@ -199,7 +199,7 @@ class NewGenome(QtWidgets.QMainWindow):
             args += " " + '"' + GlobalSettings.appdir.replace("\\","/") + "CASPERinfo" + '"'
             args += " " + '"' + self.file.replace("\\","/") + '"'
 
-        args += " " + '"' + self.orgName.text() + '"'
+        args += " " + '"' + self.orgName.text() + " " + self.strainName.text() + '"'
         args += " " + '"' + "notes" + '"'
 
         name = self.orgCode.text() + "_" + str(self.Endos[self.comboBoxEndo.currentText()][0])
@@ -367,7 +367,7 @@ class NewGenome(QtWidgets.QMainWindow):
         self.strainName.clear()
         self.orgCode.clear()
         self.s_file.setText("Name of File")
-
+        self.file = ""
 
     def open_ncbi_web_page(self):
         webbrowser.open('https://www.ncbi.nlm.nih.gov/', new=2)
@@ -430,7 +430,6 @@ class NewGenome(QtWidgets.QMainWindow):
         # make sure that there are cspr files in the DB
         file_names = os.listdir(GlobalSettings.CSPR_DB)
         noCSPRFiles = True
-        noCSPRFiles = True
         for file in file_names:
             if 'cspr' in file:
                 noCSPRFiles = False
@@ -467,4 +466,6 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.orgChoice.clear()
             GlobalSettings.mainWindow.endoChoice.clear()
             GlobalSettings.mainWindow.getData()
+            GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
+            GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
             self.hide()

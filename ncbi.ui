@@ -428,7 +428,7 @@
          <widget class="QCheckBox" name="fna_checkbox">
           <property name="maximumSize">
            <size>
-            <width>16777215</width>
+            <width>125</width>
             <height>16777215</height>
            </size>
           </property>
@@ -474,7 +474,7 @@
      </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>40</width>
+       <width>30</width>
        <height>20</height>
       </size>
      </property>
@@ -507,7 +507,7 @@
          </size>
         </property>
         <attribute name="horizontalHeaderDefaultSectionSize">
-         <number>39</number>
+         <number>59</number>
         </attribute>
        </widget>
       </item>
@@ -548,6 +548,23 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>organism_line_edit</tabstop>
+  <tabstop>infra_name_line_edit</tabstop>
+  <tabstop>ret_max_line_edit</tabstop>
+  <tabstop>yes_box</tabstop>
+  <tabstop>search_button</tabstop>
+  <tabstop>all_rows</tabstop>
+  <tabstop>ncbi_table</tabstop>
+  <tabstop>genbank_checkbox</tabstop>
+  <tabstop>refseq_checkbox</tabstop>
+  <tabstop>feature_table_checkbox</tabstop>
+  <tabstop>gbff_checkbox</tabstop>
+  <tabstop>fna_checkbox</tabstop>
+  <tabstop>output_directory</tabstop>
+  <tabstop>browse_button</tabstop>
+  <tabstop>download_button</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
  <buttongroups>
