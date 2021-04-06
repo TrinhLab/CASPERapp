@@ -532,7 +532,7 @@ class Results(QtWidgets.QMainWindow):
         
         # Loop through dictionary and link org dropdown to dictionary entry
         for entry in self.AllData.keys():
-            if (curgene.split(":")[-1].strip() in entry or curgene.split(":")[0] in entry):
+            if curgene.split(":")[0] in entry:
                 curgene = entry
 
         subset_display = set()
