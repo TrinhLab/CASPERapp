@@ -1,6 +1,6 @@
 ###############################################################################
 # This is the Annotation Parser File
-# INPUTS: inputs are the annotation files to parse, either txt or gff3
+# INPUTS: inputs are the annotation files to parse. Currently, only gbff is supported.
 # OUTPUTS: the outputs are data structures that store the parsed data
 ################################################################################
 
@@ -44,7 +44,7 @@ class Annotation_Parser:
         prevFirstIndex = ""
         indexNumber = 0
         strandChar = ""
-        currentLocusTag = ""
+        currentGeneID = ""
         para_dict_key_string = ""
         values = list()
 
@@ -62,13 +62,15 @@ class Annotation_Parser:
                     if para_dict_key_string != "":
                         if para_dict_key_string not in self.para_dict:
                             self.para_dict[para_dict_key_string] = list()
-                            self.para_dict[para_dict_key_string].append(currentLocusTag)
+                            self.para_dict[para_dict_key_string].append(currentGeneID)
                         else:
-                            if currentLocusTag not in self.para_dict[para_dict_key_string]:
-                                self.para_dict[para_dict_key_string].append(currentLocusTag)
+                            if currentGeneID not in self.para_dict[para_dict_key_string]:
+                                self.para_dict[para_dict_key_string].append(currentGeneID)
                         para_dict_key_string = ""
-
-                    currentLocusTag = feature.qualifiers['locus_tag'][0]
+                    try:
+                        currentGeneID = feature.qualifiers['db_xref'][0].split(":")[-1]
+                    except:
+                        currentGeneID = feature.qualifiers['locus_tag'][0]
 
                     # check to see if the strand is + or -
                     if feature.location.strand == -1:
@@ -77,49 +79,64 @@ class Annotation_Parser:
                         strandChar = '+'
 
                     # update that one's values
-                    values = [currentLocusTag, indexNumber, feature.type, int(feature.location.start) - 1,
+                    values = [currentGeneID, indexNumber, feature.type, int(feature.location.start) - 1,
                               int(feature.location.end), strandChar]
 
                     # insert
-                    if currentLocusTag not in self.reg_dict:
-                        self.reg_dict[currentLocusTag] = list()
-                        self.reg_dict[currentLocusTag].append(values)
+                    if currentGeneID not in self.reg_dict:
+                        self.reg_dict[currentGeneID] = list()
+                        self.reg_dict[currentGeneID].append(values)
                     else:
-                        self.reg_dict[currentLocusTag].append(values)
+                        self.reg_dict[currentGeneID].append(values)
 
-                # if it's not a gene, skip rep_orgin, telomere, and source
-                elif feature.type != "rep_origin" and feature.type != "telomere" and feature.type != "source" and feature.type != 'assembly_gap' and feature.type != 'repeat_region':
+                # if it's not a gene, skip rep_orgin, telomere, and source, etc.
+                elif feature.type != "misc_binding" and feature.type != "regulatory" and feature.type != "rep_origin" and feature.type != "telomere" and feature.type != "source" and feature.type != 'assembly_gap' and feature.type != 'repeat_region':
                     # get the data for the normal dictionary and store it
                     if feature.location.strand == -1:
                         strandChar = '-'
                     else:
                         strandChar = '+'
-                    values = [currentLocusTag, indexNumber, feature.type, int(feature.location.start) - 1,
+                    values = [currentGeneID, indexNumber, feature.type, int(feature.location.start) - 1,
                               int(feature.location.end), strandChar]
                     # make sure it isn't a duplicate
-                    if values not in self.reg_dict[currentLocusTag]:
-                        self.reg_dict[currentLocusTag].append(values)
+                    if values not in self.reg_dict[currentGeneID]:
+                        self.reg_dict[currentGeneID].append(values)
                     # now get the para_dict's data
 
-                    # check for the note section
-                    if 'note' in feature.qualifiers:
+                    # check for the Gene ID section and append if there
+                    if 'db_xref' in feature.qualifiers:
                         if para_dict_key_string == "":
-                            para_dict_key_string = feature.qualifiers['note'][0]
+                            para_dict_key_string = feature.qualifiers['db_xref'][-1].split(":")[-1]
                         else:
-                            para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['note'][0]
-                    # check for the product section
-                    if 'product' in feature.qualifiers:
-                        if para_dict_key_string == "":
-                            para_dict_key_string = feature.qualifiers['product'][0]
-                        else:
-                            para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['product'][0]
+                            para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['db_xref'][-1].split(":")[-1]
 
-                    # pull out the protein ID
+                                        # check for the protein ID section and append if there 
                     if 'protein_id' in feature.qualifiers:
                         if para_dict_key_string == "":
                             para_dict_key_string = feature.qualifiers['protein_id'][0]
                         else:
                             para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['protein_id'][0]
+                            
+                    # check for the Locus_Tag section and append if there
+                    if 'locus_tag' in feature.qualifiers:
+                        if para_dict_key_string == "":
+                            para_dict_key_string = feature.qualifiers['locus_tag'][0]
+                        else:
+                            para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['locus_tag'][0]
+
+                    # check for the protein ID section and append if there 
+                    if 'gene' in feature.qualifiers:
+                        if para_dict_key_string == "":
+                            para_dict_key_string = feature.qualifiers['gene'][0]
+                        else:
+                            para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['gene'][0]
+
+                    # check for the product section and append if there 
+                    if 'product' in feature.qualifiers:
+                        if para_dict_key_string == "":
+                            para_dict_key_string = feature.qualifiers['product'][0]
+                        else:
+                            para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['product'][0]
 
         # not sure if this number is correct, yet
         self.max_chrom = indexNumber
@@ -128,6 +145,8 @@ class Annotation_Parser:
     # This function parses gff files and stores them in a dictionary
     # It also creates a parallel dictionary to use in searching
     # Precondition: ONLY TO BE USED WITH GFF FILES
+
+    ###THIS CODE IS DEPRECATED. ONLY GBFF FILES ARE SUPPORTED RIGHT NOW!###
     ############################################
     def gff_parse(self):
         self.reg_dict.clear()
@@ -236,7 +255,9 @@ class Annotation_Parser:
     # This function parses txt files and stores them in a dictionary
     # It also creates a parallel dictionary to use in searching
     # Precondition: ONLY TO BE USED WITH TXT FILES
-    ############################################
+    
+###THIS CODE IS DEPRECATED. ONLY GBFF FILES ARE SUPPORTED RIGHT NOW!###
+############################################
     def txt_parse(self):
         self.reg_dict.clear()
         prevGenAccession = ""
