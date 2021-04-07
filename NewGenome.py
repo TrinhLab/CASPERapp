@@ -19,7 +19,17 @@ class goToPrompt(QtWidgets.QWidget):
     def __init__(self):
         super(goToPrompt, self).__init__()
         uic.loadUi(GlobalSettings.appdir + 'newgenomenavigatepage.ui', self)
-        self.setWindowTitle('Analyze New Files')
+
+        groupbox_style = """
+        QGroupBox:title{subcontrol-origin: margin;
+                        left: 10px;
+                        padding: 0 5px 0 5px;}
+        QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
+                        border-radius: 9px;
+                        font: 14pt "Arial";
+                        font: bold;
+                        margin-top: 10px;}"""
+        self.groupBox.setStyleSheet(groupbox_style)
         self.hide()
 
 
@@ -534,6 +544,8 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.orgChoice.clear()
             GlobalSettings.mainWindow.endoChoice.clear()
             GlobalSettings.mainWindow.getData()
+            GlobalSettings.MTWin.mwfg.moveCenter(GlobalSettings.MTWin.cp)  ##Center window
+            GlobalSettings.MTWin.move(GlobalSettings.MTWin.mwfg.topLeft())  ##Center window
             GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
             GlobalSettings.MTWin.show()
             GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
@@ -579,6 +591,8 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.orgChoice.clear()
             GlobalSettings.mainWindow.endoChoice.clear()
             GlobalSettings.mainWindow.getData()
+            GlobalSettings.pop_Analysis.mwfg.moveCenter(GlobalSettings.pop_Analysis.cp)  ##Center window
+            GlobalSettings.pop_Analysis.move(GlobalSettings.pop_Analysis.mwfg.topLeft())  ##Center window
             GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
             GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
             GlobalSettings.pop_Analysis.show()
