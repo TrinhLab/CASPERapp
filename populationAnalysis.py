@@ -15,6 +15,7 @@ from matplotlib import cm
 import matplotlib
 import mplcursors
 import time
+import copy
 
 
 class Pop_Analysis(QtWidgets.QMainWindow):
@@ -669,7 +670,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             c.close()
             conn.close()
 
-        labels = arr.copy()
+        labels = copy.deepcopy(arr)
+
         for i in range(len(arr)):
             arr[i][i] = 0
 
