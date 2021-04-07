@@ -567,7 +567,7 @@ class Results(QtWidgets.QMainWindow):
         for item in subset_display:
             num = int(item[0])
             loc = QtWidgets.QTableWidgetItem()
-            loc.setData(QtCore.Qt.EditRole, num)
+            loc.setData(QtCore.Qt.EditRole, abs(num))
             seq = QtWidgets.QTableWidgetItem(item[1])
             strand = QtWidgets.QTableWidgetItem(str(item[4]))
             PAM = QtWidgets.QTableWidgetItem(item[2])
