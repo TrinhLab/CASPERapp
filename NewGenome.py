@@ -15,6 +15,14 @@ def iter_except(function, exception):
     except exception:
         return
 
+class goToPrompt(QtWidgets.QWidget):
+    def __init__(self):
+        super(goToPrompt, self).__init__()
+        uic.loadUi(GlobalSettings.appdir + 'newgenomenavigatepage.ui', self)
+        self.setWindowTitle('Analyze New Files')
+        self.hide()
+
+
 class NewGenome(QtWidgets.QMainWindow):
 
 
@@ -109,9 +117,17 @@ class NewGenome(QtWidgets.QMainWindow):
         self.three_length.setEnabled(False)
         self.repeats_box.setEnabled(False)
 
+        #user prompt class
+        self.goToPrompt = goToPrompt()
+        self.goToPrompt.goToMain.clicked.connect(self.continue_to_main)
+        self.goToPrompt.goToMT.clicked.connect(self.continue_to_MT)
+        self.goToPrompt.goToPop.clicked.connect(self.continue_to_pop)
+
+
     ####---FUNCTIONS TO RUN EACH BUTTON---####
     def open_ncbi_tool(self):
         GlobalSettings.mainWindow.ncbi.show()
+
 
     def remove_from_queue(self):
         while(True):
@@ -351,6 +367,10 @@ class NewGenome(QtWidgets.QMainWindow):
         self.indexes.pop(0)
         if len(self.indexes) != 0:
             self.run_job()
+        else:
+            #prompt user if they want to analyze their new files
+            self.goToPrompt.show()
+
 
     def clear_job_queue(self):
         self.process.kill()
@@ -362,12 +382,14 @@ class NewGenome(QtWidgets.QMainWindow):
         self.progressBar.setValue(0)
         self.first = False
 
+
     def reset(self):
         self.orgName.clear()
         self.strainName.clear()
         self.orgCode.clear()
         self.s_file.setText("Name of File")
         self.file = ""
+
 
     def open_ncbi_web_page(self):
         webbrowser.open('https://www.ncbi.nlm.nih.gov/', new=2)
@@ -412,6 +434,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.s_file.setText("Name of File")
             self.progressBar.setValue(0)
             self.first = False
+            self.goToPrompt.hide()
             GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
             GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
             GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
@@ -457,6 +480,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.s_file.clear()
             self.progressBar.setValue(0)
             self.first = False
+            self.goToPrompt.hide()
             GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
             GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
             GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
@@ -468,4 +492,94 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.getData()
             GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
             GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
+            self.hide()
+
+
+    def continue_to_MT(self):
+        # make sure that there are cspr files in the DB
+        file_names = os.listdir(GlobalSettings.CSPR_DB)
+        noCSPRFiles = True
+        for file in file_names:
+            if 'cspr' in file:
+                noCSPRFiles = False
+                break
+        if noCSPRFiles == True:
+
+            error = QtWidgets.QMessageBox.question(self, "No CSPR file generated",
+                                                   "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
+                                                   "Alternatively, you could quit the program. Would you like to quit?",
+                                                   QtWidgets.QMessageBox.Yes |
+                                                   QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+
+            if (error == QtWidgets.QMessageBox.Yes):
+                self.exit = True
+                self.close()
+
+        else:
+            self.process.kill()
+            self.job_Table.clearContents()
+            self.orgName.clear()
+            self.strainName.clear()
+            self.orgCode.clear()
+            self.output_browser.clear()
+            self.s_file.clear()
+            self.progressBar.setValue(0)
+            self.first = False
+            self.goToPrompt.hide()
+            GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
+            GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
+            GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
+            if GlobalSettings.mainWindow.orgChoice.currentText() != '':
+                GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
+            GlobalSettings.mainWindow.orgChoice.clear()
+            GlobalSettings.mainWindow.endoChoice.clear()
+            GlobalSettings.mainWindow.getData()
+            GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
+            GlobalSettings.MTWin.show()
+            GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
+            self.hide()
+
+
+    def continue_to_pop(self):
+        # make sure that there are cspr files in the DB
+        file_names = os.listdir(GlobalSettings.CSPR_DB)
+        noCSPRFiles = True
+        for file in file_names:
+            if 'cspr' in file:
+                noCSPRFiles = False
+                break
+        if noCSPRFiles == True:
+
+            error = QtWidgets.QMessageBox.question(self, "No CSPR file generated",
+                                                   "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
+                                                   "Alternatively, you could quit the program. Would you like to quit?",
+                                                   QtWidgets.QMessageBox.Yes |
+                                                   QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+
+            if (error == QtWidgets.QMessageBox.Yes):
+                self.exit = True
+                self.close()
+
+        else:
+            self.process.kill()
+            self.job_Table.clearContents()
+            self.orgName.clear()
+            self.strainName.clear()
+            self.orgCode.clear()
+            self.output_browser.clear()
+            self.s_file.clear()
+            self.progressBar.setValue(0)
+            self.first = False
+            self.goToPrompt.hide()
+            GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
+            GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
+            GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
+            if GlobalSettings.mainWindow.orgChoice.currentText() != '':
+                GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
+            GlobalSettings.mainWindow.orgChoice.clear()
+            GlobalSettings.mainWindow.endoChoice.clear()
+            GlobalSettings.mainWindow.getData()
+            GlobalSettings.MTWin.launch(GlobalSettings.CSPR_DB)
+            GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
+            GlobalSettings.pop_Analysis.show()
             self.hide()
