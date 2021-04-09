@@ -922,7 +922,10 @@ class CMainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def view_results(self):
         self.hide()
-
+        try:
+            self.Results.endonucleaseBox.currentIndexChanged.disconnect()
+        except:
+            pass
         # set Results endo combo box
         self.Results.endonucleaseBox.clear()
 
