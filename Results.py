@@ -16,7 +16,6 @@ import platform
 # Outputs: The display of the gRNA results search
 # =========================================================================================
 
-
 class Results(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
