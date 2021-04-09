@@ -119,29 +119,11 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
 
         index = 0
         self.tableWidget.resizeColumnsToContents()
-
-        # if show all is checked, show the window so the user can select the genes they want
-        if mainWindow.Show_All_Results.isChecked():
-            mainWindow.hide()
-            self.mwfg.moveCenter(self.cp)  ##Center window
-            self.move(self.mwfg.topLeft())  ##Center window
-            self.show()
-        else:  # show all not checked
-            if (len(mainWindow.checkBoxes) > 15):  # check the size, throw an error if it is too large
-                error = QtWidgets.QMessageBox.question(self, "Large File Found",
-                                                       "This annotation file and search parameter yieled many matches and could cause a slow down.\n\n"
-                                                       "Do you wish to continue?",
-                                                       QtWidgets.QMessageBox.Yes |
-                                                       QtWidgets.QMessageBox.No,
-                                                       QtWidgets.QMessageBox.No)
-                if (error == QtWidgets.QMessageBox.No):
-                    return -2
-            for obj in mainWindow.checkBoxes:  # check every match
-                obj[2].setChecked(True)
-            self.mainWindow.collect_table_data_nonkegg()
-
+        mainWindow.hide()
+        self.mwfg.moveCenter(self.cp)  ##Center window
+        self.move(self.mwfg.topLeft())  ##Center window
+        self.show()
         return 0
-
 
     # this is the connection for the select all checkbox
     # selects/deselects all the genes in the table
@@ -627,9 +609,9 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def launch_ncbi(self):
-        QtWidgets.QMessageBox.question(self, "NOTE:",
-                                       "Ensure that the annotation file corresponds to the exact species and strain used for Analyze New Genome.\n\nMismatched annotation files will inhibit downstream analyses.",
-                                       QtWidgets.QMessageBox.Ok)
+        QtWidgets.QMessageBox.information(self, "Note:",
+        "NCBI Annotation Guidelines:\n\nDownload annotation files of the exact species and strain used in Analyze New Genome.\n\nMismatched annotation files will inhibit downstream analyses.",
+        QtWidgets.QMessageBox.Ok)
         self.ncbi.show()
 
 
@@ -922,6 +904,10 @@ class CMainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def view_results(self):
         self.hide()
+        try:
+            self.Results.endonucleaseBox.currentIndexChanged.disconnect()        
+        except:
+            pass
 
         # set Results endo combo box
         self.Results.endonucleaseBox.clear()

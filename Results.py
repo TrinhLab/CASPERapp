@@ -16,7 +16,6 @@ import platform
 # Outputs: The display of the gRNA results search
 # =========================================================================================
 
-
 class Results(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
@@ -25,6 +24,7 @@ class Results(QtWidgets.QMainWindow):
 
         self.setWindowTitle('Results')
         self.geneViewer.setReadOnly(True)
+        self.curgene = ""
         self.dbpath = ""
         # Main Data container
         # Keys: Gene names
@@ -61,9 +61,8 @@ class Results(QtWidgets.QMainWindow):
         self.checkBoxSelectAll.stateChanged.connect(self.selectAll)
         self.pushButton_Deselect_All.clicked.connect(self.deselectAll)
         self.gene_viewer_settings_button.clicked.connect(self.changeGeneViewerSettings)
-        self.change_start_end_button.clicked.connect(self.change_indicies)
+        self.change_start_end_button.clicked.connect(self.change_indices)
         self.actionTo_CSV.triggered.connect(self.open_export_to_csv)
-
 
         #self.targetTable.itemSelectionChanged.connect(self.item_select)
         self.minScoreLine.setText("0")
@@ -102,6 +101,7 @@ class Results(QtWidgets.QMainWindow):
         self.menuWindow.setEnabled(False)
         self.actionScore_Settings.setEnabled(False)
         self.actionDesign_Repair_Oligos.setEnabled(False)
+        
 
     # this function opens the export_to_csv window
     # first it makes sure that the user actually has some highlighted targets that they want exported
@@ -117,8 +117,7 @@ class Results(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.export_csv_window.launch(select_items)
 
 
-    def change_indicies(self):
-
+    def change_indices(self):
         # make sure the gene viewer is on
         if not self.displayGeneViewer.isChecked():
             QtWidgets.QMessageBox.question(self, "Gene Viewer Error",
@@ -129,8 +128,8 @@ class Results(QtWidgets.QMainWindow):
 
 
         # change the start and end values
-        prevTuple = self.geneDict[self.comboBoxGene.currentText()]
-        tempTuple = (self.geneDict[self.comboBoxGene.currentText()][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()))
+        prevTuple = self.geneDict[self.curgene]
+        tempTuple = (self.geneDict[self.curgene][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()))
 
         # make sure that the difference between indicies is not too large
         if abs(tempTuple[1] - tempTuple[2]) > 50000:
@@ -139,21 +138,21 @@ class Results(QtWidgets.QMainWindow):
                                            "The sequence is too long! "
                                            "Please choose indicies that will make the sequence less than 50,000!",
                                            QtWidgets.QMessageBox.Ok)
-            self.lineEditStart.setText(str(self.geneDict[self.comboBoxGene.currentText()][1]))
-            self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
+            self.lineEditStart.setText(str(self.geneDict[self.curgene][1]))
+            self.lineEditEnd.setText(str(self.geneDict[self.curgene][2]))
             return
 
 
         # if the user is using gbff
         if GlobalSettings.mainWindow.gene_viewer_settings.file_type == "gbff":
-            self.geneDict[self.comboBoxGene.currentText()] = tempTuple
-            sequence = GlobalSettings.mainWindow.gene_viewer_settings.gbff_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
-            self.geneNTDict[self.comboBoxGene.currentText()] = sequence
+            self.geneDict[self.curgene] = tempTuple
+            sequence = GlobalSettings.mainWindow.gene_viewer_settings.gbff_sequence_finder(self.geneDict[self.curgene])
+            self.geneNTDict[self.curgene] = sequence
         # if the user is using fna
         elif GlobalSettings.mainWindow.gene_viewer_settings.file_type == "fna":
-            self.geneDict[self.comboBoxGene.currentText()] = tempTuple
-            sequence = GlobalSettings.mainWindow.gene_viewer_settings.fna_sequence_finder(self.geneDict[self.comboBoxGene.currentText()])
-            self.geneNTDict[self.comboBoxGene.currentText()] = sequence
+            self.geneDict[self.curgene] = tempTuple
+            sequence = GlobalSettings.mainWindow.gene_viewer_settings.fna_sequence_finder(self.geneDict[self.curgene])
+            self.geneNTDict[self.curgene] = sequence
 
         # check and see if we need to add lowercase letters
         changeInStart = tempTuple[1] - prevTuple[1]
@@ -162,17 +161,19 @@ class Results(QtWidgets.QMainWindow):
         # check and see if the sequence is extended at all
         # if it is, make the extended part lower-case as opposed to upper case
         if changeInStart != 0 and changeInStart < 0:
-            tempString = self.geneNTDict[self.comboBoxGene.currentText()][:abs(changeInStart)].lower()
-            tempString = tempString + self.geneNTDict[self.comboBoxGene.currentText()][abs(changeInStart):]
-            self.geneNTDict[self.comboBoxGene.currentText()] = tempString
+            tempString = self.geneNTDict[self.curgene][:abs(changeInStart)].lower()
+            tempString = tempString + self.geneNTDict[self.curgene][abs(changeInStart):]
+            self.geneNTDict[self.curgene] = tempString
         if changeInEnd != 0 and changeInEnd > 0:
-            tempString = self.geneNTDict[self.comboBoxGene.currentText()][len(self.geneNTDict[self.comboBoxGene.currentText()]) - abs(changeInEnd):].lower()
-            tempString = self.geneNTDict[self.comboBoxGene.currentText()][:len(self.geneNTDict[self.comboBoxGene.currentText()]) - abs(changeInEnd)] + tempString
-            self.geneNTDict[self.comboBoxGene.currentText()] = tempString
+            tempString = self.geneNTDict[self.curgene][len(self.geneNTDict[self.curgene]) - abs(changeInEnd):].lower()
+            tempString = self.geneNTDict[self.curgene][:len(self.geneNTDict[self.curgene]) - abs(changeInEnd)] + tempString
+            self.geneNTDict[self.curgene] = tempString
 
         # update the gene viewer
         self.checkGeneViewer()
-
+    
+    #def update_curgene(self):
+        
     # this function goes through and deselects all of the Off-Target checkboxes
     # also sets the selectAllShown check box to unchecked as well
     def deselectAll(self):
@@ -210,7 +211,7 @@ class Results(QtWidgets.QMainWindow):
         noMatchString = ""
 
         # reset the gene viewer text
-        self.geneViewer.setText(self.geneNTDict[self.comboBoxGene.currentText()])
+        self.geneViewer.setText(self.geneNTDict[self.curgene])
 
         # check and make sure still is actually highlighted!
         selectedList = self.targetTable.selectedItems()
@@ -234,7 +235,7 @@ class Results(QtWidgets.QMainWindow):
 
 
                 # get the location
-                location = int(locationString) - self.geneDict[self.comboBoxGene.currentText()][1]
+                location = int(locationString) - self.geneDict[self.curgene][1]
 
                 # get which way it's moving, and the real location. This is for checking edge cases
                 if "Cas12" in self.endonucleaseBox.currentText():
@@ -336,9 +337,9 @@ class Results(QtWidgets.QMainWindow):
     # if it is un-marked, it hides the data
     def checkGeneViewer(self):
         if self.displayGeneViewer.isChecked():
-            self.lineEditStart.setText(str(self.geneDict[self.comboBoxGene.currentText()][1]))
-            self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
-            self.geneViewer.setText(self.geneNTDict[self.comboBoxGene.currentText()])
+            self.lineEditStart.setText(str(self.geneDict[self.curgene][1]))
+            self.lineEditEnd.setText(str(self.geneDict[self.curgene][2]))
+            self.geneViewer.setText(self.geneNTDict[self.curgene])
         elif not self.displayGeneViewer.isChecked():
             self.lineEditStart.clear()
             self.lineEditEnd.clear()
@@ -370,6 +371,7 @@ class Results(QtWidgets.QMainWindow):
         # organism = GlobalSettings.mainWindow.shortHand[full_org]
 
         endoChoice = self.endonucleaseBox.currentText().split("|")
+        print(endoChoice)
 
         # make sure the user actually selects a new endonuclease
         if self.endo == endoChoice:
@@ -530,31 +532,31 @@ class Results(QtWidgets.QMainWindow):
     # Main Function for updating the Table.  Connected to all filter buttons and the Gene toggling of the combobox.
     ###############################################################################################################
     def displayGeneData(self):
-
-        curgene = str(self.comboBoxGene.currentText())  # Gets the current gene
+        self.curgene = str(self.comboBoxGene.currentText())  # Gets the current gene
         # Creates the set object from the list of the current gene:
-        if curgene=='' or len(self.AllData)<1:
+        if self.curgene=='' or len(self.AllData)<1:
             return
         
         # Loop through dictionary and link org dropdown to dictionary entry
         for entry in self.AllData.keys():
-            if curgene.split(":")[0] in entry:
-                curgene = entry
+            if self.curgene.split(":")[0] in entry:
+                self.curgene = entry
 
         subset_display = set()
         # set the start and end numbers, as well as set the geneViewer text, if the displayGeneViewer is checked
         if self.displayGeneViewer.isChecked():
-            self.lineEditStart.setText(str(self.geneDict[self.comboBoxGene.currentText()][1]))
-            self.lineEditEnd.setText(str(self.geneDict[self.comboBoxGene.currentText()][2]))
-            self.geneViewer.setText(self.geneNTDict[self.comboBoxGene.currentText()])
+            self.lineEditStart.setText(str(self.geneDict[self.curgene][1]))
+            self.lineEditEnd.setText(str(self.geneDict[self.curgene][2]))
+            self.geneViewer.setText(self.geneNTDict[self.curgene])
 
         # if this checkBox is checked, remove the single endo
         if self.cotarget_checkbox.isChecked():
-            self.remove_single_endo(curgene)
+            gene = self.curgene
+            self.remove_single_endo(gene)
 
         # Removing all sequences below minimum score and creating the set:
         # for each list item
-        for item in self.AllData[curgene]:
+        for item in self.AllData[self.curgene]:
             # for each tuple item
             for i in range(len(item)):
                 if int(item[i][3]) > int(self.minScoreLine.text()):
@@ -608,12 +610,12 @@ class Results(QtWidgets.QMainWindow):
         self.targetTable.resizeColumnsToContents()
 
     # this function is only entered if the user checks the show only cotargeted sequence checkbox
-    def remove_single_endo(self, curgene):
+    def remove_single_endo(self, gene):
         removalDict = dict()
         # go through and figure out which ones need to be shown
-        for i in range(len(self.AllData[curgene])):
-            for j in range(len(self.AllData[curgene][i])):
-                endoData = self.AllData[curgene][i][j][5].split("|")
+        for i in range(len(self.AllData[gene])):
+            for j in range(len(self.AllData[gene][i])):
+                endoData = self.AllData[gene][i][j][5].split("|")
                 if len(endoData) == 1:
                     if i not in removalDict:
                         removalDict[i] = list()
@@ -625,13 +627,13 @@ class Results(QtWidgets.QMainWindow):
             # for the reverse of that list. This is to keep the program from crashing
             # easier than building a new list honestly
             for index in reversed(removalDict[item]):
-                self.AllData[curgene][item].pop(index)
+                self.AllData[gene][item].pop(index)
 
     # this function goes through and combines table rows that have the same location and PAM dir
     # it edits the dictionary data itself
     # currently it does not take the PAM direction into account
-    # parameter curgene:  the key to which part in the dictionary to look at
-    def combine_coTargets(self, curgene):
+    # parameter genename:  the key to which part in the dictionary to look at
+    def combine_coTargets(self, genename):
         deletingDict = dict()
         endoList = list()
 
@@ -654,35 +656,35 @@ class Results(QtWidgets.QMainWindow):
 
 
         # get the endo list data
-        for i in range(len(self.AllData[curgene])):
+        for i in range(len(self.AllData[genename])):
             # if one of them is empty, just return because co-targeting is useless for that one
-            if len(self.AllData[curgene][i]) == 0:
+            if len(self.AllData[genename][i]) == 0:
                 return
-            endoList.append(self.AllData[curgene][i][0][5])
+            endoList.append(self.AllData[genename][i][0][5])
 
-        # for each endoNuclease in the curGene block
-        for i in range(len(self.AllData[curgene])):
+        # for each endoNuclease in the genename block
+        for i in range(len(self.AllData[genename])):
             endoData1 = endoList[i]
             # for each target in that gene
-            for j in range(len(self.AllData[curgene][i])):
+            for j in range(len(self.AllData[genename][i])):
                 # get first locations endo
-                locationData1 = self.AllData[curgene][i][j][0]
-                sequenceData1 = self.AllData[curgene][i][j][1]
-                pamData1 = self.AllData[curgene][i][j][2]
-                scoreData1 = self.AllData[curgene][i][j][3]
-                strandData1 = self.AllData[curgene][i][j][4]
+                locationData1 = self.AllData[genename][i][j][0]
+                sequenceData1 = self.AllData[genename][i][j][1]
+                pamData1 = self.AllData[genename][i][j][2]
+                scoreData1 = self.AllData[genename][i][j][3]
+                strandData1 = self.AllData[genename][i][j][4]
 
-                # for each endoNuclease in the curGene block
-                for k in range(len(self.AllData[curgene])):
+                # for each endoNuclease in the genename block
+                for k in range(len(self.AllData[genename])):
                     # if k == i then we are on the same endo target list, so break out because there can't be any combinations
                     if k == i:
                         break
                     endoData2 = endoList[k]
                     # for each target in that gene
-                    for l in range(len(self.AllData[curgene][k])):
-                        locationData2 = self.AllData[curgene][k][l][0]
-                        strandData2 = self.AllData[curgene][k][l][4]
-                        pamData2 = self.AllData[curgene][k][l][2]
+                    for l in range(len(self.AllData[genename][k])):
+                        locationData2 = self.AllData[genename][k][l][0]
+                        strandData2 = self.AllData[genename][k][l][4]
+                        pamData2 = self.AllData[genename][k][l][2]
 
                         # check which PAM is longer, and store the longer one. Otherwise, just store the first one
                         if len(pamData1) > len(pamData2):
@@ -701,11 +703,11 @@ class Results(QtWidgets.QMainWindow):
                         # check if can be combined
                         if locationData1 == locationData2 and endoData1 != endoData2 and endoData2 not in endoData1:
                             if dir1 == dir2 and strandData1 == strandData2:
-                                storeEndo = self.AllData[curgene][i][j][5]
+                                storeEndo = self.AllData[genename][i][j][5]
                                 if endoData2 not in storeEndo:
                                     storeEndo = storeEndo + "|" + endoData2
                                 # combine the endo data
-                                    self.AllData[curgene][i][j] = (locationData1, sequenceData1, storePam, scoreData1, strandData1, storeEndo)
+                                    self.AllData[genename][i][j] = (locationData1, sequenceData1, storePam, scoreData1, strandData1, storeEndo)
 
                                 # store which ones to delete
                                 if k not in deletingDict:
@@ -718,7 +720,7 @@ class Results(QtWidgets.QMainWindow):
             # go in the reverse of that list. This is to keep the program from crashing.
             # it is easier than building a new list honestly
             for index in reversed(deletingDict[item]):
-                self.AllData[curgene][item].pop(index)
+                self.AllData[genename][item].pop(index)
 
     ########################################## END UPDATING FUNCTION #############################################
 
