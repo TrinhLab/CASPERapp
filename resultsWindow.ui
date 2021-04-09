@@ -401,25 +401,6 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QPushButton" name="changeEndoButton">
-        <property name="minimumSize">
-         <size>
-          <width>250</width>
-          <height>32</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>32</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Change Endonulcease</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="2">
        <widget class="QPushButton" name="highlight_gene_viewer_button">
         <property name="minimumSize">

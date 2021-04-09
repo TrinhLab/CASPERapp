@@ -55,7 +55,6 @@ class Results(QtWidgets.QMainWindow):
         self.actionOpen.triggered.connect(self.open_data)
         self.actionOff_Target_Analysis.triggered.connect(self.Off_Target_Analysis)
         self.actionCoTargeting.triggered.connect(self.open_cotarget)
-        self.changeEndoButton.clicked.connect(self.changeEndonuclease)
         self.displayGeneViewer.stateChanged.connect(self.checkGeneViewer)
         self.cotarget_checkbox.stateChanged.connect(self.prep_cotarget_checkbox)
         self.highlight_gene_viewer_button.clicked.connect(self.highlight_gene_viewer)
@@ -368,7 +367,7 @@ class Results(QtWidgets.QMainWindow):
     # unless the user closes out of the Results window
     def changeEndonuclease(self):
         full_org = str(GlobalSettings.mainWindow.orgChoice.currentText())
-        organism = GlobalSettings.mainWindow.shortHand[full_org]
+        # organism = GlobalSettings.mainWindow.shortHand[full_org]
 
         endoChoice = self.endonucleaseBox.currentText().split("|")
 
@@ -386,16 +385,17 @@ class Results(QtWidgets.QMainWindow):
         else:
             self.cotarget_checkbox.setEnabled(False)
             self.cotarget_checkbox.setChecked(0)
-
-        self.transfer_data(organism, endoChoice, GlobalSettings.CSPR_DB, self.geneDict,
+        # print(endoChoice)
+        # print(GlobalSettings.mainWindow.organisms_to_files[full_org])
+        self.transfer_data(full_org, GlobalSettings.mainWindow.organisms_to_files[full_org], endoChoice, GlobalSettings.CSPR_DB, self.geneDict,
                            self.geneNTDict, "")
 
     # Function that is used to set up the results page.
     # it calls get_targets, which in turn calls display data
-    def transfer_data(self, org, cspr_file, endo, path, geneposdict, geneNTSeqDict, fasta):
+    def transfer_data(self, org, org_files, endo, path, geneposdict, geneNTSeqDict, fasta):
         # set all of the classes variables
         self.org = org
-        self.cspr_file = cspr_file
+        self.org_files = org_files
         self.endo = endo
         self.directory = path
         self.fasta_ref = fasta
@@ -451,6 +451,11 @@ class Results(QtWidgets.QMainWindow):
     # it is called from the coTargetting class, when the user hits submit
     # myBool is whether or not to change the endoChoice comboBox
     def populate_cotarget_table(self, myBool = True):
+        try:
+            self.endonucleaseBox.currentIndexChanged.disconnect()
+        except:
+            pass
+
         # make a string of the combinitation, separated by commas's
         endoBoxString = ""
         for i in range(len(self.co_target_endo_list)):
@@ -476,8 +481,9 @@ class Results(QtWidgets.QMainWindow):
         self.cotarget_checkbox.setEnabled(True)
         self.cotarget_checkbox.setChecked(0)
 
+        self.endonucleaseBox.currentIndexChanged.connect(self.changeEndonuclease)
         # add it to the endoBox choices, and then call transfer_data
-        self.transfer_data(self.org, self.cspr_file, self.co_target_endo_list, GlobalSettings.CSPR_DB, self.geneDict, self.geneNTDict, "")
+        self.transfer_data(self.org, self.org_files, self.co_target_endo_list, GlobalSettings.CSPR_DB, self.geneDict, self.geneNTDict, "")
 
     # prep function for the checkbox for cotargeting
     # if the checkbox is checked, just go ahead and displayGeneData
@@ -495,9 +501,9 @@ class Results(QtWidgets.QMainWindow):
         #get the right files
         for endo in self.endo:
             if platform.system() == "Windows":
-                file = self.directory + "\\" + self.cspr_file
+                file = self.directory + "\\" + self.org_files[endo][0]
             else:
-                file = self.directory + "/" + self.cspr_file
+                file = self.directory + "/" + self.org_files[endo][0]
 
             #create the parser, read the targets store it. then display the GeneData screen
             parser = CSPRparser(file)
