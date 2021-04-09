@@ -280,6 +280,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     # it is very similar to the gather settings, how ever it stores the data instead of calling the Annotation Window class
     # it moves the data onto the generateLib function, and then opens that window
     def prep_genlib(self):
+        #print("prep genlib")
         # make sure the user actually inputs something
         inputstring = str(self.geneEntryField.toPlainText())
         if (inputstring.startswith("Example Inputs:") or inputstring == ""):
@@ -326,6 +327,12 @@ class CMainWindow(QtWidgets.QMainWindow):
                 for item in self.searches:
                     tempSum += len(self.searches[item])
 
+                self.newsearches = {}
+                #self.newsearches[]
+                # print(self.searches['d'])
+                #
+                # print("")
+                # print(self.checkBoxes)
                 # warn the user if the number is greater than 50
                 if tempSum > 50:
                     error = QtWidgets.QMessageBox.question(self, "Many Matches Found",
@@ -368,7 +375,6 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.run_results("sequence", sinput)
 
 
-
     # ---- Following functions are for running the auxillary algorithms and windows ---- #
     # this function is parses the annotation file given, and then goes through and goes onto results
     # it will call other versions of collect_table_data and fill_table that work with these file types
@@ -377,6 +383,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     # please make sure the gbff parser stores the data in the same way
     # so far the gff files seems to all be different. Need to think about how we want to parse it
     def run_results_own_ncbi_file(self, inputstring, fileName, openAnnoWindow=True):
+        #print("run ncbi results")
         self.annotation_parser = Annotation_Parser()
         self.annotation_parser.annotationFileName = fileName
         fileType = self.annotation_parser.find_which_file_version()
@@ -473,6 +480,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def run_results(self, inputtype, inputstring, openAnnoWindow=True):
+        #print("run results")
         if(str(self.annotation_files.currentText()).find('.gbff') == -1):
             QtWidgets.QMessageBox.information(self, "Genomebrowser Error", "Filetype must be GBFF.",
                                               QtWidgets.QMessageBox.Ok)
@@ -546,7 +554,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.checked_info[tempString] = (int(searchIndicies[0]), int(searchIndicies[1]), int(searchIndicies[2]))
 
             self.progressBar.setValue(50)
-            self.Results.transfer_data(full_org, self.organisms_to_files[full_org][str(self.endoChoice.currentText())][0], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, "")
+            self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, "")
             self.progressBar.setValue(100)
             self.pushButton_ViewTargets.setEnabled(True)
 
@@ -601,6 +609,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             outFile.close()
             self.progressBar.setValue(55)
 
+
     def launch_newGenome(self):
         self.hide()
         self.newGenome.mwfg.moveCenter(self.newGenome.cp)  ##Center window
@@ -622,6 +631,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                                        "Ensure that the annotation file corresponds to the exact species and strain used for Analyze New Genome.\n\nMismatched annotation files will inhibit downstream analyses.",
                                        QtWidgets.QMessageBox.Ok)
         self.ncbi.show()
+
 
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
     def collect_table_data_nonkegg(self):
@@ -653,10 +663,10 @@ class CMainWindow(QtWidgets.QMainWindow):
                             if item[1] == match:
                                 holder = (match[1], match[3], match[4])
                                 self.checked_info[item[0]] = holder
-
+        #print(self.checked_info)
         # now call transfer data
         self.progressBar.setValue(95)
-        self.Results.transfer_data(full_org, self.organisms_to_files[full_org][str(self.endoChoice.currentText())][0], [str(self.endoChoice.currentText())], os.getcwd(),
+        self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
                                    self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
@@ -714,7 +724,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         #self.orgChoice.setEnabled(seq_checker)
 
 
-
     def fill_annotation_dropdown(self):
         temp_list = list()
         self.annotation_files.clear()
@@ -724,6 +733,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         temp_list.sort(key=str.lower)
         for file in temp_list:
             self.annotation_files.addItem(file)
+
 
     def make_dictonary(self):
         url = "https://www.genome.jp/dbget-bin/get_linkdb?-t+genes+gn:" + self.TNumbers[
@@ -925,6 +935,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         self.Results.mwfg.moveCenter(self.Results.cp)  ##Center window
         self.Results.move(self.Results.mwfg.topLeft())  ##Center window
+        self.Results.endonucleaseBox.currentIndexChanged.connect(self.Results.changeEndonuclease)
         self.Results.show()
 
 
