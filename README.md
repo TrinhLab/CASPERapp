@@ -19,7 +19,7 @@ the warnings.
 6) Run CASPER!  Simply cd into the CASPERapp-master directory (wherever you put it) and run the command: "python3 main.py"
 CASPER will launch and you will be good to go!
 
-Any problems please email Brian Mendoza at bmendoz1@vols.utk.edu
+Any problems please email David Dooley at ddooley2@vols.utk.edu
 
 ### Python Dependencies Needed
 - PyQt5
