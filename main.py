@@ -908,7 +908,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.Results.endonucleaseBox.currentIndexChanged.disconnect()        
         except:
             pass
-
         # set Results endo combo box
         self.Results.endonucleaseBox.clear()
 
