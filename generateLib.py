@@ -65,9 +65,18 @@ class genLibrary(QtWidgets.QDialog):
 
         # setting the path and file name fields
         index1 = self.cspr_file.find('.')
-        index2 = self.cspr_file.rfind('/')
+        if platform.system() == "Windows":
+            index2 = self.cspr_file.rfind('\\')
+        else:
+            index2 = self.cspr_file.rfind('/')
+
         self.filename_input.setText(self.cspr_file[index2 + 1:index1] + '_lib.txt')
-        self.output_path.setText(GlobalSettings.CSPR_DB + "/")
+
+
+        if platform.system() == "Windows":
+            self.output_path.setText(GlobalSettings.CSPR_DB + "\\")
+        else:
+            self.output_path.setText(GlobalSettings.CSPR_DB + "/")
 
         # depending on the type of file, build the dictionary accordingly
         self.build_dict_non_kegg()
@@ -93,7 +102,11 @@ class genLibrary(QtWidgets.QDialog):
 
     # this function takes all of the cspr data and compresses it again for off-target usage
     def compress_file_off(self):
-        f = open(GlobalSettings.CSPR_DB + "/off_compressed.txt", 'w')
+        if platform.system() == "Windows":
+            file = GlobalSettings.CSPR_DB + "\\off_compressed.txt"
+        else:
+            file = GlobalSettings.CSPR_DB + "/off_compressed.txt"
+        f = open(file, 'w')
         for gene in self.cspr_data:
             for j in range(len(self.cspr_data[gene])):
                 loc = self.cspr_data[gene][j][0]
@@ -109,7 +122,11 @@ class genLibrary(QtWidgets.QDialog):
     # this function parses the temp_off file, which holds the off-target analysis results
     # it also updates each target in the cspr_data dictionary to replace the endo with the target's results in off-target
     def parse_off_file(self):
-        f = open(GlobalSettings.CSPR_DB + '/temp_off.txt')
+        if platform.system() == "Windows":
+            file = GlobalSettings.CSPR_DB + "\\temp_off.txt"
+        else:
+            file = GlobalSettings.CSPR_DB + "/temp_off.txt"
+        f = open(file, "r")
         file_data = f.read().split('\n')
         f.close()
         scoreDict = dict()
@@ -227,6 +244,7 @@ class genLibrary(QtWidgets.QDialog):
         if self.off_target_running:
             return
         output_file = self.output_path.text() + self.filename_input.text()
+
         minScore = int(self.minON_comboBox.currentText())
         num_targets = int(self.numGenescomboBox.currentText())
         fiveseq = ''
@@ -376,17 +394,16 @@ class genLibrary(QtWidgets.QDialog):
     # this is the version that builds it from data from feature_table, gbff, or gff
     # builds it exactly as Brian built it in the files given
     def build_dict_non_kegg(self):
-        for search in self.anno_data:
-            for gene in self.anno_data[search]:
-                descript = gene.split(';')
-                temp_descript = descript[0]
-                if temp_descript == 'hypothetical protein':
-                    temp_descript = temp_descript + " " + str(self.anno_data[search][gene][0][3])
+        for gene in self.anno_data:
+            descript = gene.split(';')
+            temp_descript = descript[0]
+            if temp_descript == 'hypothetical protein':
+                temp_descript = temp_descript + " " + str(self.anno_data[gene][0][3])
 
-                temp_descript = temp_descript + '||' +  descript[len(descript) - 1]
+            temp_descript = temp_descript + '||' +  descript[len(descript) - 1]
 
-                self.gen_lib_dict[temp_descript] = [self.anno_data[search][gene][0][1], self.anno_data[search][gene][0][3], self.anno_data[search][gene][0][4], self.anno_data[search][gene][0][5]]
-
+            self.gen_lib_dict[temp_descript] = [self.anno_data[gene][0][1], self.anno_data[gene][0][3], self.anno_data[gene][0][4], self.anno_data[gene][0][5]]
+        #print(self.gen_lib_dict)
 
     # generate function taken from Brian's code
     def generate(self,num_targets_per_gene, score_limit, space, output_file, fiveseq):

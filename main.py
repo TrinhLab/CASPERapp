@@ -202,6 +202,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.pushButton_FindTargets.clicked.connect(self.gather_settings)
         self.pushButton_ViewTargets.clicked.connect(self.view_results)
         self.pushButton_ViewTargets.setEnabled(False)
+        self.GenerateLibrary.setEnabled(False)
         self.radioButton_Gene.clicked.connect(self.toggle_annotation)
         self.radioButton_Position.clicked.connect(self.toggle_annotation)
 
@@ -277,8 +278,10 @@ class CMainWindow(QtWidgets.QMainWindow):
             # call the respective function
             self.progressBar.setValue(10)
             if self.radioButton_Gene.isChecked():
-                ginput = inputstring.split(',')
-                found_matches_bool = self.run_results("gene", ginput, openAnnoWindow=False)
+                if len(self.checked_info) > 0:
+                    found_matches_bool = True
+                else:
+                    found_matches_bool = False
             elif self.radioButton_Position.isChecked() or self.radioButton_Sequence.isChecked():
                 QtWidgets.QMessageBox.question(self, "Error", "Generate Library can only work with gene names (Locus ID).",
                                                QtWidgets.QMessageBox.Ok)
@@ -305,16 +308,19 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.progressBar.setValue(100)
 
                 # calculate the total number of matches found
-                tempSum = 0
-                for item in self.searches:
-                    tempSum += len(self.searches[item])
-
-                self.newsearches = {}
-                #self.newsearches[]
-                # print(self.searches['d'])
                 #
-                # print("")
-                # print(self.checkBoxes)
+                # print(self.checked_info)
+                # print(self.searches['d'].keys())
+                genes = self.checked_info.keys()
+                self.newsearches = {}
+
+                for gene in genes:
+                    for searches in self.searches.keys():
+                        if gene in self.searches[searches].keys():
+                            self.newsearches[gene] = self.searches[searches][gene]
+
+                tempSum = len(self.checked_info)
+
                 # warn the user if the number is greater than 50
                 if tempSum > 50:
                     error = QtWidgets.QMessageBox.question(self, "Many Matches Found",
@@ -328,7 +334,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                         self.progressBar.setValue(0)
                         return -2
 
-                self.genLib.launch(self.searches,cspr_file, kegg_non)
+                self.genLib.launch(self.newsearches,cspr_file, kegg_non)
             else:
                 self.progressBar.setValue(0)
 
@@ -366,6 +372,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     # so far the gff files seems to all be different. Need to think about how we want to parse it
     def run_results_own_ncbi_file(self, inputstring, fileName, openAnnoWindow=True):
         #print("run ncbi results")
+
         self.annotation_parser = Annotation_Parser()
         self.annotation_parser.annotationFileName = fileName
         fileType = self.annotation_parser.find_which_file_version()
@@ -539,6 +546,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, "")
             self.progressBar.setValue(100)
             self.pushButton_ViewTargets.setEnabled(True)
+            self.GenerateLibrary.setEnabled(True)
 
         # sequence code below
         if inputtype == "sequence":
@@ -652,6 +660,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                                    self.checked_info, self.check_ntseq_info, "")
         self.progressBar.setValue(100)
         self.pushButton_ViewTargets.setEnabled(True)
+        self.GenerateLibrary.setEnabled(True)
 
 
     # ------------------------------------------------------------------------------------------------------ #
@@ -977,6 +986,10 @@ class StartupWindow(QtWidgets.QDialog):
         self.info_path = os.getcwd()
         self.gdirectory = self.check_dir()
         GlobalSettings.CSPR_DB = self.gdirectory
+        if platform.system() == "Windows":
+            GlobalSettings.CSPR_DB = GlobalSettings.CSPR_DB.replace("/","\\")
+        else:
+            GlobalSettings.CSPR_DB = GlobalSettings.CSPR_DB.replace("\\","/")
         self.lineEdit.setText(self.gdirectory)
 
         self.pushButton_3.clicked.connect(self.changeDir)
@@ -1016,6 +1029,10 @@ class StartupWindow(QtWidgets.QDialog):
         self.lineEdit.setText(mydir)
         self.gdirectory = mydir
         GlobalSettings.CSPR_DB = mydir
+        if platform.system() == "Windows":
+            GlobalSettings.CSPR_DB = GlobalSettings.CSPR_DB.replace("/","\\")
+        else:
+            GlobalSettings.CSPR_DB = GlobalSettings.CSPR_DB.replace("\\","/")
 
 
     def errormsgmulti(self):
