@@ -422,7 +422,7 @@
             </size>
            </property>
            <property name="text">
-            <string>NCBI Tool</string>
+            <string>NCBI File Search</string>
            </property>
           </widget>
          </item>
