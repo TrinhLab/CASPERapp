@@ -56,27 +56,27 @@ class Results(QtWidgets.QMainWindow):
         self.actionOff_Target_Analysis.triggered.connect(self.Off_Target_Analysis)
         self.actionCoTargeting.triggered.connect(self.open_cotarget)
         self.displayGeneViewer.stateChanged.connect(self.checkGeneViewer)
-        self.cotarget_checkbox.stateChanged.connect(self.prep_cotarget_checkbox)
+        #self.cotarget_checkbox.stateChanged.connect(self.prep_cotarget_checkbox)
         self.highlight_gene_viewer_button.clicked.connect(self.highlight_gene_viewer)
         self.checkBoxSelectAll.stateChanged.connect(self.selectAll)
-        self.pushButton_Deselect_All.clicked.connect(self.deselectAll)
-        self.gene_viewer_settings_button.clicked.connect(self.changeGeneViewerSettings)
+        #self.pushButton_Deselect_All.clicked.connect(self.deselectAll)
+        #self.gene_viewer_settings_button.clicked.connect(self.changeGeneViewerSettings)
         self.change_start_end_button.clicked.connect(self.change_indices)
         self.actionTo_CSV.triggered.connect(self.open_export_to_csv)
 
         #self.targetTable.itemSelectionChanged.connect(self.item_select)
-        self.minScoreLine.setText("0")
+        #self.minScoreLine.setText("0")
 
         # Connecting the filters to the displayGeneData function
-        self.fivegseqCheckBox.stateChanged.connect(self.displayGeneData)
-        self.minScoreLine.textChanged.connect(self.displayGeneData)
+        #self.fivegseqCheckBox.stateChanged.connect(self.displayGeneData)
+        #self.minScoreLine.textChanged.connect(self.displayGeneData)
 
         # Setting up the score filter:
-        self.scoreSlider.setMinimum(0)
-        self.scoreSlider.setMaximum(100)
-        self.scoreSlider.setTracking(False)
+        #self.scoreSlider.setMinimum(0)
+        #self.scoreSlider.setMaximum(100)
+        #self.scoreSlider.setTracking(False)
 
-        self.scoreSlider.valueChanged.connect(self.update_score_filter)
+        #self.scoreSlider.valueChanged.connect(self.update_score_filter)
 
         #bool used to make sure only 1 instance of the OffTarget window is created
         self.first_boot = True

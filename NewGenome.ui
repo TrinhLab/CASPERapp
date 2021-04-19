@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>850</width>
-    <height>850</height>
+    <height>858</height>
    </rect>
   </property>
   <property name="font">
@@ -762,27 +762,9 @@ search parameters</string>
      <x>0</x>
      <y>0</y>
      <width>850</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>File</string>
-    </property>
-    <addaction name="actionExisting_Organism"/>
-   </widget>
-   <widget class="QMenu" name="menuPath">
-    <property name="title">
-     <string>Path</string>
-    </property>
-    <addaction name="actionChange_Directory"/>
-   </widget>
-   <widget class="QMenu" name="menuStatistics">
-    <property name="title">
-     <string>Statistics</string>
-    </property>
-    <addaction name="actionView_Statistics"/>
-   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
@@ -790,9 +772,6 @@ search parameters</string>
     <addaction name="visit_repo"/>
     <addaction name="go_ncbi"/>
    </widget>
-   <addaction name="menuFile"/>
-   <addaction name="menuPath"/>
-   <addaction name="menuStatistics"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionExisting_Organism">
