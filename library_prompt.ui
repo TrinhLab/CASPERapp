@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>803</width>
-    <height>435</height>
+    <width>848</width>
+    <height>490</height>
    </rect>
   </property>
   <property name="font">
@@ -226,7 +226,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Number of guides per gene/loci:  </string>
+        <string>Number of guides per gene:</string>
        </property>
       </widget>
      </item>

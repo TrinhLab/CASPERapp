@@ -456,7 +456,7 @@ class genLibrary(QtWidgets.QDialog):
             if checkStartandEndBool:
                 for i in range(len(target_list) - 1, -1, -1):
                     totalDistance = self.gen_lib_dict[gene][2] - self.gen_lib_dict[gene][1]
-                    target_loc = target_list[i][0] - self.gen_lib_dict[gene][1]
+                    target_loc = int(target_list[i][0]) - int(self.gen_lib_dict[gene][1])
 
                     myRatio = target_loc / totalDistance
 
