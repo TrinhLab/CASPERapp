@@ -23,6 +23,17 @@ class genLibrary(QtWidgets.QDialog):
         self.setWindowTitle('Generate Library')
         self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + 'cas9image.png'))
 
+        groupbox_style = """
+        QGroupBox:title{subcontrol-origin: margin;
+                        left: 10px;
+                        padding: 0 5px 0 5px;}
+        QGroupBox#grna_filters{border: 2px solid rgb(111,181,110);
+                        border-radius: 9px;
+                        font: 14pt "Arial";
+                        font: bold;
+                        margin-top: 10px;}"""
+        self.grna_filters.setStyleSheet(groupbox_style)
+
         # button connections
         self.cancel_button.clicked.connect(self.cancel_function)
         self.BrowseButton.clicked.connect(self.browse_function)
@@ -81,11 +92,8 @@ class genLibrary(QtWidgets.QDialog):
         # depending on the type of file, build the dictionary accordingly
         self.build_dict_non_kegg()
 
-        #print(self.gen_lib_dict)
-        # get the data from the cspr file
+        # get the gRNA data from the cspr file
         self.cspr_data = self.parser.gen_lib_parser(self.gen_lib_dict, GlobalSettings.mainWindow.endoChoice.currentText())
-
-
         self.show()
 
 
@@ -325,7 +333,7 @@ class genLibrary(QtWidgets.QDialog):
                 self.compress_file_off()
                 self.get_offTarget_data(num_targets, minScore, spaceValue, output_file, fiveseq)
         else:
-        # actually call the generaete function
+        # actually call the generate function
             did_work = self.generate(num_targets, minScore, spaceValue, output_file, fiveseq)
 
             if did_work != -1:
@@ -395,15 +403,13 @@ class genLibrary(QtWidgets.QDialog):
     # builds it exactly as Brian built it in the files given
     def build_dict_non_kegg(self):
         for gene in self.anno_data:
-            descript = gene.split(';')
-            temp_descript = descript[0]
-            if temp_descript == 'hypothetical protein':
-                temp_descript = temp_descript + " " + str(self.anno_data[gene][0][3])
+            temp = gene.split(';')
+            gene_id = temp[0]
+            description = temp[-1]
+            gene_name = temp[len(temp)-2]
+            ### Order: chromosome number, gene start, gene end, dir of gene, gene description, gene name/locus tag
+            self.gen_lib_dict[gene_id] = [self.anno_data[gene][0][1], self.anno_data[gene][0][3], self.anno_data[gene][0][4], self.anno_data[gene][0][5],description,gene_name]
 
-            temp_descript = temp_descript + '||' +  descript[len(descript) - 1]
-
-            self.gen_lib_dict[temp_descript] = [self.anno_data[gene][0][1], self.anno_data[gene][0][3], self.anno_data[gene][0][4], self.anno_data[gene][0][5]]
-        #print(self.gen_lib_dict)
 
     # generate function taken from Brian's code
     def generate(self,num_targets_per_gene, score_limit, space, output_file, fiveseq):
@@ -414,32 +420,35 @@ class genLibrary(QtWidgets.QDialog):
         endNum = float(self.end_target_range.text())
         checkStartandEndBool = False
         if startNum != 0.0 or endNum != 100.0:
-            startNum = startNum / 100
-            endNum = endNum / 100
-            checkStartandEndBool = True
+            if startNum >= 0.0 and endNum <= 100.0:
+                startNum = startNum / 100
+                endNum = endNum / 100
+                checkStartandEndBool = True
+            else:
+                QtWidgets.QMessageBox.question(self, "Invalid Targeting Range:",
+                                           "Please select a targeting range between 0 and 100.",
+                                           QtWidgets.QMessageBox.Ok)
+                return -1
 
         for gene in self.gen_lib_dict:
-            #print(self.gen_lib_dict[gene])
-            target_list = self.cspr_data[gene]  # Gets the chromosome the gene is on
+            target_list = self.cspr_data[gene]  # Gets the gRNAs for given gene 
 
             #target_list = chrom_list[k:l+1]
             # Reverse the target list if the gene is on negative strand:
             if self.gen_lib_dict[gene][3] == "-":
                 target_list.reverse()
 
-
             # Filter out the guides with low scores and long strings of T's
             # also store the ones deleted if the user selects 'modify search parameters'
             if self.modifyParamscheckBox.isChecked():
                 deletedDict[gene] = list()
-            for i in range(len(target_list) - 1, -1, -1):
+            for i in range(len(target_list) - 1, -1, -1): ### Start at end and move backwards through list
                 # check the target_range here
                 if int(target_list[i][3]) < int(score_limit):
                     if self.modifyParamscheckBox.isChecked():
                         deletedDict[gene].append(target_list[i])
                     target_list.pop(i)
-                # check for T's here
-                # what is this??? and shouldn't it be pulled out into its own loop?
+                # check for gRNAs with poly T regions here
                 elif re.search("T{5,10}", target_list[i][1]) is not None:
                     if self.modifyParamscheckBox.isChecked():
                         deletedDict[gene].append(target_list[i])
@@ -447,7 +456,7 @@ class genLibrary(QtWidgets.QDialog):
 
             # check for the fiveseq
             if fiveseq != '':
-                for i in range(len(target_list) - 1, -1, -1):
+                for i in range(len(target_list) - 1, -1, -1): ### Start at end and move backwards through list
                     if not target_list[i][1].startswith(fiveseq.upper()):
                         if self.modifyParamscheckBox.isChecked():
                             deletedDict[gene].append(target_list[i])
@@ -456,15 +465,14 @@ class genLibrary(QtWidgets.QDialog):
             if checkStartandEndBool:
                 for i in range(len(target_list) - 1, -1, -1):
                     totalDistance = self.gen_lib_dict[gene][2] - self.gen_lib_dict[gene][1]
-                    target_loc = int(target_list[i][0]) - int(self.gen_lib_dict[gene][1])
-
+                    target_loc = abs(int(target_list[i][0])) - int(self.gen_lib_dict[gene][1])
                     myRatio = target_loc / totalDistance
 
                     if not (startNum <= myRatio <= endNum):
                         if self.modifyParamscheckBox.isChecked():
                             deletedDict[gene].append(target_list[i])
                         target_list.pop(i)
-            # if the user selected off-targetting, check to see that the targets do not exceed the selected max score
+            # if the user selected off-targeting, check to see that the targets do not exceed the selected max score
             if self.find_off_Checkbox.isChecked():
                 maxScore = float(self.maxOFF_comboBox.text())
                 for i in range(len(target_list) - 1, -1, -1):
@@ -514,14 +522,6 @@ class genLibrary(QtWidgets.QDialog):
                             endo = deletedDict[gene][i][5]
                             self.Output[gene].append((loc, seq, pam, score, strand, endo))
 
-        """
-        for essential in self.Output:
-            print(essential)
-            for i in range(len(self.Output[essential])):
-                print('\t', self.Output[essential][i])
-        print('***********************')
-        """
-
         # Now output to the file
         try:
             f = open(output_file, 'w')
@@ -539,15 +539,16 @@ class genLibrary(QtWidgets.QDialog):
             elif not self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
                 f.write('Gene Name,Sequence\n')
 
-            for essential in self.Output:
+            for gene in self.Output:
                 i = 0
-                for target in self.Output[essential]:
+                gene_name = self.gen_lib_dict[gene][-1]
+                for target in self.Output[gene]:
                     # check to see if the target did not match the user's parameters and they selected 'modify'
                     # if the target has an error, put 2 asterisks in front of the target sequence
                     if '*' in target[4]:
-                        tag_id = "**" + essential + "-" + str(i + 1)
+                        tag_id = "**" + gene_name + "-" + str(i + 1)
                     else:
-                        tag_id = essential + "-" + str(i + 1)
+                        tag_id = gene_name + "-" + str(i + 1)
                     i += 1
 
                     if self.to_csv_checkbox.isChecked():
@@ -574,11 +575,3 @@ class genLibrary(QtWidgets.QDialog):
         except Exception as e:
             print(e)
             return
-
-
-
-
-
-
-
-
