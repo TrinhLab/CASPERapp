@@ -27,12 +27,16 @@ class genLibrary(QtWidgets.QDialog):
         QGroupBox:title{subcontrol-origin: margin;
                         left: 10px;
                         padding: 0 5px 0 5px;}
-        QGroupBox#grna_filters{border: 2px solid rgb(111,181,110);
+        QGroupBox#Step1{border: 2px solid rgb(197,224,173);
                         border-radius: 9px;
                         font: 14pt "Arial";
                         font: bold;
                         margin-top: 10px;}"""
-        self.grna_filters.setStyleSheet(groupbox_style)
+        self.Step1.setStyleSheet(groupbox_style)
+        self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2").replace("rgb(197,224,173)", "rgb(111,181,110)"))
+        self.Step3.setStyleSheet(groupbox_style.replace("Step1", "Step3").replace("rgb(197,224,173)", "rgb(77,158,89)"))
+        self.Step4.setStyleSheet(groupbox_style.replace("Step1", "Step4").replace("rgb(197,224,173)", "rgb(53,121,93)"))
+
 
         # button connections
         self.cancel_button.clicked.connect(self.cancel_function)
@@ -81,7 +85,7 @@ class genLibrary(QtWidgets.QDialog):
         else:
             index2 = self.cspr_file.rfind('/')
 
-        self.filename_input.setText(self.cspr_file[index2 + 1:index1] + '_lib.txt')
+        self.filename_input.setText(self.cspr_file[index2 + 1:index1] + '_lib')
 
 
         if platform.system() == "Windows":
@@ -111,9 +115,9 @@ class genLibrary(QtWidgets.QDialog):
     # this function takes all of the cspr data and compresses it again for off-target usage
     def compress_file_off(self):
         if platform.system() == "Windows":
-            file = GlobalSettings.CSPR_DB + "\\off_compressed.txt"
+            file = GlobalSettings.CSPR_DB + "\\off_input.txt"
         else:
-            file = GlobalSettings.CSPR_DB + "/off_compressed.txt"
+            file = GlobalSettings.CSPR_DB + "/off_input.txt"
         f = open(file, 'w')
         for gene in self.cspr_data:
             for j in range(len(self.cspr_data[gene])):
@@ -171,10 +175,8 @@ class genLibrary(QtWidgets.QDialog):
                 #self.process.kill()
                 if did_work != -1:
                     self.cancel_function()
-                    #os.remove(GlobalSettings.CSPR_DB + '/off_compressed.txt')
+                    #os.remove(GlobalSettings.CSPR_DB + '/off_input.txt')
                     #os.remove(GlobalSettings.CSPR_DB + '/temp_off.txt')
-
-            
 
         # as off-targeting outputs things, update the off-target progress bar
         def progUpdate(p):
@@ -216,7 +218,7 @@ class genLibrary(QtWidgets.QDialog):
         else:
             exe_path = app_path + r'OffTargetFolder/OT_Mac' 
         exe_path = '"' + exe_path + '" '
-        data_path = '"' + GlobalSettings.CSPR_DB + "/off_compressed.txt" + '" '
+        data_path = '"' + GlobalSettings.CSPR_DB + "/off_input.txt" + '" '
         cspr_path = '"' + self.cspr_file + '" '
         db_path = '"' + self.db_file + '" '
         output_path = '"' + GlobalSettings.CSPR_DB + '/temp_off.txt" '
@@ -235,6 +237,8 @@ class genLibrary(QtWidgets.QDialog):
 
         cmd = exe_path + data_path + cspr_path + db_path + output_path + CASPER_info_path + str(
             num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
+        
+        print(cmd)
 
         if platform.system() == 'Windows':
             cmd = cmd.replace('/', '\\')
@@ -257,17 +261,11 @@ class genLibrary(QtWidgets.QDialog):
         num_targets = int(self.numGenescomboBox.currentText())
         fiveseq = ''
 
-        # error check for csv or txt files
-        if not output_file.endswith('.txt') and not self.to_csv_checkbox.isChecked():
-            if output_file.endswith('.csv'):
-                output_file = output_file.replace('.csv', '.txt')
-            else:
-                output_file = output_file + '.txt'
-        elif self.to_csv_checkbox.isChecked():
-            if output_file.endswith('.txt'):
-                output_file = output_file.replace('.txt', '.csv')
-            elif not output_file.endswith('.txt') and not output_file.endswith('.csv'):
-                output_file = output_file + '.csv'
+        # error check for csv files
+        if output_file.endswith('.txt'):
+            output_file = output_file.replace('.txt', '.csv')
+        elif not output_file.endswith('.txt') and not output_file.endswith('.csv'):
+            output_file = output_file + '.csv'
 
         # error checking for the space value
         # if they enter nothing, default to 15 and also make sure it's actually a digit
@@ -324,9 +322,9 @@ class genLibrary(QtWidgets.QDialog):
                 return
             else:
                 # make sure it between 0 and .5
-                if not 0.0 < float(self.maxOFF_comboBox.text()) < .5:
+                if not 0.0 < float(self.maxOFF_comboBox.text()) <= .5:
                     QtWidgets.QMessageBox.question(self, "Error",
-                                                   "Please enter a max off target score between 0 and .5!",
+                                                   "Please enter a max off-target score between 0 and 0.5!",
                                                    QtWidgets.QMessageBox.Ok)
                     return
                 # compress the data, and then run off-targeting
@@ -356,6 +354,10 @@ class genLibrary(QtWidgets.QDialog):
                 self.off_target_running = False
                 self.process.kill()
 
+        QtWidgets.QMessageBox.information(self, "Library Generated!",
+                                   "CASPER has finished generating your library!",
+                                   QtWidgets.QMessageBox.Ok)
+
         self.cspr_file = ''
         self.anno_data = dict()
 
@@ -369,17 +371,14 @@ class genLibrary(QtWidgets.QDialog):
         self.start_target_range.setText('0')
         self.end_target_range.setText('100')
         self.space_line_edit.setText('15')
-        self.to_csv_checkbox.setChecked(False)
         self.find_off_Checkbox.setChecked(False)
         self.modifyParamscheckBox.setChecked(False)
         self.maxOFF_comboBox.setText('')
         self.fiveprimeseq.setText('')
         self.off_target_running = False
         self.progressBar.setValue(0)
-        self.output_all_checkbox.setChecked(False)
 
         self.hide()
-
 
     # browse function
     # allows the user to browse for a folder
@@ -525,20 +524,12 @@ class genLibrary(QtWidgets.QDialog):
         # Now output to the file
         try:
             f = open(output_file, 'w')
-
-            # if both OT and output all are checked
-            if self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
+            # if OT checked
+            if self.find_off_Checkbox.isChecked():
                 f.write('Gene Name,Sequence,On-Target Score,Off-Target Score,Location,PAM,Strand\n')
-            # if only output all is checked
-            elif not self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
+            elif not self.find_off_Checkbox.isChecked():
                 f.write('Gene Name,Sequence,On-Target Score,Location,PAM,Strand\n')
-            # if only OT is checked
-            elif self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
-                f.write('Gene Name,Sequence,Off-Target Score\n')
-            # if neither is checked
-            elif not self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
-                f.write('Gene Name,Sequence\n')
-
+            
             for gene in self.Output:
                 i = 0
                 gene_name = self.gen_lib_dict[gene][-1]
@@ -551,21 +542,15 @@ class genLibrary(QtWidgets.QDialog):
                         tag_id = gene_name + "-" + str(i + 1)
                     i += 1
 
-                    if self.to_csv_checkbox.isChecked():
-                        tag_id = tag_id.replace(',', '')
+                    tag_id = tag_id.replace(',', '')
 
-                    # if both OT and output all are checked
-                    if self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
+                    # if OT checked
+                    if self.find_off_Checkbox.isChecked():
                         f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[5]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')
-                    # if only output all is checked
-                    elif not self.find_off_Checkbox.isChecked() and self.output_all_checkbox.isChecked():
+                    # if OT not checked
+                    elif not self.find_off_Checkbox.isChecked():
                         f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')
-                    # if only OT is checked
-                    elif self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
-                        f.write(tag_id + ',' + target[1] + ',' + target[5] + '\n')
-                    # if neither is checked
-                    elif not self.find_off_Checkbox.isChecked() and not self.output_all_checkbox.isChecked():
-                        f.write(tag_id + "," + target[1] + "\n")
+
             f.close()
         except PermissionError:
             QtWidgets.QMessageBox.question(self, "File Cannot Open",
