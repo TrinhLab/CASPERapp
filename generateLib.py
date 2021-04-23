@@ -175,8 +175,8 @@ class genLibrary(QtWidgets.QDialog):
                 #self.process.kill()
                 if did_work != -1:
                     self.cancel_function()
-                    #os.remove(GlobalSettings.CSPR_DB + '/off_input.txt')
-                    #os.remove(GlobalSettings.CSPR_DB + '/temp_off.txt')
+                    os.remove(GlobalSettings.CSPR_DB + '/off_input.txt')
+                    os.remove(GlobalSettings.CSPR_DB + '/temp_off.txt')
 
         # as off-targeting outputs things, update the off-target progress bar
         def progUpdate(p):

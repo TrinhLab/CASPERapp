@@ -4,7 +4,7 @@ import io
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from CoTargeting import CoTargeting
 from closingWin import closingWindow
-from Results import Results, geneViewerSettings
+from Results import Results
 from NewGenome import NewGenome
 from NewEndonuclease import NewEndonuclease
 import genomeBrowser
@@ -248,7 +248,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.newEndonuclease = NewEndonuclease()
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
-        self.gene_viewer_settings = geneViewerSettings()
+#        self.gene_viewer_settings = geneViewer()
         self.export_csv_window = export_csv_window()
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
@@ -482,14 +482,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.gene_list = {}
         self.progressBar.setValue(progvalue)
 
-        # set the gene viewer stuff to false so that the user can't open the gene viewer unless they have a
-        # FNA/GBFF file
-        # Note: if they are using kegg, the enabled's are set to True because it uses the kegg database by default
-        self.Results.displayGeneViewer.setEnabled(False)
-        self.Results.lineEditStart.setEnabled(False)
-        self.Results.lineEditEnd.setEnabled(False)
-#        self.gene_viewer_settings.kegg_radio_button.setEnabled(False)
-        self.Results.change_start_end_button.setEnabled(False)
+#        self.Results.change_start_end_button.setEnabled(False)
         self.Results.displayGeneViewer.setChecked(0)
 
         if inputtype == "gene":
@@ -912,6 +905,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def view_results(self):
+        self.Results.annotation_path = GlobalSettings.CSPR_DB + "/" + str(self.annotation_files.currentText()) ### Set annotation path
         self.hide()
         try:
             self.Results.endonucleaseBox.currentIndexChanged.disconnect()        
@@ -919,6 +913,8 @@ class CMainWindow(QtWidgets.QMainWindow):
             pass
         # set Results endo combo box
         self.Results.endonucleaseBox.clear()
+
+        # set GeneViewer to appropriate annotation file
 
         # set the results window endoChoice box menu
         # set the mainWindow's endoChoice first, and then loop through and set the rest of them
@@ -930,6 +926,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Results.mwfg.moveCenter(self.Results.cp)  ##Center window
         self.Results.move(self.Results.mwfg.topLeft())  ##Center window
         self.Results.endonucleaseBox.currentIndexChanged.connect(self.Results.changeEndonuclease)
+        self.Results.load_gene_viewer()
         self.Results.show()
 
 
