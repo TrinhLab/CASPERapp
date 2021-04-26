@@ -14,7 +14,7 @@ class export_csv_window(QtWidgets.QDialog):
         # qt stuff
         super(export_csv_window, self).__init__()
         uic.loadUi(GlobalSettings.appdir + 'export_to_csv_window.ui', self)
-        self.setWindowTitle("Export to .csv")
+        self.setWindowTitle("Export Guides")
         self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.png"))
 
         # button connections
@@ -30,8 +30,6 @@ class export_csv_window(QtWidgets.QDialog):
     # parameter expect: a list of the items selected from the window.
     def launch(self, select_items):
         self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
-        self.filename_line_edit.setText("Choose_a_name")
-
         self.selected_table_items = select_items
         self.show()
 

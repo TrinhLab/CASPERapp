@@ -22,6 +22,7 @@ class CoTargeting(QtWidgets.QDialog):
         self.endo_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.endo_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.endo_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.endo_table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch) #Ensures last column goes to the edge of table
 
         # variables
         self.info_path = path
@@ -29,6 +30,17 @@ class CoTargeting(QtWidgets.QDialog):
         # button connections
         self.cancel_button.clicked.connect(self.cancel_function)
         self.submit_button.clicked.connect(self.submission_function)
+        groupbox_style = """
+        QGroupBox:title{subcontrol-origin: margin;
+                        left: 10px;
+                        padding: 0 5px 0 5px;}
+        QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
+                        border-radius: 9px;
+                        font: 15pt "Arial";
+                        font: bold;
+                        margin-top: 10px;}"""
+
+        self.groupBox.setStyleSheet(groupbox_style)
 
     # launches the window
     # it is expecting endo_choices in the form of a list, and the orgName in the form of a string

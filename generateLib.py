@@ -175,6 +175,9 @@ class genLibrary(QtWidgets.QDialog):
                 #self.process.kill()
                 if did_work != -1:
                     self.cancel_function()
+                    QtWidgets.QMessageBox.information(self, "Library Generated!",
+                                       "CASPER has finished generating your library!",
+                                       QtWidgets.QMessageBox.Ok)
                     os.remove(GlobalSettings.CSPR_DB + '/off_input.txt')
                     os.remove(GlobalSettings.CSPR_DB + '/temp_off.txt')
 
@@ -336,6 +339,9 @@ class genLibrary(QtWidgets.QDialog):
 
             if did_work != -1:
                 self.cancel_function()
+                QtWidgets.QMessageBox.information(self, "Library Generated!",
+                                   "CASPER has finished generating your library!",
+                                   QtWidgets.QMessageBox.Ok)
 
 
     # cancel function
@@ -354,10 +360,7 @@ class genLibrary(QtWidgets.QDialog):
                 self.off_target_running = False
                 self.process.kill()
 
-        QtWidgets.QMessageBox.information(self, "Library Generated!",
-                                   "CASPER has finished generating your library!",
-                                   QtWidgets.QMessageBox.Ok)
-
+        
         self.cspr_file = ''
         self.anno_data = dict()
 
