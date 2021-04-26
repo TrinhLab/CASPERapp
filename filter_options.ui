@@ -24,7 +24,7 @@
     <enum>QLayout::SetFixedSize</enum>
    </property>
    <item row="0" column="0">
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QGroupBox" name="filterBox">
      <property name="minimumSize">
       <size>
        <width>0</width>
@@ -44,7 +44,7 @@
       </font>
      </property>
      <property name="title">
-      <string>Filter Options</string>
+      <string/>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="1" column="0" colspan="2">
@@ -64,6 +64,9 @@
           <pointsize>14</pointsize>
          </font>
         </property>
+        <property name="toolTip">
+         <string>Cotargeting must already have been run to use this option. Filters out guides that don't have multi-endonuclease targeting capabilities.</string>
+        </property>
         <property name="text">
          <string>View Cotargets Only</string>
         </property>
@@ -71,6 +74,9 @@
       </item>
       <item row="0" column="0" colspan="2">
        <widget class="QCheckBox" name="fivegseqCheckBox">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filters for guides containing a G residue at their 5' end. This may be useful for optimizing guide expression under some promoters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>View 5' G Sequences Only</string>
         </property>
@@ -83,6 +89,9 @@
           <width>0</width>
           <height>32</height>
          </size>
+        </property>
+        <property name="toolTip">
+         <string>Filter guides based on minimum desired on-target score.</string>
         </property>
         <property name="text">
          <string>Minimum Score:</string>

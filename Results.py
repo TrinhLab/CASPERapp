@@ -21,7 +21,6 @@ class Results(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(Results, self).__init__(parent)
         uic.loadUi(GlobalSettings.appdir + 'resultsWindow.ui', self)
-
         self.setWindowTitle('Results')
         self.geneViewer.setReadOnly(True)
         self.curgene = ""
@@ -29,6 +28,7 @@ class Results(QtWidgets.QMainWindow):
         # Main Data container
         # Keys: Gene names
         # Values: #
+        self.annotation_path = ""
         self.AllData = {}
         self.highlighted = {}
         self.co_target_endo_list = list()
@@ -37,8 +37,10 @@ class Results(QtWidgets.QMainWindow):
         self.directory = ""
         self.geneDict = dict() # dictionary passed into transfer_data
         self.geneNTDict = dict() #dictionary passed into transfer_data, same key as geneDict, but hols the NTSEQ
-
         self.switcher = [1,1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
+
+        # Initialize Filter Options Object
+        self.filter_options = Filter_Options()
 
         # Target Table settings #
         self.targetTable.setColumnCount(9)  # hardcoded because there will always be 8 columns
@@ -48,35 +50,34 @@ class Results(QtWidgets.QMainWindow):
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.targetTable.horizontalHeader().setSectionResizeMode(8, QtWidgets.QHeaderView.Stretch) #Ensures last column goes to the edge of table
 
         self.back_button.clicked.connect(self.goBack)
         self.targetTable.horizontalHeader().sectionClicked.connect(self.table_sorting)
-        self.actionSave.triggered.connect(self.save_data)
-        self.actionOpen.triggered.connect(self.open_data)
-        self.actionOff_Target_Analysis.triggered.connect(self.Off_Target_Analysis)
-        self.actionCoTargeting.triggered.connect(self.open_cotarget)
+        self.off_target_button.clicked.connect(self.Off_Target_Analysis)
+        self.cotargeting_button.clicked.connect(self.open_cotarget)
         self.displayGeneViewer.stateChanged.connect(self.checkGeneViewer)
-        #self.cotarget_checkbox.stateChanged.connect(self.prep_cotarget_checkbox)
+        self.filter_options.cotarget_checkbox.stateChanged.connect(self.prep_cotarget_checkbox)
         self.highlight_gene_viewer_button.clicked.connect(self.highlight_gene_viewer)
         self.checkBoxSelectAll.stateChanged.connect(self.selectAll)
-        #self.pushButton_Deselect_All.clicked.connect(self.deselectAll)
-        #self.gene_viewer_settings_button.clicked.connect(self.changeGeneViewerSettings)
+        self.filter_options_button.clicked.connect(self.show_filter_options)
+
         self.change_start_end_button.clicked.connect(self.change_indices)
-        self.actionTo_CSV.triggered.connect(self.open_export_to_csv)
+        self.export_button.clicked.connect(self.open_export_to_csv)
 
         #self.targetTable.itemSelectionChanged.connect(self.item_select)
-        #self.minScoreLine.setText("0")
+        self.filter_options.minScoreLine.setText("0")
 
         # Connecting the filters to the displayGeneData function
-        #self.fivegseqCheckBox.stateChanged.connect(self.displayGeneData)
-        #self.minScoreLine.textChanged.connect(self.displayGeneData)
+        self.filter_options.fivegseqCheckBox.stateChanged.connect(self.displayGeneData)
+        self.filter_options.minScoreLine.textChanged.connect(self.displayGeneData)
 
         # Setting up the score filter:
-        #self.scoreSlider.setMinimum(0)
-        #self.scoreSlider.setMaximum(100)
-        #self.scoreSlider.setTracking(False)
+        self.filter_options.scoreSlider.setMinimum(0)
+        self.filter_options.scoreSlider.setMaximum(100)
+        self.filter_options.scoreSlider.setTracking(False)
 
-        #self.scoreSlider.valueChanged.connect(self.update_score_filter)
+        self.filter_options.scoreSlider.valueChanged.connect(self.update_score_filter)
 
         #bool used to make sure only 1 instance of the OffTarget window is created
         self.first_boot = True
@@ -91,18 +92,22 @@ class Results(QtWidgets.QMainWindow):
         self.seq_and_avg_list = []
         self.files_list = []
         self.seq_finder_cspr_file = ''
-
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
 
+        groupbox_style = """
+        QGroupBox:title{subcontrol-origin: margin;
+                        left: 10px;
+                        padding: 0 5px 0 5px;}
+        QGroupBox#guide_viewer{border: 2px solid rgb(111,181,110);
+                        border-radius: 9px;
+                        font: 15pt "Arial";
+                        font: bold;
+                        margin-top: 10px;}"""
 
-        #disable unused buttons
-        self.menuFile.setEnabled(False)
-        self.menuWindow.setEnabled(False)
-        self.actionScore_Settings.setEnabled(False)
-        self.actionDesign_Repair_Oligos.setEnabled(False)
-        
-
+        self.guide_viewer.setStyleSheet(groupbox_style)
+        self.guide_analysis.setStyleSheet(groupbox_style.replace("guide_viewer", "guide_analysis").replace("rgb(111,181,110)", "rgb(77,158,89)"))
+        self.gene_viewer.setStyleSheet(groupbox_style.replace("guide_viewer", "gene_viewer").replace("rgb(111,181,110)", "rgb(53,121,93)"))
     # this function opens the export_to_csv window
     # first it makes sure that the user actually has some highlighted targets that they want exported
     def open_export_to_csv(self):
@@ -144,15 +149,17 @@ class Results(QtWidgets.QMainWindow):
 
 
         # if the user is using gbff
-        if GlobalSettings.mainWindow.gene_viewer_settings.file_type == "gbff":
+        if self.annotation_path.endswith(".gbff"):
             self.geneDict[self.curgene] = tempTuple
             sequence = GlobalSettings.mainWindow.gene_viewer_settings.gbff_sequence_finder(self.geneDict[self.curgene])
             self.geneNTDict[self.curgene] = sequence
-        # if the user is using fna
-        elif GlobalSettings.mainWindow.gene_viewer_settings.file_type == "fna":
+        # if the user is using fna (deprecated)
+        """
+        elif self.annotation_path.endswith(".fna"):
             self.geneDict[self.curgene] = tempTuple
             sequence = GlobalSettings.mainWindow.gene_viewer_settings.fna_sequence_finder(self.geneDict[self.curgene])
             self.geneNTDict[self.curgene] = sequence
+        """
 
         # check and see if we need to add lowercase letters
         changeInStart = tempTuple[1] - prevTuple[1]
@@ -172,8 +179,6 @@ class Results(QtWidgets.QMainWindow):
         # update the gene viewer
         self.checkGeneViewer()
     
-    #def update_curgene(self):
-        
     # this function goes through and deselects all of the Off-Target checkboxes
     # also sets the selectAllShown check box to unchecked as well
     def deselectAll(self):
@@ -217,7 +222,7 @@ class Results(QtWidgets.QMainWindow):
         selectedList = self.targetTable.selectedItems()
         if len(selectedList) <= 0:
             QtWidgets.QMessageBox.question(self, "Nothing Selected",
-                                           "No targets were highlighted "
+                                           "No targets were highlighted."
                                            "Please highlight the targets you want to be highlighted in the gene viewer!",
                                            QtWidgets.QMessageBox.Ok)
             return
@@ -345,11 +350,9 @@ class Results(QtWidgets.QMainWindow):
             self.lineEditEnd.clear()
             self.geneViewer.clear()
 
-    # this function just opens ing when the user clicks the CoTargeting button
-    # opened the same way that main opens it
+    # this function opens when the user clicks the CoTargeting button
     def open_cotarget(self):
         endo_list = list()
-
         if self.endonucleaseBox.count() <= 1:
             QtWidgets.QMessageBox.question(self, "Not Enough Endonucleases",
                                            "There are not enough endonucleases with this organism. "
@@ -371,7 +374,6 @@ class Results(QtWidgets.QMainWindow):
         # organism = GlobalSettings.mainWindow.shortHand[full_org]
 
         endoChoice = self.endonucleaseBox.currentText().split("|")
-        print(endoChoice)
 
         # make sure the user actually selects a new endonuclease
         if self.endo == endoChoice:
@@ -382,13 +384,11 @@ class Results(QtWidgets.QMainWindow):
 
         # enable the cotarget checkbox if needed
         if len(endoChoice) > 1:
-            self.cotarget_checkbox.setEnabled(True)
-            self.cotarget_checkbox.setChecked(0)
+            self.filter_options.cotarget_checkbox.setEnabled(True)
+            self.filter_options.cotarget_checkbox.setChecked(0)
         else:
-            self.cotarget_checkbox.setEnabled(False)
-            self.cotarget_checkbox.setChecked(0)
-        # print(endoChoice)
-        # print(GlobalSettings.mainWindow.organisms_to_files[full_org])
+            self.filter_options.cotarget_checkbox.setEnabled(False)
+            self.filter_options.cotarget_checkbox.setChecked(0)
         self.transfer_data(full_org, GlobalSettings.mainWindow.organisms_to_files[full_org], endoChoice, GlobalSettings.CSPR_DB, self.geneDict,
                            self.geneNTDict, "")
 
@@ -435,22 +435,20 @@ class Results(QtWidgets.QMainWindow):
         # check and see if they searched on Sequence. If so, delete the temp CSPR file
         if len(self.seq_finder_cspr_file) > 0:
             os.remove(self.seq_finder_cspr_file)
-            self.displayGeneViewer.setEnabled(False)
-            self.gene_viewer_settings_button.setEnabled(True)
             GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
             self.seq_finder_cspr_file = ''
         GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
         GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
         GlobalSettings.mainWindow.show()
-        self.cotarget_checkbox.setChecked(0)
+        self.filter_options.cotarget_checkbox.setChecked(0)
         self.hide()
 
     # called when the user hits 'gene viewer settings'
     def changeGeneViewerSettings(self):
         GlobalSettings.mainWindow.gene_viewer_settings.show()
 
-    # this is the function that sets up the co-targetting.
-    # it is called from the coTargetting class, when the user hits submit
+    # this is the function that sets up the cotargeting.
+    # it is called from the Cotargeting class, when the user hits submit
     # myBool is whether or not to change the endoChoice comboBox
     def populate_cotarget_table(self, myBool = True):
         try:
@@ -480,8 +478,8 @@ class Results(QtWidgets.QMainWindow):
                 self.endonucleaseBox.addItem(endoBoxList[i])
 
         # enable the cotarget checkbox
-        self.cotarget_checkbox.setEnabled(True)
-        self.cotarget_checkbox.setChecked(0)
+        self.filter_options.cotarget_checkbox.setEnabled(True)
+        self.filter_options.cotarget_checkbox.setChecked(0)
 
         self.endonucleaseBox.currentIndexChanged.connect(self.changeEndonuclease)
         # add it to the endoBox choices, and then call transfer_data
@@ -491,9 +489,9 @@ class Results(QtWidgets.QMainWindow):
     # if the checkbox is checked, just go ahead and displayGeneData
     # if not, call populate_cotarget_table, as a reset to get all of the data there
     def prep_cotarget_checkbox(self):
-        if self.cotarget_checkbox.isChecked():
+        if self.filter_options.cotarget_checkbox.isChecked():
             self.displayGeneData()
-        elif not self.cotarget_checkbox.isChecked():
+        elif not self.filter_options.cotarget_checkbox.isChecked():
             self.populate_cotarget_table(myBool=False)
 
 
@@ -550,7 +548,7 @@ class Results(QtWidgets.QMainWindow):
             self.geneViewer.setText(self.geneNTDict[self.curgene])
 
         # if this checkBox is checked, remove the single endo
-        if self.cotarget_checkbox.isChecked():
+        if self.filter_options.cotarget_checkbox.isChecked():
             gene = self.curgene
             self.remove_single_endo(gene)
 
@@ -559,9 +557,9 @@ class Results(QtWidgets.QMainWindow):
         for item in self.AllData[self.curgene]:
             # for each tuple item
             for i in range(len(item)):
-                if int(item[i][3]) > int(self.minScoreLine.text()):
+                if int(item[i][3]) > int(self.filter_options.minScoreLine.text()):
                     # Removing all non 5' G sequences:
-                    if self.fivegseqCheckBox.isChecked():
+                    if self.filter_options.fivegseqCheckBox.isChecked():
                         if item[i][1].startswith("G"):
                             subset_display.add(item[i])
                     else:
@@ -874,8 +872,10 @@ class Results(QtWidgets.QMainWindow):
     # ---- All Filter functions below ---------------------------------------------------------------------#
     # -----------------------------------------------------------------------------------------------------#
     def update_score_filter(self):
-        self.minScoreLine.setText(str(self.scoreSlider.value()))
+        self.filter_options.minScoreLine.setText(str(self.filter_options.scoreSlider.value()))
 
+    ###Save data and open data functions are currently deprecated
+    """
     #allows user to save what is currently in the table
     def save_data(self):
         filename = QtWidgets.QFileDialog.getSaveFileName(self,
@@ -943,6 +943,8 @@ class Results(QtWidgets.QMainWindow):
                     f.close()
                     self.displayGeneData()
 
+    """
+
     # this function calls the closingWindow class.
     def closeEvent(self, event):
         # check and see if they searched on Sequence. If so, delete the temp CSPR file
@@ -955,104 +957,34 @@ class Results(QtWidgets.QMainWindow):
         event.accept()
 
 ############################################
-# CLASS NAME: geneViewerSettings
-# It's essentially a little window where the user can tell the program which file to use for geneviewer
+# All Gene Viewer functions are below! 
 ############################################
-class geneViewerSettings(QtWidgets.QDialog):
-    def __init__(self):
-        # Qt init stuff
-        super(geneViewerSettings, self).__init__()
-        uic.loadUi(GlobalSettings.appdir + "geneViewerSettings.ui", self)
-        self.setWindowTitle("Change Gene Viewer Settings")
-        self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.png"))
-
-        # button connections
-        self.gbff_radio_button.clicked.connect(self.change_file_type)
-        self.fna_radio_button.clicked.connect(self.change_file_type)
-        self.browse_button.clicked.connect(self.browseForFile)
-        self.cancel_button.clicked.connect(self.cancelFunction)
-        self.submit_button.clicked.connect(self.submitFunction)
-        self.file=""
-
-        # class variables
-        self.file_type = ""
-
-    # this function is called when the user changes the file type
-    # it just sets a class variable to the type of file selected
-    def change_file_type(self):
-        if self.gbff_radio_button.isChecked():
-            self.file_type = "gbff"
-        elif self.fna_radio_button.isChecked():
-            self.file_type = "fna"
-
-
-    # this function is only called when the user selects browse for a file option
-    # it opens a window such that the user can search for a file to use for the gene viewer sequence
-    def browseForFile(self):
-        # make sure that either GBFF or FNA is checked
-        if not self.gbff_radio_button.isChecked() and not self.fna_radio_button.isChecked():
-            QtWidgets.QMessageBox.question(self, "Nothing Selected",
-                                           "Please select either the GBFF or the FNA radio button.",
-                                           QtWidgets.QMessageBox.Ok)
-            return
-
-        # open a window so that the user can select a file
-        filed = QtWidgets.QFileDialog()
-        myFile = QtWidgets.QFileDialog.getOpenFileName(filed, "Choose an Annotation File")
-        self.file = myFile[0]
-        print(self.file)
-        # make sure they choose the correct type of file
-        if self.file_type not in myFile[0]:
-            QtWidgets.QMessageBox.question(self, "Wrong type of file selected",
-                                           "Please select the same type of file selected in the radio buttons.",
-                                           QtWidgets.QMessageBox.Ok)
-            self.file_name_edit.setText("")
-            return
-
-        # if the file is not empty, then set it
-        if (myFile[0] != ""):
-            self.file_name_edit.setText(myFile[0])
-
-    # this function is only called when the user clicks on cancel.
-    # it resets the text for the file chosen, while also unchecking all of the radio buttons
-    # then it hides the window
-    def cancelFunction(self):
-        self.file_name_edit.setText("Please choose a file!")
-
-        # setting them to False does not seem to work, no idea why
-        self.gbff_radio_button.setChecked(False)
-        self.fna_radio_button.setChecked(False)
-        self.hide()
-
-    # this function is only called when the user clicks on submit
-    # it will find all of the sequences for all of the genes in the comboGeneBox in the results window
     # It will go based on the lengths stored in the comboGeneBox dictionary
-    def submitFunction(self):
+    def load_gene_viewer(self):
         sequence = ""
-
         # for each gene selected from the results window
         for item in GlobalSettings.mainWindow.Results.geneDict:
+        ### FNA support deprecated currently 
+            """
             if self.file_type == "fna":
                 sequence = self.fna_sequence_finder(GlobalSettings.mainWindow.Results.geneDict[item])
                 GlobalSettings.mainWindow.Results.geneNTDict[item] = sequence
-            if self.file_type == "gbff":
+            """
+            if self.annotation_path.endswith(".gbff"):
                 sequence = self.gbff_sequence_finder(GlobalSettings.mainWindow.Results.geneDict[item])
                 GlobalSettings.mainWindow.Results.geneNTDict[item] = sequence
 
-
-        GlobalSettings.mainWindow.Results.displayGeneViewer.setEnabled(True)
         GlobalSettings.mainWindow.Results.lineEditStart.setEnabled(True)
         GlobalSettings.mainWindow.Results.lineEditEnd.setEnabled(True)
         GlobalSettings.mainWindow.Results.change_start_end_button.setEnabled(True)
-        GlobalSettings.mainWindow.Results.displayGeneViewer.setChecked(1)
+        GlobalSettings.mainWindow.Results.displayGeneViewer.setChecked(0)
         GlobalSettings.mainWindow.Results.checkGeneViewer()
-        self.hide()
 
     # this function gets the sequence out of the GBFF file
     # may have indexing issues
     def gbff_sequence_finder(self, location_data):
         # start up the function
-        fileStream = open(self.file_name_edit.displayText())
+        fileStream = open(self.annotation_path)
         buffer = fileStream.readline()
         index = 1
         pre_sequence = ""
@@ -1103,6 +1035,8 @@ class geneViewerSettings(QtWidgets.QDialog):
 
     # this function is the function that actually finds the sequence
     # May have indexing issues here
+    # This function is currently deprecated.
+    """
     def fna_sequence_finder(self, location_data):
         # Open the file and set the index to 0
         fileStream = open(self.file_name_edit.displayText())
@@ -1135,11 +1069,27 @@ class geneViewerSettings(QtWidgets.QDialog):
         NTSequence = sequence[location_data[1]:location_data[2]]
 
         return NTSequence
+        """
+    def show_filter_options(self):
+        self.filter_options.show()
 
-
-
-
-
+class Filter_Options(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        super(Filter_Options, self).__init__(parent)
+        uic.loadUi(GlobalSettings.appdir + 'filter_options.ui', self)
+        self.minScoreLine.setText("0")
+        self.hide()
+        groupbox_style = """
+        QGroupBox:title{subcontrol-origin: margin;
+                        left: 10px;
+                        padding: 0 5px 0 5px;}
+        QGroupBox#filterBox{border: 2px solid rgb(111,181,110);
+                        border-radius: 9px;
+                        font: 15pt "Arial";
+                        font: bold;
+                        margin-top: 10px;}"""
+        self.filterBox.setStyleSheet(groupbox_style)
+ 
 
 # Window opening and GUI launching code for debugging #
 # ----------------------------------------------------------------------------------------------------- #

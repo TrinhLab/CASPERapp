@@ -79,7 +79,7 @@ class Annotation_Parser:
                         strandChar = '+'
 
                     # update that one's values
-                    values = [currentGeneID, indexNumber, feature.type, int(feature.location.start) - 1,
+                    values = [currentGeneID, indexNumber, feature.type, int(feature.location.start) + 2,
                               int(feature.location.end), strandChar]
 
                     # insert
@@ -96,7 +96,7 @@ class Annotation_Parser:
                         strandChar = '-'
                     else:
                         strandChar = '+'
-                    values = [currentGeneID, indexNumber, feature.type, int(feature.location.start) - 1,
+                    values = [currentGeneID, indexNumber, feature.type, int(feature.location.start) + 2,
                               int(feature.location.end), strandChar]
                     # make sure it isn't a duplicate
                     if values not in self.reg_dict[currentGeneID]:

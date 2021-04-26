@@ -91,6 +91,9 @@
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Please write the file name you want.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Note: do not add the '.csv'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
+     <property name="placeholderText">
+      <string>Choose a file name</string>
+     </property>
     </widget>
    </item>
   </layout>
