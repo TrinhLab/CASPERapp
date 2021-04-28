@@ -549,10 +549,10 @@ class genLibrary(QtWidgets.QDialog):
 
                     # if OT checked
                     if self.find_off_Checkbox.isChecked():
-                        f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[5]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')
+                        f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[5]) + ',' + str(abs(int(target[0]))) + ',' + target[2] + ',' + target[4][0] + '\n')
                     # if OT not checked
                     elif not self.find_off_Checkbox.isChecked():
-                        f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')
+                        f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(abs(int(target[0]))) + ',' + target[2] + ',' + target[4][0] + '\n')
 
             f.close()
         except PermissionError:
