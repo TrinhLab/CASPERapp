@@ -30,17 +30,7 @@ class CoTargeting(QtWidgets.QDialog):
         # button connections
         self.cancel_button.clicked.connect(self.cancel_function)
         self.submit_button.clicked.connect(self.submission_function)
-        groupbox_style = """
-        QGroupBox:title{subcontrol-origin: margin;
-                        left: 10px;
-                        padding: 0 5px 0 5px;}
-        QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
-                        border-radius: 9px;
-                        font: 15pt "Arial";
-                        font: bold;
-                        margin-top: 10px;}"""
 
-        self.groupBox.setStyleSheet(groupbox_style)
 
     # launches the window
     # it is expecting endo_choices in the form of a list, and the orgName in the form of a string
