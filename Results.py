@@ -37,20 +37,20 @@ class Results(QtWidgets.QMainWindow):
         self.directory = ""
         self.geneDict = dict() # dictionary passed into transfer_data
         self.geneNTDict = dict() #dictionary passed into transfer_data, same key as geneDict, but hols the NTSEQ
-        self.switcher = [1,1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
+        self.switcher = [1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
 
         # Initialize Filter Options Object
         self.filter_options = Filter_Options()
 
         # Target Table settings #
-        self.targetTable.setColumnCount(9)  # hardcoded because there will always be 8 columns
+        self.targetTable.setColumnCount(8)  # hardcoded because there will always be 8 columns
         self.targetTable.setShowGrid(False)
-        self.targetTable.setHorizontalHeaderLabels("Location;Sequence;Strand;PAM;Score;Off-Target;;Details;Endonuclease".split(";"))
+        self.targetTable.setHorizontalHeaderLabels("Location;Endonuclease;Sequence;Strand;PAM;Score;Off-Target;Details".split(";"))
         self.targetTable.horizontalHeader().setSectionsClickable(True)
         self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-        self.targetTable.horizontalHeader().setSectionResizeMode(8, QtWidgets.QHeaderView.Stretch) #Ensures last column goes to the edge of table
+        self.targetTable.horizontalHeader().setSectionResizeMode(7, QtWidgets.QHeaderView.Stretch) #Ensures last column goes to the edge of table
 
         self.back_button.clicked.connect(self.goBack)
         self.targetTable.horizontalHeader().sectionClicked.connect(self.table_sorting)
@@ -85,7 +85,7 @@ class Results(QtWidgets.QMainWindow):
         #using this helps speed up updating the chart
         self.OTA = []
 
-
+        self.clear_gene_viewer_button.clicked.connect(self.clear_gene_viewer)
 
         self.detail_output_list = []
         self.rows_and_seq_list = []
@@ -108,6 +108,8 @@ class Results(QtWidgets.QMainWindow):
         self.guide_viewer.setStyleSheet(groupbox_style)
         self.guide_analysis.setStyleSheet(groupbox_style.replace("guide_viewer", "guide_analysis").replace("rgb(111,181,110)", "rgb(77,158,89)"))
         self.gene_viewer.setStyleSheet(groupbox_style.replace("guide_viewer", "gene_viewer").replace("rgb(111,181,110)", "rgb(53,121,93)"))
+
+
     # this function opens the export_to_csv window
     # first it makes sure that the user actually has some highlighted targets that they want exported
     def open_export_to_csv(self):
@@ -178,13 +180,7 @@ class Results(QtWidgets.QMainWindow):
 
         # update the gene viewer
         self.checkGeneViewer()
-    
-    # this function goes through and deselects all of the Off-Target checkboxes
-    # also sets the selectAllShown check box to unchecked as well
-    def deselectAll(self):
-        for i in range(self.targetTable.rowCount()):
-            self.targetTable.cellWidget(i, 6).setCheckState(0)
-        self.checkBoxSelectAll.setCheckState(0)
+
 
     # this function listens for a stateChange in selectAllShown
     # if it is checked, it selects all shown
@@ -192,11 +188,9 @@ class Results(QtWidgets.QMainWindow):
     # Note: it is a little buggy, possibly because when you change the minimum score it resets it all
     def selectAll(self):
         if self.checkBoxSelectAll.isChecked():
-            for i in range(self.targetTable.rowCount()):
-                self.targetTable.cellWidget(i, 6).setCheckState(2)
-        elif not self.checkBoxSelectAll.isChecked():
-            for i in range(self.targetTable.rowCount()):
-                self.targetTable.cellWidget(i, 6).setCheckState(0)
+            self.targetTable.selectAll()
+        else:
+            self.targetTable.clearSelection()
 
     # hightlights the sequences found in the gene viewer
     # highlighting should stay the exact same with fasta and genbank files, as this function only edits what
@@ -231,8 +225,8 @@ class Results(QtWidgets.QMainWindow):
             if self.targetTable.item(i, 0).isSelected():
                 # get the strand and sequence strings
                 locationString = self.targetTable.item(i,0).text()
-                strandString = self.targetTable.item(i, 2).text()
-                sequenceString = self.targetTable.item(i, 1).text()
+                strandString = self.targetTable.item(i, 3).text()
+                sequenceString = self.targetTable.item(i, 2).text()
                 printSequence = ""
                 movementIndex = 0
                 left_right = ""
@@ -250,9 +244,9 @@ class Results(QtWidgets.QMainWindow):
                     # if the strand is positive, it moves to the right, if the strand is negative, it moves to the left
                     if strandString == "-":
                         left_right = "-"
-                        location = (location - len(self.targetTable.item(i, 3).text())) + 1
+                        location = (location - len(self.targetTable.item(i, 4).text())) + 1
                     elif strandString == "+":
-                        location = (location + len(self.targetTable.item(i,3).text())) + 1
+                        location = (location + len(self.targetTable.item(i,4).text())) + 1
                         left_right = "+"
                 # if the endo is Cas9
                 elif "Cas9" in self.endonucleaseBox.currentText():
@@ -582,22 +576,17 @@ class Results(QtWidgets.QMainWindow):
             score = QtWidgets.QTableWidgetItem()
             score.setData(QtCore.Qt.EditRole, num1)
             self.targetTable.setItem(index, 0, loc)
-            self.targetTable.setItem(index, 1, seq)
-            self.targetTable.setItem(index, 2, strand)
-            self.targetTable.setItem(index, 3, PAM)
-            self.targetTable.setItem(index, 4, score)
-            self.targetTable.setItem(index, 5, QtWidgets.QTableWidgetItem("--.--"))
+            self.targetTable.setItem(index, 1, endonuclease)
+            self.targetTable.setItem(index, 2, seq)
+            self.targetTable.setItem(index, 3, strand)
+            self.targetTable.setItem(index, 4, PAM)
+            self.targetTable.setItem(index, 5, score)
+            self.targetTable.setItem(index, 6, QtWidgets.QTableWidgetItem("--.--"))
             self.targetTable.removeCellWidget(index, 7)
-            self.targetTable.setItem(index, 8, endonuclease)
-            ckbox = QtWidgets.QCheckBox()
-            ckbox.clicked.connect(self.search_gene)
-            self.targetTable.setCellWidget(index,6,ckbox)
-            if(self.highlighted[str(item[1])] == True):
-                ckbox.click()
             if (item[1] in self.seq_and_avg_list[self.comboBoxGene.currentIndex()].keys()):
                 OT = QtWidgets.QTableWidgetItem()
                 OT.setData(QtCore.Qt.EditRole, self.seq_and_avg_list[self.comboBoxGene.currentIndex()][item[1]])
-                self.targetTable.setItem(index, 5, OT)
+                self.targetTable.setItem(index, 6, OT)
             if (item[1] in self.detail_output_list[self.comboBoxGene.currentIndex()].keys()):
                 details = QtWidgets.QPushButton()
                 details.setText("Details")
@@ -727,7 +716,7 @@ class Results(QtWidgets.QMainWindow):
         checkBox = self.sender()
         index = self.targetTable.indexAt(checkBox.pos())
         # print(index.column(), index.row(), checkBox.isChecked())
-        seq = self.targetTable.item(index.row(),1).text()
+        seq = self.targetTable.item(index.row(),2).text()
         self.highlighted[str(seq)] = checkBox.isChecked()
 
         x=1
@@ -742,13 +731,6 @@ class Results(QtWidgets.QMainWindow):
         else:
             self.targetTable.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
 
-        #update the OTA list in case user already has stuff selected, because their rows
-        #will most likely change after the sort
-        self.OTA.clear()
-        for row in range(self.targetTable.rowCount()):
-            if (self.targetTable.cellWidget(row, 6).isChecked()):
-                self.OTA.append(row)
-
     #linked to when the user pushes tools->off target analysis
     def Off_Target_Analysis(self):
         #build temp file for offtarget to read from
@@ -757,17 +739,22 @@ class Results(QtWidgets.QMainWindow):
         else:
             f = open(GlobalSettings.appdir + 'OffTargetFolder' + '/temp.txt', 'w+')
         self.OTA.clear()
-        for row in range(self.targetTable.rowCount()):
-            if(self.targetTable.cellWidget(row,6).isChecked()):
-                self.OTA.append(row)
-                loc = self.targetTable.item(row, 0).text()
-                seq = self.targetTable.item(row,1).text()
-                strand = self.targetTable.item(row,2).text()
-                pam = self.targetTable.item(row,3).text()
-                score = self.targetTable.item(row,4).text()
-                self.rows_and_seq_list[self.comboBoxGene.currentIndex()][seq] = row
-                output = str(loc) + ';' + str(seq) + ";" + str(pam) + ";" + score + ";" + str(strand)
-                f.write(output + '\n')
+        #get selected rows
+        selected_rows = []
+        indexes = self.targetTable.selectionModel().selectedRows()
+        for index in indexes:
+            selected_rows.append(index.row())
+
+        for row in sorted(selected_rows):
+            self.OTA.append(row)
+            loc = self.targetTable.item(row, 0).text()
+            seq = self.targetTable.item(row,2).text()
+            strand = self.targetTable.item(row,3).text()
+            pam = self.targetTable.item(row,4).text()
+            score = self.targetTable.item(row,5).text()
+            self.rows_and_seq_list[self.comboBoxGene.currentIndex()][seq] = row
+            output = str(loc) + ';' + str(seq) + ";" + str(pam) + ";" + score + ";" + str(strand)
+            f.write(output + '\n')
         f.close()
         #only make off target object if first time, otherwise just
         #reshow the object
@@ -791,7 +778,7 @@ class Results(QtWidgets.QMainWindow):
         for rows in range(0,self.targetTable.rowCount()):
             self.targetTable.removeCellWidget(rows,7)
             self.targetTable.removeCellWidget(rows,5)
-            self.targetTable.setItem(rows, 5, QtWidgets.QTableWidgetItem("--.--"))
+            self.targetTable.setItem(rows, 6, QtWidgets.QTableWidgetItem("--.--"))
         self.off_tar_win.hide()
         filename = filename[:len(filename)-1]
         filename = filename[1:]
@@ -813,7 +800,7 @@ class Results(QtWidgets.QMainWindow):
                     row = self.rows_and_seq_list[self.comboBoxGene.currentIndex()][values[0]]
                     OT = QtWidgets.QTableWidgetItem()
                     OT.setData(QtCore.Qt.EditRole, values[1])
-                    self.targetTable.setItem(row, 5, OT)
+                    self.targetTable.setItem(row, 6, OT)
                     self.seq_and_avg_list[self.comboBoxGene.currentIndex()][values[0]] = values[1]
         else:
             details_bool = False
@@ -832,7 +819,7 @@ class Results(QtWidgets.QMainWindow):
                     row = self.rows_and_seq_list[self.comboBoxGene.currentIndex()][values[0]]
                     OT = QtWidgets.QTableWidgetItem()
                     OT.setData(QtCore.Qt.EditRole, values[1])
-                    self.targetTable.setItem(row, 5, OT)
+                    self.targetTable.setItem(row, 6, OT)
                 else:
                     details_bool = True
                     temp_list.append(line)
@@ -854,19 +841,28 @@ class Results(QtWidgets.QMainWindow):
         msg = QtWidgets.QMessageBox()
         msg.setWindowTitle("Details")
         msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        key = str(self.targetTable.item(index.row(),1).text())
+        key = str(self.targetTable.item(index.row(),2).text())
         temp_str = ''
         for items in self.detail_output_list[self.comboBoxGene.currentIndex()][key]:
             temp_str += items + "<br>"
 
         chromo_str = "<html><b>Chromsome: Location, Sequence, Strand, PAM, Score:<br></b></html>"
         input_str = self.targetTable.item(index.row(),0).text() + ' , ' + key + ' , ' + \
-                    self.targetTable.item(index.row(),2).text() + ' , ' + self.targetTable.item(index.row(),3).text() + \
-                    ' , ' + self.targetTable.item(index.row(),4).text() + "<br><br>"
+                    self.targetTable.item(index.row(),3).text() + ' , ' + self.targetTable.item(index.row(),4).text() + \
+                    ' , ' + self.targetTable.item(index.row(),5).text() + "<br><br>"
         detail_str = "<html><b>Deatailed Output: Score, Chromsome, Location, Sequence:<br></b></html>"
         msg.setText(chromo_str + input_str + detail_str + temp_str)
         msg.exec()
 
+    #function to clear highlights in gene viewer and un-select any rows highlighted in main table
+    def clear_gene_viewer(self):
+        #clear gene viewer highlights
+        if self.displayGeneViewer.isChecked():
+            self.geneViewer.setText(self.geneNTDict[self.curgene])
+
+        #clear selected rows in table
+        self.checkBoxSelectAll.setChecked(False)
+        self.targetTable.selectionModel().clearSelection()
 
     # -----------------------------------------------------------------------------------------------------#
     # ---- All Filter functions below ---------------------------------------------------------------------#

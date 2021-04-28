@@ -56,6 +56,9 @@ class OffTarget(QtWidgets.QDialog):
 
     #copied from MT to fill in the chromo and endo dropdowns based on CSPR files user provided at the startup
     def fill_data_dropdown(self):
+        self.organisms_to_files = {}
+        self.organisms_to_endos = {}
+
         #fill in chromosome and endo dropdowns
         onlyfiles = [f for f in os.listdir(GlobalSettings.filedir) if os.path.isfile(os.path.join(GlobalSettings.filedir , f))]
         self.orgsandendos = {}
@@ -63,7 +66,7 @@ class OffTarget(QtWidgets.QDialog):
         for file in onlyfiles:
             if file.find('.cspr') != -1:
                 newname = file[0:-4]
-                s = newname.split('_')
+                endo = newname[newname.rfind("_") + 1:-1]
                 hold = gzip.open(file, 'r')
                 buf = (hold.readline())
                 hold.close()
@@ -71,49 +74,55 @@ class OffTarget(QtWidgets.QDialog):
                 buf = buf.strip("'b")
                 buf = buf[:len(buf) - 2]
                 species = buf.replace("GENOME: ", "")
-                endo = str(s[1])
-                endo = endo.strip('.')
-                if species not in self.shortName:
-                    self.shortName[species] = s[0]
-                if species in self.orgsandendos:
-                    self.orgsandendos[species].append(endo)
-                else:
-                    self.orgsandendos[species] = [endo]
-                    self.OrgcomboBox.addItem(species)
-        self.data = self.orgsandendos
-        self.shortHand = self.shortName
-        temp = self.data[str(self.OrgcomboBox.currentText())]
-        temp1 = []
-        for i in temp:
-            temp1.append(i)
-        self.EndocomboBox.addItems(temp1)
-        self.OrgcomboBox.currentIndexChanged.connect(self.changeEndos)
 
-        endo = str(self.EndocomboBox.currentText())
-        short = str(self.shortHand[str(self.OrgcomboBox.currentText())])
-        file = short + '_' + endo + '_' + 'repeats.db'
-        self.db_file = file
-        self.cspr_file = short + "_" + endo + ".cspr"
+                if species in self.organisms_to_files:
+                    self.organisms_to_files[species][endo] = [file, file.replace(".cspr", "_repeats.db")]
+                else:
+                    self.organisms_to_files[species] = {}
+                    self.organisms_to_files[species][endo] = [file, file.replace(".cspr", "_repeats.db")]
+
+                if species in self.organisms_to_endos:
+                    self.organisms_to_endos[species].append(endo)
+                else:
+                    self.organisms_to_endos[species] = [endo]
+                    if self.OrgcomboBox.findText(species) == -1:
+                        self.OrgcomboBox.addItem(species)
+
+        # fill in endos dropdown based on current organism
+        endos = self.organisms_to_endos[str(self.OrgcomboBox.currentText())]
+        self.EndocomboBox.addItems(endos)
+        self.OrgcomboBox.currentIndexChanged.connect(self.update_endos)
+        self.EndocomboBox.currentIndexChanged.connect(self.change_endos)
+
+        # update file names for current org/endo combo
+        self.cspr_file = self.organisms_to_files[str(self.OrgcomboBox.currentText())][endos[0]][0]
+        self.db_file = self.organisms_to_files[str(self.OrgcomboBox.currentText())][endos[0]][1]
 
         #fill in Max Mismatch dropdown
         mismatch_list = ['1','2','3','4','5','6','7','8','9','10']
         self.mismatchcomboBox.addItems(mismatch_list)
 
-    #updated endo dropdown based on chromo
-    def changeEndos(self):
+    def change_endos(self):
+        #update file names based on current org/endo combo
+        self.cspr_file = self.organisms_to_files[str(self.OrgcomboBox.currentText())][str(self.EndocomboBox.currentText())][0]
+        self.db_file = self.organisms_to_files[str(self.OrgcomboBox.currentText())][str(self.EndocomboBox.currentText())][1]
+
+    def update_endos(self):
+        #try to disconnect index changed signal on endo dropdown if there is one
+        try:
+            self.EndocomboBox.currentIndexChanged.disconnect()
+        except:
+            pass
+
+        #clear endo dropdown and fill in with endos relative to the current organism
         self.EndocomboBox.clear()
-        temp = self.data[str(self.OrgcomboBox.currentText())]
-        temp1 = []
-        for i in temp:
-            temp1.append(i)
-        self.EndocomboBox.addItems(temp1)
+        endos = self.organisms_to_endos[str(self.OrgcomboBox.currentText())]
+        self.EndocomboBox.addItems(endos)
+        self.cspr_file = self.organisms_to_files[str(self.OrgcomboBox.currentText())][endos[0]][0]
+        self.db_file = self.organisms_to_files[str(self.OrgcomboBox.currentText())][endos[0]][1]
 
-        endo = str(self.EndocomboBox.currentText())
-        short = str(self.shortHand[str(self.OrgcomboBox.currentText())])
-        file = short + '_' + endo + '_' + 'repeats.db'
-        self.db_file = file
-        self.cspr_file = short + "_" + endo + ".cspr"
-
+        #reconnect index changed signal on endo dropdown
+        self.EndocomboBox.currentIndexChanged.connect(self.change_endos)
     #tolerance slider / entry box. Allows for slider to update, or the user to input in text box
     def tol_change(self):
         if(self.tolerance == float(self.tolerancelineEdit.text())):
@@ -131,11 +140,6 @@ class OffTarget(QtWidgets.QDialog):
         self.perc = False
         self.bool_temp = False
         self.running = False
-
-        #get user specified paramters from the UI
-        file_name_1 = self.shortName[str(self.OrgcomboBox.currentText())]
-        file_name_2 = self.orgsandendos[str(self.OrgcomboBox.currentText())]
-        file_name = str(file_name_1) + '_' + str(file_name_2[0]) + 'cspr'
 
         if (self.AVG.isChecked()):
             avg_output = r'TRUE'
@@ -165,12 +169,13 @@ class OffTarget(QtWidgets.QDialog):
         CASPER_info_path = r' "' + app_path + 'CASPERinfo' + '" '
         num_of_mismathes = int(self.mismatchcomboBox.currentText())
         tolerance = self.tolerance
+        endo = ' "' + self.EndocomboBox.currentText() + '"'
 
         #create command string
-        cmd = exe_path + data_path + cspr_path + db_path + self.output_path + CASPER_info_path + str(num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
+        cmd = exe_path + data_path + endo + cspr_path + db_path + self.output_path + CASPER_info_path + str(num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
         if platform.system() == 'Windows':
             cmd = cmd.replace('/', '\\')
-        print(cmd)
+        #print(cmd)
         #used to know when the process is done
         def finished():
             self.running = False
@@ -234,7 +239,6 @@ class OffTarget(QtWidgets.QDialog):
         if(self.running == False):
             self.running = True
             self.run_command()
-
 
     #exit linked to user clicking cancel, resets bools, and kills process if one was running
     def exit(self):
