@@ -131,7 +131,7 @@
       <item row="0" column="0" alignment="Qt::AlignLeft">
        <widget class="QLabel" name="label">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Potential off-target sites scoring lower than this value are dismissed (I.e. they do not pose a threat for off-target activity).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Potential off-target sites scoring lower than this value are dismissed (I.e. they do not pose a threat for off-target activity). Computational time increases as tolerance value decreases.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Tolerance:</string>
@@ -214,6 +214,9 @@
       </item>
       <item row="3" column="0">
        <widget class="QCheckBox" name="AVG">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check this option if you only want to see the average off-target score for each gRNA. Leaving this option unchecked will report the average off-target score as well as the putatitve off-target sequences, their locations, and individual off-target scores.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Average Output</string>
         </property>

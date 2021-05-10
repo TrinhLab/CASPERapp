@@ -27,15 +27,15 @@ class genLibrary(QtWidgets.QDialog):
         QGroupBox:title{subcontrol-origin: margin;
                         left: 10px;
                         padding: 0 5px 0 5px;}
-        QGroupBox#Step1{border: 2px solid rgb(197,224,173);
+        QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
                         font: 14pt "Arial";
                         font: bold;
                         margin-top: 10px;}"""
         self.Step1.setStyleSheet(groupbox_style)
-        self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2").replace("rgb(197,224,173)", "rgb(111,181,110)"))
-        self.Step3.setStyleSheet(groupbox_style.replace("Step1", "Step3").replace("rgb(197,224,173)", "rgb(77,158,89)"))
-        self.Step4.setStyleSheet(groupbox_style.replace("Step1", "Step4").replace("rgb(197,224,173)", "rgb(53,121,93)"))
+        self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2"))
+        self.Step3.setStyleSheet(groupbox_style.replace("Step1", "Step3"))
+        self.Step4.setStyleSheet(groupbox_style.replace("Step1", "Step4"))
 
 
         # button connections
@@ -549,10 +549,10 @@ class genLibrary(QtWidgets.QDialog):
 
                     # if OT checked
                     if self.find_off_Checkbox.isChecked():
-                        f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[5]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')
+                        f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[5]) + ',' + str(abs(int(target[0]))) + ',' + target[2] + ',' + target[4][0] + '\n')
                     # if OT not checked
                     elif not self.find_off_Checkbox.isChecked():
-                        f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(target[0]) + ',' + target[2] + ',' + target[4][0] + '\n')
+                        f.write(tag_id + ',' + target[1] + ',' + str(target[3]) + ',' + str(abs(int(target[0]))) + ',' + target[2] + ',' + target[4][0] + '\n')
 
             f.close()
         except PermissionError:

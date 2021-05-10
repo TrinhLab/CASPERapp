@@ -106,8 +106,8 @@ class Results(QtWidgets.QMainWindow):
                         margin-top: 10px;}"""
 
         self.guide_viewer.setStyleSheet(groupbox_style)
-        self.guide_analysis.setStyleSheet(groupbox_style.replace("guide_viewer", "guide_analysis").replace("rgb(111,181,110)", "rgb(77,158,89)"))
-        self.gene_viewer.setStyleSheet(groupbox_style.replace("guide_viewer", "gene_viewer").replace("rgb(111,181,110)", "rgb(53,121,93)"))
+        self.guide_analysis.setStyleSheet(groupbox_style.replace("guide_viewer", "guide_analysis"))
+        self.gene_viewer.setStyleSheet(groupbox_style.replace("guide_viewer", "gene_viewer"))
 
 
     # this function opens the export_to_csv window

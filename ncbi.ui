@@ -354,6 +354,9 @@
             <pointsize>14</pointsize>
            </font>
           </property>
+          <property name="toolTip">
+           <string>These are the file types that you are choosing to download. GBFF = annotation file, FASTA/FNA = genomic sequence file.</string>
+          </property>
           <property name="text">
            <string>File Types:</string>
           </property>
@@ -377,6 +380,9 @@
             <weight>50</weight>
             <bold>false</bold>
            </font>
+          </property>
+          <property name="toolTip">
+           <string>These are the databases that files are downloaded from. Refseq is considered the gold standard for annotations and assemblies. It is HIGHLY recommended to use Refseq if available for the genome of interest.</string>
           </property>
           <property name="text">
            <string>Collections:</string>
