@@ -51,8 +51,8 @@ class OffTarget(QtWidgets.QDialog):
                         margin-top: 10px;}"""
 
         self.Step1.setStyleSheet(groupbox_style)
-        self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2").replace("rgb(111,181,110)", "rgb(77,158,89)"))
-        self.Step3.setStyleSheet(groupbox_style.replace("Step1", "Step3").replace("rgb(111,181,110)", "rgb(53,121,93)"))
+        self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2"))
+        self.Step3.setStyleSheet(groupbox_style.replace("Step1", "Step3"))
 
     #copied from MT to fill in the chromo and endo dropdowns based on CSPR files user provided at the startup
     def fill_data_dropdown(self):
