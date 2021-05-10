@@ -79,7 +79,7 @@ class Annotation_Parser:
                         strandChar = '+'
 
                     # update that one's values
-                    values = [currentGeneID, indexNumber, feature.type, int(feature.location.start) + 2,
+                    values = [currentGeneID, indexNumber, feature.type, int(feature.location.start) + 1,
                               int(feature.location.end), strandChar]
 
                     # insert
