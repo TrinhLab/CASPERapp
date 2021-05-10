@@ -153,7 +153,7 @@ class Results(QtWidgets.QMainWindow):
         # if the user is using gbff
         if self.annotation_path.endswith(".gbff"):
             self.geneDict[self.curgene] = tempTuple
-            sequence = GlobalSettings.mainWindow.gene_viewer_settings.gbff_sequence_finder(self.geneDict[self.curgene])
+            sequence = self.gbff_sequence_finder(self.geneDict[self.curgene])
             self.geneNTDict[self.curgene] = sequence
         # if the user is using fna (deprecated)
         """
@@ -1026,7 +1026,7 @@ class Results(QtWidgets.QMainWindow):
         # we are having an issue here. Sometimes the length of the pre_sequence string is not large enough
         # need to talk to brian to see what could be causing that
         # get the correct location and return
-        ret_sequence = pre_sequence[location_data[1]:location_data[2]]
+        ret_sequence = pre_sequence[location_data[1]-1:location_data[2]]
         return ret_sequence
 
     # this function is the function that actually finds the sequence
