@@ -213,18 +213,24 @@ class genLibrary(QtWidgets.QDialog):
                         else:
                             self.bool_temp = True
 
-        app_path = GlobalSettings.appdir.replace('\\','/')
         if platform.system() == 'Windows':
-            exe_path = app_path + r'OffTargetFolder/OT_Win.exe'
+            app_path = GlobalSettings.appdir
+            exe_path = app_path + 'OffTargetFolder\\OT_Win.exe'
+            output_path = '"' + GlobalSettings.CSPR_DB + '\\temp_off.txt" '
+            data_path = '"' + GlobalSettings.CSPR_DB + "\\off_input.txt" + '" '
         elif platform.system() == 'Linux':
-            exe_path = app_path + r'OffTargetFolder/OT_Lin' 
+            app_path = GlobalSettings.appdir.replace('\\', '/')
+            exe_path = app_path + r'OffTargetFolder/OT_Lin'
+            output_path = '"' + GlobalSettings.CSPR_DB + '/temp_off.txt" '
+            data_path = '"' + GlobalSettings.CSPR_DB + "/off_input.txt" + '" '
         else:
-            exe_path = app_path + r'OffTargetFolder/OT_Mac' 
+            app_path = GlobalSettings.appdir.replace('\\', '/')
+            exe_path = app_path + r'OffTargetFolder/OT_Mac'
+            output_path = '"' + GlobalSettings.CSPR_DB + '/temp_off.txt" '
+            data_path = '"' + GlobalSettings.CSPR_DB + "/off_input.txt" + '" '
         exe_path = '"' + exe_path + '" '
-        data_path = '"' + GlobalSettings.CSPR_DB + "/off_input.txt" + '" '
         cspr_path = '"' + self.cspr_file + '" '
         db_path = '"' + self.db_file + '" '
-        output_path = '"' + GlobalSettings.CSPR_DB + '/temp_off.txt" '
         filename = output_path
         filename = filename[:len(filename) - 1]
         filename = filename[1:]
@@ -232,17 +238,15 @@ class genLibrary(QtWidgets.QDialog):
         CASPER_info_path = '"' + app_path + 'CASPERinfo' +'" '
         num_of_mismathes = self.off_max_misMatch
         tolerance = self.off_tol  # create command string
-
+        endo = '"' + GlobalSettings.mainWindow.endoChoice.currentText() + '" '
         detailed_output = " False "
         avg_output = "True"
         # set the off_target_running to true, to keep the user from closing the window while it is running
         self.off_target_running = True
 
-        cmd = exe_path + data_path + cspr_path + db_path + output_path + CASPER_info_path + str(
+        cmd = exe_path + data_path + endo + cspr_path + db_path + output_path + CASPER_info_path + str(
             num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
         
-        print(cmd)
-
         if platform.system() == 'Windows':
             cmd = cmd.replace('/', '\\')
         self.process.readyReadStandardOutput.connect(partial(progUpdate, self.process))
