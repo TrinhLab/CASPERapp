@@ -153,7 +153,7 @@ class Results(QtWidgets.QMainWindow):
         # if the user is using gbff
         if self.annotation_path.endswith(".gbff"):
             self.geneDict[self.curgene] = tempTuple
-            sequence = GlobalSettings.mainWindow.gene_viewer_settings.gbff_sequence_finder(self.geneDict[self.curgene])
+            sequence = self.gbff_sequence_finder(self.geneDict[self.curgene])
             self.geneNTDict[self.curgene] = sequence
         # if the user is using fna (deprecated)
         """
@@ -1023,10 +1023,18 @@ class Results(QtWidgets.QMainWindow):
         pre_sequence = pre_sequence.upper()
         #print("Length of the pre-sequence: ", len(pre_sequence))
 
-        # we are having an issue here. Sometimes the length of the pre_sequence string is not large enough
-        # need to talk to brian to see what could be causing that
-        # get the correct location and return
-        ret_sequence = pre_sequence[location_data[1]:location_data[2]]
+        ###Get gene sequence and padding sequences (for visualizing gRNAs that appear at extreme ends of gene)
+        if location_data[1] - 20 >= 0: ### Check to make sure there is enough 5' end of gene to pull the padding from, so indexing error isn't raised
+            five_prime_tail = str(pre_sequence[location_data[1]-21:location_data[1]-1])
+        else:
+            five_prime_tail = ""
+        if len(pre_sequence) > (location_data[2] + 20): ### Check to make sure there is enough 3' end of gene to pull the padding from, so indexing error isn't raised
+            three_prime_tail = str(pre_sequence[location_data[2]:location_data[2]+20])
+        else:
+            three_prime_tail = ""
+            
+        gene_sequence = str(pre_sequence[location_data[1]-1:location_data[2]])
+        ret_sequence = five_prime_tail.lower() + gene_sequence.upper() + three_prime_tail.lower()
         return ret_sequence
 
     # this function is the function that actually finds the sequence
