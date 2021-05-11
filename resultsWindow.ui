@@ -286,7 +286,7 @@
        </sizepolicy>
       </property>
       <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gene Viewer shows where each gRNA falls within the selected gene. To use, check &amp;quot;Display On,&amp;quot; Select guides from the table, and click &amp;quot;Highlight Selected Guides.&amp;quot;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;span style=&quot; color:#108040;&quot;&gt;Green highlights&lt;/span&gt; = +ve sense, &lt;span style=&quot; color:#fc0107;&quot;&gt;Red highlights&lt;/span&gt; = -ve sense.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gene Viewer shows where each gRNA falls within the selected gene. To use, check &amp;quot;Display On,&amp;quot; Select guides from the table, and click &amp;quot;Highlight Selected Guides.&amp;quot; UPPERCASE nucleotides belong to the gene sequence and lowercase nucleotides belong to regions outside of the gene, which are included to account for gRNAs whose PAMs/cut sites fall within the gene, but other parts of the sequence falls outside the gene.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;span style=&quot; color:#108040;&quot;&gt;Green highlights&lt;/span&gt; = +ve sense&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#fc0107;&quot;&gt;Red highlights&lt;/span&gt; = -ve sense.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="title">
        <string>Gene Viewer</string>
