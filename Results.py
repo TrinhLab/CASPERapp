@@ -109,6 +109,28 @@ class Results(QtWidgets.QMainWindow):
         self.guide_analysis.setStyleSheet(groupbox_style.replace("guide_viewer", "guide_analysis"))
         self.gene_viewer.setStyleSheet(groupbox_style.replace("guide_viewer", "gene_viewer"))
 
+        self.get_endo_data()
+
+    def get_endo_data(self):
+        f = open(GlobalSettings.appdir + "CASPERinfo")
+        self.endo_data = {}
+        while True:
+            line = f.readline()
+            if line.startswith('ENDONUCLEASES'):
+                while True:
+                    line = f.readline()
+                    if (line[0] == "-"):
+                        break
+                    line_tokened = line.split(";")
+                    if len(line_tokened) == 8:
+                        endo = line_tokened[0]
+                        five_length = line_tokened[2]
+                        seed_length = line_tokened[3]
+                        three_length = line_tokened[4]
+                        self.endo_data[endo] = int(five_length) + int(three_length) + int(seed_length)
+                break
+        f.close()
+
 
     # this function opens the export_to_csv window
     # first it makes sure that the user actually has some highlighted targets that they want exported
@@ -149,7 +171,6 @@ class Results(QtWidgets.QMainWindow):
             self.lineEditEnd.setText(str(self.geneDict[self.curgene][2]))
             return
 
-
         # if the user is using gbff
         if self.annotation_path.endswith(".gbff"):
             self.geneDict[self.curgene] = tempTuple
@@ -162,7 +183,6 @@ class Results(QtWidgets.QMainWindow):
             sequence = GlobalSettings.mainWindow.gene_viewer_settings.fna_sequence_finder(self.geneDict[self.curgene])
             self.geneNTDict[self.curgene] = sequence
         """
-
         # check and see if we need to add lowercase letters
         changeInStart = tempTuple[1] - prevTuple[1]
         changeInEnd = tempTuple[2] - prevTuple[2]
@@ -236,11 +256,14 @@ class Results(QtWidgets.QMainWindow):
                 # get the location
                 location = int(locationString) - self.geneDict[self.curgene][1]
 
+                try:
+                    movementIndex = self.endo_data[self.endonucleaseBox.currentText()]
+                except:
+                    QtWidgets.QMessageBox.critical(self, "Endo data not found.", "Could not find length of sequences in CASPERinfo file based on endo selected.", QtWidgets.QMessageBox.Ok)
+                    return
+
                 # get which way it's moving, and the real location. This is for checking edge cases
                 if "Cas12" in self.endonucleaseBox.currentText():
-                    # movement is always 24
-                    movementIndex = 24
-
                     # if the strand is positive, it moves to the right, if the strand is negative, it moves to the left
                     if strandString == "-":
                         left_right = "-"
@@ -250,10 +273,6 @@ class Results(QtWidgets.QMainWindow):
                         left_right = "+"
                 # if the endo is Cas9
                 elif "Cas9" in self.endonucleaseBox.currentText():
-                    # movement is always 20
-                    movementIndex = 20
-                    location = location + 2
-
                     # if the strand is negative, it moves to the right if the strand is positive it moves to the left
                     if strandString == "-":
                         left_right = "+"
@@ -418,8 +437,6 @@ class Results(QtWidgets.QMainWindow):
             self.rows_and_seq_list.append(rows_and_seq2)
             self.comboBoxGene.addItem(gene_name)
             self.get_targets(gene, geneposdict[gene])
-
-
 
         # Enable the combobox to be toggled now that the data is in AllData
         self.comboBoxGene.currentTextChanged.connect(self.displayGeneData)
@@ -959,7 +976,7 @@ class Results(QtWidgets.QMainWindow):
     def load_gene_viewer(self):
         sequence = ""
         # for each gene selected from the results window
-        for item in GlobalSettings.mainWindow.Results.geneDict:
+        for item in self.geneDict:
         ### FNA support deprecated currently 
             """
             if self.file_type == "fna":
@@ -967,14 +984,13 @@ class Results(QtWidgets.QMainWindow):
                 GlobalSettings.mainWindow.Results.geneNTDict[item] = sequence
             """
             if self.annotation_path.endswith(".gbff"):
-                sequence = self.gbff_sequence_finder(GlobalSettings.mainWindow.Results.geneDict[item])
-                GlobalSettings.mainWindow.Results.geneNTDict[item] = sequence
-
-        GlobalSettings.mainWindow.Results.lineEditStart.setEnabled(True)
-        GlobalSettings.mainWindow.Results.lineEditEnd.setEnabled(True)
-        GlobalSettings.mainWindow.Results.change_start_end_button.setEnabled(True)
-        GlobalSettings.mainWindow.Results.displayGeneViewer.setChecked(0)
-        GlobalSettings.mainWindow.Results.checkGeneViewer()
+                sequence = self.gbff_sequence_finder(self.geneDict[item])
+                self.geneNTDict[item] = sequence
+        self.lineEditStart.setEnabled(True)
+        self.lineEditEnd.setEnabled(True)
+        self.change_start_end_button.setEnabled(True)
+        self.displayGeneViewer.setChecked(0)
+        self.checkGeneViewer()
 
     # this function gets the sequence out of the GBFF file
     # may have indexing issues
