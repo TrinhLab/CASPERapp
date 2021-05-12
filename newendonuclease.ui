@@ -65,6 +65,9 @@
        <height>98</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Scoring algorithms are autopopulated from the CASPERinfo file. If you wish to upload a custom on- or off-target dataset, simply append it to the CASPERinfo file using the same format as the default datasets.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="title">
       <string>Scoring Algorithms:</string>
      </property>
@@ -153,7 +156,7 @@
          </size>
         </property>
         <property name="placeholderText">
-         <string>Ex. NGG or NGG,NNG</string>
+         <string>Ex. NGG</string>
         </property>
        </widget>
       </item>
@@ -272,7 +275,7 @@
       </font>
      </property>
      <property name="toolTip">
-      <string>Please fill out the fields and click &quot;Submit&quot; to define a New Endonuclease in your CASPERinfo file. Placeholder texts give example inputs for uploading spCas9 endonuclease.</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Please fill out the fields and click &amp;quot;Submit&amp;quot; to define a New Endonuclease in your CASPERinfo file.&lt;/p&gt;&lt;p&gt;Placeholder texts give example inputs for uploading spCas9 endonuclease.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="text">
       <string>Define New Endonuclease</string>
