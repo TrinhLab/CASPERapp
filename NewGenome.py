@@ -239,7 +239,6 @@ class NewGenome(QtWidgets.QMainWindow):
 
     def fillEndo(self):
         f = open(GlobalSettings.appdir + "CASPERinfo")
-
         while True:
             line = f.readline()
             if line.startswith('ENDONUCLEASES'):
@@ -248,7 +247,7 @@ class NewGenome(QtWidgets.QMainWindow):
                     if (line[0] == "-"):
                         break
                     line_tokened = line.split(";")
-                    if len(line_tokened) == 8:
+                    if len(line_tokened) == 10:
                         endo = line_tokened[0]
                         # Checking to see if there is more than one pam sequence in the list
                         if line_tokened[1].find(",") != -1:

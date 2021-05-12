@@ -87,11 +87,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         #Window centering stuff
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
+        self.mwfg.moveCenter(self.cp)  ##Center window
+        self.move(self.mwfg.topLeft())  ##Center window
+        #screen = QtGui.QGuiApplication.screenAt(QtGui.QCursor().pos())
 
-        screen = QtGui.QGuiApplication.screenAt(QtGui.QCursor().pos())
-        fg = self.frameGeometry()
-        fg.moveCenter(screen.geometry().center())
-        self.move(fg.topLeft())
 
         #Initialize variables
         self.index_to_cspr = {}

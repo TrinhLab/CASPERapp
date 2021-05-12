@@ -696,7 +696,7 @@
   </action>
   <action name="actionUpload_New_Endonuclease">
    <property name="text">
-    <string>Upload New Endonuclease</string>
+    <string>Define New Endonuclease</string>
    </property>
   </action>
   <action name="actionOpen_Genome_Browser">
