@@ -194,6 +194,9 @@
           <height>300</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To analyze a seed, simply click on the row in the table and the figures will be populated.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Note:&lt;/span&gt; if multiple rows are selected in the table, only the first seed will be analyzed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="title">
          <string>Seed Analysis:</string>
         </property>
@@ -201,7 +204,7 @@
          <item row="3" column="0">
           <widget class="QTabWidget" name="tabWidget_2">
            <property name="currentIndex">
-            <number>1</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="tab_3">
             <attribute name="title">
@@ -247,6 +250,13 @@
              </item>
             </layout>
            </widget>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Currently Analyzing:</string>
+           </property>
           </widget>
          </item>
         </layout>

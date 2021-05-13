@@ -104,7 +104,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         if (self.line_bool and self.bar_bool):
             self.multitargeting_statistics.show()
         else:
-            QtWidgets.QMessageBox.question(self, "No analysis run.", 'Multitargeting Analysis must be performed before viewing statistics.\n\nSelect an organism and endonuclease and click "Analyze," then try again.', QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.question(self, "No analysis run.", 'Multitargeting Analysis must be performed before viewing statistics.\n\nSelect an organism and endonuclease and click "Analyze" then try again.', QtWidgets.QMessageBox.Ok)
             return True
 
     def eventFilter(self, source, event):
