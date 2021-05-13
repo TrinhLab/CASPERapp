@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>990</width>
-    <height>869</height>
+    <width>1132</width>
+    <height>871</height>
    </rect>
   </property>
   <property name="font">
@@ -21,6 +21,22 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
+    <item row="5" column="1">
+     <widget class="QTableWidget" name="tableWidget">
+      <property name="minimumSize">
+       <size>
+        <width>400</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+     </widget>
+    </item>
     <item row="13" column="1">
      <widget class="QPushButton" name="back_button">
       <property name="maximumSize">
@@ -52,111 +68,6 @@
       <property name="text">
        <string>Multitargeting Analysis</string>
       </property>
-     </widget>
-    </item>
-    <item row="4" column="2" rowspan="2">
-     <widget class="QGroupBox" name="groupBox_3">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>441</width>
-        <height>680</height>
-       </size>
-      </property>
-      <property name="title">
-       <string>Global Analysis:</string>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_5">
-       <property name="sizeConstraint">
-        <enum>QLayout::SetDefaultConstraint</enum>
-       </property>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_4">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Repeat Location Histogram</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QPushButton" name="statistics_overview">
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>32</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Statistics Overview</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QTabWidget" name="tabWidget">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="currentIndex">
-          <number>0</number>
-         </property>
-         <widget class="QWidget" name="tab">
-          <attribute name="title">
-           <string>Repeats per ID Number</string>
-          </attribute>
-          <layout class="QGridLayout" name="gridLayout_3">
-           <item row="0" column="0">
-            <widget class="QWidget" name="repeats_vs_seeds_line" native="true"/>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="tab_2">
-          <attribute name="title">
-           <string>Sequences per Number Repeats</string>
-          </attribute>
-          <layout class="QGridLayout" name="gridLayout_4">
-           <item row="0" column="0">
-            <widget class="QWidget" name="seeds_vs_repeats_bar" native="true"/>
-           </item>
-          </layout>
-         </widget>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QWidget" name="repeats_vs_chromo" native="true">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>250</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
      </widget>
     </item>
     <item row="4" column="1">
@@ -227,106 +138,17 @@
       </layout>
      </widget>
     </item>
-    <item row="5" column="1">
-     <widget class="QGroupBox" name="groupBox_2">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
+    <item row="3" column="1" colspan="2">
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
-      <property name="minimumSize">
-       <size>
-        <width>441</width>
-        <height>553</height>
-       </size>
-      </property>
-      <property name="title">
-       <string>Granular Analysis:</string>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_6">
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_5">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Scaffold/Chromosome Viewer:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QPushButton" name="pushButton">
-         <property name="maximumSize">
-          <size>
-           <width>200</width>
-           <height>32</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Export Selected gRNAs</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="2">
-        <widget class="QGraphicsView" name="graphicsView_2">
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>41</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0" colspan="2">
-        <widget class="QGraphicsView" name="graphicsView">
-         <property name="minimumSize">
-          <size>
-           <width>400</width>
-           <height>200</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0" colspan="2">
-        <widget class="QTableWidget" name="tableWidget">
-         <property name="minimumSize">
-          <size>
-           <width>400</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-        </widget>
-       </item>
-      </layout>
      </widget>
     </item>
     <item row="0" column="1">
      <widget class="Line" name="line_2">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1" colspan="2">
-     <widget class="Line" name="line">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
       </property>
      </widget>
     </item>
@@ -356,6 +178,177 @@
       </property>
      </widget>
     </item>
+    <item row="4" column="2" rowspan="2">
+     <layout class="QGridLayout" name="gridLayout_7">
+      <item row="0" column="0">
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>300</height>
+         </size>
+        </property>
+        <property name="title">
+         <string>Seed Analysis:</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_6">
+         <item row="3" column="0">
+          <widget class="QTabWidget" name="tabWidget_2">
+           <property name="currentIndex">
+            <number>1</number>
+           </property>
+           <widget class="QWidget" name="tab_3">
+            <attribute name="title">
+             <string>Scaffold/Chromosome Viewer:</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout">
+             <item>
+              <widget class="QGraphicsView" name="graphicsView_2">
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>41</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGraphicsView" name="graphicsView">
+               <property name="minimumSize">
+                <size>
+                 <width>400</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tab_4">
+            <attribute name="title">
+             <string>Seed Distribution</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_2">
+             <item>
+              <widget class="QWidget" name="repeats_vs_chromo" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QGroupBox" name="groupBox_3">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>400</height>
+         </size>
+        </property>
+        <property name="title">
+         <string>Global Analysis:</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetDefaultConstraint</enum>
+         </property>
+         <item row="0" column="0">
+          <widget class="QPushButton" name="statistics_overview">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Arial</family>
+             <pointsize>14</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Statistics Overview</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QTabWidget" name="tabWidget">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <widget class="QWidget" name="tab">
+            <attribute name="title">
+             <string>Repeats per ID Number</string>
+            </attribute>
+            <layout class="QGridLayout" name="gridLayout_3">
+             <item row="0" column="0">
+              <widget class="QWidget" name="repeats_vs_seeds_line" native="true"/>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tab_2">
+            <attribute name="title">
+             <string>Sequences per Number Repeats</string>
+            </attribute>
+            <layout class="QGridLayout" name="gridLayout_4">
+             <item row="0" column="0">
+              <widget class="QWidget" name="seeds_vs_repeats_bar" native="true"/>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="13" column="2" alignment="Qt::AlignRight">
+     <widget class="QPushButton" name="pushButton">
+      <property name="maximumSize">
+       <size>
+        <width>200</width>
+        <height>32</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Export Selected gRNAs</string>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -363,7 +356,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>990</width>
+     <width>1132</width>
      <height>24</height>
     </rect>
    </property>
