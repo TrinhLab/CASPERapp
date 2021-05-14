@@ -76,12 +76,12 @@ class NewEndonuclease(QtWidgets.QDialog):
         off_scoring = str(self.comboBox_2.currentText())
         length = len(seed_len) + len(five_len) + len(three_len)
         argument_list = [abbr, pam, five_len, seed_len, three_len, pam_dir, name, crisprtype, on_scoring, off_scoring]
-        validPAM = ('A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y',',')
+        validPAM = ('A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y')
         self.error = False;
 
         ### Error checking for PAM alphabet
         for letter in pam:
-            if (letter.upper() not in validPAM):
+            if (letter not in validPAM):
                 QtWidgets.QMessageBox.question(self, "Invalid PAM", "Invalid characters in PAM Sequence.",
                                                QtWidgets.QMessageBox.Ok)
                 self.exec()
@@ -99,7 +99,17 @@ class NewEndonuclease(QtWidgets.QDialog):
                 return True
             else:
                 pass
-            
+        
+        ### Check for duplicate endo abbreviations
+        for key in GlobalSettings.mainWindow.organisms_to_endos:
+            endo = GlobalSettings.mainWindow.organisms_to_endos[key]
+            if abbr in endo:
+                QtWidgets.QMessageBox.question(self, "Duplicate endo name.", "The given abbreviation already exists.  Please choose a unique identifier.", QtWidgets.QMessageBox.Ok)
+                self.exec()
+                return True
+            else:
+                pass
+                 
         myString = ""
         for i, arg in enumerate(argument_list):
             if i == len(argument_list)-1: ### Last argument in list

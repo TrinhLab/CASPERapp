@@ -124,6 +124,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.ncbi_table.verticalHeader().hide()
         self.all_rows.clicked.connect(self.select_all)
         self.browse_button.clicked.connect(self.browseForFolder)
+        self.back_button.clicked.connect(self.go_back)
         self.ncbi_table.setFocusPolicy(QtCore.Qt.NoFocus)
         self.progressBar.setValue(0)
         self.rename_window = rename_window()
@@ -142,6 +143,28 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.Step1.setStyleSheet(groupbox_style)
         self.Step2.setStyleSheet(groupbox_style.replace("Step1","Step2"))
         self.Step3.setStyleSheet(groupbox_style.replace("Step1","Step3"))
+
+    def go_back(self):
+        """ Clear table """
+        self.df = pd.DataFrame() ###Make empty DF
+        self.model = PandasModel(self.df)
+        self.proxy = CustomProxyModel(self)
+        self.proxy.setSourceModel(self.model)
+        self.ncbi_table.setModel(self.proxy)
+        self.ncbi_table.verticalHeader().hide()
+        """ Clear all line edits """
+        self.organism_line_edit.clear()
+        self.infra_name_line_edit.clear()
+        self.ret_max_line_edit.setText("1000")
+        self.infra_name_line_edit.clear()
+        """ Reset all checkboxes """
+        self.yes_box.setChecked(False)
+        self.genbank_checkbox.setChecked(False)
+        self.refseq_checkbox.setChecked(False)
+        self.gbff_checkbox.setChecked(False)
+        self.fna_checkbox.setChecked(False)
+        """ Hide window """
+        self.close()
 
     def browseForFolder(self):
         # get the folder
@@ -434,7 +457,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
             self.rename_window.resize(self.rename_window.sizeHint())
             self.rename_window.show()
         
-    def go_back(self):
+    def rename_go_back(self):
         self.rename_window.close()
         
     def submit_rename(self):
