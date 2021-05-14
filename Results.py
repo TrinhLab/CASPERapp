@@ -119,6 +119,7 @@ class Results(QtWidgets.QMainWindow):
             if line.startswith('ENDONUCLEASES'):
                 while True:
                     line = f.readline()
+                    line = line.replace("\n","")
                     if (line[0] == "-"):
                         break
                     line_tokened = line.split(";")
@@ -129,7 +130,7 @@ class Results(QtWidgets.QMainWindow):
                         three_length = line_tokened[4]
                         prime = line_tokened[5]
                         hsu = line_tokened[9]
-                        self.endo_data[endo] = [int(five_length) + int(three_length) + int(seed_length), prime, hsu]
+                        self.endo_data[endo] = [int(five_length) + int(three_length) + int(seed_length), prime, "MATRIX:" + hsu]
 
                 break
         f.close()

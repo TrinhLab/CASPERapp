@@ -98,8 +98,32 @@ class genLibrary(QtWidgets.QDialog):
 
         # get the gRNA data from the cspr file
         self.cspr_data = self.parser.gen_lib_parser(self.gen_lib_dict, GlobalSettings.mainWindow.endoChoice.currentText())
+        self.get_endo_data()
         self.show()
 
+    def get_endo_data(self):
+        f = open(GlobalSettings.appdir + "CASPERinfo")
+        self.endo_data = {}
+        while True:
+            line = f.readline()
+            if line.startswith('ENDONUCLEASES'):
+                while True:
+                    line = f.readline()
+                    line = line.replace("\n","")
+                    if (line[0] == "-"):
+                        break
+                    line_tokened = line.split(";")
+                    if len(line_tokened) == 10:
+                        endo = line_tokened[0]
+                        five_length = line_tokened[2]
+                        seed_length = line_tokened[3]
+                        three_length = line_tokened[4]
+                        prime = line_tokened[5]
+                        hsu = line_tokened[9]
+                        self.endo_data[endo] = [int(five_length) + int(three_length) + int(seed_length), prime, "MATRIX:" + hsu]
+
+                break
+        f.close()
 
     # this is here in case the user clicks 'x' instead of cancel. Just calls the cancel function
     def closeEvent(self, event):
@@ -241,12 +265,14 @@ class genLibrary(QtWidgets.QDialog):
         endo = '"' + GlobalSettings.mainWindow.endoChoice.currentText() + '" '
         detailed_output = " False "
         avg_output = "True"
+        hsu = ' "' + self.endo_data[GlobalSettings.mainWindow.endoChoice.currentText()][2] + '"'
+
         # set the off_target_running to true, to keep the user from closing the window while it is running
         self.off_target_running = True
 
         cmd = exe_path + data_path + endo + cspr_path + db_path + output_path + CASPER_info_path + str(
-            num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
-        
+            num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output + hsu
+
         if platform.system() == 'Windows':
             cmd = cmd.replace('/', '\\')
         self.process.readyReadStandardOutput.connect(partial(progUpdate, self.process))
