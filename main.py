@@ -927,6 +927,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Results.move(self.Results.mwfg.topLeft())  ##Center window
         self.Results.endonucleaseBox.currentIndexChanged.connect(self.Results.changeEndonuclease)
         self.Results.load_gene_viewer()
+        self.Results.get_endo_data()
         self.Results.show()
 
 

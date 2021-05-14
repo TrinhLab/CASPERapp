@@ -119,15 +119,19 @@ class Results(QtWidgets.QMainWindow):
             if line.startswith('ENDONUCLEASES'):
                 while True:
                     line = f.readline()
+                    line = line.replace("\n","")
                     if (line[0] == "-"):
                         break
                     line_tokened = line.split(";")
-                    if len(line_tokened) == 8:
+                    if len(line_tokened) == 10:
                         endo = line_tokened[0]
                         five_length = line_tokened[2]
                         seed_length = line_tokened[3]
                         three_length = line_tokened[4]
-                        self.endo_data[endo] = int(five_length) + int(three_length) + int(seed_length)
+                        prime = line_tokened[5]
+                        hsu = line_tokened[9]
+                        self.endo_data[endo] = [int(five_length) + int(three_length) + int(seed_length), prime, "MATRIX:" + hsu]
+
                 break
         f.close()
 
@@ -255,15 +259,14 @@ class Results(QtWidgets.QMainWindow):
 
                 # get the location
                 location = int(locationString) - self.geneDict[self.curgene][1]
-
                 try:
-                    movementIndex = self.endo_data[self.endonucleaseBox.currentText()]
+                    movementIndex = self.endo_data[self.endonucleaseBox.currentText()][0]
                 except:
                     QtWidgets.QMessageBox.critical(self, "Endo data not found.", "Could not find length of sequences in CASPERinfo file based on endo selected.", QtWidgets.QMessageBox.Ok)
                     return
 
                 # get which way it's moving, and the real location. This is for checking edge cases
-                if "Cas12" in self.endonucleaseBox.currentText():
+                if int(self.endo_data[self.endonucleaseBox.currentText()][1]) == 5:
                     # if the strand is positive, it moves to the right, if the strand is negative, it moves to the left
                     if strandString == "-":
                         left_right = "-"
@@ -271,8 +274,7 @@ class Results(QtWidgets.QMainWindow):
                     elif strandString == "+":
                         location = (location + len(self.targetTable.item(i,4).text())) + 1
                         left_right = "+"
-                # if the endo is Cas9
-                elif "Cas9" in self.endonucleaseBox.currentText():
+                else:
                     # if the strand is negative, it moves to the right if the strand is positive it moves to the left
                     if strandString == "-":
                         left_right = "+"

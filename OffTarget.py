@@ -170,12 +170,13 @@ class OffTarget(QtWidgets.QDialog):
         num_of_mismathes = int(self.mismatchcomboBox.currentText())
         tolerance = self.tolerance
         endo = ' "' + self.EndocomboBox.currentText() + '"'
+        hsu = ' "' + GlobalSettings.mainWindow.Results.endo_data[self.EndocomboBox.currentText()][2] + '"'
 
         #create command string
-        cmd = exe_path + data_path + endo + cspr_path + db_path + self.output_path + CASPER_info_path + str(num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output
+        cmd = exe_path + data_path + endo + cspr_path + db_path + self.output_path + CASPER_info_path + str(num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output + hsu
         if platform.system() == 'Windows':
             cmd = cmd.replace('/', '\\')
-        #print(cmd)
+
         #used to know when the process is done
         def finished():
             self.running = False
