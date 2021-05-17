@@ -1,4 +1,6 @@
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
 import GlobalSettings
 from PyQt5.QtChart import QChartView
 from Algorithms import SeqTranslate
@@ -9,6 +11,7 @@ import sqlite3
 import gzip
 from collections import Counter
 import statistics
+import repeats_vs_seeds_line
 
 
 class Multitargeting(QtWidgets.QMainWindow):
@@ -18,22 +21,44 @@ class Multitargeting(QtWidgets.QMainWindow):
         super(Multitargeting, self).__init__()
         uic.loadUi(GlobalSettings.appdir + 'multitargetingwindow.ui', self)
         self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
+        self.multitargeting_statistics = Multitargeting_Statistics()
 
         self.sq = SeqTranslate()  # SeqTranslate object used in class
+        self.line_bool = False # Used to check if VBoxLayout already has canvas in it
+        self.bar_bool = False # Used to check if VBoxLayout already has canvas in it
+        self.seed_bar_bool = False # Used to check if VBoxLayout already has canvas in it
 
-        # Initializes the three graphs
-        self.chart_view_chro_bar = QChartView()
-        self.chart_view_repeat_bar = QChartView()
-        self.chart_view_repeat_line = QChartView()
+        # GroupBox Styling
+        groupbox_style = """
+        QGroupBox:title{subcontrol-origin: margin;
+                        left: 10px;
+                        padding: 0 5px 0 15px;}
+        QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
+                        border-radius: 9px;
+                        font: 15pt "Arial";
+                        font: bold;
+                        margin-top: 10px;}"""
+        self.groupBox.setStyleSheet(groupbox_style)
+        self.groupBox_2.setStyleSheet(groupbox_style.replace("groupBox","groupBox_2"))
+        self.groupBox_3.setStyleSheet(groupbox_style.replace("groupBox","groupBox_3"))
+
+        # Initializes layouts for the graphs
+        self.global_line = QtWidgets.QVBoxLayout()
+        self.global_bar = QtWidgets.QVBoxLayout()
+        self.seed_bar = QtWidgets.QVBoxLayout()
+        self.global_line.setContentsMargins(0,0,0,0)
+        self.global_bar.setContentsMargins(0,0,0,0)
+        self.seed_bar.setContentsMargins(0,0,0,0)
 
         self.data = ""
         self.shortHand = ""
         self.chromo_length = list()
 
         # Listeners for changing the seed sequence or the .cspr file
-        self.chromo_seed.currentIndexChanged.connect(self.seed_chromo_changed)
-        self.update_min_max.clicked.connect(self.update)
+#        self.chromo_seed.currentIndexChanged.connect(self.seed_chromo_changed)
+#        self.update_min_max.clicked.connect(self.update)
         self.Analyze_Button.clicked.connect(self.make_graphs)
+        self.statistics_overview.clicked.connect(self.show_statistics)
 
         # go back to main button
         self.back_button.clicked.connect(self.go_back)
@@ -74,6 +99,13 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.mwfg.moveCenter(self.cp)  ##Center window
         self.move(self.mwfg.topLeft())  ##Center window
         self.hide()
+
+    def show_statistics(self):
+        if (self.line_bool and self.bar_bool):
+            self.multitargeting_statistics.show()
+        else:
+            QtWidgets.QMessageBox.question(self, "No analysis run.", 'Multitargeting Analysis must be performed before viewing statistics.\n\nSelect an organism and endonuclease and click "Analyze" then try again.', QtWidgets.QMessageBox.Ok)
+            return True
 
     def eventFilter(self, source, event):
         if (event.type() == QtCore.QEvent.MouseMove and source is self.graphicsView.viewport()):
@@ -203,16 +235,16 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.loading_window.loading_bar.setValue(20)
         self.bar_seeds_vs_repeats()
         self.loading_window.loading_bar.setValue(40)
-        self.fill_min_max()
+        #self.fill_min_max()
         self.loading_window.loading_bar.setValue(60)
-        self.fill_seed_id_chrom()
+        #self.fill_seed_id_chrom()
         self.loading_window.loading_bar.setValue(80)
-        self.fill_Chromo_Text(self.chromo_seed.currentText())
+        #self.fill_Chromo_Text(self.chromo_seed.currentText())
         self.loading_window.loading_bar.setValue(100)
-        self.avg_rep.setText(str(float(self.average)))
-        self.med_rep.setText(str(float(self.median)))
-        self.mode_rep.setText(str(float(self.mode)))
-        self.nbr_seq.setText(str(float(self.repeat_count)))
+        self.multitargeting_statistics.avg_rep.setText(str(round(float(self.average),1)))
+        self.multitargeting_statistics.med_rep.setText(str(round(float(self.median),1)))
+        self.multitargeting_statistics.mode_rep.setText(str(round(float(self.mode),1)))
+        self.multitargeting_statistics.nbr_seq.setText(str(round(float(self.repeat_count),1)))
         self.loading_window.hide()
 
 
@@ -238,7 +270,7 @@ class Multitargeting(QtWidgets.QMainWindow):
 
                     break
 
-        seed = self.chromo_seed.currentText()
+        seed = self.chromo_seed.currentText() ###Change to selection from table
         data = c.execute("SELECT chromosome, location FROM repeats WHERE seed = ? ", (seed,)).fetchone()
         c.close()
         if data != None:
@@ -304,7 +336,7 @@ class Multitargeting(QtWidgets.QMainWindow):
     def generate_event_data(self):
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
-        seed = self.chromo_seed.currentText()
+#        seed = self.chromo_seed.currentText()
         data = list(c.execute("SELECT * FROM repeats WHERE seed = ? ", (seed,)).fetchone())
         c.close()
         chromo = data[1].split(',')
@@ -341,7 +373,12 @@ class Multitargeting(QtWidgets.QMainWindow):
     # this graphs is connected to the repeats_vs_chromo.py file
     # to represent the widget space in the UI file
     def chro_bar_create(self, seed):
-        self.repeats_vs_chromo.canvas.axes.clear()
+        ###Clear out old widgets in layout
+        for i in reversed(range(self.seed_bar.count())): 
+            self.seed_bar.itemAt(i).widget().setParent(None)
+        self.seed_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
+        self.seed_bar.addWidget(self.seed_canvas) ### Add canvas to global line layout 
+        self.repeats_vs_chromo.setLayout(self.seed_bar) ### Add global line layout to repeats vs. seeds line plot widget
         y = []
         x_labels = []
         conn = sqlite3.connect(self.db_file)
@@ -358,21 +395,30 @@ class Multitargeting(QtWidgets.QMainWindow):
         x = list(range(0, len(x_labels)))
 
         #the following statements are plottings / formatting for the graph
-        self.repeats_vs_chromo.canvas.axes.bar(x, y, align='center')
-        self.repeats_vs_chromo.canvas.axes.yaxis.set_major_locator(MaxNLocator(integer=True))
-        self.repeats_vs_chromo.canvas.axes.set_ylim(0, max(y) + 1)
-        self.repeats_vs_chromo.canvas.axes.set_xticks(x)
-        self.repeats_vs_chromo.canvas.axes.set_xticklabels(x_labels)
-        self.repeats_vs_chromo.canvas.axes.set_xlabel('Chromosome')
-        self.repeats_vs_chromo.canvas.axes.set_ylabel('Number of Repeats')
-        self.repeats_vs_chromo.canvas.draw()
+        self.seed_canvas.axes.bar(x, y, align='center')
+        self.seed_canvas.axes.yaxis.set_major_locator(MaxNLocator(integer=True))
+        self.seed_canvas.axes.set_ylim(0, max(y) + 1)
+        self.seed_canvas.axes.set_xticks(x)
+        self.seed_canvas.axes.set_xticklabels(x_labels)
+        self.seed_canvas.axes.set_xlabel('Chromosome', fontsize = 10)
+        self.seed_canvas.axes.set_ylabel('Number of Repeats', fontsize=10)
+        self.line_canvas.axes.set_title('Repeats per Scaffold/Chromosome',fontsize=10)
+        self.line_canvas.axes.tick_params(axis='both', which='major', labelsize=8)
+        self.line_canvas.draw()
 
 
     # plots the sequences per Number Repeats bar graph
     # this graph is connected to the seeds_vs_repeats_bar.py file
     # to represent the wdiget space in the UI file
     def bar_seeds_vs_repeats(self):
-        self.seeds_vs_repeats_bar.canvas.axes.clear()
+        ###Clear out old widgets in layout
+        for i in reversed(range(self.global_bar.count())): 
+            self.global_bar.itemAt(i).widget().setParent(None)
+        self.bar_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
+        self.global_bar.addWidget(self.bar_canvas) ### Add canvas to global line layout 
+        self.seeds_vs_repeats_bar.setLayout(self.global_bar) ### Add global line layout to repeats vs. seeds line plot widget
+
+        """ Get the data """ 
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         data = c.execute("SELECT seed, count from repeats").fetchall()
@@ -391,21 +437,22 @@ class Multitargeting(QtWidgets.QMainWindow):
             y.append(repeat_data[rep])
         x = list(range(0, len(x_labels)))
         # the following are plotting / formatting for the graph
-        self.seeds_vs_repeats_bar.canvas.axes.bar(x, y)
-        self.seeds_vs_repeats_bar.canvas.axes.set_xticks(x)
-        self.seeds_vs_repeats_bar.canvas.axes.set_xticklabels(x_labels)
-        self.seeds_vs_repeats_bar.canvas.axes.set_xlabel('Number of Repeats')
-        self.seeds_vs_repeats_bar.canvas.axes.set_ylabel('Number of Sequences')
-        self.seeds_vs_repeats_bar.canvas.axes.set_title('Number of Sequences per Number of Repeats')
-
+        self.bar_canvas.axes.bar(x, y)
+        self.bar_canvas.axes.set_xticks(x)
+        self.bar_canvas.axes.set_xticklabels(x_labels)
+        self.bar_canvas.axes.set_xlabel('Number of Repeats', fontsize=10)
+        self.bar_canvas.axes.set_ylabel('Number of Sequences', fontsize=10)
+        self.bar_canvas.axes.set_title('Number of Sequences per Number of Repeats',fontsize=10)
+        self.bar_canvas.axes.tick_params(axis='both', which='major', labelsize=8)
+        self.bar_bool = True
 
         # rects are all the bar objects in the graph
-        rects = self.seeds_vs_repeats_bar.canvas.axes.patches
+        rects = self.bar_canvas.axes.patches
         rect_vals = []
         # this for loop will calculate the height and create an annotation for each bar
         for rect in rects:
             height = rect.get_height()
-            temp = self.seeds_vs_repeats_bar.canvas.axes.text(rect.get_x() + rect.get_width() / 2, height,
+            temp = self.bar_canvas.axes.text(rect.get_x() + rect.get_width() / 2, height,
                                                               '%d' % int(height),
                                                               ha='center', va='bottom')
             temp.set_visible(False)
@@ -421,19 +468,26 @@ class Multitargeting(QtWidgets.QMainWindow):
                 else:
                     rect_vals[i].set_visible(False)
                 i = i + 1
-            self.seeds_vs_repeats_bar.canvas.draw()
+            self.bar_canvas.draw()
 
         # statement to detect cursor hovering over the bars
-        self.seeds_vs_repeats_bar.canvas.mpl_connect('motion_notify_event', on_plot_hover)
+        self.bar_canvas.mpl_connect('motion_notify_event', on_plot_hover)
         # must redraw after every change
-        self.seeds_vs_repeats_bar.canvas.draw()
+        self.bar_canvas.draw()
 
 
     # plots the repeats per ID number graph as line graph
     # this graph is connected to the repeats_vs_seeds_line.py file
-    # to represent the widget space in the UI file
+    
     def plot_repeats_vs_seeds(self):
-        self.repeats_vs_seeds_line.canvas.axes.clear()
+        ###Clear out old widgets in layout
+        for i in reversed(range(self.global_line.count())): 
+            self.global_line.itemAt(i).widget().setParent(None)
+        self.line_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
+        self.global_line.addWidget(self.line_canvas) ### Add canvas to global line layout 
+        self.repeats_vs_seeds_line.setLayout(self.global_line) ### Add global line layout to repeats vs. seeds line plot widget
+
+        """ Fetch all the data """
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         data = c.execute("SELECT seed, count from repeats").fetchall()
@@ -452,19 +506,21 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.repeat_count = len(data)
 
         # clear axes
-        self.repeats_vs_seeds_line.canvas.axes.clear()
-        # the following are for plotting / formatting
-        self.repeats_vs_seeds_line.canvas.axes.plot(x1, y1)
-        self.repeats_vs_seeds_line.canvas.axes.set_xlabel('Seed ID Number')
-        self.repeats_vs_seeds_line.canvas.axes.set_ylabel('Number of Repeats')
-        self.repeats_vs_seeds_line.canvas.axes.set_title('Number of Repeats per Seed ID Number')
+        self.line_canvas.axes.clear()
+        #Plotting / formatting
+        self.line_canvas.axes.plot(x1, y1)
+        self.line_canvas.axes.set_xlabel('Seed ID Number',fontsize=10)
+        self.line_canvas.axes.set_ylabel('Number of Repeats',fontsize=10)
+        self.line_canvas.axes.set_title('Number of Repeats per Seed ID Number',fontsize=10)
+        self.line_canvas.axes.tick_params(axis='both', which='major', labelsize=8)
         # always redraw at the end
-        self.repeats_vs_seeds_line.canvas.draw()
+        self.line_bool = True
+        self.line_canvas.draw()
 
 
     #fills min and max dropdown windows ###NEED TO EDIT FOR TEXTEDIT
     def fill_min_max(self,run_seed_fill=True):
-        self.update_min_max.clicked.disconnect()
+#        self.update_min_max.clicked.disconnect()
         self.max_chromo.clear()
         self.min_chromo.clear()
         conn = sqlite3.connect(self.db_file)
@@ -475,12 +531,12 @@ class Multitargeting(QtWidgets.QMainWindow):
         nums = list(range(1, max_rep + 1))
         self.min_chromo.setText(str(min(nums)))
         self.max_chromo.setText(str(max(nums)))
-        self.update_min_max.clicked.connect(self.update)
+#########        self.update_min_max.clicked.connect(self.update)
 
 
     #fill_seed_id_chrom will fill the seed ID dropdown, and create the chromosome graph
     def fill_seed_id_chrom(self):
-        self.chromo_seed.disconnect()
+#        self.chromo_seed.disconnect()
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         min_v = int(self.min_chromo.toPlainText())
@@ -504,8 +560,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             i += 1
         self.seed_counter = 0
         self.seed_max_counter = len(self.seeds) / 1000
-        self.chromo_seed.setModel(model)
-        self.chromo_seed.currentIndexChanged.connect(self.seed_chromo_changed)
+#        self.chromo_seed.setModel(model)
+#        self.chromo_seed.currentIndexChanged.connect(self.seed_chromo_changed)
 
 
     def update(self):
@@ -523,7 +579,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 if self.seed.toPlainText() == '':
                     self.fill_seed_id_chrom()
                     self.loading_window.loading_bar.setValue(50)
-                    self.fill_Chromo_Text(self.chromo_seed.currentText())
+#                    self.fill_Chromo_Text(self.chromo_seed.currentText())
                     self.loading_window.loading_bar.setValue(100)
                 else:
                     result = self.fill_Chromo_Text(self.seed.toPlainText())
@@ -539,9 +595,9 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.loading_window.show()
         QtCore.QCoreApplication.processEvents()
         self.seed.setText('')
-        self.chro_bar_create(self.chromo_seed.currentText())
+#        self.chro_bar_create(self.chromo_seed.currentText())
         self.loading_window.loading_bar.setValue(50)
-        self.fill_Chromo_Text(self.chromo_seed.currentText())
+#        self.fill_Chromo_Text(self.chromo_seed.currentText())
         self.loading_window.loading_bar.setValue(100)
         self.loading_window.hide()
 
@@ -561,15 +617,10 @@ class Multitargeting(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.show()
         self.hide()
 
-
     # this function calls the closingWindow class.
     def closeEvent(self, event):
         GlobalSettings.mainWindow.closeFunction()
         event.accept()
-
-
-
-
 
 class loading_window(QtWidgets.QWidget):
     def __init__(self):
@@ -577,4 +628,17 @@ class loading_window(QtWidgets.QWidget):
         uic.loadUi(GlobalSettings.appdir + "loading_data_form.ui", self)
         self.loading_bar.setValue(0)
         self.setWindowTitle("Loading Data")
+        self.hide()
+
+class MplCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi,tight_layout=True)
+        self.axes = fig.add_subplot(111)
+        self.axes.clear()
+        super(MplCanvas, self).__init__(fig)
+
+class Multitargeting_Statistics(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        super(Multitargeting_Statistics, self).__init__(parent)
+        uic.loadUi(GlobalSettings.appdir + 'multitargeting_statistics.ui', self)
         self.hide()
