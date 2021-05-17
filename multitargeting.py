@@ -42,6 +42,23 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.groupBox_2.setStyleSheet(groupbox_style.replace("groupBox","groupBox_2"))
         self.groupBox_3.setStyleSheet(groupbox_style.replace("groupBox","groupBox_3"))
 
+        #layout for table
+        self.table.setColumnCount(8)
+        self.table.setShowGrid(False)
+        # for keeping track of where we are in the sorting clicking for each column
+        self.switcher_table = [1, 1, 1, 1, 1, 1, 1, 1]
+        self.table.setHorizontalHeaderLabels(
+            ["Seed", "Total Repeats", "Avg. Repeats/Scaffold", "Consensus Sequence", "% Consensus",
+             "Score", "PAM", "Strand"])
+        self.table.horizontalHeader().setSectionsClickable(True)
+        self.table.horizontalHeader().sectionClicked.connect(self.table_sorting)
+        self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.table.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.table.resizeColumnsToContents()
+
+
         # Initializes layouts for the graphs
         self.global_line = QtWidgets.QVBoxLayout()
         self.global_bar = QtWidgets.QVBoxLayout()
@@ -100,12 +117,14 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.move(self.mwfg.topLeft())  ##Center window
         self.hide()
 
+
     def show_statistics(self):
         if (self.line_bool and self.bar_bool):
             self.multitargeting_statistics.show()
         else:
             QtWidgets.QMessageBox.question(self, "No analysis run.", 'Multitargeting Analysis must be performed before viewing statistics.\n\nSelect an organism and endonuclease and click "Analyze" then try again.', QtWidgets.QMessageBox.Ok)
             return True
+
 
     def eventFilter(self, source, event):
         if (event.type() == QtCore.QEvent.MouseMove and source is self.graphicsView.viewport()):
@@ -199,10 +218,12 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][endos[0]][0]
         self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][endos[0]][1]
 
+
     def change_endos(self):
         #update file names based on current org/endo combo
         self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][str(self.endo_drop.currentText())][0]
         self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][str(self.endo_drop.currentText())][1]
+
 
     def update_endos(self):
         #try to disconnect index changed signal on endo dropdown if there is one
@@ -234,11 +255,13 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.plot_repeats_vs_seeds()
         self.loading_window.loading_bar.setValue(20)
         self.bar_seeds_vs_repeats()
-        self.loading_window.loading_bar.setValue(40)
-        #self.fill_min_max()
+        self.loading_window.loading_bar.setValue(30)
+        self.fill_table()
         self.loading_window.loading_bar.setValue(60)
+        #self.fill_min_max()
+        self.loading_window.loading_bar.setValue(70)
         #self.fill_seed_id_chrom()
-        self.loading_window.loading_bar.setValue(80)
+        self.loading_window.loading_bar.setValue(90)
         #self.fill_Chromo_Text(self.chromo_seed.currentText())
         self.loading_window.loading_bar.setValue(100)
         self.multitargeting_statistics.avg_rep.setText(str(round(float(self.average),1)))
@@ -246,6 +269,124 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.multitargeting_statistics.mode_rep.setText(str(round(float(self.mode),1)))
         self.multitargeting_statistics.nbr_seq.setText(str(round(float(self.repeat_count),1)))
         self.loading_window.hide()
+
+
+    #function to fill table in UI
+    def fill_table(self):
+        #empty table
+        self.table.setRowCount(0)
+
+        #query db file for data
+        conn = sqlite3.connect(self.db_file)
+        c = conn.cursor()
+        row_cnt = 0
+        for repeat in c.execute("SELECT * FROM repeats;"):
+            #expand table by 1 row
+            self.table.setRowCount(row_cnt + 1)
+
+            #extract repeat info
+            seed = repeat[0]
+            chroms = repeat[1].split(",")
+            locs = repeat[2].split(",")
+            threes = repeat[3].split(",")
+            fives = repeat[4].split(",")
+            pams = repeat[5].split(",")
+            scores = repeat[6].split(",")
+            count = repeat[7]
+
+            #push seed
+            table_seed = QtWidgets.QTableWidgetItem()
+            table_seed.setData(QtCore.Qt.EditRole, seed)
+            table_seed.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table.setItem(row_cnt, 0, table_seed)
+
+            if len(threes) < len(fives):
+                for i in range(len(fives) - len(threes)):
+                    threes.append('')
+
+            elif len(fives) < len(threes):
+                for i in range(len(threes) - len(fives)):
+                    fives.append('')
+
+            #get index of majority three/five
+            majority_index = 0
+            if threes[0] == '':
+                majority = max(set(fives), key=fives.count)
+                majority_index = fives.index(majority)
+            else:
+                majority = max(set(threes), key=threes.count)
+                majority_index = threes.index(majority)
+
+            # push total count
+            table_count = QtWidgets.QTableWidgetItem()
+            table_count.setData(QtCore.Qt.EditRole, count)
+            table_count.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table.setItem(row_cnt, 1, table_count)
+
+            # push avg repeat
+            avg_rep = QtWidgets.QTableWidgetItem()
+            avg_rep_per_scaff = count / len(chroms)
+            avg_rep_per_scaff = float("%.2f" % avg_rep_per_scaff)
+            avg_rep.setData(QtCore.Qt.EditRole, avg_rep_per_scaff)
+            avg_rep.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table.setItem(row_cnt, 2, avg_rep)
+
+            # push seq
+            seq = QtWidgets.QTableWidgetItem()
+            seq.setData(QtCore.Qt.EditRole, fives[majority_index] + seed + threes[majority_index])
+            seq.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table.setItem(row_cnt, 3, seq)
+
+            # push percent consensus
+            perc_cons = QtWidgets.QTableWidgetItem()
+            percent_consensus = (pams.count(pams[majority_index]) / len(pams)) * 100
+            percent_consensus = float("%.2f" % percent_consensus)
+            perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
+            perc_cons.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table.setItem(row_cnt, 4, perc_cons)
+
+            # push score
+            score = QtWidgets.QTableWidgetItem()
+            score.setData(QtCore.Qt.EditRole, scores[majority_index])
+            score.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table.setItem(row_cnt, 5, score)
+
+            # push PAM
+            pam = QtWidgets.QTableWidgetItem()
+            pam.setData(QtCore.Qt.EditRole, pams[majority_index])
+            pam.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table.setItem(row_cnt, 6, pam)
+
+            # push strand
+            strand_val = ""
+            if int(locs[majority_index]) < 0:
+                strand_val = "-"
+            else:
+                strand_val = "+"
+
+            strand = QtWidgets.QTableWidgetItem()
+            strand.setData(QtCore.Qt.EditRole, strand_val)
+            strand.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            self.table.setItem(row_cnt, 7, strand)
+
+            #increment row count
+            row_cnt += 1
+
+        #close db connection
+        c.close()
+        conn.close()
+
+        #resize columns in table to match contents
+        self.table.resizeColumnsToContents()
+
+
+    # sorting to table
+    def table_sorting(self, logicalIndex):
+        self.switcher_table[logicalIndex] *= -1
+        if self.switcher_table[logicalIndex] == -1:
+            self.table.sortItems(logicalIndex, QtCore.Qt.DescendingOrder)
+        else:
+            self.table.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
 
 
     #fill in chromo bar visualization
@@ -478,7 +619,6 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     # plots the repeats per ID number graph as line graph
     # this graph is connected to the repeats_vs_seeds_line.py file
-    
     def plot_repeats_vs_seeds(self):
         ###Clear out old widgets in layout
         for i in reversed(range(self.global_line.count())): 
@@ -535,6 +675,7 @@ class Multitargeting(QtWidgets.QMainWindow):
 
 
     #fill_seed_id_chrom will fill the seed ID dropdown, and create the chromosome graph
+
     def fill_seed_id_chrom(self):
 #        self.chromo_seed.disconnect()
         conn = sqlite3.connect(self.db_file)
@@ -562,7 +703,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.seed_max_counter = len(self.seeds) / 1000
 #        self.chromo_seed.setModel(model)
 #        self.chromo_seed.currentIndexChanged.connect(self.seed_chromo_changed)
-
 
     def update(self):
         self.scene2 = QtWidgets.QGraphicsScene()
@@ -617,10 +757,12 @@ class Multitargeting(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.show()
         self.hide()
 
+
     # this function calls the closingWindow class.
     def closeEvent(self, event):
         GlobalSettings.mainWindow.closeFunction()
         event.accept()
+
 
 class loading_window(QtWidgets.QWidget):
     def __init__(self):
@@ -630,12 +772,14 @@ class loading_window(QtWidgets.QWidget):
         self.setWindowTitle("Loading Data")
         self.hide()
 
+
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi,tight_layout=True)
         self.axes = fig.add_subplot(111)
         self.axes.clear()
         super(MplCanvas, self).__init__(fig)
+
 
 class Multitargeting_Statistics(QtWidgets.QDialog):
     def __init__(self, parent=None):
