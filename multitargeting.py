@@ -444,6 +444,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.bar_canvas.axes.set_ylabel('Number of Sequences', fontsize=10)
         self.bar_canvas.axes.set_title('Number of Sequences per Number of Repeats',fontsize=10)
         self.bar_canvas.axes.tick_params(axis='both', which='major', labelsize=8)
+        self.bar_bool = True
 
         # rects are all the bar objects in the graph
         rects = self.bar_canvas.axes.patches
