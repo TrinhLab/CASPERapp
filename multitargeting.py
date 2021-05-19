@@ -58,6 +58,8 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.table.resizeColumnsToContents()
 
+        #table trigger for row selection
+        self.table.itemSelectionChanged.connect(self.row_selection_trigger)
 
         # Initializes layouts for the graphs
         self.global_line = QtWidgets.QVBoxLayout()
@@ -72,8 +74,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.chromo_length = list()
 
         # Listeners for changing the seed sequence or the .cspr file
-#        self.chromo_seed.currentIndexChanged.connect(self.seed_chromo_changed)
-#        self.update_min_max.clicked.connect(self.update)
         self.Analyze_Button.clicked.connect(self.make_graphs)
         self.statistics_overview.clicked.connect(self.show_statistics)
 
@@ -251,18 +251,12 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.loading_window.show()
         QtCore.QCoreApplication.processEvents()
         self.chromo_length.clear()
-        self.loading_window.loading_bar.setValue(5)
+        self.loading_window.loading_bar.setValue(10)
         self.plot_repeats_vs_seeds()
-        self.loading_window.loading_bar.setValue(20)
-        self.bar_seeds_vs_repeats()
         self.loading_window.loading_bar.setValue(30)
+        self.bar_seeds_vs_repeats()
+        self.loading_window.loading_bar.setValue(50)
         self.fill_table()
-        self.loading_window.loading_bar.setValue(60)
-        #self.fill_min_max()
-        self.loading_window.loading_bar.setValue(70)
-        #self.fill_seed_id_chrom()
-        self.loading_window.loading_bar.setValue(90)
-        #self.fill_Chromo_Text(self.chromo_seed.currentText())
         self.loading_window.loading_bar.setValue(100)
         self.multitargeting_statistics.avg_rep.setText(str(round(float(self.average),1)))
         self.multitargeting_statistics.med_rep.setText(str(round(float(self.median),1)))
@@ -380,6 +374,16 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.table.resizeColumnsToContents()
 
 
+    #function for triggering graph updates when user selects row in table
+    def row_selection_trigger(self):
+        item = self.table.currentItem()
+        if item.isSelected() == True:
+            row_num = item.row()
+            seed = self.table.item(row_num,0).text()
+            self.fill_Chromo_Text(seed)
+            self.chro_bar_create(seed)
+
+
     # sorting to table
     def table_sorting(self, logicalIndex):
         self.switcher_table[logicalIndex] *= -1
@@ -411,7 +415,6 @@ class Multitargeting(QtWidgets.QMainWindow):
 
                     break
 
-        seed = self.chromo_seed.currentText() ###Change to selection from table
         data = c.execute("SELECT chromosome, location FROM repeats WHERE seed = ? ", (seed,)).fetchone()
         c.close()
         if data != None:
@@ -464,7 +467,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                     self.bar_coords.append(temp)  # push x, y1, and y2 to this list
                     ind += 1
                 i = i + 1
-            self.generate_event_data()
+            self.generate_event_data(seed)
             return True
         else:
             QtWidgets.QMessageBox.information(self, "Seed Error",
@@ -473,11 +476,10 @@ class Multitargeting(QtWidgets.QMainWindow):
             return False
 
 
-    # get data for chromsome viewer to display
-    def generate_event_data(self):
+    # get data for chromosome viewer to display
+    def generate_event_data(self, seed):
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
-#        seed = self.chromo_seed.currentText()
         data = list(c.execute("SELECT * FROM repeats WHERE seed = ? ", (seed,)).fetchone())
         c.close()
         chromo = data[1].split(',')
@@ -658,86 +660,12 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.line_canvas.draw()
 
 
-    #fills min and max dropdown windows ###NEED TO EDIT FOR TEXTEDIT
-    def fill_min_max(self,run_seed_fill=True):
-#        self.update_min_max.clicked.disconnect()
-        self.max_chromo.clear()
-        self.min_chromo.clear()
-        conn = sqlite3.connect(self.db_file)
-        c = conn.cursor()
-        data = c.execute("SELECT MAX(count) from repeats").fetchone()
-        c.close()
-        max_rep = int(data[0])
-        nums = list(range(1, max_rep + 1))
-        self.min_chromo.setText(str(min(nums)))
-        self.max_chromo.setText(str(max(nums)))
-#########        self.update_min_max.clicked.connect(self.update)
-
-
-    #fill_seed_id_chrom will fill the seed ID dropdown, and create the chromosome graph
-
-    def fill_seed_id_chrom(self):
-#        self.chromo_seed.disconnect()
-        conn = sqlite3.connect(self.db_file)
-        c = conn.cursor()
-        min_v = int(self.min_chromo.toPlainText())
-        max_v = int(self.max_chromo.toPlainText())
-        data = c.execute("SELECT seed, count from repeats where count >= ?  and count <= ? LIMIT 0,1000", (min_v, max_v,)).fetchall()
-        c.close()
-        model = QtGui.QStandardItemModel()
-        parentItem = model.invisibleRootItem()
-        i = 0
-        self.seeds = []
-        for obj in data:
-            seed = (list(obj)[0])
-            if i > 999:
-                break
-            else:
-                if i == 0:
-                    self.chro_bar_create(seed)
-                item = QtGui.QStandardItem(seed)
-                parentItem.appendRow(item)
-                self.seeds.append(seed)
-            i += 1
-        self.seed_counter = 0
-        self.seed_max_counter = len(self.seeds) / 1000
-#        self.chromo_seed.setModel(model)
-#        self.chromo_seed.currentIndexChanged.connect(self.seed_chromo_changed)
-
-    def update(self):
-        self.scene2 = QtWidgets.QGraphicsScene()
-        self.graphicsView_2.setScene(self.scene2)
-        if self.min_chromo.toPlainText() != '' and self.max_chromo.toPlainText() != '':
-            if int(self.min_chromo.toPlainText()) > int(self.max_chromo.toPlainText()):
-                QtWidgets.QMessageBox.question(self, "Maximum cant be less than Minimum",
-                                               "The Minimum number of repeats cant be more than the Maximum",
-                                               QtWidgets.QMessageBox.Ok)
-            else:
-                self.loading_window.loading_bar.setValue(5)
-                self.loading_window.show()
-                QtCore.QCoreApplication.processEvents()
-                if self.seed.toPlainText() == '':
-                    self.fill_seed_id_chrom()
-                    self.loading_window.loading_bar.setValue(50)
-#                    self.fill_Chromo_Text(self.chromo_seed.currentText())
-                    self.loading_window.loading_bar.setValue(100)
-                else:
-                    result = self.fill_Chromo_Text(self.seed.toPlainText())
-                    self.loading_window.loading_bar.setValue(50)
-                    if result == True:
-                        self.chro_bar_create(self.seed.toPlainText())
-                    self.loading_window.loading_bar.setValue(100)
-        self.loading_window.hide()
-
-
     def seed_chromo_changed(self):
         self.loading_window.loading_bar.setValue(5)
         self.loading_window.show()
         QtCore.QCoreApplication.processEvents()
         self.seed.setText('')
-#        self.chro_bar_create(self.chromo_seed.currentText())
         self.loading_window.loading_bar.setValue(50)
-#        self.fill_Chromo_Text(self.chromo_seed.currentText())
         self.loading_window.loading_bar.setValue(100)
         self.loading_window.hide()
 
