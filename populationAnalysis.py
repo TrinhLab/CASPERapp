@@ -103,10 +103,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         self.loading_window = loading_window()
 
-        self.seed_label.hide()
-        self.query_seed_button.hide()
-        self.seed_input.hide()
-
 
 
     def prevent_toggle(self):
@@ -188,7 +184,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.endoBox.addItems(self.Endos.keys())
         self.endoBox.currentIndexChanged.connect(self.change_endo)
         self.change_endo()
-
 
     def change_endo(self):
         onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
@@ -388,15 +383,19 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loading_window.loading_bar.setValue(100)
         self.loading_window.hide()
         QtCore.QCoreApplication.processEvents()
-        self.seed_label.show()
-        self.query_seed_button.show()
-        self.seed_input.show()
 
 
     def custom_seed_search(self):
         seeds = str(self.seed_input.text())
+        seeds = seeds.replace(" ","")
         seeds = seeds.upper()
         seeds = seeds.split(",")
+        print(seeds)
+
+        if len(seeds) == 1:
+            if seeds[0] == "":
+                self.pre_analyze()
+                return
 
         # update progress bar
         self.loading_window.loading_bar.setValue(5)
@@ -421,15 +420,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         # retrieve data on shared seeds
         self.counts = []
         for seed in seeds:
-            # increase row count
-            self.table2.setRowCount(index + 1)
-
-            # push seed to table
-            table_seed = QtWidgets.QTableWidgetItem()
-            table_seed.setData(QtCore.Qt.EditRole, seed)
-            table_seed.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-            self.table2.setItem(index, 0, table_seed)
-
             total_count = 0
             org_count = 0
             threes = []
@@ -437,13 +427,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             scores = []
             pams = []
             locs = []
-
+            none_data = True
             for db_file in self.db_files:
                 conn = sqlite3.connect(db_file)
                 c = conn.cursor()
-                data = c.execute("SELECT count, three, five, pam, score, location FROM repeats WHERE seed = ? ",
+                data = c.execute("SELECT count, three, five, pam, score, location FROM repeats WHERE seed = ?",
                                  (seed,)).fetchone()
+                print(data)
                 if data != None:
+                    none_data = False
                     data = list(data)
                     org_count += 1
                     total_count += int(data[0])
@@ -453,87 +445,103 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     scores += data[4].split(",")
                     locs += data[5].split(",")
 
-            self.counts.append(total_count)
-
-            if len(threes) < len(fives):
-                for i in range(len(fives) - len(threes)):
-                    threes.append('')
-
-            elif len(fives) < len(threes):
-                for i in range(len(threes) - len(fives)):
-                    fives.append('')
-
-            majority_index = 0
-            if threes[0] == '':
-                majority = max(set(fives), key=fives.count)
-                majority_index = fives.index(majority)
+            if none_data == True:
+                QtWidgets.QMessageBox.information(self, "Seed Error",
+                                                  seed + " : No such seed exists in the repeats section of any organism selected.",
+                                                  QtWidgets.QMessageBox.Ok)
+                self.loading_window.hide()
             else:
-                majority = max(set(threes), key=threes.count)
-                majority_index = threes.index(majority)
 
-            # push percent coverage
-            perc_cov = QtWidgets.QTableWidgetItem()
-            coverage = (org_count / len(self.db_files)) * 100
-            coverage = float("%.2f" % coverage)
-            perc_cov.setData(QtCore.Qt.EditRole, str(coverage) + '%')
-            perc_cov.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-            self.table2.setItem(index, 1, perc_cov)
+                # increase row count
+                self.table2.setRowCount(index + 1)
 
-            # push total count
-            table_count = QtWidgets.QTableWidgetItem()
-            table_count.setData(QtCore.Qt.EditRole, total_count)
-            table_count.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-            self.table2.setItem(index, 2, table_count)
+                # push seed to table
+                table_seed = QtWidgets.QTableWidgetItem()
+                table_seed.setData(QtCore.Qt.EditRole, seed)
+                table_seed.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 0, table_seed)
 
-            # push avg repeat
-            avg_rep = QtWidgets.QTableWidgetItem()
-            avg_rep_per_scaff = total_count / org_count
-            avg_rep_per_scaff = float("%.2f" % avg_rep_per_scaff)
-            avg_rep.setData(QtCore.Qt.EditRole, avg_rep_per_scaff)
-            avg_rep.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-            self.table2.setItem(index, 3, avg_rep)
+                self.counts.append(total_count)
 
-            # push seq
-            seq = QtWidgets.QTableWidgetItem()
-            seq.setData(QtCore.Qt.EditRole, fives[majority_index] + seed + threes[majority_index])
-            seq.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-            self.table2.setItem(index, 4, seq)
+                if len(threes) < len(fives):
+                    for i in range(len(fives) - len(threes)):
+                        threes.append('')
 
-            # push percent consensus
-            perc_cons = QtWidgets.QTableWidgetItem()
-            percent_consensus = (pams.count(pams[majority_index]) / len(pams)) * 100
-            percent_consensus = float("%.2f" % percent_consensus)
-            perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
-            perc_cons.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-            self.table2.setItem(index, 5, perc_cons)
+                elif len(fives) < len(threes):
+                    for i in range(len(threes) - len(fives)):
+                        fives.append('')
 
-            # push score
-            score = QtWidgets.QTableWidgetItem()
-            score.setData(QtCore.Qt.EditRole, scores[majority_index])
-            score.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-            self.table2.setItem(index, 6, score)
+                majority_index = 0
+                if threes[0] == '':
+                    majority = max(set(fives), key=fives.count)
+                    majority_index = fives.index(majority)
+                else:
+                    majority = max(set(threes), key=threes.count)
+                    majority_index = threes.index(majority)
 
-            # push PAM
-            pam = QtWidgets.QTableWidgetItem()
-            pam.setData(QtCore.Qt.EditRole, pams[majority_index])
-            pam.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-            self.table2.setItem(index, 7, pam)
+                # push percent coverage
+                perc_cov = QtWidgets.QTableWidgetItem()
+                coverage = (org_count / len(self.db_files)) * 100
+                coverage = float("%.2f" % coverage)
+                perc_cov.setData(QtCore.Qt.EditRole, str(coverage) + '%')
+                perc_cov.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 1, perc_cov)
 
-            # push strand
-            strand_val = ""
-            if int(locs[majority_index]) < 0:
-                strand_val = "-"
-            else:
-                strand_val = "+"
+                # push total count
+                table_count = QtWidgets.QTableWidgetItem()
+                table_count.setData(QtCore.Qt.EditRole, total_count)
+                table_count.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 2, table_count)
 
-            strand = QtWidgets.QTableWidgetItem()
-            strand.setData(QtCore.Qt.EditRole, strand_val)
-            strand.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-            self.table2.setItem(index, 8, strand)
+                # push avg repeat
+                avg_rep = QtWidgets.QTableWidgetItem()
+                avg_rep_per_scaff = total_count / org_count
+                avg_rep_per_scaff = float("%.2f" % avg_rep_per_scaff)
+                avg_rep.setData(QtCore.Qt.EditRole, avg_rep_per_scaff)
+                avg_rep.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 3, avg_rep)
 
-            index += 1
-            running_val += increase_val
-            self.loading_window.loading_bar.setValue(running_val)
+                # push seq
+                seq = QtWidgets.QTableWidgetItem()
+                seq.setData(QtCore.Qt.EditRole, fives[majority_index] + seed + threes[majority_index])
+                seq.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 4, seq)
+
+                # push percent consensus
+                perc_cons = QtWidgets.QTableWidgetItem()
+                percent_consensus = (pams.count(pams[majority_index]) / len(pams)) * 100
+                percent_consensus = float("%.2f" % percent_consensus)
+                perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
+                perc_cons.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 5, perc_cons)
+
+                # push score
+                score = QtWidgets.QTableWidgetItem()
+                score.setData(QtCore.Qt.EditRole, scores[majority_index])
+                score.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 6, score)
+
+                # push PAM
+                pam = QtWidgets.QTableWidgetItem()
+                pam.setData(QtCore.Qt.EditRole, pams[majority_index])
+                pam.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 7, pam)
+
+                # push strand
+                strand_val = ""
+                if int(locs[majority_index]) < 0:
+                    strand_val = "-"
+                else:
+                    strand_val = "+"
+
+                strand = QtWidgets.QTableWidgetItem()
+                strand.setData(QtCore.Qt.EditRole, strand_val)
+                strand.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+                self.table2.setItem(index, 8, strand)
+
+                index += 1
+                running_val += increase_val
+                self.loading_window.loading_bar.setValue(running_val)
 
         self.table2.resizeColumnsToContents()
         self.loading_window.hide()
@@ -692,6 +700,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         #get labels based on org table rows
         ax.set_xticklabels(self.rows)
         ax.set_yticklabels(self.rows)
+        ax.set_xlabel("Organism")
+        ax.set_ylabel("Organism")
 
         ax.grid(which='minor', color='w', linestyle='-', linewidth=2)
         #ax.set_frame_on(False)
