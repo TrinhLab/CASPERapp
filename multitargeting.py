@@ -58,9 +58,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.table.resizeColumnsToContents()
 
-        #table trigger for row selection
-        self.table.itemSelectionChanged.connect(self.row_selection_trigger)
-
         # Initializes layouts for the graphs
         self.global_line = QtWidgets.QVBoxLayout()
         self.global_bar = QtWidgets.QVBoxLayout()
@@ -212,17 +209,10 @@ class Multitargeting(QtWidgets.QMainWindow):
         endos = self.organisms_to_endos[str(self.organism_drop.currentText())]
         self.endo_drop.addItems(endos)
         self.organism_drop.currentIndexChanged.connect(self.update_endos)
-        self.endo_drop.currentIndexChanged.connect(self.change_endos)
 
         #update file names for current org/endo combo
         self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][endos[0]][0]
         self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][endos[0]][1]
-
-
-    def change_endos(self):
-        #update file names based on current org/endo combo
-        self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][str(self.endo_drop.currentText())][0]
-        self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][str(self.endo_drop.currentText())][1]
 
 
     def update_endos(self):
@@ -236,16 +226,14 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.endo_drop.clear()
         endos = self.organisms_to_endos[str(self.organism_drop.currentText())]
         self.endo_drop.addItems(endos)
-        self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][endos[0]][0]
-        self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][endos[0]][1]
 
         #reconnect index changed signal on endo dropdown
         self.endo_drop.currentIndexChanged.connect(self.change_endos)
 
 
     def make_graphs(self):
-        # self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][0]
-        # self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][0]
+        self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][str(self.endo_drop.currentText())][0]
+        self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][str(self.endo_drop.currentText())][1]
 
         self.loading_window.loading_bar.setValue(0)
         self.loading_window.show()
@@ -267,6 +255,12 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     #function to fill table in UI
     def fill_table(self):
+        #disable row triggers
+        try:
+            self.table.itemSelectionChanged.disconnect()
+        except:
+            pass
+
         #empty table
         self.table.setRowCount(0)
 
@@ -373,6 +367,10 @@ class Multitargeting(QtWidgets.QMainWindow):
 
         #resize columns in table to match contents
         self.table.resizeColumnsToContents()
+
+        #reconnect row trigger
+        self.table.itemSelectionChanged.connect(self.row_selection_trigger)
+
 
 
     #function for triggering graph updates when user selects row in table
