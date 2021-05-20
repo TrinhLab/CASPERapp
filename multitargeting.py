@@ -318,8 +318,9 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.table.setItem(row_cnt, 1, table_count)
 
             # push avg repeat
+            location_repeat_counts = Counter(chroms)
+            avg_rep_per_scaff = sum(location_repeat_counts.values()) / len(location_repeat_counts.values())
             avg_rep = QtWidgets.QTableWidgetItem()
-            avg_rep_per_scaff = count / len(chroms)
             avg_rep_per_scaff = float("%.2f" % avg_rep_per_scaff)
             avg_rep.setData(QtCore.Qt.EditRole, avg_rep_per_scaff)
             avg_rep.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
