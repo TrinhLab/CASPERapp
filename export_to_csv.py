@@ -25,12 +25,14 @@ class export_csv_window(QtWidgets.QDialog):
         # variables
         self.location = self.fileLocation_line_edit.text()
         self.selected_table_items = []
+        self.num_columns = []
 
     # launch function. Called in Results.
     # parameter expect: a list of the items selected from the window.
-    def launch(self, select_items):
+    def launch(self, select_items, num_columns):
         self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
         self.selected_table_items = select_items
+        self.num_columns = num_columns
         self.show()
 
     # export function
@@ -40,6 +42,8 @@ class export_csv_window(QtWidgets.QDialog):
     def export_function(self):
         # get the full path ( path and file name)
         file_name = self.filename_line_edit.text()
+        if file_name == "":
+            file_name = "exported_gRNAs"
         self.location = self.fileLocation_line_edit.text() + '/'
         full_path = ""
         if '.csv' in file_name:
@@ -49,18 +53,28 @@ class export_csv_window(QtWidgets.QDialog):
 
         # try to do it
         try:
-             # right the table headers
-            output_data = open(full_path, 'w')
-            output_data.write('Location,Sequence,Strand,PAM,Score,Off_Target,Endonuclease(s)\n')
+            #write the table headers
+            if self.num_columns == 8: ###Change headers for multitargeting table export
+                output_data = open(full_path, 'w')
+                output_data.write('Seed,Total Repeats,Avg. Repeats/Scaffold,Consensus Sequence,% Consensus,Score,PAM,Strand\n')
+            elif self.num_columns == 9:
+                output_data = open(full_path, 'w')
+                output_data.write('Seed,% Coverage,Total Repeats,Avg. Repeats/Scaffold,Consensus Sequence,% Consensus,Score,PAM,Strand\n')
+            else: ###Change headers for view results export
+                output_data = open(full_path, 'w')
+                output_data.write('Location,Endonuclease,Sequence,Strand,PAM,Score,Off_Target\n')
 
             # loop through and write the other data
+            i = 0
             for item in self.selected_table_items:
-                if 'Cas' in item.text():
+                if i == self.num_columns-1:
                     output_data.write(item.text())
                     output_data.write('\n')
+                    i = 0
                 else:
                     output_data.write(item.text())
                     output_data.write(',')
+                    i += 1
         # catch the permission exception
         except PermissionError:
             QtWidgets.QMessageBox.question(self, "File Cannot Open",
@@ -79,7 +93,7 @@ class export_csv_window(QtWidgets.QDialog):
     # then closes the window
     def cancel_function(self):
         self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
-        self.filename_line_edit.setText("Choose_a_name")
+        self.filename_line_edit.setText("")
         self.location = ""
         self.hide()
 

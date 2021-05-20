@@ -45,7 +45,7 @@
        <string>Export selected guides to a CSV file.</string>
       </property>
       <property name="text">
-       <string>Export Selected Guides</string>
+       <string>Export Selected gRNAs</string>
       </property>
      </widget>
     </item>
