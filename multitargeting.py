@@ -73,6 +73,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         # Listeners for changing the seed sequence or the .cspr file
         self.Analyze_Button.clicked.connect(self.make_graphs)
         self.statistics_overview.clicked.connect(self.show_statistics)
+        self.export_button.clicked.connect(self.export_to_csv)
 
         # go back to main button
         self.back_button.clicked.connect(self.go_back)
@@ -113,6 +114,17 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.mwfg.moveCenter(self.cp)  ##Center window
         self.move(self.mwfg.topLeft())  ##Center window
         self.hide()
+
+    def export_to_csv(self):
+        select_items = self.table.selectedItems()
+        if len(select_items) <= 0:
+            QtWidgets.QMessageBox.question(self, "Nothing Selected",
+                                           "No targets were highlighted."
+                                           "Please highlight the targets you want to be exported to a CSV File!",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+        GlobalSettings.mainWindow.export_csv_window.launch(select_items,8)
+
 
 
     def show_statistics(self):
@@ -425,7 +437,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 c = int(chromo[i])
                 p = abs(int(pos[i]))
                 k = int(kstats[c - 1])
-                new_pos = int((p / k) * 485)
+                new_pos = int((p / k) * 350)
                 if c in chromo_pos.keys():
                     chromo_pos[c].append(new_pos)
                 else:
@@ -435,7 +447,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.graphicsView.setScene(self.scene)
             self.bar_coords.clear()  # clear bar_coords list before creating visual
             ind = 0
-            for chromo in chromo_pos:
+            for chromo in sorted(chromo_pos.keys()):
                 pen_blk = QtGui.QPen(QtCore.Qt.black)
                 pen_red = QtGui.QPen(QtCore.Qt.red)
                 pen_blk.setWidth(3)
@@ -447,7 +459,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                     font.setBold(True)
                     font.setPointSize(10)
                     text.setFont(font)
-                    self.scene.addRect(40, (i * 25), 525, 25, pen_blk)
+                    self.scene.addRect(40, (i * 25), 375, 25, pen_blk)
                 else:
                     text = self.scene.addText(str(chromo))
                     font = QtGui.QFont()
@@ -455,12 +467,12 @@ class Multitargeting(QtWidgets.QMainWindow):
                     font.setPointSize(10)
                     text.setFont(font)
                     text.setPos(0, i * 25 + 10 * i)
-                    self.scene.addRect(40, (i * 25) + 10 * i, 525, 25, pen_blk)
-                for k in chromo_pos[chromo]:
-                    line = self.scene.addLine(k + 40, (i * 25) + 3 + 10 * i, k + 40, (i * 25) + 22 + 10 * i, pen_red)
+                    self.scene.addRect(40, (i * 25) + 10 * i, 375, 25, pen_blk)
+                for scaled_pos in chromo_pos[chromo]:
+                    line = self.scene.addLine(scaled_pos + 40, (i * 25) + 3 + 10 * i, scaled_pos + 40, (i * 25) + 22 + 10 * i, pen_red)
                     temp = []  # used for storing coordinates and saving them in self.bar_coords[]
                     temp.append(ind)  # index value
-                    temp.append(k + 40)  # x value
+                    temp.append(scaled_pos + 40)  # x value
                     temp.append((i * 25) + 3 + 10 * i)  # y1
                     temp.append((i * 25) + 22 + 10 * i)  # y2
                     self.bar_coords.append(temp)  # push x, y1, and y2 to this list

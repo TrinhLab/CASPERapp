@@ -147,7 +147,7 @@ class Results(QtWidgets.QMainWindow):
                                            QtWidgets.QMessageBox.Ok)
             return
         # now launch the window
-        GlobalSettings.mainWindow.export_csv_window.launch(select_items)
+        GlobalSettings.mainWindow.export_csv_window.launch(select_items, 7)
 
 
     def change_indices(self):
