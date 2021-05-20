@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1132</width>
-    <height>875</height>
+    <width>1242</width>
+    <height>997</height>
    </rect>
   </property>
   <property name="font">
@@ -25,7 +25,7 @@
      <widget class="QTableWidget" name="table">
       <property name="minimumSize">
        <size>
-        <width>400</width>
+        <width>600</width>
         <height>0</height>
        </size>
       </property>
@@ -191,11 +191,11 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>300</height>
+          <height>0</height>
          </size>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To analyze a seed, simply click on the row in the table and the figures will be populated.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Note:&lt;/span&gt; if multiple rows are selected in the table, only the first seed will be analyzed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To analyze a seed, simply click on the row in the table and the figures will be populated.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Note:&lt;/span&gt; if multiple rows are selected in the table, only the &lt;span style=&quot; text-decoration: underline;&quot;&gt;last seed&lt;/span&gt; selected will be analyzed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="title">
          <string>Seed Analysis:</string>
@@ -203,6 +203,12 @@
         <layout class="QGridLayout" name="gridLayout_6">
          <item row="3" column="0">
           <widget class="QTabWidget" name="tabWidget_2">
+           <property name="minimumSize">
+            <size>
+             <width>500</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="currentIndex">
             <number>0</number>
            </property>
@@ -276,6 +282,12 @@
           <height>400</height>
          </size>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>400</height>
+         </size>
+        </property>
         <property name="title">
          <string>Global Analysis:</string>
         </property>
@@ -310,6 +322,12 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>300</height>
+            </size>
+           </property>
            <property name="currentIndex">
             <number>0</number>
            </property>
@@ -341,7 +359,7 @@
      </layout>
     </item>
     <item row="13" column="2" alignment="Qt::AlignRight">
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="export_button">
       <property name="maximumSize">
        <size>
         <width>200</width>
@@ -366,8 +384,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1132</width>
-     <height>21</height>
+     <width>1242</width>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">

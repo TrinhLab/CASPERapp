@@ -26,6 +26,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.goBackButton.clicked.connect(self.go_back)
         self.analyze_button.clicked.connect(self.pre_analyze)
         self.clear_Button.clicked.connect(self.clear)
+        self.export_button.clicked.connect(self.export_to_csv)
         self.sq = Algorithms.SeqTranslate()
         self.ref_para_list = list()
         self.mode = 0
@@ -71,8 +72,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loc_finder_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
         self.loc_finder_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.loc_finder_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.loc_finder_table.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
-        self.loc_finder_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+#        self.loc_finder_table.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+#        self.loc_finder_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.loc_finder_table.resizeColumnsToContents()
 
         #custom seed search
@@ -103,7 +104,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         self.loading_window = loading_window()
 
-
+    def export_to_csv(self):
+        select_items = self.table2.selectedItems()
+        if len(select_items) <= 0:
+            QtWidgets.QMessageBox.question(self, "Nothing Selected",
+                                           "No targets were highlighted."
+                                           "Please highlight the targets you want to be exported to a CSV File!",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+        GlobalSettings.mainWindow.export_csv_window.launch(select_items,9)
 
     def prevent_toggle(self):
         self.meta_genomic_cspr_checkbox.setChecked(QtCore.Qt.Checked)
@@ -766,7 +775,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                             sequence_table.setData(QtCore.Qt.EditRole, fives[i] + seed + threes[i])
                         organism_table.setData(QtCore.Qt.EditRole, org_names[self.db_files.index(db_file)])
                         chromsome_table.setData(QtCore.Qt.EditRole, chrom)
-                        location_table.setData(QtCore.Qt.EditRole, locs[i])
+                        location_table.setData(QtCore.Qt.EditRole, abs(int(locs[i])))
                         self.loc_finder_table.setItem(index, 0, seed_table)
                         self.loc_finder_table.setItem(index, 1, sequence_table)
                         self.loc_finder_table.setItem(index, 2, organism_table)
