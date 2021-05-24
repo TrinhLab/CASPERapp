@@ -13,7 +13,6 @@ from collections import Counter
 import statistics
 import repeats_vs_seeds_line
 
-
 class Multitargeting(QtWidgets.QMainWindow):
 
 
@@ -296,9 +295,9 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             #push seed
             table_seed = QtWidgets.QTableWidgetItem()
-            seed_font = QtGui.QFont()
-            seed_font.setUnderline(True)
-            table_seed.setFont(seed_font)
+            #seed_font = QtGui.QFont()
+            #seed_font.setUnderline(True)
+            #table_seed.setFont(seed_font)
             table_seed.setData(QtCore.Qt.EditRole, seed)
             table_seed.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             self.table.setItem(row_cnt, 0, table_seed)
@@ -337,7 +336,6 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             # push seq
             seq = QtWidgets.QTableWidgetItem()
-            #seq_label = QtGui.QFont.
             seq.setData(QtCore.Qt.EditRole, fives[majority_index] + seed + threes[majority_index])
             seq.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             self.table.setItem(row_cnt, 3, seq)
