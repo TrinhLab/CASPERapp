@@ -240,7 +240,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.endo_drop.addItems(endos)
 
         #reconnect index changed signal on endo dropdown
-        self.endo_drop.currentIndexChanged.connect(self.change_endos)
+        #self.endo_drop.currentIndexChanged.connect(self.change_endos)
 
 
     def make_graphs(self):
@@ -296,6 +296,9 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             #push seed
             table_seed = QtWidgets.QTableWidgetItem()
+            seed_font = QtGui.QFont()
+            seed_font.setUnderline(True)
+            table_seed.setFont(seed_font)
             table_seed.setData(QtCore.Qt.EditRole, seed)
             table_seed.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             self.table.setItem(row_cnt, 0, table_seed)
@@ -334,6 +337,7 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             # push seq
             seq = QtWidgets.QTableWidgetItem()
+            #seq_label = QtGui.QFont.
             seq.setData(QtCore.Qt.EditRole, fives[majority_index] + seed + threes[majority_index])
             seq.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             self.table.setItem(row_cnt, 3, seq)
@@ -406,9 +410,6 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     #fill in chromo bar visualization
     def fill_Chromo_Text(self, seed):
-        # self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][0]
-        # self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][0]
-
         chromo_pos = {}
         # get kstats
         conn = sqlite3.connect(self.db_file)
@@ -423,31 +424,39 @@ class Multitargeting(QtWidgets.QMainWindow):
                     buf = buf.replace("KARYSTATS: ", "")
                     kstats = buf.split(',')
                     kstats = kstats[:-1]
-
                     break
 
         data = c.execute("SELECT chromosome, location FROM repeats WHERE seed = ? ", (seed,)).fetchone()
         c.close()
+
         if data != None:
+            # sort data on chromosome
             data = list(data)
             chromo = data[0].split(',')
             pos = data[1].split(',')
-            self.event_data = {}
+            seed_data = {}
             for i in range(len(chromo)):
-                c = int(chromo[i])
-                p = abs(int(pos[i]))
-                k = int(kstats[c - 1])
-                new_pos = int((p / k) * 350)
-                if c in chromo_pos.keys():
-                    chromo_pos[c].append(new_pos)
+                if int(chromo[i]) in seed_data.keys():
+                    seed_data[int(chromo[i])].append(abs(int(pos[i])))
                 else:
-                    chromo_pos[c] = [new_pos]
+                    seed_data[int(chromo[i])] = [abs(int(pos[i]))]
+
+            self.event_data = {}
+            for chromo in sorted(seed_data.keys()):
+                c = int(chromo)
+                for p in sorted(seed_data[chromo]):
+                    k = int(kstats[c - 1])
+                    new_pos = int((p / k) * 350)
+                    if c in chromo_pos.keys():
+                        chromo_pos[c].append(new_pos)
+                    else:
+                        chromo_pos[c] = [new_pos]
             i = 0
             self.scene = QtWidgets.QGraphicsScene()
             self.graphicsView.setScene(self.scene)
             self.bar_coords.clear()  # clear bar_coords list before creating visual
             ind = 0
-            for chromo in sorted(chromo_pos.keys()):
+            for chromo in chromo_pos.keys():
                 pen_blk = QtGui.QPen(QtCore.Qt.black)
                 pen_red = QtGui.QPen(QtCore.Qt.red)
                 pen_blk.setWidth(3)
@@ -505,23 +514,42 @@ class Multitargeting(QtWidgets.QMainWindow):
             five_bool = False
         if three[0] == '':
             three_bool = False
+        seed_data = {}
 
         self.event_data = {}
+
+        #get a dictionary of all the data to sort on chromo and location
         for i in range(len(chromo)):
-            if int(loc[i]) < 0:
-                dira = '-'
+            if int(chromo[i]) in seed_data.keys():
+                seed_data[int(chromo[i])].append([int(loc[i]), pam[i], score[i], three[i], five[i]])
             else:
-                dira = '+'
+                seed_data[int(chromo[i])] = [[int(loc[i]), pam[i], score[i], three[i], five[i]]]
+        i = 0
 
-            if five_bool and not three_bool:
-                seq = five[i] + seed
-            elif not five_bool and three_bool:
-                seq = seed + three[i]
-            else:
-                seq = five[i] + seed + three[i]
+        #loop through each chromo sorted
+        for chromo in sorted(seed_data.keys()):
+            #sort 2D dict for each chromo based on location values
+            for obj in sorted(seed_data[chromo], key=lambda x: abs(x[0])):
+                location = obj[0]
+                pam = obj[1]
+                score = obj[2]
+                three = obj[3]
+                five = obj[4]
 
-            self.event_data[i] = [str(abs(int(loc[i]))), seq, pam[i], score[i], dira]
+                if location < 0:
+                    dira = '-'
+                else:
+                    dira = '+'
 
+                if five_bool and not three_bool:
+                    seq = five + seed
+                elif not five_bool and three_bool:
+                    seq = seed + three
+                else:
+                    seq = five + seed + three
+
+                self.event_data[i] = [str(abs(location)), seq, pam, score, dira]
+                i += 1
 
     # creates bar graph num of repeats vs. chromsome
     # this graphs is connected to the repeats_vs_chromo.py file
