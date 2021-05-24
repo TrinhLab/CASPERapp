@@ -399,7 +399,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         seeds = seeds.replace(" ","")
         seeds = seeds.upper()
         seeds = seeds.split(",")
-        print(seeds)
 
         if len(seeds) == 1:
             if seeds[0] == "":
@@ -442,7 +441,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 c = conn.cursor()
                 data = c.execute("SELECT count, three, five, pam, score, location FROM repeats WHERE seed = ?",
                                  (seed,)).fetchone()
-                print(data)
                 if data != None:
                     none_data = False
                     data = list(data)
