@@ -11,7 +11,6 @@ import sqlite3
 import gzip
 from collections import Counter
 import statistics
-import repeats_vs_seeds_line
 
 class Multitargeting(QtWidgets.QMainWindow):
 
@@ -550,8 +549,6 @@ class Multitargeting(QtWidgets.QMainWindow):
                 i += 1
 
     # creates bar graph num of repeats vs. chromsome
-    # this graphs is connected to the repeats_vs_chromo.py file
-    # to represent the widget space in the UI file
     def chro_bar_create(self, seed):
         ###Clear out old widgets in layout
         for i in reversed(range(self.seed_bar.count())): 
@@ -588,8 +585,6 @@ class Multitargeting(QtWidgets.QMainWindow):
 
 
     # plots the sequences per Number Repeats bar graph
-    # this graph is connected to the seeds_vs_repeats_bar.py file
-    # to represent the wdiget space in the UI file
     def bar_seeds_vs_repeats(self):
         ###Clear out old widgets in layout
         for i in reversed(range(self.global_bar.count())): 
@@ -657,7 +652,6 @@ class Multitargeting(QtWidgets.QMainWindow):
 
 
     # plots the repeats per ID number graph as line graph
-    # this graph is connected to the repeats_vs_seeds_line.py file
     def plot_repeats_vs_seeds(self):
         ###Clear out old widgets in layout
         for i in reversed(range(self.global_line.count())): 

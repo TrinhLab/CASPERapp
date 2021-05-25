@@ -1,4 +1,6 @@
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
 import GlobalSettings
 import os
 from CSPRparser import CSPRparser
@@ -35,6 +37,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.directory = ""
         self.names = []
         self.names_venn = []
+
+        self.colormap_layout = QtWidgets.QVBoxLayout()
+        self.colormap_layout.setContentsMargins(0,0,0,0)
+        self.colormap_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
 
         #organism table
         self.org_Table.setColumnCount(1)
@@ -387,7 +393,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         if len(self.db_files) > 1:
             self.plot_3D_graph()
         else:
-            self.pop_analysis_3dgraph.canvas.figure.set_visible(False)
+            self.colormap_canvas.figure.set_visible(False)
 
         self.loading_window.loading_bar.setValue(100)
         self.loading_window.hide()
@@ -633,6 +639,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 self.org_names[org_name] = len(kstats) - 1
 
     ###This is deprecated
+    """
     def plot_repeats_vs_seeds(self):
         self.pop_analysis_repeats_graph.canvas.figure.set_visible(True)
         self.pop_analysis_repeats_graph.canvas.axes.clear()
@@ -658,14 +665,22 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         # always redraw at the end
         self.pop_analysis_repeats_graph.canvas.draw()
         QtCore.QCoreApplication.processEvents()
-
+        """
+        
     def plot_3D_graph(self):
-        self.pop_analysis_3dgraph.canvas.axes.clear()
-        try:
-            self.pop_analysis_3dgraph.canvas.cbar.remove()
-        except:
-            None
-        self.pop_analysis_3dgraph.canvas.figure.set_visible(True)
+        for i in reversed(range(self.colormap_layout.count())): ### Clear out old widges in layout
+            self.colormap_layout.itemAt(i).widget().setParent(None)
+            
+        self.colormap_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
+        self.colormap_layout.addWidget(self.colormap_canvas) ### Add canvas to colormap layout 
+        self.colormap_figure.setLayout(self.colormap_layout) ### Add colormap layout to colormap plot widget
+
+#        self.colormap_canvas.axes.clear()
+#        try:
+#            self.colormap_canvas.cbar.remove()
+#        except:
+#            None
+#        self.colormap_canvas.figure.set_visible(True)
 
         rows, cols = (self.total_org_number, self.total_org_number)
         arr = [[0 for i in range(cols)] for j in range(rows)]
@@ -690,10 +705,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         for i in range(len(arr)):
             arr[i][i] = 0
 
-        ax = self.pop_analysis_3dgraph.canvas.axes
-        im = self.pop_analysis_3dgraph.canvas.axes.imshow(arr, cmap='summer')
-        self.pop_analysis_3dgraph.canvas.cbar = self.pop_analysis_3dgraph.canvas.axes.figure.colorbar(im, ax=self.pop_analysis_3dgraph.canvas.axes)
-        self.pop_analysis_3dgraph.canvas.cbar.ax.set_ylabel("", rotation=-90, va="bottom")
+        ax = self.colormap_canvas.axes
+        im = self.colormap_canvas.axes.imshow(arr, cmap='summer')
+        self.colormap_canvas.cbar = self.colormap_canvas.axes.figure.colorbar(im, ax=self.colormap_canvas.axes)
+        self.colormap_canvas.cbar.ax.set_ylabel("", rotation=-90, va="bottom",fontsize=8)
         cursor = mplcursors.cursor(im, hover=True)
         @cursor.connect("add")
         def on_add(sel):
@@ -708,9 +723,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         #get labels based on org table rows
         ax.set_xticklabels(self.rows)
         ax.set_yticklabels(self.rows)
-        ax.set_xlabel("Organism")
-        ax.set_ylabel("Organism")
-
+        ax.set_xlabel("Organism", fontsize = 10)
+        ax.set_ylabel("Organism", fontsize = 10)
+        ax.tick_params(axis='both', which='major', labelsize=8)
         ax.grid(which='minor', color='w', linestyle='-', linewidth=2)
         #ax.set_frame_on(False)
         #ax.set_aspect('equal')
@@ -719,7 +734,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 #                text = ax.text(j, i, arr[i][j],
 #                               ha="center", va="center", color="black")
 
-        self.pop_analysis_3dgraph.canvas.draw()
+        self.colormap_canvas.draw()
 
     def find_locations(self):
 
@@ -841,3 +856,10 @@ class loading_window(QtWidgets.QWidget):
         self.loading_bar.setValue(0)
         self.setWindowTitle("Loading Data")
         self.hide()
+
+class MplCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi,tight_layout=True)
+        self.axes = fig.add_subplot(111)
+        self.axes.clear()
+        super(MplCanvas, self).__init__(fig)
