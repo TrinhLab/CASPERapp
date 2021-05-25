@@ -227,6 +227,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
         args += " " + '"' + self.orgName.text() + " " + self.strainName.text() + '"'
         args += " " + '"' + "notes" + '"'
+        args += " " + '"DATA:' + self.Endos[self.comboBoxEndo.currentText()][6] + '"'
 
         name = self.orgCode.text() + "_" + str(self.Endos[self.comboBoxEndo.currentText()][0])
         rowPosition = self.job_Table.rowCount()
@@ -238,6 +239,12 @@ class NewGenome(QtWidgets.QMainWindow):
 
 
     def fillEndo(self):
+        #disconnect signal
+        try:
+            self.comboBoxEndo.currentIndexChanged.disconnect()
+        except:
+            pass
+
         f = open(GlobalSettings.appdir + "CASPERinfo")
         while True:
             line = f.readline()
@@ -258,7 +265,8 @@ class NewGenome(QtWidgets.QMainWindow):
                         seed_length = line_tokened[3]
                         three_length = line_tokened[4]
                         dir = line_tokened[5]
-                        self.Endos[endo + " - PAM: " + p_pam] = (endo, p_pam, five_length, seed_length, three_length, dir)
+                        on_target_data = line_tokened[8]
+                        self.Endos[endo + " - PAM: " + p_pam] = (endo, p_pam, five_length, seed_length, three_length, dir, on_target_data)
                 break
         f.close()
         self.comboBoxEndo.addItems(self.Endos.keys())
@@ -266,6 +274,9 @@ class NewGenome(QtWidgets.QMainWindow):
         self.seed_length.setText(self.Endos[key][3])
         self.five_length.setText(self.Endos[key][2])
         self.three_length.setText(self.Endos[key][4])
+
+        #reconnect signal
+        self.comboBoxEndo.currentIndexChanged.connect(self.changeEndos)
 
 
     def changeEndos(self):

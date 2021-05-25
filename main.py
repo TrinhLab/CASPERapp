@@ -597,6 +597,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.hide()
         self.newGenome.mwfg.moveCenter(self.newGenome.cp)  ##Center window
         self.newGenome.move(self.newGenome.mwfg.topLeft())  ##Center window
+        #update endo list
+        self.newGenome.fillEndo()
+        #show new genome window
         self.newGenome.show()
 
 

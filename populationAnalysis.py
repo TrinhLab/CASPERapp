@@ -516,6 +516,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
                 # push percent consensus
                 perc_cons = QtWidgets.QTableWidgetItem()
+
                 percent_consensus = (pams.count(pams[majority_index]) / len(pams)) * 100
                 percent_consensus = float("%.2f" % percent_consensus)
                 perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
@@ -590,6 +591,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         #execute inner join
         new_c.execute(sql_inner_join)
+
         #get shared data
         if limit == False:
             shared_seeds = new_c.execute("select count(*) from join_results").fetchall()
@@ -599,7 +601,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
         #end transaction
         new_c.execute("END TRANSACTION;")
-        new_conn.commit()
 
         #close memory db
         new_c.close()
@@ -756,14 +757,12 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         fives = []
                     i = 0
                     for chrom in chroms:
-
                         self.loc_finder_table.setRowCount(index + 1)
                         seed_table = QtWidgets.QTableWidgetItem()
                         sequence_table = QtWidgets.QTableWidgetItem()
                         organism_table = QtWidgets.QTableWidgetItem()
                         chromsome_table = QtWidgets.QTableWidgetItem()
                         location_table = QtWidgets.QTableWidgetItem()
-
                         seed_table.setData(QtCore.Qt.EditRole, seed)
                         if len(fives) == 0 and len(threes) != 0:
                             sequence_table.setData(QtCore.Qt.EditRole, seed + threes[i])
