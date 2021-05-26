@@ -353,7 +353,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 perc_cov = QtWidgets.QTableWidgetItem()
                 coverage = (org_count / len(self.db_files)) * 100
                 coverage = float("%.2f" % coverage)
-                perc_cov.setData(QtCore.Qt.EditRole, str(coverage) + '%')
+                perc_cov.setData(QtCore.Qt.EditRole, coverage)
                 perc_cov.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
                 self.table2.setItem(index, 1, perc_cov)
 
@@ -388,7 +388,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     percent_consensus = (threes_and_fives.count(threes_and_fives[majority_index]) / len(threes_and_fives)) * 100
 
                 percent_consensus = float("%.2f" % percent_consensus)
-                perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
+                perc_cons.setData(QtCore.Qt.EditRole, percent_consensus)
                 perc_cons.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
                 self.table2.setItem(index, 5, perc_cons)
 
@@ -534,7 +534,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 perc_cov = QtWidgets.QTableWidgetItem()
                 coverage = (org_count / len(self.db_files)) * 100
                 coverage = float("%.2f" % coverage)
-                perc_cov.setData(QtCore.Qt.EditRole, str(coverage) + '%')
+                perc_cov.setData(QtCore.Qt.EditRole, coverage)
                 perc_cov.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
                 self.table2.setItem(index, 1, perc_cov)
 
@@ -568,7 +568,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 elif both_prime:
                     pass
                 percent_consensus = float("%.2f" % percent_consensus)
-                perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
+                perc_cons.setData(QtCore.Qt.EditRole, percent_consensus)
                 perc_cons.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
                 self.table2.setItem(index, 5, perc_cons)
 
