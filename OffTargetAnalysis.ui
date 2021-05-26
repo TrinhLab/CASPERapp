@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>577</width>
-    <height>494</height>
+    <width>552</width>
+    <height>551</height>
    </rect>
   </property>
   <property name="font">
@@ -26,6 +26,9 @@
    <string notr="true">font: 14pt &quot;Arial&quot;;</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetMinimumSize</enum>
+   </property>
    <item row="2" column="0" colspan="2">
     <widget class="QGroupBox" name="Step1">
      <property name="title">
@@ -33,7 +36,7 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <property name="verticalSpacing">
-       <number>-1</number>
+       <number>6</number>
       </property>
       <item row="0" column="0" alignment="Qt::AlignLeft">
        <widget class="QLabel" name="label_3">
@@ -150,9 +153,15 @@
       </item>
       <item row="0" column="4">
        <widget class="QLabel" name="label_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="minimumSize">
          <size>
-          <width>160</width>
+          <width>188</width>
           <height>17</height>
          </size>
         </property>

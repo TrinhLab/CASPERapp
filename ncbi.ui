@@ -466,6 +466,9 @@
           <property name="text">
            <string>RefSeq</string>
           </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
        </layout>
