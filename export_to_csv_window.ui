@@ -17,7 +17,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>CSV Export</string>
+   <string>Export gRNAs</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="sizeConstraint">
