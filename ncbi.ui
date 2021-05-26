@@ -180,7 +180,7 @@
          </widget>
         </item>
         <item row="3" column="1">
-         <widget class="QRadioButton" name="yes_box">
+         <widget class="QCheckBox" name="yes_box">
           <property name="text">
            <string>Yes</string>
           </property>
@@ -374,17 +374,14 @@
         <item row="1" column="1" rowspan="2" colspan="2">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
-           <widget class="QRadioButton" name="gbff_checkbox">
+           <widget class="QCheckBox" name="gbff_checkbox">
             <property name="text">
              <string>GBFF</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="fna_checkbox">
+           <widget class="QCheckBox" name="fna_checkbox">
             <property name="text">
              <string>FASTA/FNA</string>
             </property>
@@ -400,7 +397,7 @@
              <string>GenBank</string>
             </property>
             <property name="checked">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -408,6 +405,9 @@
            <widget class="QRadioButton" name="refseq_checkbox">
             <property name="text">
              <string>RefSeq</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -525,11 +525,4 @@
  </tabstops>
  <resources/>
  <connections/>
- <buttongroups>
-  <buttongroup name="comp_genome_group">
-   <property name="exclusive">
-    <bool>false</bool>
-   </property>
-  </buttongroup>
- </buttongroups>
 </ui>
