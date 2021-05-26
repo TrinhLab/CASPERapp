@@ -577,6 +577,11 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.seed_canvas.axes.set_ylim(0, max(y) + 1)
         self.seed_canvas.axes.set_xticks(x)
         self.seed_canvas.axes.set_xticklabels(x_labels)
+        if len(x_labels) > 10:
+            tick_spacing = round(len(x_labels)/10)
+            for i, t in enumerate(self.seed_canvas.axes.get_xticklabels()):
+                if (i % tick_spacing) != 0:
+                    t.set_visible(False)
         self.seed_canvas.axes.set_xlabel('Chromosome', fontsize = 10)
         self.seed_canvas.axes.set_ylabel('Number of Repeats', fontsize=10)
         self.line_canvas.axes.set_title('Repeats per Scaffold/Chromosome',fontsize=10)
@@ -606,7 +611,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         max_rep = max(repeat_data.values())
         x_labels = []
         y = []
-        for rep in sorted(repeat_data, key=repeat_data.get, reverse=True):
+        for rep in sorted(repeat_data):
             #if repeat_data[rep] / max_rep > 0.01:
             x_labels.append(rep)
             y.append(repeat_data[rep])
@@ -615,6 +620,11 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.bar_canvas.axes.bar(x, y)
         self.bar_canvas.axes.set_xticks(x)
         self.bar_canvas.axes.set_xticklabels(x_labels)
+        if len(x_labels) > 10:
+            tick_spacing = round(len(x_labels)/15)
+            for i, t in enumerate(self.bar_canvas.axes.get_xticklabels()):
+                if (i % tick_spacing) != 0:
+                    t.set_visible(False)
         self.bar_canvas.axes.set_xlabel('Number of Repeats', fontsize=10)
         self.bar_canvas.axes.set_ylabel('Number of Sequences', fontsize=10)
         self.bar_canvas.axes.set_title('Number of Sequences per Number of Repeats',fontsize=10)

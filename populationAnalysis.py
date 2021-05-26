@@ -38,9 +38,23 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.names = []
         self.names_venn = []
 
+        """ Colormap Graph initialization """
         self.colormap_layout = QtWidgets.QVBoxLayout()
         self.colormap_layout.setContentsMargins(0,0,0,0)
         self.colormap_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
+
+
+        groupbox_style = """
+        QGroupBox:title{subcontrol-origin: margin;
+                        left: 10px;
+                        padding: 0 5px 0 15px;}
+        QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
+                        border-radius: 9px;
+                        font: 15pt "Arial";
+                        font: bold;
+                        margin-top: 10px;}"""
+        self.groupBox.setStyleSheet(groupbox_style)
+        self.groupBox_2.setStyleSheet(groupbox_style.replace("groupBox","groupBox_2"))
 
         #organism table
         self.org_Table.setColumnCount(1)
