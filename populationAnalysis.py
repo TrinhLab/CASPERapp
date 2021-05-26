@@ -646,7 +646,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             shared_seeds = new_c.execute("select count(*) from join_results").fetchall()
             return shared_seeds
         else:
-            shared_seeds = new_c.execute("select * from join_results limit 0,100").fetchall()
+            shared_seeds = new_c.execute("select * from join_results limit 0,1000").fetchall()
 
         #end transaction
         new_c.execute("END TRANSACTION;")
