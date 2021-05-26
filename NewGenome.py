@@ -493,11 +493,12 @@ class NewGenome(QtWidgets.QMainWindow):
         else:
             self.process.kill()
             self.job_Table.clearContents()
+            self.job_Table.setRowCount(0)
             self.orgName.clear()
             self.strainName.clear()
             self.orgCode.clear()
             self.output_browser.clear()
-            self.s_file.clear()
+            self.s_file.setText("Name of File")
             self.progressBar.setValue(0)
             self.first = False
             self.goToPrompt.hide()
@@ -538,11 +539,12 @@ class NewGenome(QtWidgets.QMainWindow):
         else:
             self.process.kill()
             self.job_Table.clearContents()
+            self.job_Table.setRowCount(0)
             self.orgName.clear()
             self.strainName.clear()
             self.orgCode.clear()
             self.output_browser.clear()
-            self.s_file.clear()
+            self.s_file.setText("Name of File")
             self.progressBar.setValue(0)
             self.first = False
             self.goToPrompt.hide()
@@ -585,11 +587,12 @@ class NewGenome(QtWidgets.QMainWindow):
         else:
             self.process.kill()
             self.job_Table.clearContents()
+            self.job_Table.setRowCount(0)
             self.orgName.clear()
             self.strainName.clear()
             self.orgCode.clear()
             self.output_browser.clear()
-            self.s_file.clear()
+            self.s_file.setText("Name of File")
             self.progressBar.setValue(0)
             self.first = False
             self.goToPrompt.hide()
