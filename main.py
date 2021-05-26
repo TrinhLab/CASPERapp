@@ -1005,23 +1005,8 @@ class StartupWindow(QtWidgets.QDialog):
         mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a folder...",
                                                            self.gdirectory, QtWidgets.QFileDialog.ShowDirsOnly)
 
-
         if (os.path.isdir(mydir) == False):
             QtWidgets.QMessageBox.critical(self, "Invalid Directory!", "Invalid Directory!", QtWidgets.QMessageBox.Ok)
-            self.lineEdit.setText("")
-            self.gdirectory = ""
-            GlobalSettings.CSPR_DB = ""
-            return
-
-        found = False
-        for file in os.listdir(mydir):
-            if(file.find(".cspr") != -1):
-                found = True
-                break
-
-        if(found == False):
-            QtWidgets.QMessageBox.critical(self, "Directory is invalid!", "You must select a directory with CSPR Files!",
-                                           QtWidgets.QMessageBox.Ok)
             self.lineEdit.setText("")
             self.gdirectory = ""
             GlobalSettings.CSPR_DB = ""
@@ -1038,12 +1023,8 @@ class StartupWindow(QtWidgets.QDialog):
 
     def errormsgmulti(self):
         self.gdirectory = str(self.lineEdit.text())
-        # print(self.gdirectory)
-        if "Please select a directory that contains .cspr files" in self.gdirectory:
-            QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory.",
-                                           QtWidgets.QMessageBox.Ok)
 
-        elif (os.path.isdir(self.gdirectory)):
+        if (os.path.isdir(self.gdirectory)):
             os.chdir(self.gdirectory)
             # change dir, still load main window, still load MT data, and then open main window and newGenome window
             GlobalSettings.filedir = self.gdirectory
@@ -1095,6 +1076,18 @@ class StartupWindow(QtWidgets.QDialog):
 
 
     def show_window(self):
+        found = False
+        for file in os.listdir(self.gdirectory):
+            if (file.find(".cspr") != -1):
+                found = True
+                break
+
+        if (found == False):
+            QtWidgets.QMessageBox.critical(self, "Directory is invalid!",
+                                           "You must select a directory with CSPR Files!",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
         self.gdirectory = str(self.lineEdit.text())
         # print(self.gdirectory)
         if "Please select a directory that contains .cspr files" in self.gdirectory:
