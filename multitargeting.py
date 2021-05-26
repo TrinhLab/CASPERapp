@@ -360,7 +360,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 percent_consensus = (threes_and_fives.count(threes_and_fives[majority_index]) / len(threes_and_fives)) * 100
 
             percent_consensus = float("%.2f" % percent_consensus)
-            perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
+            perc_cons.setData(QtCore.Qt.EditRole, percent_consensus)
             perc_cons.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             self.table.setItem(row_cnt, 4, perc_cons)
 

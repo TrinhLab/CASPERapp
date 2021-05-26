@@ -378,7 +378,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
             if self.genbank_checkbox.isChecked():
                 genbank_ftp = self.genbank_ftp_dict[int(id)]
                 dirs.append(genbank_ftp)
-            if self.refseq_checkbox.isChecked():
+            else:
                 refseq_ftp = self.refseq_ftp_dict[int(id)]
                 dirs.append(refseq_ftp)
 

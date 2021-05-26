@@ -46,94 +46,6 @@
         <property name="sizeConstraint">
          <enum>QLayout::SetDefaultConstraint</enum>
         </property>
-        <item row="0" column="0">
-         <widget class="QLabel" name="organism_label">
-          <property name="font">
-           <font>
-            <family>Arial</family>
-            <pointsize>14</pointsize>
-            <weight>50</weight>
-            <bold>false</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Organism (Required): </string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="ret_max_label">
-          <property name="font">
-           <font>
-            <family>Arial</family>
-            <pointsize>14</pointsize>
-           </font>
-          </property>
-          <property name="toolTip">
-           <string>Number of search results to return</string>
-          </property>
-          <property name="text">
-           <string>Return Max (Default = 1000):</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLineEdit" name="ret_max_line_edit">
-          <property name="maximumSize">
-           <size>
-            <width>400</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>14</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>1000</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="organism_line_edit">
-          <property name="minimumSize">
-           <size>
-            <width>225</width>
-            <height>21</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>400</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>14</pointsize>
-           </font>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLineEdit" name="infra_name_line_edit">
-          <property name="maximumSize">
-           <size>
-            <width>400</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>14</pointsize>
-           </font>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="0">
          <widget class="QLabel" name="infra_name_label">
           <property name="font">
@@ -179,32 +91,99 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="QCheckBox" name="yes_box">
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="organism_line_edit">
           <property name="minimumSize">
            <size>
-            <width>100</width>
-            <height>0</height>
+            <width>225</width>
+            <height>21</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>100</width>
+            <width>400</width>
             <height>16777215</height>
            </size>
           </property>
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLineEdit" name="ret_max_line_edit">
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>1000</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="infra_name_line_edit">
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="ret_max_label">
           <property name="font">
            <font>
             <family>Arial</family>
             <pointsize>14</pointsize>
            </font>
           </property>
+          <property name="toolTip">
+           <string>Number of search results to return</string>
+          </property>
+          <property name="text">
+           <string>Return Max (Default = 1000):</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="organism_label">
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <pointsize>14</pointsize>
+            <weight>50</weight>
+            <bold>false</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Organism (Required): </string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QCheckBox" name="yes_box">
           <property name="text">
            <string>Yes</string>
           </property>
-          <attribute name="buttonGroup">
-           <string notr="true">comp_genome_group</string>
-          </attribute>
          </widget>
         </item>
        </layout>
@@ -340,31 +319,6 @@
         <property name="sizeConstraint">
          <enum>QLayout::SetDefaultConstraint</enum>
         </property>
-        <item row="1" column="0" rowspan="2">
-         <widget class="QLabel" name="label_3">
-          <property name="maximumSize">
-           <size>
-            <width>100</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <family>Arial</family>
-            <pointsize>14</pointsize>
-           </font>
-          </property>
-          <property name="toolTip">
-           <string>These are the file types that you are choosing to download. GBFF = annotation file, FASTA/FNA = genomic sequence file.</string>
-          </property>
-          <property name="text">
-           <string>File Types:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="0">
          <widget class="QLabel" name="collection_label">
           <property name="maximumSize">
@@ -392,8 +346,8 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QCheckBox" name="genbank_checkbox">
+        <item row="1" column="0" rowspan="2">
+         <widget class="QLabel" name="label_3">
           <property name="maximumSize">
            <size>
             <width>100</width>
@@ -406,70 +360,58 @@
             <pointsize>14</pointsize>
            </font>
           </property>
+          <property name="toolTip">
+           <string>These are the file types that you are choosing to download. GBFF = annotation file, FASTA/FNA = genomic sequence file.</string>
+          </property>
           <property name="text">
-           <string>GenBank</string>
+           <string>File Types:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
-        <item row="1" column="1" rowspan="2">
-         <widget class="QCheckBox" name="gbff_checkbox">
-          <property name="maximumSize">
-           <size>
-            <width>100</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <family>Arial</family>
-            <pointsize>14</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>GBFF</string>
-          </property>
-         </widget>
+        <item row="1" column="1" rowspan="2" colspan="2">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QCheckBox" name="gbff_checkbox">
+            <property name="text">
+             <string>GBFF</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="fna_checkbox">
+            <property name="text">
+             <string>FASTA/FNA</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
-        <item row="1" column="2" rowspan="2" colspan="2">
-         <widget class="QCheckBox" name="fna_checkbox">
-          <property name="maximumSize">
-           <size>
-            <width>125</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <family>Arial</family>
-            <pointsize>14</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>FASTA/FNA</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2" colspan="2">
-         <widget class="QCheckBox" name="refseq_checkbox">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <family>Arial</family>
-            <pointsize>14</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>RefSeq</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
+        <item row="0" column="1" colspan="2">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QRadioButton" name="genbank_checkbox">
+            <property name="text">
+             <string>GenBank</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="refseq_checkbox">
+            <property name="text">
+             <string>RefSeq</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
@@ -574,25 +516,13 @@
   <tabstop>organism_line_edit</tabstop>
   <tabstop>infra_name_line_edit</tabstop>
   <tabstop>ret_max_line_edit</tabstop>
-  <tabstop>yes_box</tabstop>
   <tabstop>search_button</tabstop>
   <tabstop>all_rows</tabstop>
   <tabstop>ncbi_table</tabstop>
-  <tabstop>genbank_checkbox</tabstop>
-  <tabstop>refseq_checkbox</tabstop>
-  <tabstop>gbff_checkbox</tabstop>
-  <tabstop>fna_checkbox</tabstop>
   <tabstop>output_directory</tabstop>
   <tabstop>browse_button</tabstop>
   <tabstop>download_button</tabstop>
  </tabstops>
  <resources/>
  <connections/>
- <buttongroups>
-  <buttongroup name="comp_genome_group">
-   <property name="exclusive">
-    <bool>false</bool>
-   </property>
-  </buttongroup>
- </buttongroups>
 </ui>

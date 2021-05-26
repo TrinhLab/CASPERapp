@@ -1076,6 +1076,11 @@ class StartupWindow(QtWidgets.QDialog):
 
 
     def show_window(self):
+        if (os.path.isdir(self.gdirectory) == False):
+            QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
         found = False
         for file in os.listdir(self.gdirectory):
             if (file.find(".cspr") != -1):
