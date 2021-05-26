@@ -522,12 +522,14 @@ class Multitargeting(QtWidgets.QMainWindow):
         five = data[4].split(',')
         pam = data[5].split(',')
         score = data[6].split(',')
-        five_bool = True
-        three_bool = True
-        if five[0] == '':
-            five_bool = False
-        if three[0] == '':
-            three_bool = False
+
+        if len(three) < len(five):
+            for i in range(len(five) - len(three)):
+                three.append('')
+        elif len(five) < len(three):
+            for i in range(len(three) - len(five)):
+                five.append('')
+
         seed_data = {}
 
         self.event_data = {}
@@ -555,12 +557,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 else:
                     dira = '+'
 
-                if five_bool and not three_bool:
-                    seq = five + seed
-                elif not five_bool and three_bool:
-                    seq = seed + three
-                else:
-                    seq = five + seed + three
+                seq = five + seed + three
 
                 self.event_data[i] = [str(abs(location)), seq, pam, score, dira]
                 i += 1
