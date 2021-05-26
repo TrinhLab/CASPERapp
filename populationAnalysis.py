@@ -331,12 +331,23 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         fives.append('')
 
                 majority_index = 0
+                three_prime, five_prime, both_prime = False, False, False
                 if threes[0] == '':
                     majority = max(set(fives), key=fives.count)
                     majority_index = fives.index(majority)
-                else:
+                    five_prime = True
+                elif fives[0] == '':
                     majority = max(set(threes), key=threes.count)
                     majority_index = threes.index(majority)
+                    three_prime = True
+                else:
+                    #account for both 3 and 5 present
+                    threes_and_fives = []
+                    for i in range(len(threes)):
+                        threes_and_fives.append(threes[i] + fives[i])
+                    majority = max(set(threes_and_fives), key=threes_and_fives.count)
+                    majority_index = threes_and_fives.index(majority)
+                    both_prime = True
 
                 # push percent coverage
                 perc_cov = QtWidgets.QTableWidgetItem()
@@ -368,7 +379,14 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
                 # push percent consensus
                 perc_cons = QtWidgets.QTableWidgetItem()
-                percent_consensus = (pams.count(pams[majority_index]) / len(pams)) * 100
+                percent_consensus = 0
+                if five_prime == True:
+                    percent_consensus = (fives.count(fives[majority_index]) / len(fives)) * 100
+                elif three_prime == True:
+                    percent_consensus = (threes.count(threes[majority_index]) / len(threes)) * 100
+                elif both_prime:
+                    percent_consensus = (threes_and_fives.count(threes_and_fives[majority_index]) / len(threes_and_fives)) * 100
+
                 percent_consensus = float("%.2f" % percent_consensus)
                 perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
                 perc_cons.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
@@ -499,12 +517,18 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         fives.append('')
 
                 majority_index = 0
+                three_prime, five_prime, both_prime = False, False, False
                 if threes[0] == '':
                     majority = max(set(fives), key=fives.count)
                     majority_index = fives.index(majority)
-                else:
+                    five_prime = True
+                elif fives[0] == '':
                     majority = max(set(threes), key=threes.count)
                     majority_index = threes.index(majority)
+                    three_prime = True
+                else:
+                    #account for both 3 and 5 present
+                    both_prime = True
 
                 # push percent coverage
                 perc_cov = QtWidgets.QTableWidgetItem()
@@ -536,8 +560,13 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
                 # push percent consensus
                 perc_cons = QtWidgets.QTableWidgetItem()
-
-                percent_consensus = (pams.count(pams[majority_index]) / len(pams)) * 100
+                percent_consensus = 0
+                if five_prime == True:
+                    percent_consensus = (fives.count(fives[majority_index]) / len(fives)) * 100
+                elif three_prime == True:
+                    percent_consensus = (threes.count(threes[majority_index]) / len(threes)) * 100
+                elif both_prime:
+                    pass
                 percent_consensus = float("%.2f" % percent_consensus)
                 perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
                 perc_cons.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
