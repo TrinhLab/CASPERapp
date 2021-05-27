@@ -97,7 +97,6 @@ class Multitargeting(QtWidgets.QMainWindow):
 
         self.ready_chromo_min_max = True
         self.ready_chromo_make_graph = True
-        self.directory = 'Cspr files'
         self.info_path = os.getcwd()
 
         ##################################
@@ -175,20 +174,26 @@ class Multitargeting(QtWidgets.QMainWindow):
         return Qt.QWidget.eventFilter(self, source, event)
 
 
-    def launch(self,path):
-        os.chdir(path)
-        self.directory = path
+    def launch(self):
         self.get_data()
 
 
     def get_data(self):
         #disconnect index changed signal on endo dropdown if there is one
         try:
+            self.organism_drop.currentIndexChanged.disconnect()
+        except:
+            pass
+        try:
             self.endo_drop.currentIndexChanged.disconnect()
         except:
             pass
 
-        onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
+
+        self.organism_drop.clear()
+        self.endo_drop.clear()
+
+        onlyfiles = [f for f in os.listdir(GlobalSettings.CSPR_DB) if os.path.isfile(os.path.join(GlobalSettings.CSPR_DB, f))]
         self.organisms_to_files = {}
         self.organisms_to_endos = {}
         # shortName = {}

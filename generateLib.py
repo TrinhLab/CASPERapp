@@ -427,7 +427,10 @@ class genLibrary(QtWidgets.QDialog):
             return
 
         # make sure to append the '/' to the folder path
-        self.output_path.setText(mydir + "/")
+        if platform.system() == "Windwos":
+            self.output_path.setText(mydir + "\\")
+        else:
+            self.output_path.setText(mydir + "/")
 
 
     # this function builds the dictionary that is used in the generate function

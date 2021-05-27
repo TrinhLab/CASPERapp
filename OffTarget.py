@@ -56,11 +56,24 @@ class OffTarget(QtWidgets.QDialog):
 
     #copied from MT to fill in the chromo and endo dropdowns based on CSPR files user provided at the startup
     def fill_data_dropdown(self):
+        try:
+            self.EndocomboBox.diconnect()
+        except:
+            pass
+        try:
+            self.OrgcomboBox.diconnect()
+        except:
+            pass
+
+        self.OrgcomboBox.clear()
+        self.EndocomboBox.clear()
+        self.mismatchcomboBox.clear()
+
         self.organisms_to_files = {}
         self.organisms_to_endos = {}
 
         #fill in chromosome and endo dropdowns
-        onlyfiles = [f for f in os.listdir(GlobalSettings.filedir) if os.path.isfile(os.path.join(GlobalSettings.filedir , f))]
+        onlyfiles = [f for f in os.listdir(GlobalSettings.CSPR_DB) if os.path.isfile(os.path.join(GlobalSettings.CSPR_DB , f))]
         self.orgsandendos = {}
         self.shortName = {}
         for file in onlyfiles:
