@@ -34,7 +34,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.mode = 0
         self.find_locs_button.clicked.connect(self.find_locations)
         self.clear_loc_button.clicked.connect(self.clear_loc_table)
-        self.directory = ""
         self.names = []
         self.names_venn = []
 
@@ -166,16 +165,11 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.fill_data()
 
 
-    def launch(self, path):
-        os.chdir(path)
-        self.directory = path
+    def launch(self):
         self.get_data()
 
 
     def get_data(self):
-        if self.directory == '':
-            return
-
         self.fillEndo()
 
 
@@ -215,7 +209,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.change_endo()
 
     def change_endo(self):
-        onlyfiles = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
+        self.org_Table.clearContents()
+        self.org_Table.setRowCount(0)
+        onlyfiles = [f for f in os.listdir(GlobalSettings.CSPR_DB) if os.path.isfile(os.path.join(GlobalSettings.CSPR_DB, f))]
         index = 0
         for file in onlyfiles:
             if file.find('.cspr') != -1:

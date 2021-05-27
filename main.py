@@ -785,6 +785,13 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     # ----- CALLED IN STARTUP WINDOW ------ #
     def getData(self):
+        try:
+            self.orgChoice.currentIndexChanged.disconnect()
+        except:
+            pass
+
+        self.orgChoice.clear()
+        self.endoChoice.clear()
         mypath = os.getcwd()
         found = False
         self.dbpath = mypath
@@ -853,9 +860,38 @@ class CMainWindow(QtWidgets.QMainWindow):
         mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a folder...",
                                                            self.dbpath, QtWidgets.QFileDialog.ShowDirsOnly)
 
-        if (os.path.isdir(mydir)):
-            os.chdir(mydir)
+        if os.path.isdir(mydir) == False:
+            #check if directory is a valid directory
+            QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+
+        #check if directory contains CSPR files
+        found = False
+        for file in os.listdir(mydir):
+            if (file.find(".cspr") != -1):
+                found = True
+                break
+        if (found == False):
+            QtWidgets.QMessageBox.critical(self, "Directory is invalid!",
+                                           "You must select a directory with CSPR Files!",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+
+        os.chdir(mydir)
+        if platform.system() == "Windows":
+            mydir = mydir.replace("/","\\")
+        GlobalSettings.CSPR_DB = mydir
+        #update dropdowns in main, MT, pop
         self.getData()
+
+        GlobalSettings.MTWin.directory = mydir
+        GlobalSettings.MTWin.get_data()
+        GlobalSettings.pop_Analysis.get_data()
+        self.fill_annotation_dropdown()
+
 
 
     # Tanner - added this function to allow the Tools->Multitargeting button to work
@@ -871,7 +907,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     def changeto_population_Analysis(self):
         GlobalSettings.pop_Analysis.mwfg.moveCenter(GlobalSettings.pop_Analysis.cp)  ##Center window
         GlobalSettings.pop_Analysis.move(GlobalSettings.pop_Analysis.mwfg.topLeft())  ##Center window
-        GlobalSettings.pop_Analysis.launch(GlobalSettings.CSPR_DB)
+        GlobalSettings.pop_Analysis.launch()
         GlobalSettings.pop_Analysis.show()
         GlobalSettings.mainWindow.hide()
 
@@ -1011,13 +1047,12 @@ class StartupWindow(QtWidgets.QDialog):
             GlobalSettings.CSPR_DB = ""
             return
 
+        if platform.system() == "Windows":
+            mydir = mydir.replace("/","\\")
+
         self.lineEdit.setText(mydir)
         self.gdirectory = mydir
         GlobalSettings.CSPR_DB = mydir
-        if platform.system() == "Windows":
-            GlobalSettings.CSPR_DB = GlobalSettings.CSPR_DB.replace("/","\\")
-        else:
-            GlobalSettings.CSPR_DB = GlobalSettings.CSPR_DB.replace("\\","/")
 
 
     def errormsgmulti(self):
@@ -1026,8 +1061,6 @@ class StartupWindow(QtWidgets.QDialog):
         if (os.path.isdir(self.gdirectory)):
             os.chdir(self.gdirectory)
             # change dir, still load main window, still load MT data, and then open main window and newGenome window
-            GlobalSettings.filedir = self.gdirectory
-            GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
             self.re_write_dir()
             GlobalSettings.mainWindow.launch_newGenome()
             self.close()
@@ -1040,16 +1073,15 @@ class StartupWindow(QtWidgets.QDialog):
         cspr_info = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
         cspr_info = cspr_info.read()
         lines = cspr_info.split('\n')
-        line = ""
+        dir = ""
         for item in lines:
             if 'DIRECTORY:' in item:
-                line = item
+                dir = item
                 break
-        if len(line) < 11:
-            return os.path.expanduser("~\Documents").replace('\\', '/')
-        else:
-            return line[10:]
-
+        if platform.system() == "Windows":
+            dir = dir.replace("DIRECTORY:","")
+            dir = dir.replace("/","\\")
+        return dir
 
     def re_write_dir(self):
         cspr_info = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
@@ -1060,6 +1092,7 @@ class StartupWindow(QtWidgets.QDialog):
             if 'DIRECTORY:' in item:
                 line = item
                 break
+
         line_final = "DIRECTORY:" + self.gdirectory
         for item in cspr_info_text:
             if item == line:
@@ -1113,7 +1146,7 @@ class StartupWindow(QtWidgets.QDialog):
             GlobalSettings.mainWindow.show()
 
             # Tanner - still setup data for MT
-            GlobalSettings.MTWin.launch(self.gdirectory)
+            GlobalSettings.MTWin.launch()
 
             self.close()
         else:
