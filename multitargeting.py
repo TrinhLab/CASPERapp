@@ -11,6 +11,9 @@ import sqlite3
 import gzip
 from collections import Counter
 import statistics
+import time
+import math
+import matplotlib.pyplot as plt
 
 class Multitargeting(QtWidgets.QMainWindow):
 
@@ -113,6 +116,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.move(self.mwfg.topLeft())  ##Center window
         self.hide()
 
+
     def export_to_csv(self):
         select_items = self.table.selectedItems()
         if len(select_items) <= 0:
@@ -122,7 +126,6 @@ class Multitargeting(QtWidgets.QMainWindow):
                                            QtWidgets.QMessageBox.Ok)
             return
         GlobalSettings.mainWindow.export_csv_window.launch(select_items,8)
-
 
 
     def show_statistics(self):
@@ -252,7 +255,9 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.loading_window.loading_bar.setValue(10)
         self.plot_repeats_vs_seeds()
         self.loading_window.loading_bar.setValue(30)
+        #start = time.time()
         self.bar_seeds_vs_repeats()
+        #print("Time: " + str(time.time() - start))
         self.loading_window.loading_bar.setValue(50)
         self.fill_table()
         self.loading_window.loading_bar.setValue(100)
@@ -278,7 +283,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         row_cnt = 0
-        for repeat in c.execute("SELECT * FROM repeats;"):
+        for repeat in c.execute("SELECT * FROM repeats LIMIT 0, 1000;"):
             #expand table by 1 row
             self.table.setRowCount(row_cnt + 1)
 
@@ -402,7 +407,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.table.itemSelectionChanged.connect(self.row_selection_trigger)
 
 
-
     #function for triggering graph updates when user selects row in table
     def row_selection_trigger(self):
         item = self.table.currentItem()
@@ -522,12 +526,14 @@ class Multitargeting(QtWidgets.QMainWindow):
         five = data[4].split(',')
         pam = data[5].split(',')
         score = data[6].split(',')
-        five_bool = True
-        three_bool = True
-        if five[0] == '':
-            five_bool = False
-        if three[0] == '':
-            three_bool = False
+
+        if len(three) < len(five):
+            for i in range(len(five) - len(three)):
+                three.append('')
+        elif len(five) < len(three):
+            for i in range(len(three) - len(five)):
+                five.append('')
+
         seed_data = {}
 
         self.event_data = {}
@@ -555,15 +561,11 @@ class Multitargeting(QtWidgets.QMainWindow):
                 else:
                     dira = '+'
 
-                if five_bool and not three_bool:
-                    seq = five + seed
-                elif not five_bool and three_bool:
-                    seq = seed + three
-                else:
-                    seq = five + seed + three
+                seq = five + seed + three
 
                 self.event_data[i] = [str(abs(location)), seq, pam, score, dira]
                 i += 1
+
 
     # creates bar graph num of repeats vs. chromsome
     def chro_bar_create(self, seed):
@@ -606,109 +608,62 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.line_canvas.draw()
 
 
-    # plots the sequences per Number Repeats bar graph
     def bar_seeds_vs_repeats(self):
         ###Clear out old widgets in layout
-        for i in reversed(range(self.global_bar.count())): 
+        for i in reversed(range(self.global_bar.count())):
             self.global_bar.itemAt(i).widget().setParent(None)
         self.bar_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
-        self.global_bar.addWidget(self.bar_canvas) ### Add canvas to global line layout 
+        self.global_bar.addWidget(self.bar_canvas) ### Add canvas to global line layout
         self.seeds_vs_repeats_bar.setLayout(self.global_bar) ### Add global line layout to repeats vs. seeds line plot widget
 
-        """ Get the data """ 
+        """ Get the data """
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
-        data = c.execute("SELECT seed, count from repeats").fetchall()
-        c.close()
-        repeat_data = []
-        for obj in data:
-            cnt = list(obj)[1]
-            repeat_data.append(cnt)
-        repeat_data = Counter(repeat_data)
-        max_rep = max(repeat_data.values())
         x_labels = []
         y = []
-        for rep in sorted(repeat_data):
-            #if repeat_data[rep] / max_rep > 0.01:
-            x_labels.append(rep)
-            y.append(repeat_data[rep])
+        for obj in c.execute("select count, COUNT(count) as cnt from repeats group by count order by cnt DESC;"):
+            x_labels.append(obj[0])
+            y.append(obj[1])
+
         x = list(range(0, len(x_labels)))
         # the following are plotting / formatting for the graph
-        self.bar_canvas.axes.bar(x, y)
-        self.bar_canvas.axes.set_xticks(x)
-        self.bar_canvas.axes.set_xticklabels(x_labels)
-        if len(x_labels) > 10:
-            tick_spacing = round(len(x_labels)/15)
-            for i, t in enumerate(self.bar_canvas.axes.get_xticklabels()):
-                if (i % tick_spacing) != 0:
-                    t.set_visible(False)
+        self.bar_canvas.axes.scatter(x, y, s=10)
+        self.bar_canvas.axes.set_yscale('log')
         self.bar_canvas.axes.set_xlabel('Number of Repeats', fontsize=10)
         self.bar_canvas.axes.set_ylabel('Number of Sequences', fontsize=10)
         self.bar_canvas.axes.set_title('Number of Sequences per Number of Repeats',fontsize=10)
         self.bar_canvas.axes.tick_params(axis='both', which='major', labelsize=8)
-        self.bar_bool = True
-
-        # rects are all the bar objects in the graph
-        rects = self.bar_canvas.axes.patches
-        rect_vals = []
-        # this for loop will calculate the height and create an annotation for each bar
-        for rect in rects:
-            height = rect.get_height()
-            temp = self.bar_canvas.axes.text(rect.get_x() + rect.get_width() / 2, height,
-                                                              '%d' % int(height),
-                                                              ha='center', va='bottom')
-            temp.set_visible(False)
-            rect_vals.append(temp)
-
-        # function used for when user cursor is hovering over the bar, if hovering over a bar, the
-        # height annotatin will appear above the bar, otherwise it will be hidden
-        def on_plot_hover(event):
-            i = 0
-            for rect in rects:
-                if rect.contains(event)[0]:
-                    rect_vals[i].set_visible(True)
-                else:
-                    rect_vals[i].set_visible(False)
-                i = i + 1
-            self.bar_canvas.draw()
-
-        # statement to detect cursor hovering over the bars
-        self.bar_canvas.mpl_connect('motion_notify_event', on_plot_hover)
-        # must redraw after every change
         self.bar_canvas.draw()
 
-
-    # plots the repeats per ID number graph as line graph
+    # # plots the repeats per ID number graph as line graph
     def plot_repeats_vs_seeds(self):
         ###Clear out old widgets in layout
-        for i in reversed(range(self.global_line.count())): 
+        for i in reversed(range(self.global_line.count())):
             self.global_line.itemAt(i).widget().setParent(None)
         self.line_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
-        self.global_line.addWidget(self.line_canvas) ### Add canvas to global line layout 
+        self.global_line.addWidget(self.line_canvas) ### Add canvas to global line layout
         self.repeats_vs_seeds_line.setLayout(self.global_line) ### Add global line layout to repeats vs. seeds line plot widget
 
         """ Fetch all the data """
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
-        data = c.execute("SELECT seed, count from repeats").fetchall()
-        c.close()
-        x1 = list(range(0, len(data)))
-        y1 = []
-        for obj in data:
-            y1.append(int(list(obj)[1]))
 
-        #y1.sort(reverse=True)
+        y1 = []
+        for obj in c.execute("SELECT count from repeats;"):
+            y1.append(obj[0])
+
+        c.close()
 
         #get stats
         self.average = statistics.mean(y1)
         self.mode = statistics.mode(y1)
         self.median = statistics.median(y1)
-        self.repeat_count = len(data)
+        self.repeat_count = len(y1)
 
         # clear axes
         self.line_canvas.axes.clear()
         #Plotting / formatting
-        self.line_canvas.axes.plot(x1, y1)
+        self.line_canvas.axes.plot(y1)
         self.line_canvas.axes.set_xlabel('Seed ID Number',fontsize=10)
         self.line_canvas.axes.set_ylabel('Number of Repeats',fontsize=10)
         self.line_canvas.axes.set_title('Number of Repeats per Seed ID Number',fontsize=10)

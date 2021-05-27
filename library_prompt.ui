@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>996</width>
-    <height>463</height>
+    <width>1007</width>
+    <height>482</height>
    </rect>
   </property>
   <property name="font">
@@ -20,6 +20,9 @@
    <string>Generate Library</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetFixedSize</enum>
+   </property>
    <item row="3" column="0" rowspan="2" colspan="2">
     <widget class="QGroupBox" name="Step2">
      <property name="maximumSize">

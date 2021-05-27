@@ -1,7 +1,7 @@
 import GlobalSettings
 import os
 from PyQt5 import QtWidgets, Qt, uic, QtCore
-
+import platform
 
 ########################################################################################################################
 # Class: export_csv_window
@@ -30,7 +30,10 @@ class export_csv_window(QtWidgets.QDialog):
     # launch function. Called in Results.
     # parameter expect: a list of the items selected from the window.
     def launch(self, select_items, num_columns):
-        self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
+        if platform.system() == "Windows":
+            self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "\\")
+        else:
+            self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
         self.selected_table_items = select_items
         self.num_columns = num_columns
         self.show()
@@ -92,7 +95,11 @@ class export_csv_window(QtWidgets.QDialog):
     # Resets everything to the init funciton
     # then closes the window
     def cancel_function(self):
-        self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
+
+        if platform.system() == "Windows":
+            self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "\\")
+        else:
+            self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
         self.filename_line_edit.setText("")
         self.location = ""
         self.hide()
@@ -107,6 +114,10 @@ class export_csv_window(QtWidgets.QDialog):
         if(os.path.isdir(mydir) == False):
             return
 
-        # make sure to append the '/' to the folder path
-        self.fileLocation_line_edit.setText(mydir + "/")
-        self.location = mydir + "/"
+
+        if platform.system() == "Windows":
+            self.fileLocation_line_edit.setText(mydir + "\\")
+            self.location = mydir + "\\"
+        else:
+            self.fileLocation_line_edit.setText(mydir + "/")
+            self.location = mydir + "/"

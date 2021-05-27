@@ -76,7 +76,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.mainWindow.progressBar.setValue(85)
         self.tableWidget.setHorizontalHeaderLabels(["Gene ID","Gene Name/Locus Tag","Chromosome/Scaffold #","Description"])
         header = self.tableWidget.horizontalHeader()
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         mainWindow.checkBoxes = []
         self.type = "nonkegg"
         index = 0
