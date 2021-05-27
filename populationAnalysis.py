@@ -353,7 +353,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 perc_cov = QtWidgets.QTableWidgetItem()
                 coverage = (org_count / len(self.db_files)) * 100
                 coverage = float("%.2f" % coverage)
-                perc_cov.setData(QtCore.Qt.EditRole, str(coverage) + '%')
+                perc_cov.setData(QtCore.Qt.EditRole, coverage)
                 perc_cov.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
                 self.table2.setItem(index, 1, perc_cov)
 
@@ -388,7 +388,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     percent_consensus = (threes_and_fives.count(threes_and_fives[majority_index]) / len(threes_and_fives)) * 100
 
                 percent_consensus = float("%.2f" % percent_consensus)
-                perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
+                perc_cons.setData(QtCore.Qt.EditRole, percent_consensus)
                 perc_cons.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
                 self.table2.setItem(index, 5, perc_cons)
 
@@ -511,7 +511,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 if len(threes) < len(fives):
                     for i in range(len(fives) - len(threes)):
                         threes.append('')
-
                 elif len(fives) < len(threes):
                     for i in range(len(threes) - len(fives)):
                         fives.append('')
@@ -527,14 +526,19 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                     majority_index = threes.index(majority)
                     three_prime = True
                 else:
-                    #account for both 3 and 5 present
+                    # account for both 3 and 5 present
+                    threes_and_fives = []
+                    for i in range(len(threes)):
+                        threes_and_fives.append(threes[i] + fives[i])
+                    majority = max(set(threes_and_fives), key=threes_and_fives.count)
+                    majority_index = threes_and_fives.index(majority)
                     both_prime = True
 
                 # push percent coverage
                 perc_cov = QtWidgets.QTableWidgetItem()
                 coverage = (org_count / len(self.db_files)) * 100
                 coverage = float("%.2f" % coverage)
-                perc_cov.setData(QtCore.Qt.EditRole, str(coverage) + '%')
+                perc_cov.setData(QtCore.Qt.EditRole, coverage)
                 perc_cov.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
                 self.table2.setItem(index, 1, perc_cov)
 
@@ -566,9 +570,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 elif three_prime == True:
                     percent_consensus = (threes.count(threes[majority_index]) / len(threes)) * 100
                 elif both_prime:
-                    pass
+                    percent_consensus = (threes_and_fives.count(threes_and_fives[majority_index]) / len(threes_and_fives)) * 100
                 percent_consensus = float("%.2f" % percent_consensus)
-                perc_cons.setData(QtCore.Qt.EditRole, str(percent_consensus) + "%")
+                perc_cons.setData(QtCore.Qt.EditRole, percent_consensus)
                 perc_cons.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
                 self.table2.setItem(index, 5, perc_cons)
 
@@ -646,7 +650,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             shared_seeds = new_c.execute("select count(*) from join_results").fetchall()
             return shared_seeds
         else:
-            shared_seeds = new_c.execute("select * from join_results limit 0,100").fetchall()
+            shared_seeds = new_c.execute("select * from join_results limit 0,1000").fetchall()
 
         #end transaction
         new_c.execute("END TRANSACTION;")

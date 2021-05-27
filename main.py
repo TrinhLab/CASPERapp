@@ -76,7 +76,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.mainWindow.progressBar.setValue(85)
         self.tableWidget.setHorizontalHeaderLabels(["Gene ID","Gene Name/Locus Tag","Chromosome/Scaffold #","Description"])
         header = self.tableWidget.horizontalHeader()
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         mainWindow.checkBoxes = []
         self.type = "nonkegg"
         index = 0
@@ -1076,6 +1075,11 @@ class StartupWindow(QtWidgets.QDialog):
 
 
     def show_window(self):
+        if (os.path.isdir(self.gdirectory) == False):
+            QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
         found = False
         for file in os.listdir(self.gdirectory):
             if (file.find(".cspr") != -1):

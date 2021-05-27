@@ -275,7 +275,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.proxy.setSourceModel(self.model)
         self.ncbi_table.setModel(self.proxy)
         self.ncbi_table.resizeColumnsToContents()
-        self.ncbi_table.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.Stretch) #Ensures last column goes to the edge of table
         self.comboBox.addItems(["{0}".format(col) for col in self.model._df.columns])
         self.ncbi_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.ncbi_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -378,7 +377,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
             if self.genbank_checkbox.isChecked():
                 genbank_ftp = self.genbank_ftp_dict[int(id)]
                 dirs.append(genbank_ftp)
-            if self.refseq_checkbox.isChecked():
+            else:
                 refseq_ftp = self.refseq_ftp_dict[int(id)]
                 dirs.append(refseq_ftp)
 
