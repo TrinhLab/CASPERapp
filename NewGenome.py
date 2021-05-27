@@ -194,7 +194,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
 
 
-        #endo, pam, repeats, directionality, five length, seed length, three length, orgcode, output path, CASPERinfo path, fna path, orgName, notes
+        #endo, pam, repeats, directionality, five length, seed length, three length, orgcode, output path, CASPERinfo path, fna path, orgName, notes, on target matrix
         args = self.Endos[self.comboBoxEndo.currentText()][0]
         args += " " + self.Endos[self.comboBoxEndo.currentText()][1]
         if self.mt.isChecked():
