@@ -21,6 +21,7 @@ from CSPRparser import CSPRparser
 import populationAnalysis
 import platform
 import ncbi
+import glob
 
 # =========================================================================================
 # CLASS NAME: AnnotationsWindow
@@ -216,7 +217,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.GenerateLibrary.clicked.connect(self.prep_genlib)
         self.actionExit.triggered.connect(self.close_app)
         self.visit_repo.triggered.connect(self.visit_repo_func)
-        self.refresh_button.clicked.connect(self.fill_annotation_dropdown)
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
         self.progressBar.reset()
@@ -711,15 +711,20 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def fill_annotation_dropdown(self):
-        temp_list = list()
+        #recursive search for all .gbff in casper db folder
         self.annotation_files.clear()
-        for file in os.listdir(GlobalSettings.CSPR_DB):
-            if ".gbff" in file:
-                temp_list.append(str(file))
-        temp_list.sort(key=str.lower)
-        for file in temp_list:
-            self.annotation_files.addItem(file)
+        annotation_files = glob.glob(GlobalSettings.CSPR_DB + "/**/*.gbff", recursive=True)
+        if platform.system() == "Windows":
+            for i in range(len(annotation_files)):
+                annotation_files[i] = annotation_files[i].replace("/","\\")
+                annotation_files[i] = annotation_files[i][annotation_files[i].rfind("\\") + 1:]
+        else:
+            for i in range(len(annotation_files)):
+                annotation_files[i] = annotation_files[i].replace("\\","/")
+                annotation_files[i] = annotation_files[i][annotation_files[i].rfind("/") + 1:]
 
+        annotation_files.sort(key=str.lower)
+        self.annotation_files.addItems(annotation_files)
 
     def make_dictonary(self):
         url = "https://www.genome.jp/dbget-bin/get_linkdb?-t+genes+gn:" + self.TNumbers[
@@ -893,7 +898,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.fill_annotation_dropdown()
 
 
-
     # Tanner - added this function to allow the Tools->Multitargeting button to work
     # Function launches the multitargeting window and closing the current one
     def changeto_multitargeting(self):
@@ -1041,10 +1045,8 @@ class StartupWindow(QtWidgets.QDialog):
                                                            self.gdirectory, QtWidgets.QFileDialog.ShowDirsOnly)
 
         if (os.path.isdir(mydir) == False):
-            QtWidgets.QMessageBox.critical(self, "Invalid Directory!", "Invalid Directory!", QtWidgets.QMessageBox.Ok)
-            self.lineEdit.setText("")
-            self.gdirectory = ""
-            GlobalSettings.CSPR_DB = ""
+            QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
+                                           QtWidgets.QMessageBox.Ok)
             return
 
         if platform.system() == "Windows":
@@ -1054,15 +1056,26 @@ class StartupWindow(QtWidgets.QDialog):
         self.gdirectory = mydir
         GlobalSettings.CSPR_DB = mydir
 
-
+    #launch new genome
     def errormsgmulti(self):
         self.gdirectory = str(self.lineEdit.text())
 
         if (os.path.isdir(self.gdirectory)):
             os.chdir(self.gdirectory)
-            # change dir, still load main window, still load MT data, and then open main window and newGenome window
+
+            # update dir in CASPERinfo
             self.re_write_dir()
+
+            #make sure FNA and GBFF subdirectories are present
+            subdirs = os.listdir(self.gdirectory)
+            if "FNA" not in subdirs and os.path.isdir("FNA") == False:
+                os.mkdir("FNA")
+            if "GBFF" not in subdirs and os.path.isdir("GBFF") == False:
+                os.mkdir("GBFF")
+
+            #launch new genome
             GlobalSettings.mainWindow.launch_newGenome()
+
             self.close()
         else:
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
@@ -1078,8 +1091,8 @@ class StartupWindow(QtWidgets.QDialog):
             if 'DIRECTORY:' in item:
                 dir = item
                 break
+        dir = dir.replace("DIRECTORY:", "")
         if platform.system() == "Windows":
-            dir = dir.replace("DIRECTORY:","")
             dir = dir.replace("/","\\")
         return dir
 
@@ -1101,12 +1114,12 @@ class StartupWindow(QtWidgets.QDialog):
                 full_doc = full_doc + "\n" + item
         full_doc = full_doc[1:]
         cspr_info.close()
-        cspr_info = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
+        cspr_info = open(GlobalSettings.appdir + "CASPERinfo", 'w+')
         cspr_info.write(full_doc)
 
         cspr_info.close()
 
-
+    #launch main
     def show_window(self):
         if (os.path.isdir(self.gdirectory) == False):
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
@@ -1126,7 +1139,6 @@ class StartupWindow(QtWidgets.QDialog):
             return
 
         self.gdirectory = str(self.lineEdit.text())
-        # print(self.gdirectory)
         if "Please select a directory that contains .cspr files" in self.gdirectory:
             QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory.",
                                            QtWidgets.QMessageBox.Ok)
@@ -1140,13 +1152,20 @@ class StartupWindow(QtWidgets.QDialog):
                                                "Please select a directory that contains cspr files.",
                                                QtWidgets.QMessageBox.Ok)
                 return
-            GlobalSettings.filedir = self.gdirectory
+
             self.re_write_dir()
-            GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
-            GlobalSettings.mainWindow.show()
+
+            #make sure FNA and GBFF subdirectories are present
+            subdirs = os.listdir(self.gdirectory)
+            if "FNA" not in subdirs and os.path.isdir("FNA") == False:
+                os.mkdir("FNA")
+            if "GBFF" not in subdirs and os.path.isdir("GBFF") == False:
+                os.mkdir("GBFF")
 
             # Tanner - still setup data for MT
             GlobalSettings.MTWin.launch()
+
+            GlobalSettings.mainWindow.show()
 
             self.close()
         else:

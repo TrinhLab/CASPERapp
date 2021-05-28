@@ -455,10 +455,9 @@ class NewGenome(QtWidgets.QMainWindow):
             self.progressBar.setValue(0)
             self.first = False
             self.goToPrompt.hide()
-            GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
+            GlobalSettings.mainWindow.fill_annotation_dropdown()
             GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
             GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
-            GlobalSettings.mainWindow.show()
             if GlobalSettings.mainWindow.orgChoice.currentText() != '':
                 GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
             GlobalSettings.mainWindow.orgChoice.clear()
@@ -466,6 +465,7 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.getData()
             GlobalSettings.MTWin.launch()
             GlobalSettings.pop_Analysis.launch()
+            GlobalSettings.mainWindow.show()
             event.accept()
 
 
@@ -502,10 +502,9 @@ class NewGenome(QtWidgets.QMainWindow):
             self.progressBar.setValue(0)
             self.first = False
             self.goToPrompt.hide()
-            GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
+            GlobalSettings.mainWindow.fill_annotation_dropdown()
             GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
             GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
-            GlobalSettings.mainWindow.show()
             if GlobalSettings.mainWindow.orgChoice.currentText() != '':
                 GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
             GlobalSettings.mainWindow.orgChoice.clear()
@@ -513,6 +512,7 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.getData()
             GlobalSettings.MTWin.launch()
             GlobalSettings.pop_Analysis.launch()
+            GlobalSettings.mainWindow.show()
             self.hide()
 
 
@@ -548,7 +548,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.progressBar.setValue(0)
             self.first = False
             self.goToPrompt.hide()
-            GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
+            GlobalSettings.mainWindow.fill_annotation_dropdown()
             GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
             GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
             if GlobalSettings.mainWindow.orgChoice.currentText() != '':
@@ -559,8 +559,8 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.MTWin.mwfg.moveCenter(GlobalSettings.MTWin.cp)  ##Center window
             GlobalSettings.MTWin.move(GlobalSettings.MTWin.mwfg.topLeft())  ##Center window
             GlobalSettings.MTWin.launch()
-            GlobalSettings.MTWin.show()
             GlobalSettings.pop_Analysis.launch()
+            GlobalSettings.MTWin.show()
             self.hide()
 
 
@@ -596,7 +596,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.progressBar.setValue(0)
             self.first = False
             self.goToPrompt.hide()
-            GlobalSettings.CASPER_FOLDER_LOCATION = self.info_path
+            GlobalSettings.mainWindow.fill_annotation_dropdown()
             GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
             GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
             if GlobalSettings.mainWindow.orgChoice.currentText() != '':
