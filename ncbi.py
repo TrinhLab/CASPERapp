@@ -5,10 +5,7 @@ from ftplib import FTP
 import gzip
 import pandas as pd
 import shutil
-import threading
-from multiprocessing import Pool
 import os
-import sys
 import ssl
 import GlobalSettings
 import platform
@@ -116,14 +113,10 @@ class NCBI_search_tool(QtWidgets.QWidget):
         uic.loadUi(GlobalSettings.appdir + 'ncbi.ui', self)
         self.logicalIndex = 0
         self.filters = dict()
-        self.output_path = GlobalSettings.CSPR_DB
-        self.output_directory.setText(self.output_path)
-        #self.organism_line_edit.setText(GlobalSettings.mainWindow.orgChoice.currentText())
         self.download_button.clicked.connect(self.download_files_wrapper)
         self.search_button.clicked.connect(self.query_db)
         self.ncbi_table.verticalHeader().hide()
         self.all_rows.clicked.connect(self.select_all)
-        self.browse_button.clicked.connect(self.browseForFolder)
         self.back_button.clicked.connect(self.go_back)
         self.ncbi_table.setFocusPolicy(QtCore.Qt.NoFocus)
         self.progressBar.setValue(0)
@@ -165,20 +158,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.fna_checkbox.setChecked(False)
         """ Hide window """
         self.close()
-
-    def browseForFolder(self):
-        # get the folder
-        filed = QtWidgets.QFileDialog()
-
-        temp_path = QtWidgets.QFileDialog.getExistingDirectory(filed, "Select a Directory",
-                                                       GlobalSettings.CSPR_DB, QtWidgets.QFileDialog.ShowDirsOnly)
-
-        if temp_path != "" and os.path.isdir(self.output_path) == True:
-            self.output_path = temp_path
-
-            # make sure to append the '/' to the folder path
-            self.output_directory.setText(self.output_path)
-
 
     @QtCore.pyqtSlot()
     def query_db(self):
@@ -385,21 +364,28 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 link = str(dir).replace('ftp://ftp.ncbi.nlm.nih.gov', '')
                 ftp.cwd(link)
                 dir_files = ftp.nlst()
-                print("output path: " + str(self.output_path))
-                # if(dir_files.count("GO_TO_CURRENT_VERSION") != 0):
-                #     print(dir_files)
+
                 for file in dir_files:
-                    output_file = self.output_path + "/" + file
-                    if platform.system() == "Windows":
-                        output_file = output_file.replace("/", "\\")
                     if self.gbff_checkbox.isChecked():
                         if file.find('genomic.gbff') != -1:
+                            # check OS for output path
+                            if platform.system() == "Windows":
+                                output_file = GlobalSettings.CSPR_DB + "\\GBFF\\" + file
+                            else:
+                                output_file = GlobalSettings.CSPR_DB + "/GBFF/" + file
+
                             with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(output_file)
+
                     if self.fna_checkbox.isChecked():
                         if file.find('genomic.fna') != -1 and file.find('_cds_') == -1 and file.find('_rna_') == -1:
-                            print(output_file)
+                            # check OS for output path
+                            if platform.system() == "Windows":
+                                output_file = GlobalSettings.CSPR_DB + "\\FNA\\" + file
+                            else:
+                                output_file = GlobalSettings.CSPR_DB + "/FNA/" + file
+
                             with open(output_file, 'wb') as f:
                                 ftp.retrbinary(f"RETR {file}", f.write)
                             files.append(output_file)
@@ -427,8 +413,10 @@ class NCBI_search_tool(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def select_all(self):
-        for i in range(self.df.shape[0]):
-            self.ncbi_table.selectRow(i)
+        if self.all_rows.isChecked():
+            self.ncbi_table.selectAll()
+        else:
+            self.ncbi_table.clearSelection()
 
     # decompress file function
     def decompress_file(self, filename):
@@ -462,26 +450,40 @@ class NCBI_search_tool(QtWidgets.QWidget):
     def submit_rename(self):
         #loop through columns and rename the files
         for row in range(self.rename_window.rename_table.rowCount()):
-            orig = str(self.rename_window.rename_table.item(row, 0).text()).replace(" ", "")
-            new = str(self.rename_window.rename_table.cellWidget(row, 1).text()).replace(" ", "")
-            print(orig)
-            print(new)
+            orig = str(self.rename_window.rename_table.item(row, 0).text())
+            new = str(self.rename_window.rename_table.cellWidget(row, 1).text())
             if new != "":
-                if new.find(".gbff") == -1 and new.find(".gff") == -1 and new.find(".txt") == -1:
-                    if orig.find(".gbff") != -1:
-                        new = new + ".gbff"
-                    elif orig.find(".gff") != -1:
-                        new = new + ".gff"
-                    elif orig.find(".txt") != -1:
-                        new = new + ".txt"
+                if orig.find(".gbff")!= -1:
+                    if new.find(".") != -1:
+                        new = new[:new.find(".")]
+                    new = new + ".gbff"
+                elif orig.find(".fna") != -1:
+                    if new.find(".") != -1:
+                        new = new[:new.find(".")]
+                    new = new + ".fna"
 
-                os.rename(self.output_path + "/" + orig, self.output_path + "/" + new)
+                if platform.system() == "Windows":
+                    if new.find(".gbff") != -1:
+                        os.rename(GlobalSettings.CSPR_DB + "\\GBFF\\" + orig, GlobalSettings.CSPR_DB + "\\GBFF\\" + new)
+                    else:
+                        os.rename(GlobalSettings.CSPR_DB + "\\FNA\\" + orig, GlobalSettings.CSPR_DB + "\\FNA\\" + new)
+
+                else:
+                    #unix cannot have spaces in paths
+                    new = new.replace(" ","")
+                    if new.find(".gbff") != -1:
+                        os.rename(GlobalSettings.CSPR_DB + "/GBFF/" + orig, GlobalSettings.CSPR_DB + "/GBFF/" + new)
+                    else:
+                        os.rename(GlobalSettings.CSPR_DB + "/FNA/" + orig, GlobalSettings.CSPR_DB + "/FNA/" + new)
 
         self.rename_window.rename_table.setRowCount(0)
         self.rename_window.close()
+        GlobalSettings.mainWindow.fill_annotation_dropdown()
         QtWidgets.QMessageBox.question(self, "Download Completed",
-                                       "Successfully downloaded file(s) to " + self.output_path + "\n\nYou may close this window or download more files.",
+                                       "Successfully downloaded file(s) to " + GlobalSettings.CSPR_DB + "\n\nYou may close this window or download more files.",
                                        QtWidgets.QMessageBox.Ok)
+
+
                                        
 class rename_window(QtWidgets.QWidget):
     def __init__(self):
