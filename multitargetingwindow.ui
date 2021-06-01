@@ -35,6 +35,9 @@
         <pointsize>14</pointsize>
        </font>
       </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;– Total Repeats: &lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;the total number of times the seed sequence is repeated across the organism of interest.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;– Avg. Repeats/Scaffold: the average number of times the seed sequence is repeated per scaffold/chromosome/contig (varies depending on how the organism’s FASTA file is arranged).&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;– Consensus Sequence: the full length guide RNA sequence that appears most commonly amongst all occurrences of the given seed. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;– % Consensus: the percentage of all seed repeats that have the tail of the consensus sequence. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;- Score: on-target score for the consensus sequence.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;- PAM: the protospacer adjacent motif of the consensus sequence.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;- Strand: the strand directionality (+ or -) of the consensus sequence.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
      </widget>
     </item>
     <item row="13" column="1">
@@ -77,6 +80,9 @@
         <width>441</width>
         <height>127</height>
        </size>
+      </property>
+      <property name="toolTip">
+       <string>Please select an organism and endonuclease and click &quot;Analyze&quot; to populate the multitargeting window.</string>
       </property>
       <property name="title">
        <string>Select Organism and Endonuclease:</string>
@@ -195,7 +201,7 @@
          </size>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To analyze a seed, simply click on the row in the table and the figures will be populated.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Note:&lt;/span&gt; if multiple rows are selected in the table, only the &lt;span style=&quot; text-decoration: underline;&quot;&gt;last seed&lt;/span&gt; selected will be analyzed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;These plots show the multitargeting topology of a single unique seed. To analyze a seed, simply click on the row in the table.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Note:&lt;/span&gt; if multiple rows are selected in the table, only the &lt;span style=&quot; text-decoration: underline;&quot;&gt;last seed&lt;/span&gt; selected will be analyzed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="title">
          <string>Seed Analysis:</string>
@@ -209,8 +215,11 @@
              <height>0</height>
             </size>
            </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Tab 1&lt;/span&gt; shows the locations of the selected seed's repeats on each chromosome/scaffold/contig. Hovering over a repeat (&lt;span style=&quot; color:#fc0107;&quot;&gt;red line&lt;/span&gt;&lt;span style=&quot; color:#000000;&quot;&gt;) will show more detailed information for that particular repeat.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Tab 2&lt;/span&gt; shows the number of times the selected seed is repeated on each chromosome/scaffold/contig of the organism of interest.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <widget class="QWidget" name="tab_3">
             <attribute name="title">
@@ -281,6 +290,9 @@
           <height>400</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;These plots and statistics help show the overall multitargeting topology of the selected organism.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="title">
          <string>Global Analysis:</string>
         </property>
@@ -302,6 +314,9 @@
              <pointsize>14</pointsize>
             </font>
            </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to see genome-scale repeat statistics for the organism of interest.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Statistics Overview</string>
            </property>
@@ -321,6 +336,9 @@
              <height>300</height>
             </size>
            </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Tab 1&lt;/span&gt; shows the number of total repeats for each seed in the organism of interest. Seeds IDs are assigned arbitrarily.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Tab 2 &lt;/span&gt;shows the number of unique seeds per repeat number. &lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="currentIndex">
             <number>1</number>
            </property>
@@ -336,7 +354,7 @@
            </widget>
            <widget class="QWidget" name="tab_2">
             <attribute name="title">
-             <string>Sequences per Number Repeats</string>
+             <string>Seeds per Number Repeats</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_4">
              <item row="0" column="0">
@@ -378,7 +396,7 @@
      <x>0</x>
      <y>0</y>
      <width>1242</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">
