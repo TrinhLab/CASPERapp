@@ -14,7 +14,6 @@ class export_csv_window(QtWidgets.QDialog):
         # qt stuff
         super(export_csv_window, self).__init__()
         uic.loadUi(GlobalSettings.appdir + 'export_to_csv_window.ui', self)
-        self.setWindowTitle("Export Guides")
         self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.png"))
 
         # button connections
