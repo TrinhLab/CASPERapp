@@ -371,9 +371,14 @@ class CMainWindow(QtWidgets.QMainWindow):
     # so far the gff files seems to all be different. Need to think about how we want to parse it
     def run_results_own_ncbi_file(self, inputstring, fileName, openAnnoWindow=True):
         #print("run ncbi results")
-
         self.annotation_parser = Annotation_Parser()
-        self.annotation_parser.annotationFileName = fileName
+
+        #get complete path of file
+        for file in glob.glob(GlobalSettings.CSPR_DB + "/**/*.gbff", recursive=True):
+            if file.find(fileName) != -1:
+                self.annotation_parser.annotationFileName = file
+                break
+
         fileType = self.annotation_parser.find_which_file_version()
 
         # if the parser retuns the 'wrong file type' error
@@ -947,7 +952,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def view_results(self):
-        self.Results.annotation_path = GlobalSettings.CSPR_DB + "/" + str(self.annotation_files.currentText()) ### Set annotation path
+        self.Results.annotation_path = self.annotation_parser.annotationFileName ### Set annotation path
         self.hide()
         try:
             self.Results.endonucleaseBox.currentIndexChanged.disconnect()        
