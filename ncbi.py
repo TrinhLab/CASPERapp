@@ -136,6 +136,12 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.Step1.setStyleSheet(groupbox_style)
         self.Step2.setStyleSheet(groupbox_style.replace("Step1","Step2"))
         self.Step3.setStyleSheet(groupbox_style.replace("Step1","Step3"))
+        self.ncbi_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.ncbi_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        #navigation page
+        self.goToPrompt = goToPrompt()
+        self.goToPrompt.stay.clicked.connect(self.stay)
+        self.goToPrompt.close.clicked.connect(self.close)
 
     def go_back(self):
         """ Clear table """
@@ -255,8 +261,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.ncbi_table.setModel(self.proxy)
         self.ncbi_table.resizeColumnsToContents()
         self.comboBox.addItems(["{0}".format(col) for col in self.model._df.columns])
-        self.ncbi_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-        self.ncbi_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.activateWindow()
 
     @QtCore.pyqtSlot(int)
     def on_view_horizontalHeader_sectionClicked(self, logicalIndex):
@@ -408,7 +413,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 files[i] = files[i][files[i].rfind("\\")+1:]
             else:
                 files[i] = files[i][files[i].rfind("/") + 1:]
-
+        
         self.rename_files(files)
 
     @QtCore.pyqtSlot()
@@ -443,6 +448,9 @@ class NCBI_search_tool(QtWidgets.QWidget):
             header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
             self.rename_window.resize(self.rename_window.sizeHint())
             self.rename_window.show()
+        else:
+            GlobalSettings.mainWindow.fill_annotation_dropdown()
+            self.goToPrompt.show()
         
     def rename_go_back(self):
         self.rename_window.close()
@@ -482,9 +490,33 @@ class NCBI_search_tool(QtWidgets.QWidget):
         QtWidgets.QMessageBox.question(self, "Download Completed",
                                        "Successfully downloaded file(s) to " + GlobalSettings.CSPR_DB + "\n\nYou may close this window or download more files.",
                                        QtWidgets.QMessageBox.Ok)
+        self.goToPrompt.show()
+
+    def stay(self):
+        self.goToPrompt.hide()
+
+    def close(self):
+        self.hide()
+        self.goToPrompt.hide()
+
+class goToPrompt(QtWidgets.QWidget):
+    def __init__(self):
+        super(goToPrompt, self).__init__()
+        uic.loadUi(GlobalSettings.appdir + 'NCBI_navigation_page.ui', self)
+
+        groupbox_style = """
+        QGroupBox:title{subcontrol-origin: margin;
+                        left: 10px;
+                        padding: 0 5px 0 5px;}
+        QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
+                        border-radius: 9px;
+                        font: 14pt "Arial";
+                        font: bold;
+                        margin-top: 10px;}"""
+        self.groupBox.setStyleSheet(groupbox_style)
+        self.hide()
 
 
-                                       
 class rename_window(QtWidgets.QWidget):
     def __init__(self):
         super(rename_window, self).__init__()
