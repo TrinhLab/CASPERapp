@@ -487,9 +487,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.rename_window.rename_table.setRowCount(0)
         self.rename_window.close()
         GlobalSettings.mainWindow.fill_annotation_dropdown()
-        QtWidgets.QMessageBox.question(self, "Download Completed",
-                                       "Successfully downloaded file(s) to " + GlobalSettings.CSPR_DB + "\n\nYou may close this window or download more files.",
-                                       QtWidgets.QMessageBox.Ok)
         self.goToPrompt.show()
 
     def stay(self):
@@ -503,7 +500,8 @@ class goToPrompt(QtWidgets.QWidget):
     def __init__(self):
         super(goToPrompt, self).__init__()
         uic.loadUi(GlobalSettings.appdir + 'NCBI_navigation_page.ui', self)
-
+        self.label.setText("Successfullly downloaded file(s) to the CASPERdb directory:\n" + GlobalSettings.CSPR_DB)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
         groupbox_style = """
         QGroupBox:title{subcontrol-origin: margin;
                         left: 10px;
