@@ -8,6 +8,7 @@ from PyQt5.QtCore import QDir, QUrl
 from Bio import Entrez, SeqIO
 import PyQt5.QtNetwork as QtNetwork
 import platform
+import glob
 
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -27,36 +28,29 @@ class genomebrowser(QtWidgets.QWidget):
 		try:
 			return (longString).split(':')[2]
 		except:
-			print(longString.split(':'))
-			#print("Please search for a genome")
+			pass
 
 
 	def splitStringLocal(self, longString):
 		try:
-			#print(longString)
-			#print(longString.split('/'))
 			return (longString.split('/').pop()).split('.')[0]
 		except:
-			#print(longString.split('/').pop()).split('.')[0]
-			print("Please search for a genome")
+			pass
 
 
 	def ncbiAPI(self, filename):
 
-		gb_file = filename
-		gb_file = GlobalSettings.filedir + "/" + gb_file
 		if platform.system() == 'Windows':
-			gb_file = str(gb_file).replace("/","\\")
-		print(gb_file)
+			filename = str(filename).replace("/","\\")
+
 		genomeList = []
-		for gb_record in SeqIO.parse(open(gb_file, "r"), "genbank"):
+		for gb_record in SeqIO.parse(open(filename, "r"), "genbank"):
 			genomeList.append(gb_record.id)
 
 		return genomeList
 
 
 	def createHtml(self, genomeList):
-		print(genomeList)
 		htmlString1 = """
 		<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 		<ihtml>
@@ -116,55 +110,26 @@ class genomebrowser(QtWidgets.QWidget):
 		#launch loading window
 		self.loadingWindow.show()
 		QtCore.QCoreApplication.processEvents()
-
-		annotationWindow = p.findChild(QtWidgets.QComboBox,'Annotations_Organism')
-		NCBIFileBoolean = p.findChild(QtWidgets.QRadioButton, 'NCBI_Select')
-		localFileBoolean = p.findChild(QtWidgets.QRadioButton, 'Annotation_Ownfile')
-
 		selectedGenome = p.annotation_files.currentText()
-
-		#returns gci String value that can be used to retrieve the file
-		#print("selected Genome is ", selectedGenome)
-		gciVariable = ""
-
-		# if(localFileBoolean.isChecked() == True):
-		# 	print("local")
 		gciVariable = self.splitStringLocal(selectedGenome)
-		# elif(NCBIFileBoolean.isChecked() == True):
-		# 	print("NCBI")
-		# 	gciVariable = splitStringNCBI(selectedGenome)
-
-		#print("gci variable is ", gciVariable)
 
 		if(gciVariable == None):
-			print("Please select NCBI Genome")
 			return
 
-		directory = GlobalSettings.CSPR_DB
-		#print('*****')
-		#print(directory)
-		# onlyfiles = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
-		# for file in onlyfiles:
-		# 	print("One file is ",file)
-		# 	if gciVariable in file and ".fna" not in file:
-		# 		fileToSearch = file
-		# 		print("searching file:", fileToSearch)
-		# 		break
-
 		fileToSearch = GlobalSettings.mainWindow.annotation_files.currentText()
-		#print(fileToSearch)
+		for file in glob.glob(GlobalSettings.CSPR_DB + "/**/*.gbff", recursive=True):
+			if file.find(fileToSearch) != -1:
+				fileToSearch = file
+				break
+
 		if(str(fileToSearch).find(".gbff") == -1):
-			#print("filetype not valid")
 			QtWidgets.QMessageBox.information(p, "Genomebrowser Error", "Filetype must be GBFF.", QtWidgets.QMessageBox.Ok)
 			return
 
 
 		try:
-			#print("file to search is ", fileToSearch)
 			genomeList = self.ncbiAPI(fileToSearch)
-
 		except:
-			#print("No gbff file found")
 			QtWidgets.QMessageBox.question(p, "GBFF_FileNotFound", "GBFF file is not in selected directory", QtWidgets.QMessageBox.Ok)
 			return
 
@@ -176,8 +141,6 @@ class genomebrowser(QtWidgets.QWidget):
 		self.browser.load(local_url)
 		self.browser.show()
 		self.loadingWindow.hide()
-
-
 
 #progress bar gui
 class loading_window(QtWidgets.QWidget):

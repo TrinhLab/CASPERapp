@@ -15,10 +15,10 @@ import statistics
 import itertools
 from matplotlib import cm
 import matplotlib
+import matplotlib.patches as patches
 import mplcursors
 import time
 import copy
-
 
 class Pop_Analysis(QtWidgets.QMainWindow):
     def __init__(self):
@@ -759,19 +759,19 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         ax.set_xticks(np.arange(len(arr)))
         ax.set_yticks(np.arange(len(arr)))
 
+        def plotCellGrid(data, ax=None, **kwargs):
+            for x in range(data[0]):
+                for y in range(data[1]):
+                    rect = patches.Rectangle((x - .5, y - .5), 1, 1, fill=False, **kwargs)
+                    ax.add_patch(rect)
+
         #get labels based on org table rows
         ax.set_xticklabels(self.rows)
         ax.set_yticklabels(self.rows)
         ax.set_xlabel("Organism", fontsize = 10)
         ax.set_ylabel("Organism", fontsize = 10)
         ax.tick_params(axis='both', which='major', labelsize=8)
-        ax.grid(which='minor', color='w', linestyle='-', linewidth=2)
-        #ax.set_frame_on(False)
-        #ax.set_aspect('equal')
-#        for i in range(len(arr)):
-#            for j in range(len(arr)):
-#                text = ax.text(j, i, arr[i][j],
-#                               ha="center", va="center", color="black")
+        plotCellGrid([len(self.rows), len(self.rows)], ax, color="black", linewidth=1)
 
         self.colormap_canvas.draw()
 
@@ -886,7 +886,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         GlobalSettings.mainWindow.closeFunction()
         event.accept()
-
 
 class loading_window(QtWidgets.QWidget):
     def __init__(self):

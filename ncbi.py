@@ -143,6 +143,9 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.goToPrompt.stay.clicked.connect(self.stay)
         self.goToPrompt.close.clicked.connect(self.close)
 
+        #loading label
+        self.loading = loadingScreen()
+
     def go_back(self):
         """ Clear table """
         self.df = pd.DataFrame() ###Make empty DF
@@ -167,6 +170,14 @@ class NCBI_search_tool(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def query_db(self):
+        #show loading
+        position = self.frameGeometry().center()
+        position.setX(position.x()-50)
+        self.loading.move(position)
+        self.loading.show()
+
+        QtCore.QCoreApplication.processEvents()
+
         #setup table
         self.comboBox = QtWidgets.QComboBox(self)
         self.horizontalHeader = self.ncbi_table.horizontalHeader()
@@ -201,7 +212,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
         content = "".join(str(content))
         bs_content = BeautifulSoup(content, 'lxml')
 
-        #print(bs_content.prettify())
 
         #Prep Data for Table
         assembly_name = bs_content.find_all('assemblyname')
@@ -262,6 +272,9 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.ncbi_table.resizeColumnsToContents()
         self.comboBox.addItems(["{0}".format(col) for col in self.model._df.columns])
         self.activateWindow()
+
+        #close loading gif
+        self.loading.hide()
 
     @QtCore.pyqtSlot(int)
     def on_view_horizontalHeader_sectionClicked(self, logicalIndex):
@@ -338,8 +351,32 @@ class NCBI_search_tool(QtWidgets.QWidget):
     @QtCore.pyqtSlot()
     def download_files_wrapper(self):
         self.progressBar.setValue(0)
-        if self.df.shape[0] != 0:
-            self.download_files()
+
+        #make sure rows are present in table
+        if self.df.shape[0] == 0:
+            QtWidgets.QMessageBox.critical(self, "No Query Results",
+                                           "Please run an NCBI query to fill the table with results to choose from!",
+                                           QtWidgets.QMessageBox.Ok)
+
+            return
+
+        #make sure user has selected at least one row
+        indexes = self.ncbi_table.selectionModel().selectedRows()
+        if len(indexes) == 0:
+            QtWidgets.QMessageBox.critical(self, "No Rows Selected",
+                                           "Please select rows from the table!",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+        #make sure file type is selected
+        if self.gbff_checkbox.isChecked() == False and self.fna_checkbox.isChecked() == False:
+            QtWidgets.QMessageBox.critical(self, "No File Type Selected",
+                                           "No file type selected."
+                                           "Please select the file types you want to download!",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
+        self.download_files()
 
     def download_files(self):
         indexes = self.ncbi_table.selectionModel().selectedRows()
@@ -496,6 +533,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.hide()
         self.goToPrompt.hide()
 
+
 class goToPrompt(QtWidgets.QWidget):
     def __init__(self):
         super(goToPrompt, self).__init__()
@@ -524,4 +562,18 @@ class rename_window(QtWidgets.QWidget):
         self.rename_table.setColumnCount(2)
         self.rename_table.setHorizontalHeaderLabels(['Original Filename', 'New Filename'])
         self.hide()
+
+
+class loadingScreen(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.FramelessWindowHint)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+
+        self.label = QtWidgets.QLabel(self)
+        #self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setText("Loading...")
+        self.label.setFont((QtGui.QFont('Arial', 15)))
+        self.hide()
+            
 

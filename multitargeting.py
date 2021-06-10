@@ -109,6 +109,12 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.loading_window = loading_window()
         screen = QtGui.QGuiApplication.screenAt(QtGui.QCursor().pos())
 
+        #sql query settings
+        self.row_limit = 1000
+        self.sql_query_settings.clicked.connect(self.update_sql_query_settings)
+        self.sql_settings = sql_query_settings()
+        self.sql_settings.row_count.textChanged.connect(self.sql_row_count_value_changed)
+
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
         self.mwfg.moveCenter(self.cp)  ##Center window
@@ -176,6 +182,20 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     def launch(self):
         self.get_data()
+
+    
+    #button trigger for sql settings
+    def update_sql_query_settings(self):
+        self.sql_settings.show()
+        self.sql_settings.activateWindow()
+
+
+    #trigger for if sql line edit value has changed
+    def sql_row_count_value_changed(self):
+        try:
+            self.row_limit = int(self.sql_settings.row_count.text())
+        except:
+            pass
 
 
     def get_data(self):
@@ -260,9 +280,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.loading_window.loading_bar.setValue(10)
         self.plot_repeats_vs_seeds()
         self.loading_window.loading_bar.setValue(30)
-        #start = time.time()
         self.bar_seeds_vs_repeats()
-        #print("Time: " + str(time.time() - start))
         self.loading_window.loading_bar.setValue(50)
         self.fill_table()
         self.loading_window.loading_bar.setValue(100)
@@ -288,7 +306,13 @@ class Multitargeting(QtWidgets.QMainWindow):
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
         row_cnt = 0
-        for repeat in c.execute("SELECT * FROM repeats LIMIT 0, 1000;"):
+
+        if self.row_limit == -1:
+            sql_query = "SELECT * FROM repeats ORDER BY count DESC;"
+        else:
+            sql_query = "SELECT * FROM repeats ORDER BY count DESC LIMIT 0, " + str(self.row_limit) + ";"
+
+        for repeat in c.execute(sql_query):
             #expand table by 1 row
             self.table.setRowCount(row_cnt + 1)
 
@@ -304,9 +328,6 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             #push seed
             table_seed = QtWidgets.QTableWidgetItem()
-            #seed_font = QtGui.QFont()
-            #seed_font.setUnderline(True)
-            #table_seed.setFont(seed_font)
             table_seed.setData(QtCore.Qt.EditRole, seed)
             table_seed.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             self.table.setItem(row_cnt, 0, table_seed)
@@ -640,6 +661,9 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.bar_canvas.axes.tick_params(axis='both', which='major', labelsize=8)
         self.bar_canvas.draw()
 
+        self.bar_bool = True
+
+    
     # # plots the repeats per ID number graph as line graph
     def plot_repeats_vs_seeds(self):
         ###Clear out old widgets in layout
@@ -690,6 +714,8 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     #connects to view->CASPER to switch back to the main CASPER window
     def changeto_main(self):
+        self.sql_settings.hide()
+        self.multitargeting_statistics.hide()
         GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
         GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
         GlobalSettings.mainWindow.show()
@@ -698,6 +724,8 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     #connects to go back button in bottom left to switch back to the main CASPER window
     def go_back(self):
+        self.sql_settings.hide()
+        self.multitargeting_statistics.hide()
         GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
         GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
         GlobalSettings.mainWindow.show()
@@ -707,6 +735,8 @@ class Multitargeting(QtWidgets.QMainWindow):
     # this function calls the closingWindow class.
     def closeEvent(self, event):
         GlobalSettings.mainWindow.closeFunction()
+        self.sql_settings.hide()
+        self.multitargeting_statistics.hide()
         event.accept()
 
 
@@ -731,4 +761,14 @@ class Multitargeting_Statistics(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(Multitargeting_Statistics, self).__init__(parent)
         uic.loadUi(GlobalSettings.appdir + 'multitargeting_statistics.ui', self)
+        self.setWindowTitle("Statistics")
+        self.hide()
+
+
+class sql_query_settings(QtWidgets.QWidget):
+    def __init__(self):
+        super(sql_query_settings, self).__init__()
+        uic.loadUi(GlobalSettings.appdir + "sql_settings_form.ui", self)
+        self.setWindowTitle("SQL Settings")
+        self.row_count.setValidator(QtGui.QIntValidator())
         self.hide()
