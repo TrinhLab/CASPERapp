@@ -26,6 +26,8 @@ class Multitargeting(QtWidgets.QMainWindow):
 
         self.sq = SeqTranslate()  # SeqTranslate object used in class
         self.line_bool = False # Used to check if VBoxLayout already has canvas in it
+        self.bar_bool = False # Used to check if VBoxLayout already has canvas in it
+        self.seed_bar_bool = False # Used to check if VBoxLayout already has canvas in it
 
         # GroupBox Styling
         groupbox_style = """
@@ -126,7 +128,7 @@ class Multitargeting(QtWidgets.QMainWindow):
 
 
     def show_statistics(self):
-        if (self.line_bool):
+        if (self.line_bool and self.bar_bool):
             self.multitargeting_statistics.show()
         else:
             QtWidgets.QMessageBox.question(self, "No analysis run.", 'Multitargeting Analysis must be performed before viewing statistics.\n\nSelect an organism and endonuclease and click "Analyze" then try again.', QtWidgets.QMessageBox.Ok)
