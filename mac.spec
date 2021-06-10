@@ -8,6 +8,7 @@ a = Analysis(['main.py'],
              pathex=['C:/Users/Tfry/Desktop/CASPERapp'],
              datas=[
 				('OffTargetFolder', 'OffTargetFolder'),
+				('SeqFinderFolder', 'SeqFinderFolder'),
 				('*.ui','.'),
 				('CASPERinfo', '.'),
 				('Casperimg.icns', '.'),
