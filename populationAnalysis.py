@@ -84,11 +84,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.loc_finder_table.setHorizontalHeaderLabels(["Seed ID", "Sequence", "Organism", "Scaffold", "Location"])
         self.loc_finder_table.horizontalHeader().setSectionsClickable(True)
         self.loc_finder_table.horizontalHeader().sectionClicked.connect(self.loc_table_sorter)
-        self.loc_finder_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.loc_finder_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        self.loc_finder_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch) #This keeps the organism column from being too small.
-        self.loc_finder_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        self.loc_finder_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
+        self.loc_finder_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.loc_finder_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.loc_finder_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
 #        self.loc_finder_table.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
