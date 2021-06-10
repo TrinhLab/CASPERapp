@@ -761,6 +761,13 @@ class Results(QtWidgets.QMainWindow):
         #get selected rows
         selected_rows = []
         indexes = self.targetTable.selectionModel().selectedRows()
+
+        if len(indexes) == 0:
+            QtWidgets.QMessageBox.critical(self, "No Rows Selected",
+                                           "Please rows from the table to pass into the off target analysis!",
+                                           QtWidgets.QMessageBox.Ok)
+            return
+
         for index in indexes:
             selected_rows.append(index.row())
 
@@ -791,6 +798,9 @@ class Results(QtWidgets.QMainWindow):
 
         # if the user hits submit without running thr program, do nothing
         if filename == '':
+            QtWidgets.QMessageBox.critical(self, "File Not Found",
+                                                    "There was an error with the Off Target execution. No results file was found.",
+                                                    QtWidgets.QMessageBox.Ok)
             return
 
 
@@ -804,15 +814,21 @@ class Results(QtWidgets.QMainWindow):
         filename = filename.replace(r'\\', '\\')
         filename = filename.replace('"', '')
         self.files_list.append(filename)
-        out_file = open(filename, "r")
+        try:
+            out_file = open(filename, "r")
+        except:
+            QtWidgets.QMessageBox.critical(self, "Unable to Open File",
+                                                    "There was an error with the Off Target execution. The results file was either not found or not able to be opened.",
+                                                    QtWidgets.QMessageBox.Ok)
+            return
+
         #read the first line : either AVG or DETAILED OUTPUT
         output_type = out_file.readline()
         output_type = output_type.strip('\r\n')
-        #length = len(self.OTA)
         #parse based on whether avg or detailed output
+        line_cnt = 0
         if(output_type == "AVG OUTPUT"):
             for line in out_file:
-                #line = out_file.readline()
                 line = line.strip('\n')
                 if (line != ''):
                     values = line.split(":")
@@ -821,12 +837,12 @@ class Results(QtWidgets.QMainWindow):
                     OT.setData(QtCore.Qt.EditRole, values[1])
                     self.targetTable.setItem(row, 6, OT)
                     self.seq_and_avg_list[self.comboBoxGene.currentIndex()][values[0]] = values[1]
+                    line_cnt += 1
         else:
             details_bool = False
             temp_list = []
             values = []
             for line in out_file:
-                #line = out_file.readline()
                 line = line.strip('\n')
                 if(line.find(':') != -1):
                     if(details_bool == True):
@@ -839,15 +855,25 @@ class Results(QtWidgets.QMainWindow):
                     OT = QtWidgets.QTableWidgetItem()
                     OT.setData(QtCore.Qt.EditRole, values[1])
                     self.targetTable.setItem(row, 6, OT)
-                else:
+                    line_cnt += 1
+                elif line != "":
                     details_bool = True
                     temp_list.append(line)
                     details = QtWidgets.QPushButton()
                     details.setText("Details")
                     details.clicked.connect(self.show_details)
                     self.targetTable.setCellWidget(row, 7, details)
+                    line_cnt += 1
             if(details_bool == True):
                 self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
+
+            
+            #make sure OT output file had lines
+            if line_cnt < 1:
+                QtWidgets.QMessageBox.critical(self, "File Empty",
+                                                    "There was an error with the Off Target execution. No results were found in the results file.",
+                                                    QtWidgets.QMessageBox.Ok)
+                return
 
             #print(self.detail_output_list)
             self.targetTable.resizeColumnsToContents()
