@@ -612,7 +612,6 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
     def launch_newGenomeBrowser(self):
-        print("creating graph")
         self.genomebrowser.createGraph(self)
 
 
@@ -953,7 +952,6 @@ class CMainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def view_results(self):
         self.Results.annotation_path = self.annotation_parser.annotationFileName ### Set annotation path
-        self.hide()
         try:
             self.Results.endonucleaseBox.currentIndexChanged.disconnect()        
         except:
@@ -976,6 +974,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Results.load_gene_viewer()
         self.Results.get_endo_data()
         self.Results.show()
+        self.hide()
 
 
     # this function calls the closingWindow class.
