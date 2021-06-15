@@ -15,7 +15,7 @@ a = Analysis(['main.py'],
 				('Codonimg.icns', '.'),
 				('myicon.ico', '.'),
 				('mainart.jpg', '.'),
-				('cas9image.png', '.'),
+				('cas9image.ico', '.'),
 				('settings_icon.png', '.'),
 				('CASPER-logo.jpg', '.'),
 				('genomeBrowserTemplate.html', '.')
