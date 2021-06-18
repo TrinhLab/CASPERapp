@@ -13,7 +13,7 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>1</pointsize>
+    <pointsize>-1</pointsize>
     <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
@@ -318,7 +318,7 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           
+           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -491,15 +491,15 @@
       </property>
       <property name="font">
        <font>
-        <family>12 Arial</family>
-        
-        <weight>50</weight>
+        <family>Arial</family>
+        <pointsize>-1</pointsize>
+        <weight>75</weight>
         <italic>false</italic>
-        <bold>false</bold>
+        <bold>true</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 26px bold 'Arial';</string>
+       <string notr="true">font: bold 30px 'Arial';</string>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Population Analysis&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>

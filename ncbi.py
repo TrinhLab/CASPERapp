@@ -142,6 +142,10 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.goToPrompt.stay.clicked.connect(self.stay)
         self.goToPrompt.close.clicked.connect(self.close)
 
+        #set pixel width for scroll bar
+        self.ncbi_table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.ncbi_table.horizontalScrollBar().setStyleSheet("height: 16px;")
+
         #loading label
         self.loading = loadingScreen()
 
@@ -560,6 +564,11 @@ class rename_window(QtWidgets.QWidget):
         self.rename_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.rename_table.setColumnCount(2)
         self.rename_table.setHorizontalHeaderLabels(['Original Filename', 'New Filename'])
+
+        #set pixel width for scroll bars
+        self.rename_table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.rename_table.horizontalScrollBar().setStyleSheet("height: 16px;")
+
         self.hide()
 
 

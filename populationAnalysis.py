@@ -116,6 +116,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.Endos = {}
         self.seeds = []
 
+
+        #set pixel widths on scroll bars
+        self.org_Table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.org_Table.horizontalScrollBar().setStyleSheet("height: 16px;")
+        self.table2.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.table2.horizontalScrollBar().setStyleSheet("height: 16px;")
+        self.loc_finder_table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.loc_finder_table.horizontalScrollBar().setStyleSheet("height: 16px;")
+
         self.loading_window = loading_window()
 
     def export_to_csv(self):

@@ -108,6 +108,12 @@ class Results(QtWidgets.QMainWindow):
         self.guide_analysis.setStyleSheet(groupbox_style.replace("guide_viewer", "guide_analysis"))
         self.gene_viewer.setStyleSheet(groupbox_style.replace("guide_viewer", "gene_viewer"))
 
+        #set pixel width for scroll bars
+        self.targetTable.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.targetTable.horizontalScrollBar().setStyleSheet("height: 16px;")
+        self.geneViewer.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.geneViewer.horizontalScrollBar().setStyleSheet("height: 16px;")
+
         self.get_endo_data()
 
     def get_endo_data(self):

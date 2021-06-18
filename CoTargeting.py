@@ -31,6 +31,10 @@ class CoTargeting(QtWidgets.QDialog):
         self.cancel_button.clicked.connect(self.cancel_function)
         self.submit_button.clicked.connect(self.submission_function)
 
+        #set pixel width for scroll bars
+        self.endo_table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.endo_table.horizontalScrollBar().setStyleSheet("height: 16px;")
+
 
     # launches the window
     # it is expecting endo_choices in the form of a list, and the orgName in the form of a string

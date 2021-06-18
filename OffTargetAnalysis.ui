@@ -13,7 +13,7 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>1</pointsize>
+    <pointsize>-1</pointsize>
     <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
@@ -46,7 +46,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
+          <pointsize>-1</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -71,7 +71,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
+          <pointsize>-1</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -117,7 +117,7 @@
    <item row="0" column="0" colspan="2">
     <widget class="QLabel" name="label_8">
      <property name="styleSheet">
-      <string notr="true">font: 26px bold 'Arial';</string>
+      <string notr="true">font: bold 30px 'Arial';</string>
      </property>
      <property name="text">
       <string>Off-Target Analysis</string>
@@ -174,7 +174,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
+          <pointsize>-1</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>

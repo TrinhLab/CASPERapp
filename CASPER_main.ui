@@ -16,7 +16,7 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>1</pointsize>
+    <pointsize>-1</pointsize>
     <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
@@ -61,7 +61,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
+          <pointsize>-1</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -91,7 +91,7 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             
+             <pointsize>-1</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -169,7 +169,7 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             
+             <pointsize>-1</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -249,7 +249,7 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             
+             <pointsize>-1</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -308,7 +308,7 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             
+             <pointsize>-1</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -469,7 +469,7 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        
+        <pointsize>-1</pointsize>
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>
@@ -520,7 +520,7 @@
        </size>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 24px bold 'Arial';</string>
+       <string notr="true">font: bold 30px 'Arial';</string>
       </property>
       <property name="text">
        <string>CASPER</string>

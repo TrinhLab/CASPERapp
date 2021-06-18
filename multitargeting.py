@@ -78,8 +78,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         # go back to main button
         self.back_button.clicked.connect(self.go_back)
 
-        # Tool Bar options
-        self.actionCASPER.triggered.connect(self.changeto_main)
 
         # Statistics storage variables
         self.max_repeats = 1
@@ -113,6 +111,13 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.sql_query_settings.clicked.connect(self.update_sql_query_settings)
         self.sql_settings = sql_query_settings()
         self.sql_settings.row_count.textChanged.connect(self.sql_row_count_value_changed)
+
+        #setting pixel widths for scroll bars
+        self.table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.table.horizontalScrollBar().setStyleSheet("height: 16px;")
+        self.graphicsView_2.verticalScrollBar().setStyleSheet("width: 10px;")
+        self.graphicsView_2.horizontalScrollBar().setStyleSheet("height: 10px;")
+
 
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
@@ -709,16 +714,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.loading_window.loading_bar.setValue(50)
         self.loading_window.loading_bar.setValue(100)
         self.loading_window.hide()
-
-
-    #connects to view->CASPER to switch back to the main CASPER window
-    def changeto_main(self):
-        self.sql_settings.hide()
-        self.multitargeting_statistics.hide()
-        GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
-        GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
-        GlobalSettings.mainWindow.show()
-        self.hide()
 
 
     #connects to go back button in bottom left to switch back to the main CASPER window

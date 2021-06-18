@@ -50,6 +50,10 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidget.setAutoScroll(False)
 
+        #setting pixel width for scroll bars
+        self.tableWidget.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.tableWidget.horizontalScrollBar().setStyleSheet("height: 16px;")
+
 
     def submit(self):
         self.mainWindow.collect_table_data_nonkegg()
@@ -261,6 +265,11 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.genomebrowser = genomeBrowser.genomebrowser()
         #GlobalSettings.mainWindow.ncbi = ncbi.NCBI_search_tool()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
+
+        #setting pixel width for scroll bars
+        self.geneEntryField.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.geneEntryField.horizontalScrollBar().setStyleSheet("height: 16px;")
+
 
     # this function prepares everything for the generate library function
     # it is very similar to the gather settings, how ever it stores the data instead of calling the Annotation Window class

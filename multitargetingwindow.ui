@@ -13,7 +13,7 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>1</pointsize>
+    <pointsize>-1</pointsize>
     <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
@@ -38,7 +38,7 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        
+        <pointsize>-1</pointsize>
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>
@@ -60,7 +60,7 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        
+        <pointsize>-1</pointsize>
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>
@@ -109,7 +109,7 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        
+        <pointsize>-1</pointsize>
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>
@@ -152,7 +152,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
+          <pointsize>-1</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -269,7 +269,7 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             
+             <pointsize>-1</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -335,11 +335,14 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        
-        <weight>50</weight>
+        <pointsize>-1</pointsize>
+        <weight>75</weight>
         <italic>false</italic>
-        <bold>false</bold>
+        <bold>true</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font: bold 30px;</string>
       </property>
       <property name="text">
        <string>Multitargeting Analysis</string>
@@ -375,7 +378,7 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           
+           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -391,7 +394,7 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           
+           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -418,7 +421,7 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             
+             <pointsize>-1</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -477,24 +480,11 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1242</width>
-     <height>24</height>
-    </rect>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="styleSheet">
+    <string notr="true"/>
    </property>
-   <widget class="QMenu" name="menuView">
-    <property name="title">
-     <string>View</string>
-    </property>
-    <addaction name="actionCASPER"/>
-   </widget>
-   <addaction name="menuView"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <action name="actionCASPER">
    <property name="text">
     <string>CASPER</string>

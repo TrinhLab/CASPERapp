@@ -31,7 +31,7 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>1</pointsize>
+    <pointsize>-1</pointsize>
     <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
@@ -41,7 +41,7 @@
    <string>Rename File</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 26px 'Arial';</string>
+   <string notr="true">font: 16px 'Arial';</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -63,7 +63,7 @@
        <property name="font">
         <font>
          <family>Arial</family>
-         
+         <pointsize>-1</pointsize>
          <weight>50</weight>
          <italic>false</italic>
          <bold>false</bold>
@@ -98,7 +98,7 @@
        <property name="font">
         <font>
          <family>Arial</family>
-         
+         <pointsize>-1</pointsize>
          <weight>50</weight>
          <italic>false</italic>
          <bold>false</bold>

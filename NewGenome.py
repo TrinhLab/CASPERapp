@@ -125,6 +125,14 @@ class NewGenome(QtWidgets.QMainWindow):
         self.three_length.setEnabled(False)
         self.repeats_box.setEnabled(False)
 
+
+        #set pixel widths for scroll bars
+        self.output_browser.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.output_browser.horizontalScrollBar().setStyleSheet("height: 16px;")
+        self.job_Table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.job_Table.horizontalScrollBar().setStyleSheet("height: 16px;")
+
+
         #user prompt class
         self.goToPrompt = goToPrompt()
         self.goToPrompt.goToMain.clicked.connect(self.continue_to_main)
