@@ -1204,8 +1204,18 @@ def main():
         else:
             GlobalSettings.appdir += '/'
 
+    #QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     app = Qt.QApplication(sys.argv)
+    screen = app.screens()[0]
+    dpi = screen.physicalDotsPerInch()
+    print(dpi)
+    del app
+    #QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, False)
 
+    if dpi > 92:
+        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+
+    app = Qt.QApplication(sys.argv)
     app.setOrganizationName("TrinhLab-UTK")
     app.setApplicationName("CASPER")
 
