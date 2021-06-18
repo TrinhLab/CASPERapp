@@ -36,7 +36,6 @@ class Multitargeting(QtWidgets.QMainWindow):
                         padding: 0 5px 0 15px;}
         QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 15pt "Arial";
                         font: bold;
                         margin-top: 10px;}"""
         self.groupBox.setStyleSheet(groupbox_style)
@@ -158,6 +157,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                             listtemp.append(a)
                             dups += 1
                     self.scene2 = QtWidgets.QGraphicsScene()
+
                     self.graphicsView_2.setScene(self.scene2)
                     output = str()
                     i = 1
@@ -173,8 +173,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                         i += 1
                     text = self.scene2.addText(output)
                     font = QtGui.QFont()
-                    font.setBold(True)
-                    font.setPointSize(12)
+                    font.setPixelSize(12)
                     text.setFont(font)
 
         return Qt.QWidget.eventFilter(self, source, event)

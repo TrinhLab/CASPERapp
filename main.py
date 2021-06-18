@@ -23,6 +23,8 @@ import platform
 import ncbi
 import glob
 
+import ctypes
+
 # =========================================================================================
 # CLASS NAME: AnnotationsWindow
 # Inputs: Annotation file and search query from MainWindow
@@ -186,9 +188,11 @@ class CMainWindow(QtWidgets.QMainWindow):
                         padding: 0 5px 0 5px;}
         QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 15pt "Arial";
-                        font: bold;
-                        margin-top: 10px;}"""
+                        margin-top: 10px;
+                        font: bold;}
+                        """
+
+
 
         self.Step1.setStyleSheet(groupbox_style)
         self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2"))
@@ -1191,14 +1195,16 @@ def main():
         else:
             GlobalSettings.appdir += '/'
 
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     app = Qt.QApplication(sys.argv)
+
     app.setOrganizationName("TrinhLab-UTK")
     app.setApplicationName("CASPER")
+
     startup = StartupWindow()
     GlobalSettings.mainWindow = CMainWindow(os.getcwd())
     GlobalSettings.MTWin = multitargeting.Multitargeting()
     GlobalSettings.pop_Analysis = populationAnalysis.Pop_Analysis()
+
     sys.exit(app.exec_())
 
 if __name__ == '__main__':

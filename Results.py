@@ -101,9 +101,8 @@ class Results(QtWidgets.QMainWindow):
                         padding: 0 5px 0 5px;}
         QGroupBox#guide_viewer{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 15pt "Arial";
-                        font: bold;
-                        margin-top: 10px;}"""
+                        margin-top: 10px;
+                        font: bold;}"""
 
         self.guide_viewer.setStyleSheet(groupbox_style)
         self.guide_analysis.setStyleSheet(groupbox_style.replace("guide_viewer", "guide_analysis"))
@@ -1133,8 +1132,6 @@ class Filter_Options(QtWidgets.QDialog):
                         padding: 0 5px 0 5px;}
         QGroupBox#filterBox{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 15pt "Arial";
-                        font: bold;
                         margin-top: 10px;}"""
         self.filterBox.setStyleSheet(groupbox_style)
  

@@ -36,7 +36,6 @@ class NewEndonuclease(QtWidgets.QDialog):
                         padding: 0 5px 0 5px;}
         QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 15pt "Arial";
                         font: bold;
                         margin-top: 10px;}"""
 

@@ -13,7 +13,10 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>14</pointsize>
+    <pointsize>1</pointsize>
+    <weight>50</weight>
+    <italic>false</italic>
+    <bold>false</bold>
    </font>
   </property>
   <property name="windowTitle">
@@ -23,7 +26,7 @@
    <bool>true</bool>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+   <string notr="true">font: 16px 'Arial';</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="sizeConstraint">
@@ -43,7 +46,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -53,7 +56,7 @@
          <string>This is the reference organism that off-target will be run against. List is populated based on currenet CSPR files in CASPER database directory.</string>
         </property>
         <property name="styleSheet">
-         <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+         <string notr="true"/>
         </property>
         <property name="text">
          <string>Organism:</string>
@@ -68,7 +71,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -78,7 +81,7 @@
          <string>This is the reference endonuclease that will be used for off-target analysis.</string>
         </property>
         <property name="styleSheet">
-         <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+         <string notr="true"/>
         </property>
         <property name="text">
          <string>Endonuclease:</string>
@@ -113,8 +116,11 @@
    </item>
    <item row="0" column="0" colspan="2">
     <widget class="QLabel" name="label_8">
+     <property name="styleSheet">
+      <string notr="true">font: 26px bold 'Arial';</string>
+     </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600;&quot;&gt;Off-Target Analysis&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>Off-Target Analysis</string>
      </property>
     </widget>
    </item>
@@ -168,7 +174,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -178,7 +184,7 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the number of mismatches in a putative off-target site exceeds this number, CASPER will not score the site. Computational time increases as this number increases.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="styleSheet">
-         <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+         <string notr="true"/>
         </property>
         <property name="text">
          <string>Max No. Mismatches:</string>

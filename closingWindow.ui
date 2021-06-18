@@ -14,7 +14,7 @@
    <string>Keep or Delete Files</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+   <string notr="true">font: 16px 'Arial';</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="1" column="0" colspan="2">

@@ -13,11 +13,17 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>14</pointsize>
+    <pointsize>1</pointsize>
+    <weight>50</weight>
+    <italic>false</italic>
+    <bold>false</bold>
    </font>
   </property>
   <property name="windowTitle">
    <string>Loading...</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">font: 16px 'Arial';</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="sizeConstraint">
@@ -34,7 +40,10 @@
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>14</pointsize>
+       
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
       </font>
      </property>
      <property name="text">

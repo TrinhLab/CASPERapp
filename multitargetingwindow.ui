@@ -13,11 +13,17 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>14</pointsize>
+    <pointsize>1</pointsize>
+    <weight>50</weight>
+    <italic>false</italic>
+    <bold>false</bold>
    </font>
   </property>
   <property name="windowTitle">
    <string>Multitargeting</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">font: 16px 'Arial';</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -32,7 +38,10 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>14</pointsize>
+        
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -51,7 +60,10 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>14</pointsize>
+        
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -97,7 +109,10 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>14</pointsize>
+        
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
        </font>
       </property>
       <property name="toolTip">
@@ -134,6 +149,15 @@
           <height>0</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
+         </font>
+        </property>
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;These plots show the multitargeting topology of a single unique seed. To analyze a seed, simply click on the row in the table.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Note:&lt;/span&gt; if multiple rows are selected in the table, only the &lt;span style=&quot; text-decoration: underline;&quot;&gt;last seed&lt;/span&gt; selected will be analyzed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -153,7 +177,7 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Tab 1&lt;/span&gt; shows the locations of the selected seed's repeats on each chromosome/scaffold/contig. Hovering over a repeat (&lt;span style=&quot; color:#fc0107;&quot;&gt;red line&lt;/span&gt;&lt;span style=&quot; color:#000000;&quot;&gt;) will show more detailed information for that particular repeat.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Tab 2&lt;/span&gt; shows the number of times the selected seed is repeated on each chromosome/scaffold/contig of the organism of interest.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="currentIndex">
-            <number>1</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="tab_3">
             <attribute name="title">
@@ -245,7 +269,10 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             <pointsize>14</pointsize>
+             
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
             </font>
            </property>
            <property name="toolTip">
@@ -307,9 +334,11 @@
      <widget class="QLabel" name="label">
       <property name="font">
        <font>
-        <pointsize>28</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
+        <family>Arial</family>
+        
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -346,8 +375,9 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           
            <weight>50</weight>
+           <italic>false</italic>
            <bold>false</bold>
           </font>
          </property>
@@ -361,7 +391,10 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
           </font>
          </property>
          <property name="text">
@@ -385,7 +418,10 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             <pointsize>14</pointsize>
+             
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
             </font>
            </property>
            <property name="text">
@@ -447,7 +483,7 @@
      <x>0</x>
      <y>0</y>
      <width>1242</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">

@@ -28,11 +28,19 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>14</pointsize>
+    <weight>50</weight>
+    <italic>false</italic>
+    <bold>false</bold>
    </font>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">font: 16px 'Arial';</string>
+  </property>
+  <property name="windowFilePath">
+   <string/>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="sizeConstraint">
@@ -271,9 +279,10 @@
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>18</pointsize>
-       <weight>75</weight>
-       <bold>true</bold>
+       
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
       </font>
      </property>
      <property name="toolTip">
@@ -294,6 +303,11 @@
      </property>
      <property name="font">
       <font>
+       <family>Arial</family>
+       
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
        <kerning>true</kerning>
       </font>
      </property>
