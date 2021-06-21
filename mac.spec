@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['C:/Users/Tfry/Desktop/CASPERapp'],
+             pathex=['/Users/ddooley/bioinformatics_packages/individual_packages/CASPERapp'],
              datas=[
 				('OffTargetFolder', 'OffTargetFolder'),
 				('SeqFinderFolder', 'SeqFinderFolder'),
@@ -33,7 +33,8 @@ a = Analysis(['main.py'],
              runtime_hooks=[],
              excludes=[
 				 'cryptography',
-				 'Crypto'
+				 'Crypto',
+                 'tkinter'
 			 ],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
