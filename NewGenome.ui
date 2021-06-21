@@ -13,15 +13,20 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>14</pointsize>
+    <weight>50</weight>
+    <italic>false</italic>
+    <bold>false</bold>
    </font>
   </property>
   <property name="windowTitle">
    <string>New Genome</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">font: 16px 'Arial';</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
-    <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+    <string notr="true"/>
    </property>
    <layout class="QGridLayout" name="gridLayout_9">
     <item row="4" column="3">
@@ -50,14 +55,13 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+         <string notr="true"/>
         </property>
         <property name="title">
          <string>Step 3: Select and Run Jobs</string>
@@ -224,7 +228,7 @@
          </size>
         </property>
         <property name="styleSheet">
-         <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+         <string notr="true"/>
         </property>
         <property name="title">
          <string>Step 2: Select File and Add Job to Queue</string>
@@ -259,14 +263,14 @@
                <property name="font">
                 <font>
                  <family>Arial</family>
-                 <pointsize>14</pointsize>
+                 
                  <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+                <string notr="true"/>
                </property>
                <property name="text">
                 <string>Name Of File</string>
@@ -389,14 +393,14 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+         <string notr="true"/>
         </property>
         <property name="title">
          <string>Step 1: Input Organism Info</string>
@@ -647,14 +651,14 @@ search parameters</string>
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>14</pointsize>
+        
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>Exit</string>
@@ -710,17 +714,17 @@ search parameters</string>
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>28</pointsize>
-        <weight>50</weight>
+        
+        <weight>75</weight>
         <italic>false</italic>
-        <bold>false</bold>
+        <bold>true</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 28pt &quot;Arial&quot;;</string>
+       <string notr="true">font: bold 20px 'Arial';</string>
       </property>
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#000000;&quot;&gt;New Genome&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>New Genome</string>
       </property>
       <property name="scaledContents">
        <bool>false</bool>

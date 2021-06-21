@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1394</width>
-    <height>776</height>
+    <height>783</height>
    </rect>
   </property>
   <property name="font">
@@ -20,6 +20,9 @@
    <string>Results</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true">font: 16px 'Arial';</string>
+   </property>
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="10" column="4">
      <widget class="QPushButton" name="export_button">
@@ -38,7 +41,10 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>14</pointsize>
+        <pointsize>-1</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
        </font>
       </property>
       <property name="toolTip">
@@ -64,6 +70,9 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="styleSheet">
+       <string notr="true">font: 16px 'Arial';</string>
+      </property>
       <property name="title">
        <string>Guide Analysis</string>
       </property>
@@ -73,7 +82,10 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           <pointsize>-1</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
           </font>
          </property>
          <property name="toolTip">
@@ -89,7 +101,10 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           <pointsize>-1</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
           </font>
          </property>
          <property name="toolTip">
@@ -105,6 +120,9 @@
     </item>
     <item row="2" column="1" rowspan="7" colspan="2">
      <widget class="QGroupBox" name="guide_viewer">
+      <property name="styleSheet">
+       <string notr="true">font: 16px 'Arial';</string>
+      </property>
       <property name="title">
        <string>Guide Viewer</string>
       </property>
@@ -126,7 +144,10 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           <pointsize>-1</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
           </font>
          </property>
          <property name="verticalScrollMode">
@@ -154,7 +175,7 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -173,7 +194,10 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           <pointsize>-1</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
           </font>
          </property>
          <property name="text">
@@ -186,7 +210,10 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           <pointsize>-1</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
           </font>
          </property>
          <property name="styleSheet">
@@ -208,7 +235,10 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           <pointsize>-1</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
           </font>
          </property>
          <property name="toolTip">
@@ -236,7 +266,10 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           <pointsize>-1</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
           </font>
          </property>
         </widget>
@@ -270,6 +303,9 @@
       </property>
       <property name="toolTip">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gene Viewer shows where each gRNA falls within the selected gene. To use, check &amp;quot;Display On,&amp;quot; Select guides from the table, and click &amp;quot;Highlight Selected Guides.&amp;quot; UPPERCASE nucleotides belong to the gene sequence and lowercase nucleotides belong to regions outside of the gene, which are included to account for gRNAs whose PAMs/cut sites fall within the gene, but other parts of the sequence falls outside the gene.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;span style=&quot; color:#108040;&quot;&gt;Green highlights&lt;/span&gt; = +ve sense&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#fc0107;&quot;&gt;Red highlights&lt;/span&gt; = -ve sense.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font: 16px 'Arial';</string>
       </property>
       <property name="title">
        <string>Gene Viewer</string>
@@ -316,7 +352,10 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             <pointsize>14</pointsize>
+             <pointsize>-1</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
             </font>
            </property>
            <property name="text">
@@ -348,7 +387,10 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             <pointsize>14</pointsize>
+             <pointsize>-1</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
             </font>
            </property>
            <property name="text">
@@ -395,7 +437,10 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             <pointsize>14</pointsize>
+             <pointsize>-1</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
             </font>
            </property>
            <property name="toolTip">
@@ -425,7 +470,10 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           <pointsize>-1</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
           </font>
          </property>
          <property name="toolTip">
@@ -447,7 +495,10 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           <pointsize>-1</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
           </font>
          </property>
          <property name="toolTip">
@@ -478,7 +529,10 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           <pointsize>-1</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
           </font>
          </property>
          <property name="text">
@@ -512,10 +566,17 @@
       <property name="font">
        <font>
         <family>Arial</family>
+        <pointsize>-1</pointsize>
+        <weight>75</weight>
+        <italic>false</italic>
+        <bold>true</bold>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true">font: bold 30px 'Arial';</string>
+      </property>
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600;&quot;&gt;View Targets&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>View Targets</string>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -545,7 +606,10 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>14</pointsize>
+        <pointsize>-1</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -642,35 +706,6 @@
      <string/>
     </property>
    </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1394</width>
-     <height>24</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuWindow">
-    <property name="font">
-     <font>
-      <family>Arial</family>
-      <pointsize>14</pointsize>
-     </font>
-    </property>
-    <property name="title">
-     <string>Window</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuHelp">
-    <property name="title">
-     <string>Help</string>
-    </property>
-    <addaction name="actionDocumentation"/>
-   </widget>
-   <addaction name="menuWindow"/>
-   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionScore_Settings">

@@ -49,7 +49,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         padding: 0 5px 0 15px;}
         QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 15pt "Arial";
                         font: bold;
                         margin-top: 10px;}"""
         self.groupBox.setStyleSheet(groupbox_style)
@@ -116,6 +115,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.db_files = []
         self.Endos = {}
         self.seeds = []
+
+
+        #set pixel widths on scroll bars
+        self.org_Table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.org_Table.horizontalScrollBar().setStyleSheet("height: 16px;")
+        self.table2.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.table2.horizontalScrollBar().setStyleSheet("height: 16px;")
+        self.loc_finder_table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.loc_finder_table.horizontalScrollBar().setStyleSheet("height: 16px;")
 
         self.loading_window = loading_window()
 

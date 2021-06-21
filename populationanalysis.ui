@@ -13,15 +13,21 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>14</pointsize>
+    <pointsize>-1</pointsize>
+    <weight>50</weight>
+    <italic>false</italic>
+    <bold>false</bold>
    </font>
   </property>
   <property name="windowTitle">
    <string>Population Analysis</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">font: 16px 'Arial';</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
-    <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+    <string notr="true">font: 16px 'Arial';</string>
    </property>
    <layout class="QGridLayout" name="gridLayout">
     <item row="4" column="1">
@@ -94,7 +100,7 @@
           </size>
          </property>
          <property name="styleSheet">
-          <string notr="true">font: 14pt &quot;Arial&quot;;</string>
+          <string notr="true">font: 16px 'Arial';</string>
          </property>
          <property name="text">
           <string>Analyze Organism(s)</string>
@@ -312,7 +318,7 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>14</pointsize>
+           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -369,7 +375,7 @@
           </size>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;- % Coverage:&lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt; percentage of analyzed organisms covered by the given seed sequence. (Ex. a coverage of 75% for an analysis of 4 organisms means that the seed appears in 3/4 of the organisms) &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMBX12'; font-size:12pt; font-weight:600;&quot;&gt;–  &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;Total Repeats: &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;the total number of times the seed sequence is repeated across all organisms analyzed &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMBX12'; font-size:12pt;&quot;&gt;–  &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;Avg. Repeats/Scaffold: the average number of times the seed sequence is repeated per scaffold/chromosome/contig (varies depending on how the organism’s FASTA file is arranged) &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMBX12'; font-size:12pt;&quot;&gt;–  &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;Consensus Sequence: the full length guide RNA sequence that appears most commonly amongst all occurrences of the given seed. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMBX12'; font-size:12pt;&quot;&gt;–  &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;% Consensus: the percentage of all seed repeats that have the tail of the consensus sequence. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;- Score: on-target score for the consensus sequence.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;- PAM: the protospacer adjacent motif of the consensus sequence.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;- Strand: the strand directionality (+ or -) of the consensus sequence.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;- % Coverage:&lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt; percentage of analyzed organisms covered by the given seed sequence. (Ex. a coverage of 75% for an analysis of 4 organisms means that the seed appears in 3/4 of the organisms) &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMBX12'; font-size:12pt; font-weight:600;&quot;&gt;– &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;Total Repeats: &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;the total number of times the seed sequence is repeated across all organisms analyzed &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMBX12'; font-size:12pt; font-weight:600;&quot;&gt;– &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;Avg. Repeats/Scaffold: &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;the average number of times the seed sequence is repeated per scaffold/chromosome/contig (varies depending on how the organism’s FASTA file is arranged) &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMBX12'; font-size:12pt; font-weight:600;&quot;&gt;– &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;Consensus Sequence: &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;the full length guide RNA sequence that appears most commonly amongst all occurrences of the given seed. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMBX12'; font-size:12pt; font-weight:600;&quot;&gt;– &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;% Consensus: &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;the percentage of all seed repeats that have the tail of the consensus sequence. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;- Score:&lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt; on-target score for the consensus sequence.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;- PAM:&lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt; the protospacer adjacent motif of the consensus sequence.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;- Strand: &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;the strand directionality (+ or -) of the consensus sequence.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="toolTipDuration">
           <number>-1</number>
@@ -486,14 +492,14 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>28</pointsize>
-        <weight>50</weight>
+        <pointsize>-1</pointsize>
+        <weight>75</weight>
         <italic>false</italic>
-        <bold>false</bold>
+        <bold>true</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 28pt &quot;Arial&quot;;</string>
+       <string notr="true">font: bold 30px 'Arial';</string>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Population Analysis&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>

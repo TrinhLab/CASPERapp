@@ -23,6 +23,8 @@ import platform
 import ncbi
 import glob
 
+import ctypes
+
 # =========================================================================================
 # CLASS NAME: AnnotationsWindow
 # Inputs: Annotation file and search query from MainWindow
@@ -47,6 +49,10 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.tableWidget.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidget.setAutoScroll(False)
+
+        #setting pixel width for scroll bars
+        self.tableWidget.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.tableWidget.horizontalScrollBar().setStyleSheet("height: 16px;")
 
 
     def submit(self):
@@ -186,9 +192,11 @@ class CMainWindow(QtWidgets.QMainWindow):
                         padding: 0 5px 0 5px;}
         QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 15pt "Arial";
-                        font: bold;
-                        margin-top: 10px;}"""
+                        margin-top: 10px;
+                        font: bold;}
+                        """
+
+
 
         self.Step1.setStyleSheet(groupbox_style)
         self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2"))
@@ -257,6 +265,11 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.genomebrowser = genomeBrowser.genomebrowser()
         #GlobalSettings.mainWindow.ncbi = ncbi.NCBI_search_tool()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
+
+        #setting pixel width for scroll bars
+        self.geneEntryField.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.geneEntryField.horizontalScrollBar().setStyleSheet("height: 16px;")
+
 
     # this function prepares everything for the generate library function
     # it is very similar to the gather settings, how ever it stores the data instead of calling the Annotation Window class
@@ -1191,14 +1204,26 @@ def main():
         else:
             GlobalSettings.appdir += '/'
 
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+    #QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+    app = Qt.QApplication(sys.argv)
+    screen = app.screens()[0]
+    dpi = screen.physicalDotsPerInch()
+    print(dpi)
+    del app
+    #QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, False)
+
+    if dpi > 92:
+        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+
     app = Qt.QApplication(sys.argv)
     app.setOrganizationName("TrinhLab-UTK")
     app.setApplicationName("CASPER")
+
     startup = StartupWindow()
     GlobalSettings.mainWindow = CMainWindow(os.getcwd())
     GlobalSettings.MTWin = multitargeting.Multitargeting()
     GlobalSettings.pop_Analysis = populationAnalysis.Pop_Analysis()
+
     sys.exit(app.exec_())
 
 if __name__ == '__main__':

@@ -13,11 +13,17 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>14</pointsize>
+    <pointsize>1</pointsize>
+    <weight>50</weight>
+    <italic>false</italic>
+    <bold>false</bold>
    </font>
   </property>
   <property name="windowTitle">
    <string>Generate Library</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">font: 16px 'Arial';</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="sizeConstraint">
@@ -33,7 +39,11 @@
      </property>
      <property name="font">
       <font>
-       <pointsize>14</pointsize>
+       <family>Arial</family>
+       
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
       </font>
      </property>
      <property name="title">
@@ -45,7 +55,10 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="toolTip">
@@ -61,7 +74,10 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="toolTip">
@@ -121,7 +137,10 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="text">
@@ -141,7 +160,10 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="toolTip">
@@ -153,21 +175,6 @@
        </widget>
       </item>
      </layout>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="font">
-      <font>
-       <family>Arial</family>
-      </font>
-     </property>
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;By clicking 'Submit' CASPER will automatically generate a library of target sequences for the genes/loci you selected. &lt;span style=&quot; font-style:italic;&quot;&gt;To speed up this process significantly, you can turn off &amp;quot;Find Off-Targets.&amp;quot; &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600;&quot;&gt;Generate Library&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
     </widget>
    </item>
    <item row="2" column="0" colspan="2">
@@ -214,7 +221,10 @@
           <property name="font">
            <font>
             <family>Arial</family>
-            <pointsize>14</pointsize>
+            
+            <weight>50</weight>
+            <italic>false</italic>
+            <bold>false</bold>
            </font>
           </property>
           <property name="toolTip">
@@ -258,7 +268,10 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="toolTip">
@@ -293,7 +306,10 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>13</pointsize>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="text">
@@ -321,7 +337,10 @@
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>14</pointsize>
+       
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
       </font>
      </property>
      <property name="toolTip">
@@ -349,7 +368,10 @@
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>14</pointsize>
+       
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
       </font>
      </property>
      <property name="text">
@@ -368,7 +390,10 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="toolTip">
@@ -390,7 +415,10 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="toolTip">
@@ -434,7 +462,10 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="toolTip">
@@ -475,7 +506,10 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="toolTip">
@@ -523,7 +557,10 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="toolTip">
@@ -539,7 +576,10 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="toolTip">
@@ -557,6 +597,28 @@
     <widget class="Line" name="line">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="2">
+    <widget class="QLabel" name="label">
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       
+       <weight>75</weight>
+       <italic>false</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;By clicking 'Submit' CASPER will automatically generate a library of target sequences for the genes/loci you selected. &lt;span style=&quot; font-style:italic;&quot;&gt;To speed up this process significantly, you can turn off &amp;quot;Find Off-Targets.&amp;quot; &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: bold 24px 'Arial';</string>
+     </property>
+     <property name="text">
+      <string>Generate Library</string>
      </property>
     </widget>
    </item>

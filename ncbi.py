@@ -130,7 +130,6 @@ class NCBI_search_tool(QtWidgets.QWidget):
                                 padding: 0 5px 0 5px;}
                 QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                                 border-radius: 9px;
-                                font: 15pt "Arial";
                                 font: bold;
                                 margin-top: 10px;}"""
         self.Step1.setStyleSheet(groupbox_style)
@@ -142,6 +141,10 @@ class NCBI_search_tool(QtWidgets.QWidget):
         self.goToPrompt = goToPrompt()
         self.goToPrompt.stay.clicked.connect(self.stay)
         self.goToPrompt.close.clicked.connect(self.close)
+
+        #set pixel width for scroll bar
+        self.ncbi_table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.ncbi_table.horizontalScrollBar().setStyleSheet("height: 16px;")
 
         #loading label
         self.loading = loadingScreen()
@@ -538,7 +541,7 @@ class goToPrompt(QtWidgets.QWidget):
     def __init__(self):
         super(goToPrompt, self).__init__()
         uic.loadUi(GlobalSettings.appdir + 'NCBI_navigation_page.ui', self)
-        self.label.setText("Successfullly downloaded file(s) to the CASPERdb directory:\n" + GlobalSettings.CSPR_DB)
+        self.label.setText("Successfully downloaded file(s) to the CASPERdb directory:\n" + GlobalSettings.CSPR_DB)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         groupbox_style = """
         QGroupBox:title{subcontrol-origin: margin;
@@ -546,7 +549,6 @@ class goToPrompt(QtWidgets.QWidget):
                         padding: 0 5px 0 5px;}
         QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 14pt "Arial";
                         font: bold;
                         margin-top: 10px;}"""
         self.groupBox.setStyleSheet(groupbox_style)
@@ -561,6 +563,11 @@ class rename_window(QtWidgets.QWidget):
         self.rename_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.rename_table.setColumnCount(2)
         self.rename_table.setHorizontalHeaderLabels(['Original Filename', 'New Filename'])
+
+        #set pixel width for scroll bars
+        self.rename_table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.rename_table.horizontalScrollBar().setStyleSheet("height: 16px;")
+
         self.hide()
 
 

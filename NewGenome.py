@@ -26,7 +26,6 @@ class goToPrompt(QtWidgets.QWidget):
                         padding: 0 5px 0 5px;}
         QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 14pt "Arial";
                         font: bold;
                         margin-top: 10px;}"""
         self.groupBox.setStyleSheet(groupbox_style)
@@ -51,7 +50,6 @@ class NewGenome(QtWidgets.QMainWindow):
                         padding: 0 5px 0 5px;}
         QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 15pt "Arial";
                         font: bold;
                         margin-top: 10px;}"""
 
@@ -126,6 +124,14 @@ class NewGenome(QtWidgets.QMainWindow):
         self.five_length.setEnabled(False)
         self.three_length.setEnabled(False)
         self.repeats_box.setEnabled(False)
+
+
+        #set pixel widths for scroll bars
+        self.output_browser.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.output_browser.horizontalScrollBar().setStyleSheet("height: 16px;")
+        self.job_Table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.job_Table.horizontalScrollBar().setStyleSheet("height: 16px;")
+
 
         #user prompt class
         self.goToPrompt = goToPrompt()

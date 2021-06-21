@@ -28,6 +28,9 @@ class closingWindow(QtWidgets.QDialog):
         self.files_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.files_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
 
+        #setting pixel width for scroll bars
+        self.files_table.verticalScrollBar().setStyleSheet("width: 16px;")
+        self.files_table.horizontalScrollBar().setStyleSheet("height: 16px;")
 
 
     # this function will delete selected files, and then close the program
