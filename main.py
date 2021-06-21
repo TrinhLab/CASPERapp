@@ -1082,6 +1082,7 @@ class StartupWindow(QtWidgets.QDialog):
 
             # update dir in CASPERinfo
             self.re_write_dir()
+            GlobalSettings.CSPR_DB = self.gdirectory
 
             #make sure FNA and GBFF subdirectories are present
             subdirs = os.listdir(self.gdirectory)
@@ -1097,7 +1098,6 @@ class StartupWindow(QtWidgets.QDialog):
         else:
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
                                            QtWidgets.QMessageBox.Ok)
-
 
     def check_dir(self):
         cspr_info = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
@@ -1138,6 +1138,8 @@ class StartupWindow(QtWidgets.QDialog):
 
     #launch main
     def show_window(self):
+        self.gdirectory = str(self.lineEdit.text())
+
         if (os.path.isdir(self.gdirectory) == False):
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
                                            QtWidgets.QMessageBox.Ok)
@@ -1155,13 +1157,14 @@ class StartupWindow(QtWidgets.QDialog):
                                            QtWidgets.QMessageBox.Ok)
             return
 
-        self.gdirectory = str(self.lineEdit.text())
         if "Please select a directory that contains .cspr files" in self.gdirectory:
             QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory.",
                                            QtWidgets.QMessageBox.Ok)
         elif (os.path.isdir(self.gdirectory)):
 
             os.chdir(self.gdirectory)
+            GlobalSettings.CSPR_DB = self.gdirectory
+            self.re_write_dir()
             found = GlobalSettings.mainWindow.getData()
             GlobalSettings.mainWindow.fill_annotation_dropdown()
             if found == False:
