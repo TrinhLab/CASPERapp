@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1095</width>
+    <width>1124</width>
     <height>794</height>
    </rect>
   </property>
@@ -22,7 +22,7 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>1</pointsize>
+    <pointsize>-1</pointsize>
     <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
@@ -57,7 +57,7 @@
           <property name="font">
            <font>
             <family>Arial</family>
-            
+            <pointsize>-1</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -82,7 +82,7 @@
           <property name="font">
            <font>
             <family>Arial</family>
-            
+            <pointsize>-1</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -116,7 +116,7 @@
           <property name="font">
            <font>
             <family>Arial</family>
-            
+            <pointsize>-1</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -135,7 +135,7 @@
           <property name="font">
            <font>
             <family>Arial</family>
-            
+            <pointsize>-1</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -157,7 +157,7 @@
           <property name="font">
            <font>
             <family>Arial</family>
-            
+            <pointsize>-1</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -170,7 +170,7 @@
           <property name="font">
            <font>
             <family>Arial</family>
-            
+            <pointsize>-1</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -189,7 +189,7 @@
           <property name="font">
            <font>
             <family>Arial</family>
-            
+            <pointsize>-1</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -276,7 +276,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
+          <pointsize>-1</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -303,7 +303,7 @@
           <property name="font">
            <font>
             <family>Arial</family>
-            
+            <pointsize>-1</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -331,7 +331,7 @@
           <property name="font">
            <font>
             <family>Arial</family>
-            
+            <pointsize>-1</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -450,7 +450,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
+          <pointsize>-1</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -466,7 +466,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
+          <pointsize>-1</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>

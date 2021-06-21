@@ -541,7 +541,7 @@ class goToPrompt(QtWidgets.QWidget):
     def __init__(self):
         super(goToPrompt, self).__init__()
         uic.loadUi(GlobalSettings.appdir + 'NCBI_navigation_page.ui', self)
-        self.label.setText("Successfullly downloaded file(s) to the CASPERdb directory:\n" + GlobalSettings.CSPR_DB)
+        self.label.setText("Successfully downloaded file(s) to the CASPERdb directory:\n" + GlobalSettings.CSPR_DB)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         groupbox_style = """
         QGroupBox:title{subcontrol-origin: margin;
@@ -549,7 +549,6 @@ class goToPrompt(QtWidgets.QWidget):
                         padding: 0 5px 0 5px;}
         QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
-                        font: 14pt "Arial";
                         font: bold;
                         margin-top: 10px;}"""
         self.groupBox.setStyleSheet(groupbox_style)

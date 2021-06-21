@@ -13,6 +13,7 @@
   <property name="font">
    <font>
     <family>Arial</family>
+    <pointsize>-1</pointsize>
     <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
@@ -37,7 +38,7 @@
       </size>
      </property>
      <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string/>
      </property>
      <property name="title">
       <string>NCBI:</string>
@@ -66,7 +67,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
+          <pointsize>-1</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -97,7 +98,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
+          <pointsize>-1</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -116,7 +117,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
+          <pointsize>-1</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
