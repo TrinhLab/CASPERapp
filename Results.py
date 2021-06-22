@@ -896,11 +896,11 @@ class Results(QtWidgets.QMainWindow):
         for items in self.detail_output_list[self.comboBoxGene.currentIndex()][key]:
             temp_str += items + "<br>"
 
-        chromo_str = "<html><b>Chromsome: Location, Sequence, Strand, PAM, Score:<br></b></html>"
+        chromo_str = "<html><b>Chromosome: Location, Sequence, Strand, PAM, Score:<br></b></html>"
         input_str = self.targetTable.item(index.row(),0).text() + ' , ' + key + ' , ' + \
                     self.targetTable.item(index.row(),3).text() + ' , ' + self.targetTable.item(index.row(),4).text() + \
                     ' , ' + self.targetTable.item(index.row(),5).text() + "<br><br>"
-        detail_str = "<html><b>Deatailed Output: Score, Chromsome, Location, Sequence:<br></b></html>"
+        detail_str = "<html><b>Deatailed Output: Score, Chromosome, Location, Sequence:<br></b></html>"
         msg.setText(chromo_str + input_str + detail_str + temp_str)
         msg.exec()
 
