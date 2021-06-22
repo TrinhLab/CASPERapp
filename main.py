@@ -22,6 +22,7 @@ import platform
 import ncbi
 import glob
 
+#logger alias for global logger
 logger = GlobalSettings.logger
 
 # =========================================================================================
@@ -29,7 +30,6 @@ logger = GlobalSettings.logger
 # Inputs: Annotation file and search query from MainWindow
 # Outputs: Greg: AnnotationWindow showing entries matching search query 
 # =========================================================================================
-
 class AnnotationsWindow(QtWidgets.QMainWindow):
 
     def __init__(self, info_path):
@@ -153,15 +153,12 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         GlobalSettings.mainWindow.closeFunction()
         event.accept()
 
-
 # =========================================================================================
 # CLASS NAME: CMainWindow
 # Inputs: Takes in the path information from the startup window and also all input parameters
 # that define the search for targets e.g. endonuclease, organism genome, gene target etc.
 # Outputs: The results of the target search process by generating a new Results window
 # =========================================================================================
-
-
 class CMainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, info_path):
@@ -252,7 +249,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.geneEntryField.verticalScrollBar().setStyleSheet("width: 16px;")
         self.geneEntryField.horizontalScrollBar().setStyleSheet("height: 16px;")
 
-
     # this function prepares everything for the generate library function
     # it is very similar to the gather settings, how ever it stores the data instead of calling the Annotation Window class
     # it moves the data onto the generateLib function, and then opens that window
@@ -332,7 +328,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             else:
                 self.progressBar.setValue(0)
 
-
     # Function for collecting the settings from the input field and transferring them to run_results
     def gather_settings(self):
         inputstring = str(self.geneEntryField.toPlainText())
@@ -355,7 +350,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             elif self.radioButton_Sequence.isChecked():
                 sinput = inputstring
                 self.run_results("sequence", sinput)
-
 
     # ---- Following functions are for running the auxillary algorithms and windows ---- #
     # this function is parses the annotation file given, and then goes through and goes onto results
@@ -465,7 +459,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.Annotation_Window.fill_table_nonKegg(self)
         else:
             return True
-
 
     def run_results(self, inputtype, inputstring, openAnnoWindow=True):
         #print("run results")
@@ -591,7 +584,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             outFile.close()
             self.progressBar.setValue(55)
 
-
     def launch_newGenome(self):
         self.hide()
         self.newGenome.mwfg.moveCenter(self.newGenome.cp)  ##Center window
@@ -601,21 +593,17 @@ class CMainWindow(QtWidgets.QMainWindow):
         #show new genome window
         self.newGenome.show()
 
-
     def launch_newEndonuclease(self):
         self.newEndonuclease.show()
 
-
     def launch_newGenomeBrowser(self):
         self.genomebrowser.createGraph(self)
-
 
     def launch_ncbi(self):
         QtWidgets.QMessageBox.information(self, "Note:",
         "NCBI Annotation Guidelines:\n\nDownload annotation files of the exact species and strain used in Analyze New Genome.\n\nMismatched annotation files will inhibit downstream analyses.",
         QtWidgets.QMessageBox.Ok)
         self.ncbi.show()
-
 
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
     def collect_table_data_nonkegg(self):
@@ -656,10 +644,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.pushButton_ViewTargets.setEnabled(True)
         self.GenerateLibrary.setEnabled(True)
 
-
-    # ------------------------------------------------------------------------------------------------------ #
-
-    # ----- Following Code is helper functions for processing input data ----- #
     def separate_line(self, input_string):
         export_array = []
         while True:
@@ -673,7 +657,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             export_array.append(input_string[:index])
             input_string = input_string[index + 1:]
 
-
     def removeWhiteSpace(self, strng):
         while True:
             if len(strng) == 0 or (strng[0] != " " and strng[0] != "\n"):
@@ -683,7 +666,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             if len(strng) == 0 or (strng[len(strng) - 1] != " " and strng[0] != "\n"):
                 return strng
             strng = strng[:len(strng) - 1]
-
 
     # Function to enable and disable the Annotation function if searching by position or sequence
     def toggle_annotation(self):
@@ -707,7 +689,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         #     self.changeEndos()
 
         #self.orgChoice.setEnabled(seq_checker)
-
 
     def fill_annotation_dropdown(self):
         #recursive search for all .gbff in casper db folder
@@ -758,7 +739,6 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.gene_list[key] = [seq]
             z = 5
 
-
     def organism_finder(self, long_str):
         semi = long_str.find(";")
         index = 1
@@ -767,7 +747,6 @@ class CMainWindow(QtWidgets.QMainWindow):
                 break
             index = index + 1
         return long_str[:semi - index]
-
 
     # This method is for testing the execution of a button call to make sure the button is linked properly
     def testexe(self):
@@ -779,15 +758,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         else:
             pass
 
-
-#    def addOrgoCombo(self):
-#        self.Add_Orgo_Combo.addItem("Select Organism")
-#        for item in self.orgnanism_to_endos:
-#            if (self.endoChoice.currentText() in self.organism_to_endos[item]) and (item != str(self.orgChoice.currentText())):
-#                self.Add_Orgo_Combo.addItem(item)
-
-
-    # ----- CALLED IN STARTUP WINDOW ------ #
     def getData(self):
         try:
             self.orgChoice.currentIndexChanged.disconnect()
@@ -840,7 +810,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.endoChoice.addItems(self.organisms_to_endos[str(self.orgChoice.currentText())])
         self.orgChoice.currentIndexChanged.connect(self.changeEndos)
 
-
     def changeEndos(self):
         if self.orgChoice.currentText() != "Custom Input Sequences":
             self.Step2.setEnabled(True)
@@ -857,7 +826,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.radioButton_Gene.hide()
             self.radioButton_Position.hide()
             self.seq_label.show()
-
 
     def change_directory(self):
         filed = QtWidgets.QFileDialog()
@@ -896,16 +864,12 @@ class CMainWindow(QtWidgets.QMainWindow):
         GlobalSettings.pop_Analysis.get_data()
         self.fill_annotation_dropdown()
 
-
-    # Tanner - added this function to allow the Tools->Multitargeting button to work
-    # Function launches the multitargeting window and closing the current one
     def changeto_multitargeting(self):
         os.chdir(os.getcwd())
         GlobalSettings.MTWin.mwfg.moveCenter(GlobalSettings.MTWin.cp)  ##Center window
         GlobalSettings.MTWin.move(GlobalSettings.MTWin.mwfg.topLeft())  ##Center window
         GlobalSettings.MTWin.show()
         GlobalSettings.mainWindow.hide()
-
 
     def changeto_population_Analysis(self):
         GlobalSettings.pop_Analysis.mwfg.moveCenter(GlobalSettings.pop_Analysis.cp)  ##Center window
@@ -914,35 +878,22 @@ class CMainWindow(QtWidgets.QMainWindow):
         GlobalSettings.pop_Analysis.show()
         GlobalSettings.mainWindow.hide()
 
-
-#    def add_org_popup(self):
-#        info = "This functionality will allow users to use different organisms for off-target analysis in a future " \
-#               "version of the software. If you need to run analysis on multiple organisms, please use the Population " \
-#               "Analysis feature."
-#        QtWidgets.QMessageBox.information(self, "Add Organism Information", info, QtWidgets.QMessageBox.Ok)
-
-
     def annotation_information(self):
         info = "Annotation files are used for searching for spacers on a gene/locus basis and can be selected here using either " \
                "NCBI databases or a local file."
         QtWidgets.QMessageBox.information(self, "Annotation Information", info, QtWidgets.QMessageBox.Ok)
 
-
     def open_ncbi_blast_web_page(self):
         webbrowser.open('https://blast.ncbi.nlm.nih.gov/Blast.cgi', new=2)
-
 
     def open_ncbi_web_page(self):
         webbrowser.open('https://www.ncbi.nlm.nih.gov/', new=2)
 
-
     def open_casper2_web_page(self):
         webbrowser.open('http://casper2.org/', new=2)
 
-
     def visit_repo_func(self):
         webbrowser.open('https://github.com/TrinhLab/CASPERapp')
-
 
     @QtCore.pyqtSlot()
     def view_results(self):
@@ -971,19 +922,11 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Results.show()
         self.hide()
 
-
     # this function calls the closingWindow class.
     def closeEvent(self, event):
         self.closeFunction()
         event.accept()
 
-
-    # this if the function that is called when the user closes the program entirely.
-    # so far I only know of 4 spots that can do this
-    #       1. mainWindow
-    #       2. annotationsWindow
-    #       3. Results
-    #       4. Multitargetting
     def closeFunction(self):
         try:
             self.ncbi.close()
@@ -991,7 +934,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             print("no ncbi window to close")
         self.myClosingWindow.get_files()
         self.myClosingWindow.show()
-
 
     def close_app(self):
         try:
@@ -1001,8 +943,6 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         self.closeFunction()
         self.close()
-
-
 
 #startup window class
 class StartupWindow(QtWidgets.QDialog):
@@ -1064,6 +1004,7 @@ class StartupWindow(QtWidgets.QDialog):
         GlobalSettings.CSPR_DB = newDirectory
 
     #function for loading the default database directory specified in CASPERinfo
+    #returns: default database parsed from CASPERinfo
     def loadDatabaseDirectory(self):
         #variable to hold default directory from CASPERinfo
         defaultDirectory = ""
