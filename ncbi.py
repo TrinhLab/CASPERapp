@@ -578,7 +578,6 @@ class loadingScreen(QtWidgets.QWidget):
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
 
         self.label = QtWidgets.QLabel(self)
-        #self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setText("Loading...")
         self.label.setFont((QtGui.QFont('Arial', 15)))
         self.hide()

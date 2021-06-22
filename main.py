@@ -16,14 +16,13 @@ import multitargeting
 from AnnotationParser import Annotation_Parser
 from export_to_csv import export_csv_window
 from generateLib import genLibrary
-from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
 import populationAnalysis
 import platform
 import ncbi
 import glob
 
-import ctypes
+logger = GlobalSettings.logger
 
 # =========================================================================================
 # CLASS NAME: AnnotationsWindow
@@ -175,7 +174,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.gene_list = {}  # list of genes (no ides what they pertain to
         self.searches = {}
         self.checkBoxes = []
-#        self.add_orgo = []
         self.checked_info = {}
         self.check_ntseq_info = {}  # the ntsequences that go along with the checked_info
         self.annotation_parser = Annotation_Parser()
@@ -185,7 +183,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.ncbi = ncbi.NCBI_search_tool()
         self.ncbi.hide()
 
-        # --- Style Modifications --- #
         groupbox_style = """
         QGroupBox:title{subcontrol-origin: margin;
                         left: 10px;
@@ -202,10 +199,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2"))
         self.Step3.setStyleSheet(groupbox_style.replace("Step1", "Step3"))
 
-        # --- Button Modifications --- #
 
-
-        #self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir.encode()))
         self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + 'cas9image.png'))
         self.pushButton_FindTargets.clicked.connect(self.gather_settings)
         self.pushButton_ViewTargets.clicked.connect(self.view_results)
@@ -219,9 +213,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.actionUpload_New_Genome.triggered.connect(self.launch_newGenome)
         self.actionUpload_New_Endonuclease.triggered.connect(self.launch_newEndonuclease)
         self.actionOpen_Genome_Browser.triggered.connect(self.launch_newGenomeBrowser)
-#        self.Add_Orgo_Button.clicked.connect(self.add_Orgo)
-#        self.Remove_Organism_Button.clicked.connect(self.remove_Orgo)
-#        self.endoChoice.currentIndexChanged.connect(self.endo_Changed)
+
         self.GenerateLibrary.clicked.connect(self.prep_genlib)
         self.actionExit.triggered.connect(self.close_app)
         self.visit_repo.triggered.connect(self.visit_repo_func)
@@ -230,11 +222,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.progressBar.reset()
         self.Annotation_Window = AnnotationsWindow(info_path)
 
-        # Hide Added orgo boxes
-#        self.Added_Org_Combo.hide()
-#        self.Remove_Organism_Button.hide()
-#        self.Added_Org_Label.hide()
-        # --- Menubar commands --- #
+
         self.actionChange_Directory.triggered.connect(self.change_directory)
         self.actionMultitargeting.triggered.connect(self.changeto_multitargeting)
         self.actionPopulation_Analysis.triggered.connect(self.changeto_population_Analysis)
@@ -242,10 +230,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.actionCasper2.triggered.connect(self.open_casper2_web_page)
         self.actionNCBI_BLAST.triggered.connect(self.open_ncbi_blast_web_page)
 
-#        self.Question_Button_add_org.clicked.connect(self.add_org_popup)
 
-
-        # --- Setup for Gene Entry Field --- #
         self.geneEntryField.setPlainText("Example Inputs: \n\n"
                                          "Gene (ID, Locus Tag, or Name): 854068/YOL086C/ADH1 for S. cerevisiae alcohol dehydrogenase 1\n\n"
                                          "Position: chromosome,start,stop\n\n"
@@ -255,15 +240,12 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.newEndonuclease = NewEndonuclease()
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
-#        self.gene_viewer_settings = geneViewer()
         self.export_csv_window = export_csv_window()
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
-        #self.actionUpload_New_Genome.setEnabled(False)
         self.genomebrowser = genomeBrowser.genomebrowser()
-        #GlobalSettings.mainWindow.ncbi = ncbi.NCBI_search_tool()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
         #setting pixel width for scroll bars
@@ -1021,199 +1003,296 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.close()
 
 
-# ----------------------------------------------------------------------------------------------------- #
-# =========================================================================================
-# CLASS NAME: StartupWindow
-# Inputs: Takes information from the main application window and displays the gRNA results
-# Outputs: The display of the gRNA results search
-# =========================================================================================
 
-
+#startup window class
 class StartupWindow(QtWidgets.QDialog):
     def __init__(self):
         super(StartupWindow, self).__init__()
-        uic.loadUi(GlobalSettings.appdir + 'startupCASPER.ui', self)
-        self.setWindowModality(2)  # sets the modality of the window to Application Modal
-        self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
-        pixmap = QtGui.QPixmap(GlobalSettings.appdir + 'CASPER-logo.jpg')
-        self.labelforart.setPixmap(pixmap)
-        self.pushButton_2.setDefault(True)
-        # Check to see the operating system you are on and change this in Global Settings:
-        GlobalSettings.OPERATING_SYSTEM_ID = platform.system()
-        self.info_path = os.getcwd()
-        self.gdirectory = self.check_dir()
-        GlobalSettings.CSPR_DB = self.gdirectory
+
+        #load UX files
+        try:
+            uic.loadUi(GlobalSettings.appdir + 'startupCASPER.ui', self)
+            self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
+            pixmap = QtGui.QPixmap(GlobalSettings.appdir + 'CASPER-logo.jpg')
+            self.logo.setPixmap(pixmap)
+        except:
+            logger.critical("Unable to load UX files for Startup Window.")
+            exit(-1)
+
+        #set "Main" button to be the default highlighted button on startup
+        self.goToMain.setDefault(True)
+
+        #get current directory, and update based on current operating system
+        self.currentDirectory = os.getcwd()
+        self.databaseDirectory = self.loadDatabaseDirectory()
+        GlobalSettings.CSPR_DB = self.databaseDirectory
         if platform.system() == "Windows":
             GlobalSettings.CSPR_DB = GlobalSettings.CSPR_DB.replace("/","\\")
         else:
             GlobalSettings.CSPR_DB = GlobalSettings.CSPR_DB.replace("\\","/")
-        self.lineEdit.setText(self.gdirectory)
 
-        self.pushButton_3.clicked.connect(self.changeDir)
-        self.pushButton_2.clicked.connect(self.show_window)
-        self.pushButton.clicked.connect(self.errormsgmulti)
+        #setup event handlers for startup buttons
+        self.currentDirText.setText(self.databaseDirectory)
+        self.changeDir.clicked.connect(self.changeDirectory)
+        self.goToMain.clicked.connect(self.launchMainWindow)
+        self.goToNewGenome.clicked.connect(self.launchNewGenome)
+
         self.show()
 
+    #event handler for user clicking the "Change..." button - used for changing CASPER database directory
+    def changeDirectory(self):
+        #launch OS file browser
+        fileBrowser = QtWidgets.QFileDialog()
+        newDirectory = QtWidgets.QFileDialog.getExistingDirectory(fileBrowser, "Open a folder...",
+                                                           self.databaseDirectory, QtWidgets.QFileDialog.ShowDirsOnly)
 
-    ####---FUNCTIONS TO RUN EACH BUTTON---####
-    def changeDir(self):
-        filed = QtWidgets.QFileDialog()
-        mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a folder...",
-                                                           self.gdirectory, QtWidgets.QFileDialog.ShowDirsOnly)
-
-        if (os.path.isdir(mydir) == False):
+        #check if selected path is a directory in the system
+        if (os.path.isdir(newDirectory) == False):
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
                                            QtWidgets.QMessageBox.Ok)
             return
 
+        #make sure directory contains correct filepath format based on OS
         if platform.system() == "Windows":
-            mydir = mydir.replace("/","\\")
+            newDirectory = newDirectory.replace("/","\\")
 
-        self.lineEdit.setText(mydir)
-        self.gdirectory = mydir
-        GlobalSettings.CSPR_DB = mydir
+        #update text edit showing the current selected database directory
+        self.currentDirText.setText(newDirectory)
 
-    #launch new genome
-    def errormsgmulti(self):
-        self.gdirectory = str(self.lineEdit.text())
+        #update casper database directories
+        self.databaseDirectory = newDirectory
+        GlobalSettings.CSPR_DB = newDirectory
 
-        if (os.path.isdir(self.gdirectory)):
-            os.chdir(self.gdirectory)
+    #function for loading the default database directory specified in CASPERinfo
+    def loadDatabaseDirectory(self):
+        #variable to hold default directory from CASPERinfo
+        defaultDirectory = ""
 
-            # update dir in CASPERinfo
-            self.re_write_dir()
-            GlobalSettings.CSPR_DB = self.gdirectory
+        try:
+            #open CASPERinfo file in application directory
+            CASPERInfo = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
+            #read file, parse for the default database directory
+            CASPERInfo = CASPERInfo.read()
+            lines = CASPERInfo.split('\n')
+            for item in lines:
+                if 'DIRECTORY:' in item:
+                    #default directory found
+                    defaultDirectory = item
+                    break
 
-            #make sure FNA and GBFF subdirectories are present
-            subdirs = os.listdir(self.gdirectory)
+            #remove lines meta-data
+            defaultDirectory = defaultDirectory.replace("DIRECTORY:", "")
+
+            #make sure directory is formatted properly based on OS
+            if platform.system() == "Windows":
+                defaultDirectory = defaultDirectory.replace("/","\\")
+            else:
+                defaultDirectory = defaultDirectory.replace("\\", "/")
+
+            logger.debug("Successfully parsed CASPERinfo for default database directory.")
+        except:
+            logger.error("Unable to read CASPERinfo file to get default database directory.")
+            return "Where would you like to store CASPER database files?"
+
+        return defaultDirectory
+
+    #function for saving the currently selected database directory to CASPERinfo to be the new default value on startup
+    def saveDatabaseDirectory(self):
+        #variable to hold the CASPERinfo data with new default directory change
+        CASPERInfoNewData = ""
+
+        #new default directory string for CASPERinfo
+        newDefaultDirectory = "DIRECTORY:" + str(self.databaseDirectory)
+
+        #open CASPERinfo file to read in the files data and add in new change
+        try:
+            CASPERInfo = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
+            CASPERinfoData = CASPERInfo.read()
+            CASPERinfoData = CASPERinfoData.split('\n')
+            for line in CASPERinfoData:
+                #if directory line found, use new default directory string instead
+                if 'DIRECTORY:' in line:
+                    CASPERInfoNewData = CASPERInfoNewData + "\n" + newDefaultDirectory
+                else:
+                    CASPERInfoNewData = CASPERInfoNewData + "\n" + line
+            CASPERInfoNewData = CASPERInfoNewData[1:]
+
+            #close CASPERinfo
+            CASPERInfo.close()
+
+            #re-open the file and re-write it with current changes
+            CASPERInfo = open(GlobalSettings.appdir + "CASPERinfo", 'w+')
+            CASPERInfo.write(CASPERInfoNewData)
+            CASPERInfo.close()
+            logger.debug("Successfully updated CASPERinfo with new default database directory.")
+        except:
+            logger.critical("Unable to write to CASPERinfo file to update database directory.")
+            exit(-1)
+
+    # even handler for user clicking the "New Genome" button - used for launching New Genome
+    def launchNewGenome(self):
+        # make sure database directory variable is up-to-date based on what the user has in the text edit
+        self.databaseDirectory = str(self.currentDirText.text())
+
+        # make sure the path is a valid path before launching New Genome
+        if (os.path.isdir(self.databaseDirectory)):
+
+            # change directories to the specified database directory provided
+            os.chdir(self.databaseDirectory)
+
+            # write out the database directory to CASPERinfo to be the new default loaded value
+            self.saveDatabaseDirectory()
+
+            # update global database variable
+            GlobalSettings.CSPR_DB = self.databaseDirectory
+
+            # make sure FNA and GBFF subdirectories are present, if not create them
+            subdirs = os.listdir(self.databaseDirectory)
             if "FNA" not in subdirs and os.path.isdir("FNA") == False:
-                os.mkdir("FNA")
+                try:
+                    os.mkdir("FNA")
+                    logger.debug("Successfully created FNA subdirectory in database directory.")
+                except:
+                    logger.critical("Unable to make 'FNA' subdirectory in database directory")
+                    exit(-1)
             if "GBFF" not in subdirs and os.path.isdir("GBFF") == False:
-                os.mkdir("GBFF")
+                try:
+                    os.mkdir("GBFF")
+                    logger.debug("Successfully created GBFF subdirectory in database directory.")
+                except:
+                    logger.critical("Unable to make 'GBFF' subdirectory in database directory")
+                    exit(-1)
 
-            #launch new genome
-            GlobalSettings.mainWindow.launch_newGenome()
+            # launch new genome
+            try:
+                GlobalSettings.mainWindow.launch_newGenome()
+                logger.debug("Successfully initialized New Genome in startup window.")
+            except:
+                logger.critical("Unable to initialize New Genome from startup window.")
+                exit(-1)
 
             self.close()
         else:
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
                                            QtWidgets.QMessageBox.Ok)
 
-    def check_dir(self):
-        cspr_info = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
-        cspr_info = cspr_info.read()
-        lines = cspr_info.split('\n')
-        dir = ""
-        for item in lines:
-            if 'DIRECTORY:' in item:
-                dir = item
-                break
-        dir = dir.replace("DIRECTORY:", "")
-        if platform.system() == "Windows":
-            dir = dir.replace("/","\\")
-        return dir
+    #event handler for user clicking "Main Program" button - used to launch Main Window
+    def launchMainWindow(self):
+        #make sure database directory variable is up-to-date based on what the user has in the text edit
+        self.databaseDirectory = str(self.currentDirText.text())
 
-    def re_write_dir(self):
-        cspr_info = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
-        cspr_info_text = cspr_info.read()
-        cspr_info_text = cspr_info_text.split('\n')
-        full_doc = ""
-        for item in cspr_info_text:
-            if 'DIRECTORY:' in item:
-                line = item
-                break
+        # make sure the path is a valid path before launching New Genome
+        if os.path.isdir(self.databaseDirectory) == True:
 
-        line_final = "DIRECTORY:" + self.gdirectory
-        for item in cspr_info_text:
-            if item == line:
-                full_doc = full_doc + "\n" + line_final
+            #check if database directory has CSPR files in it
+            foundCSPRFiles = False
+            for file in os.listdir(self.databaseDirectory):
+                if (file.find(".cspr") != -1):
+                    foundCSPRFiles = True
+                    break
+
+            #if CSPR files found in database directory
+            if foundCSPRFiles == True:
+
+                #change directory to database directory
+                os.chdir(self.databaseDirectory)
+
+                #update database directory global variable
+                GlobalSettings.CSPR_DB = self.databaseDirectory
+
+                #save database directory to CASPERinfo
+                self.saveDatabaseDirectory()
+
+                # make sure FNA and GBFF subdirectories are present
+                subdirs = os.listdir(self.databaseDirectory)
+                if "FNA" not in subdirs and os.path.isdir("FNA") == False:
+                    try:
+                        os.mkdir("FNA")
+                        logger.debug("Successfully created FNA subdirectory in database directory.")
+                    except:
+                        logger.critical("Unable to make 'FNA' subdirectory in database directory")
+                        exit(-1)
+                if "GBFF" not in subdirs and os.path.isdir("GBFF") == False:
+                    try:
+                        os.mkdir("GBFF")
+                        logger.debug("Successfully created GBFF subdirectory in database directory.")
+                    except:
+                        logger.critical("Unable to make 'GBFF' subdirectory in database directory")
+                        exit(-1)
+
+                #fill in organism/endo/GBFF dropdown information for main, mulit-targeting, and populatin analysis
+                try:
+                    GlobalSettings.mainWindow.getData()
+                    GlobalSettings.mainWindow.fill_annotation_dropdown()
+                    logger.debug("Successfully loaded organism/endo/annotation drop down information in Main.")
+                except:
+                    logger.critical("Unable to load organism/endo/annotation drop down information in Main.")
+                    exit(-1)
+
+                try:
+                    GlobalSettings.MTWin.launch()
+                    logger.debug("Successfully loaded organism/endo drop down information in Multi-targeting.")
+                except:
+                    logger.critical("Unable to load organism/endo drop down information in Multi-targeting.")
+                    exit(-1)
+
+                try:
+                    GlobalSettings.pop_Analysis.launch()
+                    logger.debug("Successfully loaded organism/endo drop down information in Population Analysis.")
+                except:
+                    logger.critical("Unable to load organism/endo drop down information in Population Analysis.")
+                    exit(-1)
+
+                #show main window
+                GlobalSettings.mainWindow.show()
+
+                self.close()
+
+            #no cspr file found
             else:
-                full_doc = full_doc + "\n" + item
-        full_doc = full_doc[1:]
-        cspr_info.close()
-        cspr_info = open(GlobalSettings.appdir + "CASPERinfo", 'w+')
-        cspr_info.write(full_doc)
-
-        cspr_info.close()
-
-    #launch main
-    def show_window(self):
-        self.gdirectory = str(self.lineEdit.text())
-
-        if (os.path.isdir(self.gdirectory) == False):
-            QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
-                                           QtWidgets.QMessageBox.Ok)
-            return
-
-        found = False
-        for file in os.listdir(self.gdirectory):
-            if (file.find(".cspr") != -1):
-                found = True
-                break
-
-        if (found == False):
-            QtWidgets.QMessageBox.critical(self, "Directory is invalid!",
-                                           "You must select a directory with CSPR Files!",
-                                           QtWidgets.QMessageBox.Ok)
-            return
-
-        if "Please select a directory that contains .cspr files" in self.gdirectory:
-            QtWidgets.QMessageBox.question(self, "Must select directory", "You must select your directory.",
-                                           QtWidgets.QMessageBox.Ok)
-        elif (os.path.isdir(self.gdirectory)):
-
-            os.chdir(self.gdirectory)
-            GlobalSettings.CSPR_DB = self.gdirectory
-            self.re_write_dir()
-            found = GlobalSettings.mainWindow.getData()
-            GlobalSettings.mainWindow.fill_annotation_dropdown()
-            if found == False:
-                QtWidgets.QMessageBox.question(self, "No .cspr files",
-                                               "Please select a directory that contains cspr files.",
+                QtWidgets.QMessageBox.critical(self, "Directory is invalid!",
+                                               "You must select a directory with CSPR Files!",
                                                QtWidgets.QMessageBox.Ok)
                 return
-
-            self.re_write_dir()
-
-            #make sure FNA and GBFF subdirectories are present
-            subdirs = os.listdir(self.gdirectory)
-            if "FNA" not in subdirs and os.path.isdir("FNA") == False:
-                os.mkdir("FNA")
-            if "GBFF" not in subdirs and os.path.isdir("GBFF") == False:
-                os.mkdir("GBFF")
-
-            # Tanner - still setup data for MT
-            GlobalSettings.MTWin.launch()
-
-            GlobalSettings.mainWindow.show()
-
-            self.close()
+        #not a directory
         else:
             QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
                                            QtWidgets.QMessageBox.Ok)
-
+            return
 
 def main():
+    #log OS
+    logger.info("System OS: %s" % (platform.system()))
+
     if hasattr(sys, 'frozen'):
+        #log CASPER is in packaged format
+        logger.info("Running a packaged version of CASPER.")
+
         GlobalSettings.appdir = sys.executable
         if platform.system() == 'Windows':
             GlobalSettings.appdir = GlobalSettings.appdir[:GlobalSettings.appdir.rfind("\\") + 1]
         else:
             GlobalSettings.appdir = GlobalSettings.appdir[:GlobalSettings.appdir.rfind("/") + 1]
     else:
+        # log CASPER is not in packaged format
+        logger.info("Running a non-packaged version of CASPER.")
+
         GlobalSettings.appdir = os.path.dirname(os.path.abspath(__file__))
         if platform.system() == 'Windows':
             GlobalSettings.appdir += '\\'
         else:
             GlobalSettings.appdir += '/'
 
-    #QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     app = Qt.QApplication(sys.argv)
     screen = app.screens()[0]
     dpi = screen.physicalDotsPerInch()
-    print(dpi)
+
+    #log DPI information
+    logger.info("DPI = %d" % (dpi))
+
     del app
-    #QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, False)
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, False)
 
     if dpi > 92:
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
@@ -1222,10 +1301,37 @@ def main():
     app.setOrganizationName("TrinhLab-UTK")
     app.setApplicationName("CASPER")
 
-    startup = StartupWindow()
-    GlobalSettings.mainWindow = CMainWindow(os.getcwd())
-    GlobalSettings.MTWin = multitargeting.Multitargeting()
-    GlobalSettings.pop_Analysis = populationAnalysis.Pop_Analysis()
+    #load startup window
+    try:
+        startup = StartupWindow()
+        logger.debug("Successfully initialized Startup Window.")
+    except:
+        logger.critical("Can't start Startup window.")
+        exit(-1)
+
+    #load main
+    try:
+        GlobalSettings.mainWindow = CMainWindow(os.getcwd())
+        logger.debug("Successfully initialized Main Window.")
+    except:
+        logger.critical("Can't start Main window.")
+        exit(-1)
+
+    #load multi-targeting
+    try:
+        GlobalSettings.MTWin = multitargeting.Multitargeting()
+        logger.debug("Successfully initialized Multi-targeting Window.")
+    except:
+        logger.critical("Can't start Multi-targeting window.")
+        exit(-1)
+
+    #load pop analysis
+    try:
+        GlobalSettings.pop_Analysis = populationAnalysis.Pop_Analysis()
+        logger.debug("Successfully initialized Population Analysis Window.")
+    except:
+        logger.critical("Can't start Population Analysis window.")
+        exit(-1)
 
     sys.exit(app.exec_())
 

@@ -13,6 +13,7 @@
   <property name="font">
    <font>
     <family>Arial</family>
+    <pointsize>-1</pointsize>
     <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
@@ -29,18 +30,18 @@
     <enum>QLayout::SetFixedSize</enum>
    </property>
    <item row="0" column="0" colspan="3">
-    <widget class="QLabel" name="labelforart">
+    <widget class="QLabel" name="logo">
      <property name="text">
       <string/>
      </property>
     </widget>
    </item>
    <item row="2" column="2">
-    <widget class="QPushButton" name="pushButton_3">
+    <widget class="QPushButton" name="changeDir">
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>1</pointsize>
+       <pointsize>-1</pointsize>
        <weight>50</weight>
        <italic>false</italic>
        <bold>false</bold>
@@ -52,11 +53,11 @@
     </widget>
    </item>
    <item row="2" column="0">
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="databaseDirectory">
      <property name="font">
       <font>
        <family>Arial</family>
-       
+       <pointsize>-1</pointsize>
        <weight>50</weight>
        <italic>false</italic>
        <bold>false</bold>
@@ -68,11 +69,11 @@
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QLineEdit" name="lineEdit">
+    <widget class="QLineEdit" name="currentDirText">
      <property name="font">
       <font>
        <family>Arial</family>
-       
+       <pointsize>-1</pointsize>
        <weight>50</weight>
        <italic>false</italic>
        <bold>false</bold>
@@ -86,11 +87,11 @@
    <item row="3" column="0" colspan="3">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="goToMain">
        <property name="font">
         <font>
          <family>Arial</family>
-         
+         <pointsize>-1</pointsize>
          <weight>50</weight>
          <italic>false</italic>
          <bold>false</bold>
@@ -102,11 +103,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="goToNewGenome">
        <property name="font">
         <font>
          <family>Arial</family>
-         
+         <pointsize>-1</pointsize>
          <weight>50</weight>
          <italic>false</italic>
          <bold>false</bold>

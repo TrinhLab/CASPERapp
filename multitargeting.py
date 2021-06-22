@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 class Multitargeting(QtWidgets.QMainWindow):
 
 
-    def __init__(self, parent = None):
+    def __init__(self):
         super(Multitargeting, self).__init__()
         uic.loadUi(GlobalSettings.appdir + 'multitargetingwindow.ui', self)
         self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
