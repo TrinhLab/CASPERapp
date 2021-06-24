@@ -142,6 +142,13 @@ class NewGenome(QtWidgets.QMainWindow):
 
     ####---FUNCTIONS TO RUN EACH BUTTON---####
     def open_ncbi_tool(self):
+        #center ncbi on current screen
+        frameGm = GlobalSettings.mainWindow.ncbi.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        GlobalSettings.mainWindow.ncbi.move(frameGm.topLeft())
+
         GlobalSettings.mainWindow.ncbi.show()
 
 
@@ -471,6 +478,14 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.getData()
             GlobalSettings.MTWin.launch()
             GlobalSettings.pop_Analysis.launch()
+
+            # center main on current screen
+            frameGm = GlobalSettings.mainWindow.frameGeometry()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            frameGm.moveCenter(centerPoint)
+            GlobalSettings.mainWindow.move(frameGm.topLeft())
+
             GlobalSettings.mainWindow.show()
             event.accept()
 
@@ -518,6 +533,14 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.getData()
             GlobalSettings.MTWin.launch()
             GlobalSettings.pop_Analysis.launch()
+
+            # center main on current screen
+            frameGm = GlobalSettings.mainWindow.frameGeometry()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            frameGm.moveCenter(centerPoint)
+            GlobalSettings.mainWindow.move(frameGm.topLeft())
+
             GlobalSettings.mainWindow.show()
             self.hide()
 
@@ -566,6 +589,14 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.MTWin.move(GlobalSettings.MTWin.mwfg.topLeft())  ##Center window
             GlobalSettings.MTWin.launch()
             GlobalSettings.pop_Analysis.launch()
+
+            # center multi-targeting on current screen
+            frameGm = GlobalSettings.MTWin.frameGeometry()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            frameGm.moveCenter(centerPoint)
+            GlobalSettings.MTWin.move(frameGm.topLeft())
+
             GlobalSettings.MTWin.show()
             self.hide()
 
@@ -614,5 +645,13 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.pop_Analysis.move(GlobalSettings.pop_Analysis.mwfg.topLeft())  ##Center window
             GlobalSettings.MTWin.launch()
             GlobalSettings.pop_Analysis.launch()
+
+            # center pop analysis on current screen
+            frameGm = GlobalSettings.pop_Analysis.frameGeometry()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            frameGm.moveCenter(centerPoint)
+            GlobalSettings.pop_Analysis.move(frameGm.topLeft())
+
             GlobalSettings.pop_Analysis.show()
             self.hide()

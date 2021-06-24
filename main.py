@@ -32,7 +32,6 @@ logger = GlobalSettings.logger
 # Outputs: Greg: AnnotationWindow showing entries matching search query 
 # =========================================================================================
 class AnnotationsWindow(QtWidgets.QMainWindow):
-
     def __init__(self, info_path):
         super(AnnotationsWindow, self).__init__()
         uic.loadUi(GlobalSettings.appdir + 'Annotation Details.ui', self)
@@ -54,26 +53,34 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.tableWidget.verticalScrollBar().setStyleSheet("width: 16px;")
         self.tableWidget.horizontalScrollBar().setStyleSheet("height: 16px;")
 
-
     def submit(self):
         self.mainWindow.collect_table_data_nonkegg()
         self.hide()
-        self.mainWindow.mwfg.moveCenter(self.mainWindow.cp)  ##Center window
-        self.mainWindow.move(self.mainWindow.mwfg.topLeft())  ##Center window
-        self.mainWindow.show()
 
+        #show main window on current screen
+        frameGm = self.mainWindow.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.mainWindow.move(frameGm.topLeft())
+        self.mainWindow.show()
 
     def go_Back(self):
         self.tableWidget.clear()
         self.mainWindow.checkBoxes.clear()
         self.mainWindow.searches.clear()
         self.tableWidget.setColumnCount(0)
-        self.mainWindow.mwfg.moveCenter(self.mainWindow.cp)  ##Center window
-        self.mainWindow.move(self.mainWindow.mwfg.topLeft())  ##Center window
+
+        #center main window on current screen
+        frameGm = self.mainWindow.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.mainWindow.move(frameGm.topLeft())
+
         self.mainWindow.show()
         self.mainWindow.progressBar.setValue(0)
         self.hide()
-
 
     # this function is very similar to the other fill_table, it just works with the other types of annotation files
     def fill_table_nonKegg(self, mainWindow):
@@ -126,8 +133,14 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         index = 0
         self.tableWidget.resizeColumnsToContents()
         mainWindow.hide()
-        self.mwfg.moveCenter(self.cp)  ##Center window
-        self.move(self.mwfg.topLeft())  ##Center window
+
+        #center on current screen
+        frameGm = self.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.move(frameGm.topLeft())
+
         self.show()
         return 0
 
@@ -147,7 +160,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             self.tableWidget.selectAll()
         else:
             self.tableWidget.clearSelection()
-
 
     # this function calls the closingWindow class.
     def closeEvent(self, event):
@@ -592,9 +604,23 @@ class CMainWindow(QtWidgets.QMainWindow):
         #update endo list
         self.newGenome.fillEndo()
         #show new genome window
+
+        #show new genome window and center on current screen
+        frameGm = self.newGenome.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.newGenome.move(frameGm.topLeft())
+
         self.newGenome.show()
 
     def launch_newEndonuclease(self):
+        #center new endo window on current screen
+        frameGm =  self.newEndonuclease.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.newEndonuclease.move(frameGm.topLeft())
         self.newEndonuclease.show()
 
     def launch_newGenomeBrowser(self):
@@ -604,6 +630,13 @@ class CMainWindow(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox.information(self, "Note:",
         "NCBI Annotation Guidelines:\n\nDownload annotation files of the exact species and strain used in Analyze New Genome.\n\nMismatched annotation files will inhibit downstream analyses.",
         QtWidgets.QMessageBox.Ok)
+
+        #center ncbi window on current screen
+        frameGm =  self.ncbi.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.ncbi.move(frameGm.topLeft())
         self.ncbi.show()
 
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
@@ -760,10 +793,10 @@ class CMainWindow(QtWidgets.QMainWindow):
             pass
 
     def getData(self):
-        #try:
-        self.orgChoice.currentIndexChanged.disconnect()
-        # except Exception as e:
-        #     pass
+        try:
+            self.orgChoice.currentIndexChanged.disconnect()
+        except Exception as e:
+            pass
 
         self.orgChoice.clear()
         self.endoChoice.clear()
@@ -867,14 +900,28 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def changeto_multitargeting(self):
         os.chdir(os.getcwd())
-        GlobalSettings.MTWin.mwfg.moveCenter(GlobalSettings.MTWin.cp)  ##Center window
-        GlobalSettings.MTWin.move(GlobalSettings.MTWin.mwfg.topLeft())  ##Center window
+
+        #get frame of MT window and center it on current screen
+        frameGm = GlobalSettings.MTWin.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        GlobalSettings.MTWin.move(frameGm.topLeft())
+
         GlobalSettings.MTWin.show()
         GlobalSettings.mainWindow.hide()
 
     def changeto_population_Analysis(self):
         GlobalSettings.pop_Analysis.mwfg.moveCenter(GlobalSettings.pop_Analysis.cp)  ##Center window
         GlobalSettings.pop_Analysis.move(GlobalSettings.pop_Analysis.mwfg.topLeft())  ##Center window
+
+        # get frame of pop analysis window and center it on current screen
+        frameGm = GlobalSettings.pop_Analysis.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        GlobalSettings.pop_Analysis.move(frameGm.topLeft())
+
         GlobalSettings.pop_Analysis.launch()
         GlobalSettings.pop_Analysis.show()
         GlobalSettings.mainWindow.hide()
@@ -920,6 +967,14 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Results.endonucleaseBox.currentIndexChanged.connect(self.Results.changeEndonuclease)
         self.Results.load_gene_viewer()
         self.Results.get_endo_data()
+
+        #center results window on current screen
+        frameGm = self.Results.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.Results.move(frameGm.topLeft())
+
         self.Results.show()
         self.hide()
 
@@ -1209,6 +1264,12 @@ class StartupWindow(QtWidgets.QDialog):
                     exit(-1)
 
                 #show main window
+                frameGm = GlobalSettings.mainWindow.frameGeometry()
+                screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+                centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+                frameGm.moveCenter(centerPoint)
+                GlobalSettings.mainWindow.move(frameGm.topLeft())
+
                 GlobalSettings.mainWindow.show()
 
                 self.close()
@@ -1306,7 +1367,9 @@ def main():
         logger.critical(traceback.format_exc())
         exit(-1)
 
+
     sys.exit(app.exec_())
+
 
 if __name__ == '__main__':
     main()

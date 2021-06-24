@@ -455,8 +455,14 @@ class Results(QtWidgets.QMainWindow):
             os.remove(self.seq_finder_cspr_file)
             GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
             self.seq_finder_cspr_file = ''
-        GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
-        GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
+
+        #center main on current screen
+        frameGm = GlobalSettings.mainWindow.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        GlobalSettings.mainWindow.move(frameGm.topLeft())
+
         GlobalSettings.mainWindow.show()
         self.filter_options.cotarget_checkbox.setChecked(0)
         self.hide()
