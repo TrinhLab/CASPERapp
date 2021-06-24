@@ -21,6 +21,7 @@ import populationAnalysis
 import platform
 import ncbi
 import glob
+import traceback
 
 #logger alias for global logger
 logger = GlobalSettings.logger
@@ -759,10 +760,10 @@ class CMainWindow(QtWidgets.QMainWindow):
             pass
 
     def getData(self):
-        try:
-            self.orgChoice.currentIndexChanged.disconnect()
-        except:
-            pass
+        #try:
+        self.orgChoice.currentIndexChanged.disconnect()
+        # except Exception as e:
+        #     pass
 
         self.orgChoice.clear()
         self.endoChoice.clear()
@@ -900,7 +901,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Results.annotation_path = self.annotation_parser.annotationFileName ### Set annotation path
         try:
             self.Results.endonucleaseBox.currentIndexChanged.disconnect()        
-        except:
+        except Exception as e:
             pass
         # set Results endo combo box
         self.Results.endonucleaseBox.clear()
@@ -930,7 +931,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     def closeFunction(self):
         try:
             self.ncbi.close()
-        except:
+        except Exception as e:
             print("no ncbi window to close")
         self.myClosingWindow.get_files()
         self.myClosingWindow.show()
@@ -938,7 +939,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     def close_app(self):
         try:
             self.ncbi.close()
-        except:
+        except Exception as e:
             print("no ncbi window to close")
 
         self.closeFunction()
@@ -955,8 +956,11 @@ class StartupWindow(QtWidgets.QDialog):
             self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
             pixmap = QtGui.QPixmap(GlobalSettings.appdir + 'CASPER-logo.jpg')
             self.logo.setPixmap(pixmap)
-        except:
+        except Exception as e:
             logger.critical("Unable to load UX files for Startup Window.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+
             exit(-1)
 
         #set "Main" button to be the default highlighted button on startup
@@ -1031,8 +1035,10 @@ class StartupWindow(QtWidgets.QDialog):
                 defaultDirectory = defaultDirectory.replace("\\", "/")
 
             logger.debug("Successfully parsed CASPERinfo for default database directory.")
-        except:
+        except Exception as e:
             logger.error("Unable to read CASPERinfo file to get default database directory.")
+            logger.error(e)
+            logger.error(traceback.format_exc())
             return "Where would you like to store CASPER database files?"
 
         return defaultDirectory
@@ -1066,8 +1072,10 @@ class StartupWindow(QtWidgets.QDialog):
             CASPERInfo.write(CASPERInfoNewData)
             CASPERInfo.close()
             logger.debug("Successfully updated CASPERinfo with new default database directory.")
-        except:
+        except Exception as e:
             logger.critical("Unable to write to CASPERinfo file to update database directory.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
             exit(-1)
 
     # even handler for user clicking the "New Genome" button - used for launching New Genome
@@ -1093,23 +1101,29 @@ class StartupWindow(QtWidgets.QDialog):
                 try:
                     os.mkdir("FNA")
                     logger.debug("Successfully created FNA subdirectory in database directory.")
-                except:
+                except Exception as e:
                     logger.critical("Unable to make 'FNA' subdirectory in database directory")
+                    logger.critical(e)
+                    logger.critical(traceback.format_exc())
                     exit(-1)
             if "GBFF" not in subdirs and os.path.isdir("GBFF") == False:
                 try:
                     os.mkdir("GBFF")
                     logger.debug("Successfully created GBFF subdirectory in database directory.")
-                except:
+                except Exception as e:
                     logger.critical("Unable to make 'GBFF' subdirectory in database directory")
+                    logger.critical(e)
+                    logger.critical(traceback.format_exc())
                     exit(-1)
 
             # launch new genome
             try:
                 GlobalSettings.mainWindow.launch_newGenome()
                 logger.debug("Successfully initialized New Genome in startup window.")
-            except:
+            except Exception as e:
                 logger.critical("Unable to initialize New Genome from startup window.")
+                logger.critical(e)
+                logger.critical(traceback.format_exc())
                 exit(-1)
 
             self.close()
@@ -1150,15 +1164,19 @@ class StartupWindow(QtWidgets.QDialog):
                     try:
                         os.mkdir("FNA")
                         logger.debug("Successfully created FNA subdirectory in database directory.")
-                    except:
+                    except Exception as e:
                         logger.critical("Unable to make 'FNA' subdirectory in database directory")
+                        logger.critical(e)
+                        logger.critical(traceback.format_exc())
                         exit(-1)
                 if "GBFF" not in subdirs and os.path.isdir("GBFF") == False:
                     try:
                         os.mkdir("GBFF")
                         logger.debug("Successfully created GBFF subdirectory in database directory.")
-                    except:
+                    except Exception as e:
                         logger.critical("Unable to make 'GBFF' subdirectory in database directory")
+                        logger.critical(e)
+                        logger.critical(traceback.format_exc())
                         exit(-1)
 
                 #fill in organism/endo/GBFF dropdown information for main, mulit-targeting, and populatin analysis
@@ -1166,22 +1184,28 @@ class StartupWindow(QtWidgets.QDialog):
                     GlobalSettings.mainWindow.getData()
                     GlobalSettings.mainWindow.fill_annotation_dropdown()
                     logger.debug("Successfully loaded organism/endo/annotation drop down information in Main.")
-                except:
+                except Exception as e:
                     logger.critical("Unable to load organism/endo/annotation drop down information in Main.")
+                    logger.critical(e)
+                    logger.critical(traceback.format_exc())
                     exit(-1)
 
                 try:
                     GlobalSettings.MTWin.launch()
                     logger.debug("Successfully loaded organism/endo drop down information in Multi-targeting.")
-                except:
+                except Exception as e:
                     logger.critical("Unable to load organism/endo drop down information in Multi-targeting.")
+                    logger.critical(e)
+                    logger.critical(traceback.format_exc())
                     exit(-1)
 
                 try:
                     GlobalSettings.pop_Analysis.launch()
                     logger.debug("Successfully loaded organism/endo drop down information in Population Analysis.")
-                except:
+                except Exception as e:
                     logger.critical("Unable to load organism/endo drop down information in Population Analysis.")
+                    logger.critical(e)
+                    logger.critical(traceback.format_exc())
                     exit(-1)
 
                 #show main window
@@ -1246,32 +1270,40 @@ def main():
     try:
         startup = StartupWindow()
         logger.debug("Successfully initialized Startup Window.")
-    except:
+    except Exception as e:
         logger.critical("Can't start Startup window.")
+        logger.critical(e)
+        logger.critical(traceback.format_exc())
         exit(-1)
 
     #load main
     try:
         GlobalSettings.mainWindow = CMainWindow(os.getcwd())
         logger.debug("Successfully initialized Main Window.")
-    except:
+    except Exception as e:
         logger.critical("Can't start Main window.")
+        logger.critical(e)
+        logger.critical(traceback.format_exc())
         exit(-1)
 
     #load multi-targeting
     try:
         GlobalSettings.MTWin = multitargeting.Multitargeting()
         logger.debug("Successfully initialized Multi-targeting Window.")
-    except:
+    except Exception as e:
         logger.critical("Can't start Multi-targeting window.")
+        logger.critical(e)
+        logger.critical(traceback.format_exc())
         exit(-1)
 
     #load pop analysis
     try:
         GlobalSettings.pop_Analysis = populationAnalysis.Pop_Analysis()
         logger.debug("Successfully initialized Population Analysis Window.")
-    except:
+    except Exception as e:
         logger.critical("Can't start Population Analysis window.")
+        logger.critical(e)
+        logger.critical(traceback.format_exc())
         exit(-1)
 
     sys.exit(app.exec_())
