@@ -1243,12 +1243,12 @@ class Results(QtWidgets.QMainWindow):
             #print("Length of the pre-sequence: ", len(pre_sequence))
 
             ###Get gene sequence and padding sequences (for visualizing gRNAs that appear at extreme ends of gene)
-            if location_data[1] - 20 >= 0: ### Check to make sure there is enough 5' end of gene to pull the padding from, so indexing error isn't raised
-                five_prime_tail = str(pre_sequence[location_data[1]-21:location_data[1]-1])
+            if location_data[1] - 30 >= 0: ### Check to make sure there is enough 5' end of gene to pull the padding from, so indexing error isn't raised
+                five_prime_tail = str(pre_sequence[location_data[1]-31:location_data[1]-1])
             else:
                 five_prime_tail = ""
-            if len(pre_sequence) > (location_data[2] + 20): ### Check to make sure there is enough 3' end of gene to pull the padding from, so indexing error isn't raised
-                three_prime_tail = str(pre_sequence[location_data[2]:location_data[2]+20])
+            if len(pre_sequence) > (location_data[2] + 30): ### Check to make sure there is enough 3' end of gene to pull the padding from, so indexing error isn't raised
+                three_prime_tail = str(pre_sequence[location_data[2]:location_data[2]+30])
             else:
                 three_prime_tail = ""
 
