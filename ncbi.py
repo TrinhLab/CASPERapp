@@ -578,7 +578,16 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 else:
                     files[i] = files[i][files[i].rfind("/") + 1:]
 
-            self.rename_files(files)
+
+            if len(files) > 0:
+                self.rename_files(files)
+            else:
+                QtWidgets.QMessageBox.critical(self, "No Files Downloaded",
+                                               "No files were downloaded from the selected NCBI files. Please make sure the selected files are available in the database selected.",
+                                               QtWidgets.QMessageBox.Ok)
+
+                return
+
         except Exception as e:
             logger.critical("Error in download_files() in ncbi tool.")
             logger.critical(e)
@@ -730,6 +739,7 @@ class goToPrompt(QtWidgets.QWidget):
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
+
 
 class rename_window(QtWidgets.QWidget):
     def __init__(self):
