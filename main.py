@@ -23,6 +23,7 @@ import ncbi
 import glob
 import traceback
 import math
+import logging
 
 #logger alias for global logger
 logger = GlobalSettings.logger
@@ -1538,6 +1539,16 @@ def main():
     app = Qt.QApplication(sys.argv)
     app.setOrganizationName("TrinhLab-UTK")
     app.setApplicationName("CASPER")
+
+    #setup logger
+    fh = logging.FileHandler(GlobalSettings.appdir + 'CASPER.log', mode='w')
+    fh_formatter = logging.Formatter('%(asctime)s %(levelname)s %(lineno)d:%(filename)s(%(process)d) - %(message)s')
+    fh.setFormatter(fh_formatter)
+    fh.setLevel(logging.DEBUG)
+    GlobalSettings.logger.addHandler(fh)
+
+    #log appdir
+    logger.debug("App Directory: " + str(GlobalSettings.appdir))
 
     #load startup window
     try:
