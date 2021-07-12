@@ -738,7 +738,6 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.bar_canvas.axes.set_xlim(x_labels[0]-0.5, x_labels[-1] + 0.5)
             self.bar_canvas.axes.set_yscale('log')
             self.bar_canvas.axes.set_xlabel('Number of Repeats', fontsize=10)
-            self.bar_canvas.axes.set_xticks(x_labels)
             self.bar_canvas.axes.set_ylabel('Number of Sequences', fontsize=10)
             self.bar_canvas.axes.set_title('Number of Sequences per Number of Repeats',fontsize=10)
             self.bar_canvas.axes.tick_params(axis='both', which='major', labelsize=8)
