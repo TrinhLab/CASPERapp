@@ -1261,7 +1261,7 @@ class StartupWindow(QtWidgets.QMainWindow):
         scaledHeight = int( (height * 388) // 1080)
 
         #set logo image
-        pixmapOriginal = QtGui.QPixmap("CASPER-logo.jpg")
+        pixmapOriginal = QtGui.QPixmap(GlobalSettings.appdir + "CASPER-logo.jpg")
         pixmapScaled = pixmapOriginal.scaled(scaledWidth, scaledHeight)
         self.logo.setPixmap(pixmapScaled)
 
