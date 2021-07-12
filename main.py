@@ -1199,248 +1199,216 @@ class CMainWindow(QtWidgets.QMainWindow):
 #class StartupWindow(QtWidgets.QDialog):
 class StartupWindow(QtWidgets.QMainWindow):
     def __init__(self):
-        super(StartupWindow, self).__init__()
-
-        #load UX files
         try:
-            uic.loadUi(GlobalSettings.appdir + 'startupCASPER.ui', self)
-            self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
+            super(StartupWindow, self).__init__()
+
+            #load UX files
+            try:
+                uic.loadUi(GlobalSettings.appdir + 'startupCASPER.ui', self)
+                self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
+            except Exception as e:
+                logger.critical("Unable to load UX files for Startup Window.")
+                logger.critical(e)
+                logger.critical(traceback.format_exc())
+                exit(-1)
+
+            #set "Main" button to be the default highlighted button on startup
+            self.goToMain.setDefault(True)
+
+            #get current directory, and update based on current operating system
+            self.currentDirectory = os.getcwd()
+            self.databaseDirectory = self.loadDatabaseDirectory()
+            GlobalSettings.CSPR_DB = self.databaseDirectory
+            if platform.system() == "Windows":
+                GlobalSettings.CSPR_DB = GlobalSettings.CSPR_DB.replace("/","\\")
+            else:
+                GlobalSettings.CSPR_DB = GlobalSettings.CSPR_DB.replace("\\","/")
+
+            #setup event handlers for startup buttons
+            self.currentDirText.setText(self.databaseDirectory)
+            self.changeDir.clicked.connect(self.changeDirectory)
+            self.goToMain.clicked.connect(self.launchMainWindow)
+            self.goToNewGenome.clicked.connect(self.launchNewGenome)
+
+            #scale the UI properly
+            self.scaleUI()
+
+            self.show()
         except Exception as e:
-            logger.critical("Unable to load UX files for Startup Window.")
+            logger.critical("Error initializing StartupWindow class.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
-
             exit(-1)
-
-        #set "Main" button to be the default highlighted button on startup
-        self.goToMain.setDefault(True)
-
-        #get current directory, and update based on current operating system
-        self.currentDirectory = os.getcwd()
-        self.databaseDirectory = self.loadDatabaseDirectory()
-        GlobalSettings.CSPR_DB = self.databaseDirectory
-        if platform.system() == "Windows":
-            GlobalSettings.CSPR_DB = GlobalSettings.CSPR_DB.replace("/","\\")
-        else:
-            GlobalSettings.CSPR_DB = GlobalSettings.CSPR_DB.replace("\\","/")
-
-        #setup event handlers for startup buttons
-        self.currentDirText.setText(self.databaseDirectory)
-        self.changeDir.clicked.connect(self.changeDirectory)
-        self.goToMain.clicked.connect(self.launchMainWindow)
-        self.goToNewGenome.clicked.connect(self.launchNewGenome)
-
-        #scale the UI properly
-        self.scaleUI()
-
-        self.show()
 
     #function for scaling the font size and logo size based on resolution and DPI of screen
     def scaleUI(self):
-        screen = self.screen()
-        dpi = screen.physicalDotsPerInch()
+        try:
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
 
-        # log DPI information
-        logger.info("DPI = %d" % (dpi))
+            # log DPI information
+            logger.info("DPI = %d" % (dpi))
 
-        # font scaling
-        # 16px is used for 92 dpi
-        fontSize = int((math.ceil(dpi) * 16) // 92)
-        self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
+            # font scaling
+            # 16px is used for 92 dpi
+            fontSize = int((math.ceil(dpi) * 16) // 92)
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
-        # logo scaling
-        # 1920x1080 => 766x388
-        width = screen.geometry().width()
-        height = screen.geometry().height()
+            # logo scaling
+            # 1920x1080 => 766x388
+            width = screen.geometry().width()
+            height = screen.geometry().height()
 
-        #log width x height
-        logger.info("Resolution: %s x %s", width, height)
+            #log width x height
+            logger.info("Resolution: %s x %s", width, height)
 
-        #scale logo image
-        scaledWidth = int( (width * 766) // 1920)
-        scaledHeight = int( (height * 388) // 1080)
+            #scale logo image
+            scaledWidth = int( (width * 766) // 1920)
+            scaledHeight = int( (height * 388) // 1080)
 
-        #set logo image
-        pixmapOriginal = QtGui.QPixmap(GlobalSettings.appdir + "CASPER-logo.jpg")
-        pixmapScaled = pixmapOriginal.scaled(scaledWidth, scaledHeight)
-        self.logo.setPixmap(pixmapScaled)
+            #set logo image
+            pixmapOriginal = QtGui.QPixmap(GlobalSettings.appdir + "CASPER-logo.jpg")
+            pixmapScaled = pixmapOriginal.scaled(scaledWidth, scaledHeight)
+            self.logo.setPixmap(pixmapScaled)
+        except Exception as e:
+            logger.critical("Error in scaleUI() in startup window.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
 
     #event handler for user clicking the "Change..." button - used for changing CASPER database directory
     def changeDirectory(self):
-        #launch OS file browser
-        fileBrowser = QtWidgets.QFileDialog()
-        newDirectory = QtWidgets.QFileDialog.getExistingDirectory(fileBrowser, "Open a folder...",
-                                                           self.databaseDirectory, QtWidgets.QFileDialog.ShowDirsOnly)
+        try:
+            #launch OS file browser
+            fileBrowser = QtWidgets.QFileDialog()
+            newDirectory = QtWidgets.QFileDialog.getExistingDirectory(fileBrowser, "Open a folder...",
+                                                               self.databaseDirectory, QtWidgets.QFileDialog.ShowDirsOnly)
 
-        #check if selected path is a directory in the system
-        if (os.path.isdir(newDirectory) == False):
-            QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
-                                           QtWidgets.QMessageBox.Ok)
-            return
+            #check if selected path is a directory in the system
+            if (os.path.isdir(newDirectory) == False):
+                QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
+                                               QtWidgets.QMessageBox.Ok)
+                return
 
-        #make sure directory contains correct filepath format based on OS
-        if platform.system() == "Windows":
-            newDirectory = newDirectory.replace("/","\\")
+            #make sure directory contains correct filepath format based on OS
+            if platform.system() == "Windows":
+                newDirectory = newDirectory.replace("/","\\")
 
-        #update text edit showing the current selected database directory
-        self.currentDirText.setText(newDirectory)
+            #update text edit showing the current selected database directory
+            self.currentDirText.setText(newDirectory)
 
-        #update casper database directories
-        self.databaseDirectory = newDirectory
-        GlobalSettings.CSPR_DB = newDirectory
+            #update casper database directories
+            self.databaseDirectory = newDirectory
+            GlobalSettings.CSPR_DB = newDirectory
+        except Exception as e:
+            logger.critical("Error in changeDirectory() in startup window.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
 
     #function for loading the default database directory specified in CASPERinfo
     #returns: default database parsed from CASPERinfo
     def loadDatabaseDirectory(self):
-        #variable to hold default directory from CASPERinfo
-        defaultDirectory = ""
-
         try:
-            #open CASPERinfo file in application directory
-            CASPERInfo = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
-            #read file, parse for the default database directory
-            CASPERInfo = CASPERInfo.read()
-            lines = CASPERInfo.split('\n')
-            for item in lines:
-                if 'DIRECTORY:' in item:
-                    #default directory found
-                    defaultDirectory = item
-                    break
+            #variable to hold default directory from CASPERinfo
+            defaultDirectory = ""
 
-            #remove lines meta-data
-            defaultDirectory = defaultDirectory.replace("DIRECTORY:", "")
+            try:
+                #open CASPERinfo file in application directory
+                CASPERInfo = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
+                #read file, parse for the default database directory
+                CASPERInfo = CASPERInfo.read()
+                lines = CASPERInfo.split('\n')
+                for item in lines:
+                    if 'DIRECTORY:' in item:
+                        #default directory found
+                        defaultDirectory = item
+                        break
 
-            #make sure directory is formatted properly based on OS
-            if platform.system() == "Windows":
-                defaultDirectory = defaultDirectory.replace("/","\\")
-            else:
-                defaultDirectory = defaultDirectory.replace("\\", "/")
+                #remove lines meta-data
+                defaultDirectory = defaultDirectory.replace("DIRECTORY:", "")
 
-            logger.debug("Successfully parsed CASPERinfo for default database directory.")
+                #make sure directory is formatted properly based on OS
+                if platform.system() == "Windows":
+                    defaultDirectory = defaultDirectory.replace("/","\\")
+                else:
+                    defaultDirectory = defaultDirectory.replace("\\", "/")
+
+                logger.debug("Successfully parsed CASPERinfo for default database directory.")
+            except Exception as e:
+                logger.error("Unable to read CASPERinfo file to get default database directory.")
+                logger.error(e)
+                logger.error(traceback.format_exc())
+                return "Where would you like to store CASPER database files?"
+
+            return defaultDirectory
+
         except Exception as e:
-            logger.error("Unable to read CASPERinfo file to get default database directory.")
-            logger.error(e)
-            logger.error(traceback.format_exc())
-            return "Where would you like to store CASPER database files?"
-
-        return defaultDirectory
+            logger.critical("Error in loadDatabaseDirectory() in startup window.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
 
     #function for saving the currently selected database directory to CASPERinfo to be the new default value on startup
     def saveDatabaseDirectory(self):
-        #variable to hold the CASPERinfo data with new default directory change
-        CASPERInfoNewData = ""
-
-        #new default directory string for CASPERinfo
-        newDefaultDirectory = "DIRECTORY:" + str(self.databaseDirectory)
-
-        #open CASPERinfo file to read in the files data and add in new change
         try:
-            CASPERInfo = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
-            CASPERinfoData = CASPERInfo.read()
-            CASPERinfoData = CASPERinfoData.split('\n')
-            for line in CASPERinfoData:
-                #if directory line found, use new default directory string instead
-                if 'DIRECTORY:' in line:
-                    CASPERInfoNewData = CASPERInfoNewData + "\n" + newDefaultDirectory
-                else:
-                    CASPERInfoNewData = CASPERInfoNewData + "\n" + line
-            CASPERInfoNewData = CASPERInfoNewData[1:]
+            #variable to hold the CASPERinfo data with new default directory change
+            CASPERInfoNewData = ""
 
-            #close CASPERinfo
-            CASPERInfo.close()
+            #new default directory string for CASPERinfo
+            newDefaultDirectory = "DIRECTORY:" + str(self.databaseDirectory)
 
-            #re-open the file and re-write it with current changes
-            CASPERInfo = open(GlobalSettings.appdir + "CASPERinfo", 'w+')
-            CASPERInfo.write(CASPERInfoNewData)
-            CASPERInfo.close()
-            logger.debug("Successfully updated CASPERinfo with new default database directory.")
+            #open CASPERinfo file to read in the files data and add in new change
+            try:
+                CASPERInfo = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
+                CASPERinfoData = CASPERInfo.read()
+                CASPERinfoData = CASPERinfoData.split('\n')
+                for line in CASPERinfoData:
+                    #if directory line found, use new default directory string instead
+                    if 'DIRECTORY:' in line:
+                        CASPERInfoNewData = CASPERInfoNewData + "\n" + newDefaultDirectory
+                    else:
+                        CASPERInfoNewData = CASPERInfoNewData + "\n" + line
+                CASPERInfoNewData = CASPERInfoNewData[1:]
+
+                #close CASPERinfo
+                CASPERInfo.close()
+
+                #re-open the file and re-write it with current changes
+                CASPERInfo = open(GlobalSettings.appdir + "CASPERinfo", 'w+')
+                CASPERInfo.write(CASPERInfoNewData)
+                CASPERInfo.close()
+                logger.debug("Successfully updated CASPERinfo with new default database directory.")
+            except Exception as e:
+                logger.critical("Unable to write to CASPERinfo file to update database directory.")
+                logger.critical(e)
+                logger.critical(traceback.format_exc())
+                exit(-1)
         except Exception as e:
-            logger.critical("Unable to write to CASPERinfo file to update database directory.")
+            logger.critical("Error in saveDatabaseDirectory() in startup window.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
     # even handler for user clicking the "New Genome" button - used for launching New Genome
     def launchNewGenome(self):
-        # make sure database directory variable is up-to-date based on what the user has in the text edit
-        self.databaseDirectory = str(self.currentDirText.text())
+        try:
+            # make sure database directory variable is up-to-date based on what the user has in the text edit
+            self.databaseDirectory = str(self.currentDirText.text())
 
-        # make sure the path is a valid path before launching New Genome
-        if (os.path.isdir(self.databaseDirectory)):
+            # make sure the path is a valid path before launching New Genome
+            if (os.path.isdir(self.databaseDirectory)):
 
-            # change directories to the specified database directory provided
-            os.chdir(self.databaseDirectory)
-
-            # write out the database directory to CASPERinfo to be the new default loaded value
-            self.saveDatabaseDirectory()
-
-            # update global database variable
-            GlobalSettings.CSPR_DB = self.databaseDirectory
-
-            # make sure FNA and GBFF subdirectories are present, if not create them
-            subdirs = os.listdir(self.databaseDirectory)
-            if "FNA" not in subdirs and os.path.isdir("FNA") == False:
-                try:
-                    os.mkdir("FNA")
-                    logger.debug("Successfully created FNA subdirectory in database directory.")
-                except Exception as e:
-                    logger.critical("Unable to make 'FNA' subdirectory in database directory")
-                    logger.critical(e)
-                    logger.critical(traceback.format_exc())
-                    exit(-1)
-            if "GBFF" not in subdirs and os.path.isdir("GBFF") == False:
-                try:
-                    os.mkdir("GBFF")
-                    logger.debug("Successfully created GBFF subdirectory in database directory.")
-                except Exception as e:
-                    logger.critical("Unable to make 'GBFF' subdirectory in database directory")
-                    logger.critical(e)
-                    logger.critical(traceback.format_exc())
-                    exit(-1)
-
-            # launch new genome
-            try:
-                GlobalSettings.mainWindow.launch_newGenome()
-                logger.debug("Successfully initialized New Genome in startup window.")
-            except Exception as e:
-                logger.critical("Unable to initialize New Genome from startup window.")
-                logger.critical(e)
-                logger.critical(traceback.format_exc())
-                exit(-1)
-
-            self.close()
-        else:
-            QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
-                                           QtWidgets.QMessageBox.Ok)
-
-    #event handler for user clicking "Main Program" button - used to launch Main Window
-    def launchMainWindow(self):
-        #make sure database directory variable is up-to-date based on what the user has in the text edit
-        self.databaseDirectory = str(self.currentDirText.text())
-
-        # make sure the path is a valid path before launching New Genome
-        if os.path.isdir(self.databaseDirectory) == True:
-
-            #check if database directory has CSPR files in it
-            foundCSPRFiles = False
-            for file in os.listdir(self.databaseDirectory):
-                if (file.find(".cspr") != -1):
-                    foundCSPRFiles = True
-                    break
-
-            #if CSPR files found in database directory
-            if foundCSPRFiles == True:
-
-                #change directory to database directory
+                # change directories to the specified database directory provided
                 os.chdir(self.databaseDirectory)
 
-                #update database directory global variable
-                GlobalSettings.CSPR_DB = self.databaseDirectory
-
-                #save database directory to CASPERinfo
+                # write out the database directory to CASPERinfo to be the new default loaded value
                 self.saveDatabaseDirectory()
 
-                # make sure FNA and GBFF subdirectories are present
+                # update global database variable
+                GlobalSettings.CSPR_DB = self.databaseDirectory
+
+                # make sure FNA and GBFF subdirectories are present, if not create them
                 subdirs = os.listdir(self.databaseDirectory)
                 if "FNA" not in subdirs and os.path.isdir("FNA") == False:
                     try:
@@ -1461,57 +1429,131 @@ class StartupWindow(QtWidgets.QMainWindow):
                         logger.critical(traceback.format_exc())
                         exit(-1)
 
-                #fill in organism/endo/GBFF dropdown information for main, mulit-targeting, and populatin analysis
+                # launch new genome
                 try:
-                    GlobalSettings.mainWindow.getData()
-                    GlobalSettings.mainWindow.fill_annotation_dropdown()
-                    logger.debug("Successfully loaded organism/endo/annotation drop down information in Main.")
+                    GlobalSettings.mainWindow.launch_newGenome()
+                    logger.debug("Successfully initialized New Genome in startup window.")
                 except Exception as e:
-                    logger.critical("Unable to load organism/endo/annotation drop down information in Main.")
+                    logger.critical("Unable to initialize New Genome from startup window.")
                     logger.critical(e)
                     logger.critical(traceback.format_exc())
                     exit(-1)
-
-                try:
-                    GlobalSettings.MTWin.launch()
-                    logger.debug("Successfully loaded organism/endo drop down information in Multi-targeting.")
-                except Exception as e:
-                    logger.critical("Unable to load organism/endo drop down information in Multi-targeting.")
-                    logger.critical(e)
-                    logger.critical(traceback.format_exc())
-                    exit(-1)
-
-                try:
-                    GlobalSettings.pop_Analysis.launch()
-                    logger.debug("Successfully loaded organism/endo drop down information in Population Analysis.")
-                except Exception as e:
-                    logger.critical("Unable to load organism/endo drop down information in Population Analysis.")
-                    logger.critical(e)
-                    logger.critical(traceback.format_exc())
-                    exit(-1)
-
-                #show main window
-                frameGm = GlobalSettings.mainWindow.frameGeometry()
-                screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-                centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-                frameGm.moveCenter(centerPoint)
-                GlobalSettings.mainWindow.move(frameGm.topLeft())
-
-                GlobalSettings.mainWindow.show()
 
                 self.close()
-
-            #no cspr file found
             else:
-                QtWidgets.QMessageBox.critical(self, "Directory is invalid!",
-                                               "You must select a directory with CSPR Files!",
+                QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
+                                               QtWidgets.QMessageBox.Ok)
+        except Exception as e:
+            logger.critical("Error in launchNewGenome() in startup window.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #event handler for user clicking "Main Program" button - used to launch Main Window
+    def launchMainWindow(self):
+        try:
+            #make sure database directory variable is up-to-date based on what the user has in the text edit
+            self.databaseDirectory = str(self.currentDirText.text())
+
+            # make sure the path is a valid path before launching New Genome
+            if os.path.isdir(self.databaseDirectory) == True:
+
+                #check if database directory has CSPR files in it
+                foundCSPRFiles = False
+                for file in os.listdir(self.databaseDirectory):
+                    if (file.find(".cspr") != -1):
+                        foundCSPRFiles = True
+                        break
+
+                #if CSPR files found in database directory
+                if foundCSPRFiles == True:
+
+                    #change directory to database directory
+                    os.chdir(self.databaseDirectory)
+
+                    #update database directory global variable
+                    GlobalSettings.CSPR_DB = self.databaseDirectory
+
+                    #save database directory to CASPERinfo
+                    self.saveDatabaseDirectory()
+
+                    # make sure FNA and GBFF subdirectories are present
+                    subdirs = os.listdir(self.databaseDirectory)
+                    if "FNA" not in subdirs and os.path.isdir("FNA") == False:
+                        try:
+                            os.mkdir("FNA")
+                            logger.debug("Successfully created FNA subdirectory in database directory.")
+                        except Exception as e:
+                            logger.critical("Unable to make 'FNA' subdirectory in database directory")
+                            logger.critical(e)
+                            logger.critical(traceback.format_exc())
+                            exit(-1)
+                    if "GBFF" not in subdirs and os.path.isdir("GBFF") == False:
+                        try:
+                            os.mkdir("GBFF")
+                            logger.debug("Successfully created GBFF subdirectory in database directory.")
+                        except Exception as e:
+                            logger.critical("Unable to make 'GBFF' subdirectory in database directory")
+                            logger.critical(e)
+                            logger.critical(traceback.format_exc())
+                            exit(-1)
+
+                    #fill in organism/endo/GBFF dropdown information for main, mulit-targeting, and populatin analysis
+                    try:
+                        GlobalSettings.mainWindow.getData()
+                        GlobalSettings.mainWindow.fill_annotation_dropdown()
+                        logger.debug("Successfully loaded organism/endo/annotation drop down information in Main.")
+                    except Exception as e:
+                        logger.critical("Unable to load organism/endo/annotation drop down information in Main.")
+                        logger.critical(e)
+                        logger.critical(traceback.format_exc())
+                        exit(-1)
+
+                    try:
+                        GlobalSettings.MTWin.launch()
+                        logger.debug("Successfully loaded organism/endo drop down information in Multi-targeting.")
+                    except Exception as e:
+                        logger.critical("Unable to load organism/endo drop down information in Multi-targeting.")
+                        logger.critical(e)
+                        logger.critical(traceback.format_exc())
+                        exit(-1)
+
+                    try:
+                        GlobalSettings.pop_Analysis.launch()
+                        logger.debug("Successfully loaded organism/endo drop down information in Population Analysis.")
+                    except Exception as e:
+                        logger.critical("Unable to load organism/endo drop down information in Population Analysis.")
+                        logger.critical(e)
+                        logger.critical(traceback.format_exc())
+                        exit(-1)
+
+                    #show main window
+                    frameGm = GlobalSettings.mainWindow.frameGeometry()
+                    screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+                    centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+                    frameGm.moveCenter(centerPoint)
+                    GlobalSettings.mainWindow.move(frameGm.topLeft())
+
+                    GlobalSettings.mainWindow.show()
+
+                    self.close()
+
+                #no cspr file found
+                else:
+                    QtWidgets.QMessageBox.critical(self, "Directory is invalid!",
+                                                   "You must select a directory with CSPR Files!",
+                                                   QtWidgets.QMessageBox.Ok)
+                    return
+            #not a directory
+            else:
+                QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
                                                QtWidgets.QMessageBox.Ok)
                 return
-        #not a directory
-        else:
-            QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
-                                           QtWidgets.QMessageBox.Ok)
-            return
+        except Exception as e:
+            logger.critical("Error in launchMain() in startup window.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
 
 def main():
     #log OS
