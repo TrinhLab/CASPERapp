@@ -16,7 +16,6 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>-1</pointsize>
     <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
@@ -26,7 +25,7 @@
    <string>CASPER</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 16px 'Arial';</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -77,7 +76,7 @@
        </size>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: bold 30px 'Arial';</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>CASPER</string>
@@ -138,14 +137,13 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>-1</pointsize>
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 16px 'Arial';</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>V2.0 (Beta) CRISPR Associated Software for Pathway Engineering and Research</string>
@@ -179,7 +177,7 @@
      <x>0</x>
      <y>0</y>
      <width>978</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

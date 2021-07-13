@@ -312,6 +312,9 @@ class CMainWindow(QtWidgets.QMainWindow):
 
 
             #scroll bar scaling
+
+
+
         except Exception as e:
             logger.critical("Error in scaleUI() in main.")
             logger.critical(e)
@@ -1048,8 +1051,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def changeto_population_Analysis(self):
         try:
-            GlobalSettings.pop_Analysis.mwfg.moveCenter(GlobalSettings.pop_Analysis.cp)  ##Center window
-            GlobalSettings.pop_Analysis.move(GlobalSettings.pop_Analysis.mwfg.topLeft())  ##Center window
+            GlobalSettings.pop_Analysis.launch()
 
             # get frame of pop analysis window and center it on current screen
             frameGm = GlobalSettings.pop_Analysis.frameGeometry()
@@ -1058,7 +1060,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             frameGm.moveCenter(centerPoint)
             GlobalSettings.pop_Analysis.move(frameGm.topLeft())
 
-            GlobalSettings.pop_Analysis.launch()
             GlobalSettings.pop_Analysis.show()
             GlobalSettings.mainWindow.hide()
         except Exception as e:
@@ -1243,6 +1244,9 @@ class StartupWindow(QtWidgets.QMainWindow):
     #function for scaling the font size and logo size based on resolution and DPI of screen
     def scaleUI(self):
         try:
+            originalWidth = self.width()
+            originalHeight = self.height()
+
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
 
@@ -1266,10 +1270,20 @@ class StartupWindow(QtWidgets.QMainWindow):
             scaledWidth = int( (width * 766) // 1920)
             scaledHeight = int( (height * 388) // 1080)
 
-            #set logo image
             pixmapOriginal = QtGui.QPixmap(GlobalSettings.appdir + "CASPER-logo.jpg")
             pixmapScaled = pixmapOriginal.scaled(scaledWidth, scaledHeight)
+
+            #set logo image
             self.logo.setPixmap(pixmapScaled)
+
+            #scale and center UI
+            self.setGeometry(0,0, scaledWidth, scaledHeight + originalHeight)
+            frameGm = self.frameGeometry()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            frameGm.moveCenter(centerPoint)
+            self.move(frameGm.topLeft())
+
         except Exception as e:
             logger.critical("Error in scaleUI() in startup window.")
             logger.critical(e)

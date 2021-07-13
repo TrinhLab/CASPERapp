@@ -21,7 +21,7 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
-    <string notr="true">font: 16px 'Arial';</string>
+    <string notr="true"/>
    </property>
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="10" column="4">
@@ -41,7 +41,6 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>-1</pointsize>
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>
@@ -71,7 +70,7 @@
        </sizepolicy>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 16px 'Arial';</string>
+       <string notr="true"/>
       </property>
       <property name="title">
        <string>Guide Analysis</string>
@@ -82,7 +81,6 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -101,7 +99,6 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -121,7 +118,7 @@
     <item row="2" column="1" rowspan="7" colspan="2">
      <widget class="QGroupBox" name="guide_viewer">
       <property name="styleSheet">
-       <string notr="true">font: 16px 'Arial';</string>
+       <string notr="true"/>
       </property>
       <property name="title">
        <string>Guide Viewer</string>
@@ -144,7 +141,6 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -175,7 +171,6 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -194,7 +189,6 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -210,7 +204,6 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -235,7 +228,6 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -266,7 +258,6 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -305,7 +296,7 @@
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gene Viewer shows where each gRNA falls within the selected gene. To use, check &amp;quot;Display On,&amp;quot; Select guides from the table, and click &amp;quot;Highlight Selected Guides.&amp;quot; UPPERCASE nucleotides belong to the gene sequence and lowercase nucleotides belong to regions outside of the gene, which are included to account for gRNAs whose PAMs/cut sites fall within the gene, but other parts of the sequence falls outside the gene.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;span style=&quot; color:#108040;&quot;&gt;Green highlights&lt;/span&gt; = +ve sense&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#fc0107;&quot;&gt;Red highlights&lt;/span&gt; = -ve sense.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 16px 'Arial';</string>
+       <string notr="true"/>
       </property>
       <property name="title">
        <string>Gene Viewer</string>
@@ -352,7 +343,6 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             <pointsize>-1</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -387,7 +377,6 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             <pointsize>-1</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -437,7 +426,6 @@
            <property name="font">
             <font>
              <family>Arial</family>
-             <pointsize>-1</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -470,7 +458,6 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -495,7 +482,6 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -529,7 +515,6 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -566,14 +551,13 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>-1</pointsize>
         <weight>75</weight>
         <italic>false</italic>
         <bold>true</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: bold 30px 'Arial';</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>View Targets</string>
@@ -606,7 +590,6 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>-1</pointsize>
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>

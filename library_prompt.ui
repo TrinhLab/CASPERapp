@@ -23,7 +23,7 @@
    <string>Generate Library</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 16px 'Arial';</string>
+   <string notr="true"/>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="sizeConstraint">
@@ -40,7 +40,6 @@
      <property name="font">
       <font>
        <family>Arial</family>
-       
        <weight>50</weight>
        <italic>false</italic>
        <bold>false</bold>
@@ -55,7 +54,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -74,7 +72,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -137,7 +134,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -160,7 +156,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -221,7 +216,6 @@
           <property name="font">
            <font>
             <family>Arial</family>
-            
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -268,7 +262,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -306,7 +299,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -337,7 +329,6 @@
      <property name="font">
       <font>
        <family>Arial</family>
-       
        <weight>50</weight>
        <italic>false</italic>
        <bold>false</bold>
@@ -368,7 +359,6 @@
      <property name="font">
       <font>
        <family>Arial</family>
-       
        <weight>50</weight>
        <italic>false</italic>
        <bold>false</bold>
@@ -390,7 +380,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -415,7 +404,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -462,7 +450,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -506,7 +493,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -557,7 +543,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -576,7 +561,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -605,7 +589,6 @@
      <property name="font">
       <font>
        <family>Arial</family>
-       
        <weight>75</weight>
        <italic>false</italic>
        <bold>true</bold>
@@ -615,7 +598,7 @@
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;By clicking 'Submit' CASPER will automatically generate a library of target sequences for the genes/loci you selected. &lt;span style=&quot; font-style:italic;&quot;&gt;To speed up this process significantly, you can turn off &amp;quot;Find Off-Targets.&amp;quot; &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="styleSheet">
-      <string notr="true">font: bold 24px 'Arial';</string>
+      <string notr="true"/>
      </property>
      <property name="text">
       <string>Generate Library</string>

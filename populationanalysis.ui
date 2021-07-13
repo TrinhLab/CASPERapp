@@ -13,7 +13,6 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>-1</pointsize>
     <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
@@ -23,11 +22,11 @@
    <string>Population Analysis</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 16px 'Arial';</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
-    <string notr="true">font: 16px 'Arial';</string>
+    <string notr="true"/>
    </property>
    <layout class="QGridLayout" name="gridLayout">
     <item row="4" column="1">
@@ -100,7 +99,7 @@
           </size>
          </property>
          <property name="styleSheet">
-          <string notr="true">font: 16px 'Arial';</string>
+          <string notr="true"/>
          </property>
          <property name="text">
           <string>Analyze Organism(s)</string>
@@ -318,7 +317,6 @@
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>-1</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -492,14 +490,13 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>-1</pointsize>
-        <weight>75</weight>
+        <weight>50</weight>
         <italic>false</italic>
-        <bold>true</bold>
+        <bold>false</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: bold 30px 'Arial';</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Population Analysis&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -569,7 +566,7 @@
      <x>0</x>
      <y>0</y>
      <width>1138</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

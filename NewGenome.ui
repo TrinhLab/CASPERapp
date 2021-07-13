@@ -22,7 +22,7 @@
    <string>New Genome</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 16px 'Arial';</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
@@ -263,7 +263,6 @@
                <property name="font">
                 <font>
                  <family>Arial</family>
-                 
                  <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
@@ -393,7 +392,6 @@
         <property name="font">
          <font>
           <family>Arial</family>
-          
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -651,7 +649,6 @@ search parameters</string>
       <property name="font">
        <font>
         <family>Arial</family>
-        
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>
@@ -714,14 +711,13 @@ search parameters</string>
       <property name="font">
        <font>
         <family>Arial</family>
-        
         <weight>75</weight>
         <italic>false</italic>
         <bold>true</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: bold 20px 'Arial';</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>New Genome</string>
@@ -753,7 +749,7 @@ search parameters</string>
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
