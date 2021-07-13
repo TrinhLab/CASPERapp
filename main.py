@@ -284,8 +284,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.genomebrowser = genomeBrowser.genomebrowser()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
-        #self.scaleUI()
-
     #function for scaling the font size and logo size based on resolution and DPI of screen
     def scaleUI(self):
         try:
@@ -1230,10 +1228,6 @@ class StartupWindow(QtWidgets.QMainWindow):
             self.goToMain.clicked.connect(self.launchMainWindow)
             self.goToNewGenome.clicked.connect(self.launchNewGenome)
 
-            #scale the UI properly
-            self.scaleUI()
-
-            self.show()
         except Exception as e:
             logger.critical("Error initializing StartupWindow class.")
             logger.critical(e)
@@ -1276,12 +1270,9 @@ class StartupWindow(QtWidgets.QMainWindow):
             self.logo.setPixmap(pixmapScaled)
 
             #scale and center UI
-            self.setGeometry(0,0, scaledWidth, scaledHeight + originalHeight)
-            frameGm = self.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.move(frameGm.topLeft())
+            #self.setGeometry(0,0, scaledWidth, scaledHeight + originalHeight)
+            self.resize(scaledWidth, scaledHeight + originalHeight)
+
 
         except Exception as e:
             logger.critical("Error in scaleUI() in startup window.")
@@ -1609,6 +1600,15 @@ def main():
     #load startup window
     try:
         startup = StartupWindow()
+        startup.scaleUI()
+
+        frameGm = startup.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        startup.move(frameGm.topLeft())
+
+        startup.show()
         logger.debug("Successfully initialized Startup Window.")
     except Exception as e:
         logger.critical("Can't start Startup window.")
