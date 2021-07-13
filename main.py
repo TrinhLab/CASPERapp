@@ -280,8 +280,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.export_csv_window = export_csv_window()
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
-        self.mwfg = self.frameGeometry()  ##Center window
-        self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
+
         self.genomebrowser = genomeBrowser.genomebrowser()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
@@ -301,17 +300,21 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
             # window scaling
-            # 1920x1080 => 1000x500
+            # 1920x1080 => 1150x650
             width = screen.geometry().width()
             height = screen.geometry().height()
-            scaledWidth = int( (width * 1000) //  1980)
-            scaledHeight = int( (height * 500) //  1080)
+            scaledWidth = int( (width * 1150) //  1980)
+            scaledHeight = int( (height * 650) //  1080)
             self.resize(scaledWidth, scaledHeight)
 
             #radio button scaling
 
-
             #scroll bar scaling
+
+            #CASPER header scaling
+            fontSize = int((math.ceil(dpi) * 30) // 92)
+            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
 
 
 
