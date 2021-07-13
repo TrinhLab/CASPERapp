@@ -284,7 +284,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.genomebrowser = genomeBrowser.genomebrowser()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
-        self.scaleUI()
+        #self.scaleUI()
 
     #function for scaling the font size and logo size based on resolution and DPI of screen
     def scaleUI(self):
@@ -302,8 +302,8 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             # window scaling
             # 1920x1080 => 1150x650
-            scaledWidth = int( (width * 1150) //  1980)
-            scaledHeight = int( (height * 650) //  1080)
+            scaledWidth = int((width * 1150)/1920)
+            scaledHeight = int((height * 650)/1080)
             self.resize(scaledWidth, scaledHeight)
 
             #radio button scaling
@@ -313,9 +313,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             #CASPER header scaling
             fontSize = int((math.ceil(dpi) * 30) // 92)
             self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
-
-
-
 
         except Exception as e:
             logger.critical("Error in scaleUI() in main.")
@@ -1544,6 +1541,7 @@ class StartupWindow(QtWidgets.QMainWindow):
                         exit(-1)
 
                     #show main window
+                    GlobalSettings.mainWindow.scaleUI()
                     frameGm = GlobalSettings.mainWindow.frameGeometry()
                     screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
                     centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
