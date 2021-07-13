@@ -292,9 +292,9 @@ class CMainWindow(QtWidgets.QMainWindow):
             width = screen.geometry().width()
             height = screen.geometry().height()
             # font scaling
-            # 16px is used for 1080p
-            fontSize = int((width * height * 16) // (1920 * 1080))
-
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int((math.ceil(dpi) * 16) // (92)))
+            print(fontSize)
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
@@ -309,7 +309,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             #scroll bar scaling
 
             #CASPER header scaling
-            fontSize = int((math.ceil(dpi) * 30) // 92)
+            fontSize = max(12, int((math.ceil(dpi) * 30) // (92)))
             self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
 
         except Exception as e:
@@ -1242,24 +1242,23 @@ class StartupWindow(QtWidgets.QMainWindow):
 
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
-
-            # log DPI information
-            logger.info("DPI = %d" % (dpi))
-
-            # font scaling
-            # 16px is used for 92 dpi
-            fontSize = int((math.ceil(dpi) * 16) // 92)
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
-
-            # logo scaling
-            # 1920x1080 => 766x388
             width = screen.geometry().width()
             height = screen.geometry().height()
 
             #log width x height
             logger.info("Resolution: %s x %s", width, height)
 
-            #scale logo image
+            # log DPI information
+            logger.info("DPI = %d" % (dpi))
+
+            # font scaling
+            # 16px is used for 92 dpi 1920x1080
+            fontSize = max(12, int((math.ceil(dpi) * 16) // (92)))
+
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
+
+            # scale logo image
+            # 1920x1080 => 766x388
             scaledWidth = int( (width * 766) // 1920)
             scaledHeight = int( (height * 388) // 1080)
 
@@ -1270,7 +1269,6 @@ class StartupWindow(QtWidgets.QMainWindow):
             self.logo.setPixmap(pixmapScaled)
 
             #scale and center UI
-            #self.setGeometry(0,0, scaledWidth, scaledHeight + originalHeight)
             self.resize(scaledWidth, scaledHeight + originalHeight)
 
 
