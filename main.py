@@ -291,18 +291,17 @@ class CMainWindow(QtWidgets.QMainWindow):
         try:
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
-
+            width = screen.geometry().width()
+            height = screen.geometry().height()
             # font scaling
-            # 16px is used for 92 dpi
-            fontSize = int((math.ceil(dpi) * 16) // 92)
+            # 16px is used for 1080p
+            fontSize = int((width * height * 16) // (1920 * 1080))
 
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
             # window scaling
             # 1920x1080 => 1150x650
-            width = screen.geometry().width()
-            height = screen.geometry().height()
             scaledWidth = int( (width * 1150) //  1980)
             scaledHeight = int( (height * 650) //  1080)
             self.resize(scaledWidth, scaledHeight)
