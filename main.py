@@ -293,8 +293,8 @@ class CMainWindow(QtWidgets.QMainWindow):
             height = screen.geometry().height()
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int((math.ceil(dpi) * 16) // (92)))
-            print(fontSize)
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 16) // (92)))))
+
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
@@ -309,7 +309,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             #scroll bar scaling
 
             #CASPER header scaling
-            fontSize = max(12, int((math.ceil(dpi) * 30) // (92)))
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
             self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
 
         except Exception as e:
@@ -1253,7 +1253,7 @@ class StartupWindow(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi 1920x1080
-            fontSize = max(12, int((math.ceil(dpi) * 16) // (92)))
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 16) // (92)))))
 
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
