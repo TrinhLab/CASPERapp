@@ -300,9 +300,17 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             # window scaling
             # 1920x1080 => 1150x650
+
+            print(f"base width {width} base height {height}")
+
             scaledWidth = int((width * 1150)/1920)
             scaledHeight = int((height * 650)/1080)
+
+            print(f"scaled width {scaledWidth} scaled height {scaledHeight}")
+
             self.resize(scaledWidth, scaledHeight)
+
+            print(f"new width {self.width()} new height {self.height()}")
 
             #radio button scaling
 
@@ -1241,7 +1249,7 @@ class StartupWindow(QtWidgets.QMainWindow):
             originalHeight = self.height()
 
             screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
+            dpi = math.ceil(screen.physicalDotsPerInch())
             width = screen.geometry().width()
             height = screen.geometry().height()
 
@@ -1581,7 +1589,7 @@ def main():
         else:
             GlobalSettings.appdir += '/'
 
-    app = Qt.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     app.setOrganizationName("TrinhLab-UTK")
     app.setApplicationName("CASPER")
 
@@ -1643,7 +1651,6 @@ def main():
         logger.critical(e)
         logger.critical(traceback.format_exc())
         exit(-1)
-
 
     sys.exit(app.exec_())
 
