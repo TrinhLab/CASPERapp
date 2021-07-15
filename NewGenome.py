@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import *
 import webbrowser
 import platform
 import traceback
+import math
 
 #global logger
 logger = GlobalSettings.logger
@@ -149,6 +150,44 @@ class NewGenome(QtWidgets.QMainWindow):
             self.goToPrompt.goToPop.clicked.connect(self.continue_to_pop)
         except Exception as e:
             logger.critical("Unable to initialize New Genome class.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    def scaleUI(self):
+        try:
+            screen = self.screen()
+            # print(QtWidgets.QApplication.screens()[0].devicePixelRatio())
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 16) // (92)))))
+
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+            self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # window scaling
+            # 1920x1080 => 1150x650
+            scaledWidth = int((width * 900) / 1920)
+            scaledHeight = int((height * 800) / 1080)
+            self.resize(scaledWidth, scaledHeight)
+
+            # radio button scaling
+
+            # scroll bar scaling
+
+            # CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
+            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            # resize columns in table
+            self.job_Table.resizeColumnsToContents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in new genome.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)

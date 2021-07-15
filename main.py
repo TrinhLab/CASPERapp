@@ -288,9 +288,11 @@ class CMainWindow(QtWidgets.QMainWindow):
     def scaleUI(self):
         try:
             screen = self.screen()
+            #print(QtWidgets.QApplication.screens()[0].devicePixelRatio())
             dpi = screen.physicalDotsPerInch()
             width = screen.geometry().width()
             height = screen.geometry().height()
+
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 16) // (92)))))
@@ -301,16 +303,16 @@ class CMainWindow(QtWidgets.QMainWindow):
             # window scaling
             # 1920x1080 => 1150x650
 
-            print(f"base width {width} base height {height}")
+            #print(f"base width {width} base height {height}")
 
             scaledWidth = int((width * 1150)/1920)
             scaledHeight = int((height * 650)/1080)
 
-            print(f"scaled width {scaledWidth} scaled height {scaledHeight}")
+            #print(f"scaled width {scaledWidth} scaled height {scaledHeight}")
 
             self.resize(scaledWidth, scaledHeight)
 
-            print(f"new width {self.width()} new height {self.height()}")
+            #print(f"new width {self.width()} new height {self.height()}")
 
             #radio button scaling
 
@@ -669,7 +671,8 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.newGenome.move(self.newGenome.mwfg.topLeft())  ##Center window
             #update endo list
             self.newGenome.fillEndo()
-            #show new genome window
+
+            self.newGenome.scaleUI()
 
             #show new genome window and center on current screen
             frameGm = self.newGenome.frameGeometry()
@@ -1635,6 +1638,7 @@ def main():
     #load multi-targeting
     try:
         GlobalSettings.MTWin = multitargeting.Multitargeting()
+        GlobalSettings.MTWin.scalueUI()
         logger.debug("Successfully initialized Multi-targeting Window.")
     except Exception as e:
         logger.critical("Can't start Multi-targeting window.")
@@ -1645,6 +1649,7 @@ def main():
     #load pop analysis
     try:
         GlobalSettings.pop_Analysis = populationAnalysis.Pop_Analysis()
+        GlobalSettings.pop_Analysis.scaleUI()
         logger.debug("Successfully initialized Population Analysis Window.")
     except Exception as e:
         logger.critical("Can't start Population Analysis window.")
