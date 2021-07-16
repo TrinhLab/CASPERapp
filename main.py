@@ -52,8 +52,8 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.tableWidget.setAutoScroll(False)
 
         #setting pixel width for scroll bars
-        self.tableWidget.verticalScrollBar().setStyleSheet("width: 16px;")
-        self.tableWidget.horizontalScrollBar().setStyleSheet("height: 16px;")
+        self.tableWidget.verticalScrollBar().setStyleSheet("width: 14px;")
+        self.tableWidget.horizontalScrollBar().setStyleSheet("height: 14px;")
 
     def submit(self):
         try:
@@ -288,14 +288,14 @@ class CMainWindow(QtWidgets.QMainWindow):
     def scaleUI(self):
         try:
             screen = self.screen()
-            #print(QtWidgets.QApplication.screens()[0].devicePixelRatio())
             dpi = screen.physicalDotsPerInch()
             width = screen.geometry().width()
             height = screen.geometry().height()
+            #print(dpi,width,height)
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 16) // (92)))))
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
 
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
@@ -1250,7 +1250,6 @@ class StartupWindow(QtWidgets.QMainWindow):
         try:
             originalWidth = self.width()
             originalHeight = self.height()
-
             screen = self.screen()
             dpi = math.ceil(screen.physicalDotsPerInch())
             width = screen.geometry().width()
@@ -1264,7 +1263,7 @@ class StartupWindow(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 16) // (92)))))
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
 
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
@@ -1274,10 +1273,9 @@ class StartupWindow(QtWidgets.QMainWindow):
             scaledHeight = int( (height * 388) // 1080)
 
             pixmapOriginal = QtGui.QPixmap(GlobalSettings.appdir + "CASPER-logo.jpg")
-            pixmapScaled = pixmapOriginal.scaled(scaledWidth, scaledHeight)
 
             #set logo image
-            self.logo.setPixmap(pixmapScaled)
+            self.logo.setPixmap(pixmapOriginal)
 
             #scale and center UI
             self.resize(scaledWidth, scaledHeight + originalHeight)
@@ -1610,7 +1608,6 @@ def main():
     try:
         startup = StartupWindow()
         startup.scaleUI()
-
         frameGm = startup.frameGeometry()
         screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
         centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
@@ -1628,6 +1625,7 @@ def main():
     #load main
     try:
         GlobalSettings.mainWindow = CMainWindow(os.getcwd())
+#        GlobalSettings.mainWindow.scaleUI()
         logger.debug("Successfully initialized Main Window.")
     except Exception as e:
         logger.critical("Can't start Main window.")

@@ -116,8 +116,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.sql_settings.row_count.textChanged.connect(self.sql_row_count_value_changed)
 
             #setting pixel widths for scroll bars
-            self.table.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.table.horizontalScrollBar().setStyleSheet("height: 16px;")
+            self.table.verticalScrollBar().setStyleSheet("width: 14px;")
+            self.table.horizontalScrollBar().setStyleSheet("height: 14px;")
             self.graphicsView_2.verticalScrollBar().setStyleSheet("width: 10px;")
             self.graphicsView_2.horizontalScrollBar().setStyleSheet("height: 10px;")
 
@@ -143,7 +143,7 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 16) // (92)))))
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
 
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )

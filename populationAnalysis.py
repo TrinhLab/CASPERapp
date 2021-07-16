@@ -120,12 +120,12 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
 
             #set pixel widths on scroll bars
-            self.org_Table.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.org_Table.horizontalScrollBar().setStyleSheet("height: 16px;")
-            self.table2.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.table2.horizontalScrollBar().setStyleSheet("height: 16px;")
-            self.loc_finder_table.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.loc_finder_table.horizontalScrollBar().setStyleSheet("height: 16px;")
+            self.org_Table.verticalScrollBar().setStyleSheet("width: 14px;")
+            self.org_Table.horizontalScrollBar().setStyleSheet("height: 14px;")
+            self.table2.verticalScrollBar().setStyleSheet("width: 14px;")
+            self.table2.horizontalScrollBar().setStyleSheet("height: 14px;")
+            self.loc_finder_table.verticalScrollBar().setStyleSheet("width: 14px;")
+            self.loc_finder_table.horizontalScrollBar().setStyleSheet("height: 14px;")
 
             self.loading_window = loading_window()
         except Exception as e:
@@ -144,7 +144,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 16) // (92)))))
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
 
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")

@@ -137,10 +137,10 @@ class NewGenome(QtWidgets.QMainWindow):
 
 
             #set pixel widths for scroll bars
-            self.output_browser.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.output_browser.horizontalScrollBar().setStyleSheet("height: 16px;")
-            self.job_Table.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.job_Table.horizontalScrollBar().setStyleSheet("height: 16px;")
+            self.output_browser.verticalScrollBar().setStyleSheet("width: 14px;")
+            self.output_browser.horizontalScrollBar().setStyleSheet("height: 14px;")
+            self.job_Table.verticalScrollBar().setStyleSheet("width: 14px;")
+            self.job_Table.horizontalScrollBar().setStyleSheet("height: 14px;")
 
 
             #user prompt class
@@ -164,7 +164,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 16) // (92)))))
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
 
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
