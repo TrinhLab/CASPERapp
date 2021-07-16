@@ -25,7 +25,7 @@ pexpect==4.8.0
 ptyprocess==0.7.0
 pyfaidx==0.5.9.5
 pyparsing==2.4.7
-PyQt5==5.15.4
+PyQt5==5.15.1
 PyQt5-sip==12.8.1
 PyQtChart==5.14.0
 PyQtWebEngine==5.14.0
