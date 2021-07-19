@@ -55,17 +55,54 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.tableWidget.verticalScrollBar().setStyleSheet("width: 14px;")
         self.tableWidget.horizontalScrollBar().setStyleSheet("height: 14px;")
 
+        #scale UI
+        self.scaleUI()
+
+    def scaleUI(self):
+        try:
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
+            self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
+
+            # window scaling
+            # 1920x1080 => 1150x650
+            scaledWidth = int((width * 900)/1920)
+            scaledHeight = int((height * 600)/1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            #scroll bar scaling
+
+            #CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
+            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            #resize columns in table
+            self.tableWidget.resizeColumnsToContents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in AnnotationWindow.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
     def submit(self):
         try:
             self.mainWindow.collect_table_data_nonkegg()
             self.hide()
-
-            #show main window on current screen
-            frameGm = self.mainWindow.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.mainWindow.move(frameGm.topLeft())
             self.mainWindow.show()
         except Exception as e:
             logger.critical("Error in submit() in AnnotationsWindow.")
@@ -157,6 +194,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             self.move(frameGm.topLeft())
 
             self.show()
+
             return 0
         except Exception as e:
             logger.critical("Error in fill_table_nonKegg() in AnnotationsWindow.")
@@ -284,6 +322,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.genomebrowser = genomeBrowser.genomebrowser()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
+        #scale UI
+        self.scaleUI()
+
     #function for scaling the font size and logo size based on resolution and DPI of screen
     def scaleUI(self):
         try:
@@ -307,10 +348,13 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             scaledWidth = int((width * 1150)/1920)
             scaledHeight = int((height * 650)/1080)
-
-            #print(f"scaled width {scaledWidth} scaled height {scaledHeight}")
-
-            self.resize(scaledWidth, scaledHeight)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
 
             #print(f"new width {self.width()} new height {self.height()}")
 
@@ -672,16 +716,9 @@ class CMainWindow(QtWidgets.QMainWindow):
             #update endo list
             self.newGenome.fillEndo()
 
-            self.newGenome.scaleUI()
-
-            #show new genome window and center on current screen
-            frameGm = self.newGenome.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.newGenome.move(frameGm.topLeft())
-
             self.newGenome.show()
+            print(self.newGenome.geometry())
+
         except Exception as e:
             logger.critical("Error in launch_newGenome() in main.")
             logger.critical(e)
@@ -1041,16 +1078,9 @@ class CMainWindow(QtWidgets.QMainWindow):
     def changeto_multitargeting(self):
         try:
             os.chdir(os.getcwd())
-
-            #get frame of MT window and center it on current screen
-            frameGm = GlobalSettings.MTWin.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            GlobalSettings.MTWin.move(frameGm.topLeft())
-
             GlobalSettings.MTWin.show()
             GlobalSettings.mainWindow.hide()
+
         except Exception as e:
             logger.critical("Error in changeto_multitargeting() in main.")
             logger.critical(e)
@@ -1060,14 +1090,6 @@ class CMainWindow(QtWidgets.QMainWindow):
     def changeto_population_Analysis(self):
         try:
             GlobalSettings.pop_Analysis.launch()
-
-            # get frame of pop analysis window and center it on current screen
-            frameGm = GlobalSettings.pop_Analysis.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            GlobalSettings.pop_Analysis.move(frameGm.topLeft())
-
             GlobalSettings.pop_Analysis.show()
             GlobalSettings.mainWindow.hide()
         except Exception as e:
@@ -1239,6 +1261,9 @@ class StartupWindow(QtWidgets.QMainWindow):
             self.goToMain.clicked.connect(self.launchMainWindow)
             self.goToNewGenome.clicked.connect(self.launchNewGenome)
 
+            #scale UI
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing StartupWindow class.")
             logger.critical(e)
@@ -1269,7 +1294,7 @@ class StartupWindow(QtWidgets.QMainWindow):
 
             # scale logo image
             # 1920x1080 => 766x388
-            scaledWidth = int( (width * 766) // 1920)
+            scaledWidth = int( (width * 806) // 1920)
             scaledHeight = int( (height * 388) // 1080)
 
             pixmapOriginal = QtGui.QPixmap(GlobalSettings.appdir + "CASPER-logo.jpg")
@@ -1278,7 +1303,15 @@ class StartupWindow(QtWidgets.QMainWindow):
             self.logo.setPixmap(pixmapOriginal)
 
             #scale and center UI
-            self.resize(scaledWidth, scaledHeight + originalHeight)
+            scaledHeight += originalHeight
+
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
 
 
         except Exception as e:
@@ -1539,15 +1572,7 @@ class StartupWindow(QtWidgets.QMainWindow):
                         exit(-1)
 
                     #show main window
-                    GlobalSettings.mainWindow.scaleUI()
-                    frameGm = GlobalSettings.mainWindow.frameGeometry()
-                    screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-                    centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-                    frameGm.moveCenter(centerPoint)
-                    GlobalSettings.mainWindow.move(frameGm.topLeft())
-
                     GlobalSettings.mainWindow.show()
-
                     self.close()
 
                 #no cspr file found
@@ -1607,13 +1632,6 @@ def main():
     #load startup window
     try:
         startup = StartupWindow()
-        startup.scaleUI()
-        frameGm = startup.frameGeometry()
-        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-        frameGm.moveCenter(centerPoint)
-        startup.move(frameGm.topLeft())
-
         startup.show()
         logger.debug("Successfully initialized Startup Window.")
     except Exception as e:
@@ -1625,7 +1643,6 @@ def main():
     #load main
     try:
         GlobalSettings.mainWindow = CMainWindow(os.getcwd())
-#        GlobalSettings.mainWindow.scaleUI()
         logger.debug("Successfully initialized Main Window.")
     except Exception as e:
         logger.critical("Can't start Main window.")
@@ -1636,7 +1653,6 @@ def main():
     #load multi-targeting
     try:
         GlobalSettings.MTWin = multitargeting.Multitargeting()
-        GlobalSettings.MTWin.scalueUI()
         logger.debug("Successfully initialized Multi-targeting Window.")
     except Exception as e:
         logger.critical("Can't start Multi-targeting window.")
@@ -1647,7 +1663,6 @@ def main():
     #load pop analysis
     try:
         GlobalSettings.pop_Analysis = populationAnalysis.Pop_Analysis()
-        GlobalSettings.pop_Analysis.scaleUI()
         logger.debug("Successfully initialized Population Analysis Window.")
     except Exception as e:
         logger.critical("Can't start Population Analysis window.")

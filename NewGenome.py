@@ -96,18 +96,12 @@ class NewGenome(QtWidgets.QMainWindow):
             self.first = False
             #show functionalities on window
             self.fillEndo()
-            #self.show()
 
             self.num_chromo_next = False
 
-
             #Jobs Table
-            #self.job_Table.setColumnCount(3)
             self.job_Table.setShowGrid(False)
-            #self.job_Table.setHorizontalHeaderLabels(["Job Queue","Job in Progress", "Completed Jobs"])
             self.job_Table.horizontalHeader().setSectionsClickable(True)
-            #self.job_Table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-            #self.job_Table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
             self.job_Table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
             self.job_Table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
             self.job_Table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
@@ -148,6 +142,10 @@ class NewGenome(QtWidgets.QMainWindow):
             self.goToPrompt.goToMain.clicked.connect(self.continue_to_main)
             self.goToPrompt.goToMT.clicked.connect(self.continue_to_MT)
             self.goToPrompt.goToPop.clicked.connect(self.continue_to_pop)
+
+            #scale UI
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Unable to initialize New Genome class.")
             logger.critical(e)
@@ -172,10 +170,14 @@ class NewGenome(QtWidgets.QMainWindow):
             # window scaling
             # 1920x1080 => 1150x650
             scaledWidth = int((width * 900) / 1920)
-            scaledHeight = int((height * 800) / 1080)
-            self.resize(scaledWidth, scaledHeight)
-
-            # radio button scaling
+            scaledHeight = int((height * 850) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
 
             # scroll bar scaling
 
@@ -596,8 +598,6 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.first = False
                 self.goToPrompt.hide()
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
-                GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
-                GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
                 if GlobalSettings.mainWindow.orgChoice.currentText() != '':
                     GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
                 GlobalSettings.mainWindow.orgChoice.clear()
@@ -656,8 +656,6 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.first = False
                 self.goToPrompt.hide()
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
-                GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
-                GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
                 if GlobalSettings.mainWindow.orgChoice.currentText() != '':
                     GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
                 GlobalSettings.mainWindow.orgChoice.clear()
@@ -715,15 +713,11 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.first = False
                 self.goToPrompt.hide()
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
-                GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
-                GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
                 if GlobalSettings.mainWindow.orgChoice.currentText() != '':
                     GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
                 GlobalSettings.mainWindow.orgChoice.clear()
                 GlobalSettings.mainWindow.endoChoice.clear()
                 GlobalSettings.mainWindow.getData()
-                GlobalSettings.MTWin.mwfg.moveCenter(GlobalSettings.MTWin.cp)  ##Center window
-                GlobalSettings.MTWin.move(GlobalSettings.MTWin.mwfg.topLeft())  ##Center window
                 GlobalSettings.MTWin.launch()
                 GlobalSettings.pop_Analysis.launch()
 
@@ -776,15 +770,11 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.first = False
                 self.goToPrompt.hide()
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
-                GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
-                GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
                 if GlobalSettings.mainWindow.orgChoice.currentText() != '':
                     GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
                 GlobalSettings.mainWindow.orgChoice.clear()
                 GlobalSettings.mainWindow.endoChoice.clear()
                 GlobalSettings.mainWindow.getData()
-                GlobalSettings.pop_Analysis.mwfg.moveCenter(GlobalSettings.pop_Analysis.cp)  ##Center window
-                GlobalSettings.pop_Analysis.move(GlobalSettings.pop_Analysis.mwfg.topLeft())  ##Center window
                 GlobalSettings.MTWin.launch()
                 GlobalSettings.pop_Analysis.launch()
 

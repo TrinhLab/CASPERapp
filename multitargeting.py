@@ -121,12 +121,13 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.graphicsView_2.verticalScrollBar().setStyleSheet("width: 10px;")
             self.graphicsView_2.horizontalScrollBar().setStyleSheet("height: 10px;")
 
+            #scale UI
+            self.scalueUI()
 
-            self.mwfg = self.frameGeometry()  ##Center window
-            self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
-            self.mwfg.moveCenter(self.cp)  ##Center window
-            self.move(self.mwfg.topLeft())  ##Center window
             self.hide()
+
+
+
         except Exception as e:
             logger.critical("Error initializing Multi-targeting.")
             logger.critical(e)
@@ -136,7 +137,6 @@ class Multitargeting(QtWidgets.QMainWindow):
     def scalueUI(self):
         try:
             screen = self.screen()
-            #print(QtWidgets.QApplication.screens()[0].devicePixelRatio())
             dpi = screen.physicalDotsPerInch()
             width = screen.geometry().width()
             height = screen.geometry().height()
@@ -150,9 +150,15 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             # window scaling
             # 1920x1080 => 1150x650
-            scaledWidth = int((width * 1400)/1920)
-            scaledHeight = int((height * 800)/1080)
-            self.resize(scaledWidth, scaledHeight)
+            scaledWidth = int((width * 1180)/1920)
+            scaledHeight = int((height * 710)/1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
 
             #radio button scaling
 

@@ -128,6 +128,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.loc_finder_table.horizontalScrollBar().setStyleSheet("height: 14px;")
 
             self.loading_window = loading_window()
+
+            #scale UI
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing population analysis.")
             logger.critical(e)
@@ -151,9 +155,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
             # window scaling
             # 1920x1080 => 1150x650
-            scaledWidth = int((width * 1400) / 1920)
-            scaledHeight = int((height * 800) / 1080)
-            self.resize(scaledWidth, scaledHeight)
+            scaledWidth = int((width * 1100) / 1920)
+            scaledHeight = int((height * 751) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
 
             # radio button scaling
 

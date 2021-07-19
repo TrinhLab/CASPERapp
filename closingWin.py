@@ -2,6 +2,7 @@ import GlobalSettings
 import os
 from PyQt5 import QtWidgets, Qt, uic
 import traceback
+import math
 
 #global logger
 logger = GlobalSettings.logger
@@ -36,8 +37,47 @@ class closingWindow(QtWidgets.QDialog):
             #setting pixel width for scroll bars
             self.files_table.verticalScrollBar().setStyleSheet("width: 16px;")
             self.files_table.horizontalScrollBar().setStyleSheet("height: 16px;")
+
+            #scale UI
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing closingWindow class.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    def scaleUI(self):
+        try:
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # window scaling
+            # 1920x1080 => 1150x650
+            scaledWidth = int((width * 400) / 1920)
+            scaledHeight = int((height * 300) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            # scroll bar scaling
+
+            # resize columns in table
+            self.files_table.resizeColumnsToContents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in closing window.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
