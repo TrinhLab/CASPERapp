@@ -711,13 +711,10 @@ class CMainWindow(QtWidgets.QMainWindow):
     def launch_newGenome(self):
         try:
             self.hide()
-            self.newGenome.mwfg.moveCenter(self.newGenome.cp)  ##Center window
-            self.newGenome.move(self.newGenome.mwfg.topLeft())  ##Center window
             #update endo list
             self.newGenome.fillEndo()
-
+            self.newGenome.scaleUI()
             self.newGenome.show()
-            print(self.newGenome.geometry())
 
         except Exception as e:
             logger.critical("Error in launch_newGenome() in main.")
@@ -1078,6 +1075,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     def changeto_multitargeting(self):
         try:
             os.chdir(os.getcwd())
+            GlobalSettings.MTWin.scaleUI()
             GlobalSettings.MTWin.show()
             GlobalSettings.mainWindow.hide()
 
@@ -1090,6 +1088,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     def changeto_population_Analysis(self):
         try:
             GlobalSettings.pop_Analysis.launch()
+            GlobalSettings.pop_Analysis.scaleUI()
             GlobalSettings.pop_Analysis.show()
             GlobalSettings.mainWindow.hide()
         except Exception as e:
@@ -1103,6 +1102,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             info = "Annotation files are used for searching for spacers on a gene/locus basis and can be selected here using either " \
                    "NCBI databases or a local file."
             QtWidgets.QMessageBox.information(self, "Annotation Information", info, QtWidgets.QMessageBox.Ok)
+            irint(GlobalSettings.MTWin.geometry())
         except Exception as e:
             logger.critical("Error in annotation_information() in main.")
             logger.critical(e)
@@ -1572,6 +1572,7 @@ class StartupWindow(QtWidgets.QMainWindow):
                         exit(-1)
 
                     #show main window
+                    GlobalSettings.mainWindow.scaleUI()
                     GlobalSettings.mainWindow.show()
                     self.close()
 

@@ -122,7 +122,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.graphicsView_2.horizontalScrollBar().setStyleSheet("height: 10px;")
 
             #scale UI
-            self.scalueUI()
+            self.scaleUI()
 
             self.hide()
 
@@ -134,7 +134,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    def scalueUI(self):
+    def scaleUI(self):
         try:
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
@@ -150,16 +150,16 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             # window scaling
             # 1920x1080 => 1150x650
-            scaledWidth = int((width * 1180)/1920)
-            scaledHeight = int((height * 710)/1080)
+            scaledWidth = int((width * 1200)/1920)
+            scaledHeight = int((height * 850)/1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
             y = centerPoint.y()
             x = x - (math.ceil(scaledWidth / 2))
             y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
 
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
             #radio button scaling
 
             #scroll bar scaling
