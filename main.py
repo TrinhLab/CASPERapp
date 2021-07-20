@@ -328,6 +328,9 @@ class CMainWindow(QtWidgets.QMainWindow):
     #function for scaling the font size and logo size based on resolution and DPI of screen
     def scaleUI(self):
         try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
             width = screen.geometry().width()
@@ -354,7 +357,10 @@ class CMainWindow(QtWidgets.QMainWindow):
             y = centerPoint.y()
             x = x - (math.ceil(scaledWidth / 2))
             y = y - (math.ceil(scaledHeight / 2))
+
+            print(self.geometry())
             self.setGeometry(x, y, scaledWidth, scaledHeight)
+            print(self.geometry())
 
             #print(f"new width {self.width()} new height {self.height()}")
 
@@ -365,6 +371,9 @@ class CMainWindow(QtWidgets.QMainWindow):
             #CASPER header scaling
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
             self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
         except Exception as e:
             logger.critical("Error in scaleUI() in main.")
@@ -1572,8 +1581,10 @@ class StartupWindow(QtWidgets.QMainWindow):
                         exit(-1)
 
                     #show main window
-                    GlobalSettings.mainWindow.scaleUI()
+                    #GlobalSettings.mainWindow.scaleUI()
+                    print(GlobalSettings.mainWindow.geometry())
                     GlobalSettings.mainWindow.show()
+                    print(GlobalSettings.mainWindow.geometry())
                     self.close()
 
                 #no cspr file found
