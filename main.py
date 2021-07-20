@@ -1108,6 +1108,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 GlobalSettings.MTWin.centerUI()
                 GlobalSettings.MTWin.first_show = False
             GlobalSettings.MTWin.show()
+            print(GlobalSettings.MTWin.geometry())
             GlobalSettings.mainWindow.hide()
 
         except Exception as e:

@@ -938,6 +938,7 @@ class loading_window(QtWidgets.QMainWindow):
         x = x - (math.ceil(scaledWidth / 2))
         y = y - (math.ceil(scaledHeight / 2))
         self.setGeometry(x, y, scaledWidth, scaledHeight)
+        print(self.geometry())
 
         self.repaint()
         QtWidgets.QApplication.processEvents()
