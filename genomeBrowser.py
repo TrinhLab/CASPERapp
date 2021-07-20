@@ -167,7 +167,7 @@ class genomebrowser(QtWidgets.QWidget):
 			exit(-1)
 
 #progress bar gui
-class loading_window(QtWidgets.QWidget):
+class loading_window(QtWidgets.QMainWindow):
 	def __init__(self):
 		try:
 			super(loading_window, self).__init__()

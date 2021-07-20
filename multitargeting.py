@@ -1,8 +1,7 @@
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import GlobalSettings
-from PyQt5.QtChart import QChartView
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
 from matplotlib.ticker import MaxNLocator
@@ -12,7 +11,6 @@ import gzip
 from collections import Counter
 import statistics
 import traceback
-import matplotlib.pyplot as plt
 import math
 
 #global logger
@@ -107,7 +105,6 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.graphicsView.viewport().installEventFilter(self)
 
             self.loading_window = loading_window()
-            screen = QtGui.QGuiApplication.screenAt(QtGui.QCursor().pos())
 
             #sql query settings
             self.row_limit = 1000
@@ -122,11 +119,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.graphicsView_2.horizontalScrollBar().setStyleSheet("height: 10px;")
 
             #scale UI
+            self.first_show = True
             self.scaleUI()
-
-            self.hide()
-
-
 
         except Exception as e:
             logger.critical("Error initializing Multi-targeting.")
@@ -136,6 +130,9 @@ class Multitargeting(QtWidgets.QMainWindow):
 
     def scaleUI(self):
         try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
             width = screen.geometry().width()
@@ -171,11 +168,32 @@ class Multitargeting(QtWidgets.QMainWindow):
             #resize columns in table
             self.table.resizeColumnsToContents()
 
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
         except Exception as e:
             logger.critical("Error in scaleUI() in multi-targeting.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
+
+    def centerUI(self):
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+        width = self.width()
+        height = self.height()
+        # scale/center window
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        x = centerPoint.x()
+        y = centerPoint.y()
+        x = x - (math.ceil(width / 2))
+        y = y - (math.ceil(height / 2))
+        self.setGeometry(x, y, width, height)
+
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
 
     def export_to_csv(self):
         try:
@@ -364,6 +382,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][str(self.endo_drop.currentText())][1]
 
             self.loading_window.loading_bar.setValue(0)
+            self.loading_window.centerUI()
             self.loading_window.show()
             QtCore.QCoreApplication.processEvents()
             self.chromo_length.clear()
@@ -858,13 +877,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         try:
             self.sql_settings.hide()
             self.multitargeting_statistics.hide()
-
-            #center main on current screen
-            frameGm = GlobalSettings.mainWindow.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            GlobalSettings.mainWindow.move(frameGm.topLeft())
             GlobalSettings.mainWindow.show()
             self.hide()
         except Exception as e:
@@ -887,20 +899,66 @@ class Multitargeting(QtWidgets.QMainWindow):
             exit(-1)
 
 
-class loading_window(QtWidgets.QWidget):
+class loading_window(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(loading_window, self).__init__()
             uic.loadUi(GlobalSettings.appdir + "loading_data_form.ui", self)
             self.loading_bar.setValue(0)
             self.setWindowTitle("Loading Data")
-            self.hide()
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing loading_window class in multi-targeting.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    def scaleUI(self):
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+        screen = self.screen()
+        dpi = screen.physicalDotsPerInch()
+        width = screen.geometry().width()
+        height = screen.geometry().height()
+
+        # font scaling
+        # 14px is used for 92 dpi
+        fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+        self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+        # scale/center window
+        scaledWidth = int((width * 450) / 1920)
+        scaledHeight = int((height * 125) / 1080)
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        x = centerPoint.x()
+        y = centerPoint.y()
+        x = x - (math.ceil(scaledWidth / 2))
+        y = y - (math.ceil(scaledHeight / 2))
+        self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+    def centerUI(self):
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+        width = self.width()
+        height = self.height()
+        #scale/center window
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        x = centerPoint.x()
+        y = centerPoint.y()
+        x = x - (math.ceil(width / 2))
+        y = y - (math.ceil(height / 2))
+        self.setGeometry(x, y, width, height)
+
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
 
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
@@ -929,6 +987,13 @@ class Multitargeting_Statistics(QtWidgets.QDialog):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    def scaleUI(self):
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
 
 class sql_query_settings(QtWidgets.QWidget):
     def __init__(self):
@@ -943,3 +1008,12 @@ class sql_query_settings(QtWidgets.QWidget):
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
+
+    def scaleUI(self):
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+
+
+        self.repaint()
+        QtWidgets.QApplication.processEvents()

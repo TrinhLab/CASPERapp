@@ -60,6 +60,9 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
 
     def scaleUI(self):
         try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
             width = screen.geometry().width()
@@ -92,6 +95,9 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
 
             #resize columns in table
             self.tableWidget.resizeColumnsToContents()
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
         except Exception as e:
             logger.critical("Error in scaleUI() in AnnotationWindow.")
@@ -323,6 +329,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
         #scale UI
+        self.first_show = True
         self.scaleUI()
 
     #function for scaling the font size and logo size based on resolution and DPI of screen
@@ -335,7 +342,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             dpi = screen.physicalDotsPerInch()
             width = screen.geometry().width()
             height = screen.geometry().height()
-            #print(dpi,width,height)
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
@@ -358,9 +364,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             x = x - (math.ceil(scaledWidth / 2))
             y = y - (math.ceil(scaledHeight / 2))
 
-            print(self.geometry())
             self.setGeometry(x, y, scaledWidth, scaledHeight)
-            print(self.geometry())
 
             #print(f"new width {self.width()} new height {self.height()}")
 
@@ -380,6 +384,23 @@ class CMainWindow(QtWidgets.QMainWindow):
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
+
+    def centerUI(self):
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+        width = self.width()
+        height = self.height()
+        # scale/center window
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        x = centerPoint.x()
+        y = centerPoint.y()
+        x = x - (math.ceil(width / 2))
+        y = y - (math.ceil(height / 2))
+        self.setGeometry(x, y, width, height)
+
+        self.repaint()
 
     # this function prepares everything for the generate library function
     # it is very similar to the gather settings, how ever it stores the data instead of calling the Annotation Window class
@@ -722,7 +743,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.hide()
             #update endo list
             self.newGenome.fillEndo()
-            self.newGenome.scaleUI()
             self.newGenome.show()
 
         except Exception as e:
@@ -1084,7 +1104,9 @@ class CMainWindow(QtWidgets.QMainWindow):
     def changeto_multitargeting(self):
         try:
             os.chdir(os.getcwd())
-            GlobalSettings.MTWin.scaleUI()
+            if GlobalSettings.MTWin.first_show == True:
+                GlobalSettings.MTWin.centerUI()
+                GlobalSettings.MTWin.first_show = False
             GlobalSettings.MTWin.show()
             GlobalSettings.mainWindow.hide()
 
@@ -1097,7 +1119,9 @@ class CMainWindow(QtWidgets.QMainWindow):
     def changeto_population_Analysis(self):
         try:
             GlobalSettings.pop_Analysis.launch()
-            GlobalSettings.pop_Analysis.scaleUI()
+            if GlobalSettings.pop_Analysis.first_show == True:
+                GlobalSettings.pop_Analysis.centerUI()
+                GlobalSettings.pop_Analysis.first_show = False
             GlobalSettings.pop_Analysis.show()
             GlobalSettings.mainWindow.hide()
         except Exception as e:
@@ -1111,7 +1135,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             info = "Annotation files are used for searching for spacers on a gene/locus basis and can be selected here using either " \
                    "NCBI databases or a local file."
             QtWidgets.QMessageBox.information(self, "Annotation Information", info, QtWidgets.QMessageBox.Ok)
-            irint(GlobalSettings.MTWin.geometry())
         except Exception as e:
             logger.critical("Error in annotation_information() in main.")
             logger.critical(e)
@@ -1581,10 +1604,10 @@ class StartupWindow(QtWidgets.QMainWindow):
                         exit(-1)
 
                     #show main window
-                    #GlobalSettings.mainWindow.scaleUI()
-                    print(GlobalSettings.mainWindow.geometry())
+                    if GlobalSettings.mainWindow.first_show == True:
+                        GlobalSettings.mainWindow.centerUI()
+                        GlobalSettings.mainWindow.first_show = False
                     GlobalSettings.mainWindow.show()
-                    print(GlobalSettings.mainWindow.geometry())
                     self.close()
 
                 #no cspr file found

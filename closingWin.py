@@ -49,6 +49,9 @@ class closingWindow(QtWidgets.QDialog):
 
     def scaleUI(self):
         try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
             width = screen.geometry().width()
@@ -75,6 +78,9 @@ class closingWindow(QtWidgets.QDialog):
 
             # resize columns in table
             self.files_table.resizeColumnsToContents()
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
         except Exception as e:
             logger.critical("Error in scaleUI() in closing window.")

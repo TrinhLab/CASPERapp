@@ -154,8 +154,10 @@ class NewGenome(QtWidgets.QMainWindow):
 
     def scaleUI(self):
         try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
             screen = self.screen()
-            # print(QtWidgets.QApplication.screens()[0].devicePixelRatio())
             dpi = screen.physicalDotsPerInch()
             width = screen.geometry().width()
             height = screen.geometry().height()
@@ -187,6 +189,9 @@ class NewGenome(QtWidgets.QMainWindow):
 
             # resize columns in table
             self.job_Table.resizeColumnsToContents()
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
         except Exception as e:
             logger.critical("Error in scaleUI() in new genome.")
