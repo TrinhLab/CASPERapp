@@ -130,6 +130,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.loading_window = loading_window()
 
             #scale UI
+            self.first_show = True
             self.scaleUI()
 
         except Exception as e:
@@ -140,8 +141,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     def scaleUI(self):
         try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
             screen = self.screen()
-            # print(QtWidgets.QApplication.screens()[0].devicePixelRatio())
             dpi = screen.physicalDotsPerInch()
             width = screen.geometry().width()
             height = screen.geometry().height()
@@ -177,11 +180,32 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.table2.resizeColumnsToContents()
             self.loc_finder_table.resizeColumnsToContents()
 
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
         except Exception as e:
             logger.critical("Error in scaleUI() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
+
+    def centerUI(self):
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+        width = self.width()
+        height = self.height()
+        # scale/center window
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        x = centerPoint.x()
+        y = centerPoint.y()
+        x = x - (math.ceil(width / 2))
+        y = y - (math.ceil(height / 2))
+        self.setGeometry(x, y, width, height)
+
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
 
     def export_to_csv(self):
         try:
@@ -352,6 +376,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         try:
             #update progress bar
             self.loading_window.loading_bar.setValue(5)
+            self.loading_window.centerUI()
             self.loading_window.show()
             QtCore.QCoreApplication.processEvents()
 
@@ -1004,13 +1029,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
     def go_back(self):
         try:
-            GlobalSettings.mainWindow.getData()
-            # center main on current screen
-            frameGm = GlobalSettings.mainWindow.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            GlobalSettings.mainWindow.move(frameGm.topLeft())
             GlobalSettings.mainWindow.show()
             self.hide()
         except Exception as e:
@@ -1031,20 +1049,65 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             exit(-1)
 
 
-class loading_window(QtWidgets.QWidget):
+class loading_window(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(loading_window, self).__init__()
             uic.loadUi(GlobalSettings.appdir + "loading_data_form.ui", self)
             self.loading_bar.setValue(0)
             self.setWindowTitle("Loading Data")
-            self.hide()
+            self.scaleUI()
         except Exception as e:
             logger.critical("Error initializing loading_window class in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    def scaleUI(self):
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+        screen = self.screen()
+        dpi = screen.physicalDotsPerInch()
+        width = screen.geometry().width()
+        height = screen.geometry().height()
+
+        # font scaling
+        # 14px is used for 92 dpi
+        fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+        self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+        # scale/center window
+        scaledWidth = int((width * 450) / 1920)
+        scaledHeight = int((height * 125) / 1080)
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        x = centerPoint.x()
+        y = centerPoint.y()
+        x = x - (math.ceil(scaledWidth / 2))
+        y = y - (math.ceil(scaledHeight / 2))
+        self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+    def centerUI(self):
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+        width = self.width()
+        height = self.height()
+        #scale/center window
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        x = centerPoint.x()
+        y = centerPoint.y()
+        x = x - (math.ceil(width / 2))
+        y = y - (math.ceil(height / 2))
+        self.setGeometry(x, y, width, height)
+
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
 
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
