@@ -295,7 +295,7 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Tab 1&lt;/span&gt; shows the number of total repeats for each seed in the organism of interest. Seeds IDs are assigned arbitrarily.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Tab 2 &lt;/span&gt;shows the number of unique seeds per repeat number. &lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="currentIndex">
-            <number>1</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="tab">
             <attribute name="title">
@@ -329,6 +329,7 @@
       <property name="font">
        <font>
         <family>Arial</family>
+        <pointsize>30</pointsize>
         <weight>75</weight>
         <italic>false</italic>
         <bold>true</bold>
