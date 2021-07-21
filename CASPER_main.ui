@@ -621,7 +621,7 @@
          <item row="0" column="0">
           <widget class="QRadioButton" name="radioButton_Gene">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -655,7 +655,7 @@
          <item row="0" column="1">
           <widget class="QRadioButton" name="radioButton_Position">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -667,6 +667,12 @@
            </property>
            <property name="text">
             <string>Position</string>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>16</width>
+             <height>16</height>
+            </size>
            </property>
           </widget>
          </item>
@@ -685,6 +691,12 @@
             <size>
              <width>0</width>
              <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
             </size>
            </property>
            <property name="text">
@@ -775,7 +787,7 @@
      <x>0</x>
      <y>0</y>
      <width>829</width>
-     <height>24</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="font">

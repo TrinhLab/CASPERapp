@@ -168,9 +168,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             y = y - (math.ceil(scaledHeight / 2))
             self.setGeometry(x, y, scaledWidth, scaledHeight)
 
-            # radio button scaling
-
-            # scroll bar scaling
+            # button and scroll bar scaling
+            self.setStyleSheet("QPushButton { height: 50px }")
 
             # CASPER header scaling
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
@@ -193,9 +192,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         self.repaint()
         QtWidgets.QApplication.processEvents()
 
+        #center window on current screen
         width = self.width()
         height = self.height()
-        # scale/center window
         screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
         centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
         x = centerPoint.x()
@@ -1108,6 +1107,7 @@ class loading_window(QtWidgets.QMainWindow):
 
         self.repaint()
         QtWidgets.QApplication.processEvents()
+
 
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):

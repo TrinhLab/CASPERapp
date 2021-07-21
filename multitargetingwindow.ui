@@ -25,6 +25,11 @@
    <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="font">
+    <font>
+     <pointsize>8</pointsize>
+    </font>
+   </property>
    <layout class="QGridLayout" name="gridLayout">
     <item row="13" column="2" alignment="Qt::AlignRight">
      <widget class="QPushButton" name="export_button">
@@ -37,6 +42,7 @@
       <property name="font">
        <font>
         <family>Arial</family>
+        <pointsize>8</pointsize>
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>
@@ -58,6 +64,7 @@
       <property name="font">
        <font>
         <family>Arial</family>
+        <pointsize>8</pointsize>
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>
@@ -97,6 +104,12 @@
     </item>
     <item row="5" column="1">
      <widget class="QTableWidget" name="table">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="minimumSize">
        <size>
         <width>600</width>
@@ -106,6 +119,7 @@
       <property name="font">
        <font>
         <family>Arial</family>
+        <pointsize>8</pointsize>
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>
@@ -134,7 +148,7 @@
       <item row="0" column="0">
        <widget class="QGroupBox" name="groupBox_2">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -148,6 +162,7 @@
         <property name="font">
          <font>
           <family>Arial</family>
+          <pointsize>8</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -162,9 +177,15 @@
         <layout class="QGridLayout" name="gridLayout_6">
          <item row="2" column="0">
           <widget class="QTabWidget" name="tabWidget_2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="minimumSize">
             <size>
-             <width>500</width>
+             <width>0</width>
              <height>0</height>
             </size>
            </property>
@@ -208,6 +229,12 @@
             <layout class="QVBoxLayout" name="verticalLayout_2">
              <item>
               <widget class="QWidget" name="repeats_vs_chromo" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="minimumSize">
                 <size>
                  <width>0</width>
@@ -226,7 +253,7 @@
       <item row="1" column="0">
        <widget class="QGroupBox" name="groupBox_3">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -234,13 +261,13 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>400</height>
+          <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>400</height>
+          <height>16777215</height>
          </size>
         </property>
         <property name="toolTip">
@@ -264,6 +291,7 @@
            <property name="font">
             <font>
              <family>Arial</family>
+             <pointsize>8</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -329,7 +357,7 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>30</pointsize>
+        <pointsize>8</pointsize>
         <weight>75</weight>
         <italic>false</italic>
         <bold>true</bold>
@@ -345,10 +373,16 @@
     </item>
     <item row="4" column="1">
      <widget class="QGroupBox" name="groupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="minimumSize">
        <size>
-        <width>441</width>
-        <height>127</height>
+        <width>0</width>
+        <height>0</height>
        </size>
       </property>
       <property name="toolTip">
@@ -365,13 +399,21 @@
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="2" column="1">
-        <widget class="QComboBox" name="endo_drop"/>
+        <widget class="QComboBox" name="endo_drop">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
        </item>
        <item row="0" column="1">
         <widget class="QLabel" name="label_3">
          <property name="font">
           <font>
            <family>Arial</family>
+           <pointsize>8</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -387,6 +429,7 @@
          <property name="font">
           <font>
            <family>Arial</family>
+           <pointsize>8</pointsize>
            <weight>50</weight>
            <italic>false</italic>
            <bold>false</bold>
@@ -398,21 +441,35 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QComboBox" name="organism_drop"/>
+        <widget class="QComboBox" name="organism_drop">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
        </item>
        <item row="5" column="0" colspan="2">
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
           <widget class="QPushButton" name="Analyze_Button">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="maximumSize">
             <size>
              <width>16777215</width>
-             <height>32</height>
+             <height>16777215</height>
             </size>
            </property>
            <property name="font">
             <font>
              <family>Arial</family>
+             <pointsize>8</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -426,7 +483,7 @@
          <item>
           <widget class="QToolButton" name="sql_query_settings">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>

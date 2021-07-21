@@ -145,6 +145,20 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
+            #radio button scaling
+
+            #scroll bar scaling
+
+            #CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
+            self.label.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            #resize columns in table
+            self.table.resizeColumnsToContents()
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
             # window scaling
             # 1920x1080 => 1150x650
             scaledWidth = int((width * 1200)/1920)
@@ -157,17 +171,6 @@ class Multitargeting(QtWidgets.QMainWindow):
             y = y - (math.ceil(scaledHeight / 2))
 
             self.setGeometry(x, y, scaledWidth, scaledHeight)
-            #radio button scaling
-
-            #scroll bar scaling
-
-            #CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.label.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
-
-            #resize columns in table
-            self.table.resizeColumnsToContents()
-
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
@@ -191,6 +194,8 @@ class Multitargeting(QtWidgets.QMainWindow):
         x = x - (math.ceil(width / 2))
         y = y - (math.ceil(height / 2))
         self.setGeometry(x, y, width, height)
+
+        self.Analyze_Button.resize(200, 200)
 
         self.repaint()
         QtWidgets.QApplication.processEvents()
@@ -731,7 +736,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    # creates bar graph num of repeats vs. chromsome
+    # creates bar graph num of repeats vs. chromosome
     def chro_bar_create(self, seed):
         try:
             ###Clear out old widgets in layout
@@ -938,7 +943,6 @@ class loading_window(QtWidgets.QMainWindow):
         x = x - (math.ceil(scaledWidth / 2))
         y = y - (math.ceil(scaledHeight / 2))
         self.setGeometry(x, y, scaledWidth, scaledHeight)
-        print(self.geometry())
 
         self.repaint()
         QtWidgets.QApplication.processEvents()
@@ -964,7 +968,18 @@ class loading_window(QtWidgets.QMainWindow):
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         try:
+            screen = GlobalSettings.MTWin.screen()
+            dpi = screen.physicalDotsPerInch()
+            #width = screen.geometry().width()
+            #height = screen.geometry().height()
+
+            #scaledWidth = int((width * 5) / 1920)
+            #scaledHeight = int((height * 4) / 1080)
+
             fig = Figure(figsize=(width, height), dpi=dpi,tight_layout=True)
+
+            #fig = Figure(figsize=(scaledWidth, scaledHeight), dpi=dpi,tight_layout=True)
+
             self.axes = fig.add_subplot(111)
             self.axes.clear()
             super(MplCanvas, self).__init__(fig)

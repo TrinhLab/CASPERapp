@@ -60,6 +60,8 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
 
     def scaleUI(self):
         try:
+            print(self.geometry())
+
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
@@ -71,23 +73,16 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
-            # window scaling
-            # 1920x1080 => 1150x650
-            scaledWidth = int((width * 900)/1920)
-            scaledHeight = int((height * 600)/1080)
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
-
-            #scroll bar scaling
+            #button, scroll bar scaling
+            scaledHeight = int((height * 25) / 1080)
+            scrollbarWidth = int((width * 15) / 1920)
+            scrollbarHeight = int((height * 15) / 1080)
+            self.setStyleSheet('QPushButton {height: ' + str(scaledHeight) + 'px;}')
+            self.tableWidget.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.tableWidget.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
 
             #CASPER header scaling
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
@@ -96,14 +91,45 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             #resize columns in table
             self.tableWidget.resizeColumnsToContents()
 
+            # window scaling
+            # 1920x1080 => 1150x650
+            scaledWidth = int((width * 900) / 1920)
+            scaledHeight = int((height * 600) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
             self.repaint()
             QtWidgets.QApplication.processEvents()
+
+            print(self.geometry())
 
         except Exception as e:
             logger.critical("Error in scaleUI() in AnnotationWindow.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
+
+    def centerUI(self):
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+        #center UI on current screen
+        width = self.width()
+        height = self.height()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        x = centerPoint.x()
+        y = centerPoint.y()
+        x = x - (math.ceil(width / 2))
+        y = y - (math.ceil(height / 2))
+
+        self.setGeometry(x, y, width, height)
+        self.repaint()
 
     def submit(self):
         try:
@@ -199,7 +225,9 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             frameGm.moveCenter(centerPoint)
             self.move(frameGm.topLeft())
 
+            self.centerUI()
             self.show()
+            print(self.geometry())
 
             return 0
         except Exception as e:
@@ -346,15 +374,24 @@ class CMainWindow(QtWidgets.QMainWindow):
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
-            # window scaling
-            # 1920x1080 => 1150x650
+            #scroll bar scaling
 
-            #print(f"base width {width} base height {height}")
+            #push button, radio button, combo box scaling
+            #scaledWidth = int((width * 1150) / 1920)
+            scaledHeight = int((height * 25) / 1080)
+            scrollbarWidth = int((width * 15) / 1920)
+            scrollbarHeight = int((height * 15) / 1080)
+            self.setStyleSheet('QPushButton, QProgressBar, QComboBox {height: ' + str(scaledHeight) + 'px;}' + ' QScrollBar::vertical { width: ' + str(scrollbarWidth) + 'px; }' + ' QScrollBar::horizontal { height: ' + str(scrollbarHeight) + 'px; }')
 
+            #CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
+            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            #window resize and center
+            #1920x1080 => 1150x650
             scaledWidth = int((width * 1150)/1920)
             scaledHeight = int((height * 650)/1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
@@ -363,18 +400,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             y = centerPoint.y()
             x = x - (math.ceil(scaledWidth / 2))
             y = y - (math.ceil(scaledHeight / 2))
-
             self.setGeometry(x, y, scaledWidth, scaledHeight)
-
-            #print(f"new width {self.width()} new height {self.height()}")
-
-            #radio button scaling
-
-            #scroll bar scaling
-
-            #CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
 
             self.repaint()
             QtWidgets.QApplication.processEvents()
@@ -1108,7 +1134,6 @@ class CMainWindow(QtWidgets.QMainWindow):
                 GlobalSettings.MTWin.centerUI()
                 GlobalSettings.MTWin.first_show = False
             GlobalSettings.MTWin.show()
-            print(GlobalSettings.MTWin.geometry())
             GlobalSettings.mainWindow.hide()
 
         except Exception as e:
@@ -1306,8 +1331,9 @@ class StartupWindow(QtWidgets.QMainWindow):
     #function for scaling the font size and logo size based on resolution and DPI of screen
     def scaleUI(self):
         try:
-            originalWidth = self.width()
-            originalHeight = self.height()
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
             screen = self.screen()
             dpi = math.ceil(screen.physicalDotsPerInch())
             width = screen.geometry().width()
@@ -1322,21 +1348,19 @@ class StartupWindow(QtWidgets.QMainWindow):
             # font scaling
             # 16px is used for 92 dpi 1920x1080
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
-            # scale logo image
-            # 1920x1080 => 766x388
-            scaledWidth = int( (width * 806) // 1920)
-            scaledHeight = int( (height * 388) // 1080)
-
-            pixmapOriginal = QtGui.QPixmap(GlobalSettings.appdir + "CASPER-logo.jpg")
-
             #set logo image
+            pixmapOriginal = QtGui.QPixmap(GlobalSettings.appdir + "CASPER-logo.jpg")
             self.logo.setPixmap(pixmapOriginal)
 
+            #scale buttons and line edit
+            scaledHeight = int((height * 25) // 1080)
+            self.setStyleSheet("QPushButton, QLineEdit {height: " + str(scaledHeight) + "px}")
+
             #scale and center UI
-            scaledHeight += originalHeight
+            scaledWidth = int((width * 850) // 1920)
+            scaledHeight = int((height * 550) // 1080)
 
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
@@ -1346,12 +1370,33 @@ class StartupWindow(QtWidgets.QMainWindow):
             y = y - (math.ceil(scaledHeight / 2))
             self.setGeometry(x, y, scaledWidth, scaledHeight)
 
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
 
         except Exception as e:
             logger.critical("Error in scaleUI() in startup window.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
+
+    def centerUI(self):
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
+
+        #center UI
+        width = self.width()
+        height = self.height()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        x = centerPoint.x()
+        y = centerPoint.y()
+        x = x - (math.ceil(width / 2))
+        y = y - (math.ceil(height / 2))
+        self.setGeometry(x, y, width, height)
+
+        self.repaint()
+        QtWidgets.QApplication.processEvents()
 
     #event handler for user clicking the "Change..." button - used for changing CASPER database directory
     def changeDirectory(self):
@@ -1668,7 +1713,6 @@ def main():
     #load startup window
     try:
         startup = StartupWindow()
-        startup.show()
         logger.debug("Successfully initialized Startup Window.")
     except Exception as e:
         logger.critical("Can't start Startup window.")
@@ -1705,6 +1749,9 @@ def main():
         logger.critical(e)
         logger.critical(traceback.format_exc())
         exit(-1)
+
+    startup.centerUI()
+    startup.show()
 
     sys.exit(app.exec_())
 
