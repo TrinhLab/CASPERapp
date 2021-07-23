@@ -60,8 +60,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
 
     def scaleUI(self):
         try:
-            print(self.geometry())
-
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
@@ -105,8 +103,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
 
             self.repaint()
             QtWidgets.QApplication.processEvents()
-
-            print(self.geometry())
 
         except Exception as e:
             logger.critical("Error in scaleUI() in AnnotationWindow.")

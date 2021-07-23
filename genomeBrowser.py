@@ -21,6 +21,7 @@ class WebEnginePage(PyQt5.QtWebEngineWidgets.QWebEnginePage):
 	def certificateError(self, certificateError):
 		print("ssl error")
 
+
 class genomebrowser(QtWidgets.QWidget):
 	def __init__(self, parent=None):
 		try:
@@ -165,6 +166,7 @@ class genomebrowser(QtWidgets.QWidget):
 			logger.critical(e)
 			logger.critical(traceback.format_exc())
 			exit(-1)
+
 
 #progress bar gui
 class loading_window(QtWidgets.QMainWindow):

@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import GlobalSettings
 import os
@@ -9,8 +9,6 @@ from PyQt5.QtWidgets import *
 import gzip
 import sqlite3
 import itertools
-from matplotlib import cm
-import matplotlib
 import matplotlib.patches as patches
 import mplcursors
 import copy
@@ -42,7 +40,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             """ Colormap Graph initialization """
             self.colormap_layout = QtWidgets.QVBoxLayout()
             self.colormap_layout.setContentsMargins(0,0,0,0)
-            self.colormap_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
+            self.colormap_canvas = MplCanvas(self) ###Initialize new Canvas
 
 
             groupbox_style = """
@@ -101,14 +99,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                                     1]  # for keeping track of where we are in the sorting clicking for each column
             self.switcher_loc_table = [1, 1, 1, 1, 1]
 
-            #Window centering stuff
-            self.mwfg = self.frameGeometry()  ##Center window
-            self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
-            self.mwfg.moveCenter(self.cp)  ##Center window
-            self.move(self.mwfg.topLeft())  ##Center window
-            #screen = QtGui.QGuiApplication.screenAt(QtGui.QCursor().pos())
-
-
             #Initialize variables
             self.index_to_cspr = {}
             self.index_to_db = {}
@@ -117,15 +107,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.db_files = []
             self.Endos = {}
             self.seeds = []
-
-
-            #set pixel widths on scroll bars
-            self.org_Table.verticalScrollBar().setStyleSheet("width: 14px;")
-            self.org_Table.horizontalScrollBar().setStyleSheet("height: 14px;")
-            self.table2.verticalScrollBar().setStyleSheet("width: 14px;")
-            self.table2.horizontalScrollBar().setStyleSheet("height: 14px;")
-            self.loc_finder_table.verticalScrollBar().setStyleSheet("width: 14px;")
-            self.loc_finder_table.horizontalScrollBar().setStyleSheet("height: 14px;")
 
             self.loading_window = loading_window()
 
@@ -144,7 +125,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
-            screen = self.screen()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            screen = QtWidgets.QApplication.screens()[screen]
             dpi = screen.physicalDotsPerInch()
             width = screen.geometry().width()
             height = screen.geometry().height()
@@ -152,24 +134,51 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-
+            self.fontSize = fontSize
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
 
-            # window scaling
-            # 1920x1080 => 1150x650
-            scaledWidth = int((width * 1100) / 1920)
-            scaledHeight = int((height * 751) / 1080)
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px }")
 
-            # button and scroll bar scaling
-            self.setStyleSheet("QPushButton { height: 50px }")
+            #scroll bar scaling
+            scrollbarWidth = int((width * 15) / 1920)
+            scrollbarHeight = int((height * 15) / 1080)
+            self.org_Table.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.org_Table.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+            self.table2.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.table2.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+            self.loc_finder_table.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.loc_finder_table.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+
+            #scaling group boxes
+            minGroupBoxWidth = int((width * 400) // 1920)
+            maxGroupBoxWidth = int((width * 400) // 1920)
+            minGroupBoxHeight = int((height * 250) // 1080)
+            maxGroupBoxHeight = int((height * 500) // 1080)
+            self.groupBox.setMinimumWidth(minGroupBoxWidth)
+            self.groupBox.setMaximumWidth(maxGroupBoxWidth)
+            self.groupBox.setMinimumHeight(minGroupBoxHeight)
+            self.groupBox.setMaximumHeight(maxGroupBoxHeight)
+            self.tabWidget.setMinimumWidth(minGroupBoxWidth)
+            self.tabWidget.setMaximumWidth(maxGroupBoxWidth)
+            self.tabWidget.setMinimumHeight(minGroupBoxHeight)
+            self.tabWidget.setMaximumHeight(maxGroupBoxHeight)
+
+            #scaling tables
+            minTable2Height = int((height * 200) // 1080)
+            maxTable2Height = int((height * 600) // 1080)
+            minLocTableHeight = int((height * 200) // 1080)
+            maxLocTableHeight = int((height * 200) // 1080)
+            self.table2.setMinimumHeight(minTable2Height)
+            self.table2.setMaximumHeight(maxTable2Height)
+            self.loc_finder_table.setMinimumHeight(minLocTableHeight)
+            self.loc_finder_table.setMaximumHeight(maxLocTableHeight)
+
+            #spacers
+            self.spacer_2.setStyleSheet("font: 1pt;")
+            self.spacer_1.setStyleSheet("font: 1pt;")
 
             # CASPER header scaling
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
@@ -178,6 +187,18 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             # resize columns in table
             self.table2.resizeColumnsToContents()
             self.loc_finder_table.resizeColumnsToContents()
+
+            # window scaling
+            # 1920x1080 => 1150x650
+            scaledWidth = int((width * 1100) / 1920)
+            scaledHeight = int((height * 750) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
 
             self.repaint()
             QtWidgets.QApplication.processEvents()
@@ -189,31 +210,42 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             exit(-1)
 
     def centerUI(self):
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
-        #center window on current screen
-        width = self.width()
-        height = self.height()
-        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-        x = centerPoint.x()
-        y = centerPoint.y()
-        x = x - (math.ceil(width / 2))
-        y = y - (math.ceil(height / 2))
-        self.setGeometry(x, y, width, height)
+            #center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
 
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in population analysis.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
 
     def export_to_csv(self):
         try:
             select_items = self.table2.selectedItems()
             if len(select_items) <= 0:
-                QtWidgets.QMessageBox.question(self, "Nothing Selected",
-                                               "No targets were highlighted."
-                                               "Please highlight the targets you want to be exported to a CSV File!",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Nothing Selected")
+                msgBox.setText("No targets were highlighted. Please highlight the targets you want to be exported to a CSV File!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
             GlobalSettings.mainWindow.export_csv_window.launch(select_items,9)
         except Exception as e:
@@ -244,9 +276,14 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
             # error check
             if len(selected_indexes) == 0:
-                QtWidgets.QMessageBox.question(self, "Error",
-                                               "Please select CSPR file(s) for analysis.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText("Please select CSPR file(s) for analysis.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
             #get cspr and db filenames
@@ -572,7 +609,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
             # prep table
             self.total_org_number = len(self.cspr_files)
-            self.table2.setRowCount(0)
             self.loading_window.loading_bar.setValue(10)
             index = 0
 
@@ -580,10 +616,23 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 self.loading_window.hide()
                 return
 
+            if len(self.seeds) == 0:
+                self.loading_window.hide()
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText("No analysis has been run to be able to search for a specific seed.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+                return
+
             increase_val = float(15 / len(self.seeds))
             running_val = self.loading_window.loading_bar.value()
             self.loading_window.info_label.setText("Parsing Seed Data")
             # QtCore.QCoreApplication.processEvents()
+
+            self.table2.setRowCount(0)
 
             # retrieve data on shared seeds
             self.counts = []
@@ -613,10 +662,16 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         locs += data[5].split(",")
 
                 if none_data == True:
-                    QtWidgets.QMessageBox.information(self, "Seed Error",
-                                                      seed + " : No such seed exists in the repeats section of any organism selected.",
-                                                      QtWidgets.QMessageBox.Ok)
                     self.loading_window.hide()
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Seed Error")
+                    msgBox.setText(seed + " : No such seed exists in the repeats section of any organism selected.")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+                    return
+
                 else:
 
                     # increase row count
@@ -902,8 +957,14 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         try:
             #error checking
             if len(self.table2.selectedItems()) == 0:
-                QtWidgets.QMessageBox.question(self, "Error", "Please select at least 1 seed to find locations of.",
-                                                    QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText("Please select at least 1 seed to find locations of.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 self.loc_finder_table.setRowCount(0)
                 return
 
@@ -1063,56 +1124,70 @@ class loading_window(QtWidgets.QMainWindow):
             exit(-1)
 
     def scaleUI(self):
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
-        screen = self.screen()
-        dpi = screen.physicalDotsPerInch()
-        width = screen.geometry().width()
-        height = screen.geometry().height()
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
 
-        # font scaling
-        # 14px is used for 92 dpi
-        fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-        self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+            # font scaling
+            # 14px is used for 92 dpi
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
 
-        # scale/center window
-        scaledWidth = int((width * 450) / 1920)
-        scaledHeight = int((height * 125) / 1080)
-        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-        x = centerPoint.x()
-        y = centerPoint.y()
-        x = x - (math.ceil(scaledWidth / 2))
-        y = y - (math.ceil(scaledHeight / 2))
-        self.setGeometry(x, y, scaledWidth, scaledHeight)
+            # scale/center window
+            scaledWidth = int((width * 450) / 1920)
+            scaledHeight = int((height * 125) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
 
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in scaleUI() in loading_window() class in population analysis.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
 
     def centerUI(self):
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
-        width = self.width()
-        height = self.height()
-        #scale/center window
-        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-        x = centerPoint.x()
-        y = centerPoint.y()
-        x = x - (math.ceil(width / 2))
-        y = y - (math.ceil(height / 2))
-        self.setGeometry(x, y, width, height)
+            width = self.width()
+            height = self.height()
+            #scale/center window
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
 
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in loading_window() class in population analysis.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
 
 
 class MplCanvas(FigureCanvasQTAgg):
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
+    def __init__(self, parent=None, width=400, height=250, dpi=100):
         try:
-            fig = Figure(figsize=(width, height), dpi=dpi,tight_layout=True)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            dpi = QtWidgets.QApplication.screens()[screen].physicalDotsPerInch()
+            fig = Figure(dpi=dpi, tight_layout=True)
             self.axes = fig.add_subplot(111)
             self.axes.clear()
             super(MplCanvas, self).__init__(fig)
