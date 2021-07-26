@@ -373,8 +373,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
-            #scroll bar scaling
-
             #push button, radio button, combo box scaling
             #scaledWidth = int((width * 1150) / 1920)
             scaledHeight = int((height * 25) / 1080)
@@ -762,11 +760,13 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def launch_newGenome(self):
         try:
-            self.hide()
-            #update endo list
+            # update endo list
             self.newGenome.fillEndo()
+            if self.newGenome.first_show == True:
+                self.newGenome.centerUI()
+                self.newGenome.first_show = False
+            self.hide()
             self.newGenome.show()
-
         except Exception as e:
             logger.critical("Error in launch_newGenome() in main.")
             logger.critical(e)

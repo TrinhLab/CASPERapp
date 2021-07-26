@@ -18,8 +18,11 @@ import math
 #global logger
 logger = GlobalSettings.logger
 
+
+#population analysis class
 class Pop_Analysis(QtWidgets.QMainWindow):
 
+    #init class
     def __init__(self):
         try:
             super(Pop_Analysis, self).__init__()
@@ -120,6 +123,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #scale the UI based on current screen
     def scaleUI(self):
         try:
             self.repaint()
@@ -176,10 +180,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.loc_finder_table.setMinimumHeight(minLocTableHeight)
             self.loc_finder_table.setMaximumHeight(maxLocTableHeight)
 
-            #spacers
-            self.spacer_2.setStyleSheet("font: 1pt;")
-            self.spacer_1.setStyleSheet("font: 1pt;")
-
             # CASPER header scaling
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
             self.label.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
@@ -187,6 +187,11 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             # resize columns in table
             self.table2.resizeColumnsToContents()
             self.loc_finder_table.resizeColumnsToContents()
+
+            # spacers
+            spacerSize = int((height * 1) / 1080)
+            self.spacer_1.setStyleSheet("font: " + str(spacerSize) + "pt;")
+            self.spacer_2.setStyleSheet("font: " + str(spacerSize) + "pt;")
 
             # window scaling
             # 1920x1080 => 1150x650
@@ -209,6 +214,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #center UI on current screen
     def centerUI(self):
         try:
             self.repaint()
@@ -233,7 +239,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-
+    #export shared seed table to csv function
     def export_to_csv(self):
         try:
             select_items = self.table2.selectedItems()
@@ -250,15 +256,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.export_csv_window.launch(select_items,9)
         except Exception as e:
             logger.critical("Error in export_to_csv() in population analysis.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            exit(-1)
-
-    def prevent_toggle(self):
-        try:
-            self.meta_genomic_cspr_checkbox.setChecked(QtCore.Qt.Checked)
-        except Exception as e:
-            logger.critical("Error in prevent_toggle() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -300,6 +297,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #wrapper for calling get_data()
     def launch(self):
         try:
             self.get_data()
@@ -309,6 +307,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #responsible for calling all loading/analysis functions for loading the shared seeds table and generating the heatmap based on selected organisms
     def get_data(self):
         try:
             self.fillEndo()
@@ -359,6 +358,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #event handler for updating the organism options based on the endo selected
     def change_endo(self):
         try:
             self.org_Table.clearContents()
@@ -408,6 +408,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #fills shared seed table with data from analysis
     def fill_data(self):
         try:
             #update progress bar
@@ -590,6 +591,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #function to allow user to search for a specific seed amongst the organisms analyzed
     def custom_seed_search(self):
         try:
             seeds = str(self.seed_input.text())
@@ -854,6 +856,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #get the names of organism in current directory
     def get_org_names(self):
         try:
             self.org_names = {}
@@ -878,6 +881,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #plot the heatmap graph
     def plot_3D_graph(self):
         try:
             for i in reversed(range(self.colormap_layout.count())): ### Clear out old widges in layout
@@ -953,6 +957,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #find the locations of selected seeds to load into the location table
     def find_locations(self):
         try:
             #error checking
@@ -1037,20 +1042,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    def table_sorting(self, logicalIndex):
-        try:
-            self.switcher[logicalIndex] *= -1
-            if self.switcher[logicalIndex] == -1:
-                self.table2.sortItems(logicalIndex, QtCore.Qt.DescendingOrder)
-            else:
-                self.table2.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
-        except Exception as e:
-            logger.critical("Error in table_sorting() in population analysis.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            exit(-1)
-
-    # sorting to table2: IE the table in top-right
+    # sorting function for table2 - shared seeds table: IE the table in top-right
     def table2_sorting(self, logicalIndex):
         try:
             self.switcher_table2[logicalIndex] *= -1
@@ -1078,6 +1070,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #clears the table showcasing shared seeds
     def clear(self):
         try:
             self.table2.setRowCount(0)
@@ -1087,6 +1080,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #return to main function
     def go_back(self):
         try:
             GlobalSettings.mainWindow.show()
@@ -1109,6 +1103,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             exit(-1)
 
 
+#loading window UI class for when data is loading
 class loading_window(QtWidgets.QMainWindow):
     def __init__(self):
         try:
@@ -1123,6 +1118,7 @@ class loading_window(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #scale UI based on current screen
     def scaleUI(self):
         try:
             self.repaint()
@@ -1157,6 +1153,7 @@ class loading_window(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #center UI on current screen
     def centerUI(self):
         try:
             self.repaint()
@@ -1182,6 +1179,7 @@ class loading_window(QtWidgets.QMainWindow):
             exit(-1)
 
 
+#matplotlib canvas class for the heatmap graph
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=400, height=250, dpi=100):
         try:

@@ -13,7 +13,7 @@
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>1</pointsize>
+    <pointsize>8</pointsize>
     <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
@@ -25,11 +25,11 @@
   <property name="styleSheet">
    <string notr="true"/>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2">
+  <layout class="QGridLayout" name="gridLayout">
    <property name="sizeConstraint">
     <enum>QLayout::SetFixedSize</enum>
    </property>
-   <item row="0" column="0" rowspan="2">
+   <item row="0" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="minimumSize">
       <size>
