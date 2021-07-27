@@ -21,11 +21,11 @@ def iter_except(function, exception):
 
 
 #UI prompt for when the user has finished running jobs in new genome to allow them to choose where the want to proceed
-class goToPrompt(QtWidgets.QWidget):
+class goToPrompt(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(goToPrompt, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'newgenomenavigatepage.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'newgenomenavigationpage.ui', self)
 
             groupbox_style = """
             QGroupBox:title{subcontrol-origin: margin;
@@ -37,6 +37,8 @@ class goToPrompt(QtWidgets.QWidget):
                             margin-top: 10px;}"""
             self.groupBox.setStyleSheet(groupbox_style)
             self.scaleUI()
+            self.setWindowTitle("New Genome")
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.hide()
 
         except Exception as e:
@@ -45,6 +47,7 @@ class goToPrompt(QtWidgets.QWidget):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #scale UI based on current screen
     def scaleUI(self):
         try:
             self.repaint()
@@ -52,6 +55,7 @@ class goToPrompt(QtWidgets.QWidget):
 
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
             height = screen.geometry().height()
 
             # font scaling
@@ -60,16 +64,30 @@ class goToPrompt(QtWidgets.QWidget):
 
             # button scaling
             scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px } QWidget {font: " + str(fontSize) + "px 'Arial';}")
+            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px; } QWidget { font: " + str(fontSize) + "px 'Arial'; }")
+
+            # window scaling
+            # 1920x1080 => 550x200
+            scaledWidth = int((width * 575) / 1920)
+            scaledHeight = int((height * 175) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
 
             self.repaint()
             QtWidgets.QApplication.processEvents()
+
         except Exception as e:
             logger.critical("Error in scaleUI() in new genome navigation window.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #center UI on current screen
     def centerUI(self):
         try:
             self.repaint()
@@ -124,7 +142,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
             #---Button Modifications---#
 
-            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.png"))
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.resetButton.clicked.connect(self.reset)
             self.submitButton.clicked.connect(self.submit)
             self.browseForFile.clicked.connect(self.selectFasta)
@@ -190,6 +208,8 @@ class NewGenome(QtWidgets.QMainWindow):
             self.goToPrompt.goToMT.clicked.connect(self.continue_to_MT)
             self.goToPrompt.goToPop.clicked.connect(self.continue_to_pop)
 
+            self.orgName.setFocus()
+
             #scale UI
             self.scaleUI()
             self.first_show = True
@@ -244,7 +264,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.spacer_3.setStyleSheet("font: " + str(spacerSize) + "pt;")
 
             # window scaling
-            # 1920x1080 => 1150x650
+            # 1920x1080 => 850x750
             scaledWidth = int((width * 850) / 1920)
             scaledHeight = int((height * 750) / 1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
@@ -374,7 +394,7 @@ class NewGenome(QtWidgets.QMainWindow):
             if len(warning) != 0:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                 msgBox.setWindowTitle("Missing Information")
                 msgBox.setText(warning + "\n\nDo you wish to continue without including this information?")
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
@@ -646,7 +666,8 @@ class NewGenome(QtWidgets.QMainWindow):
             self.orgCode.clear()
             self.selectedFile.clear()
             self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
-
+            self.output_browser.clear()
+            self.output_browser.setText("Waiting for program initiation...")
             self.file = ""
         except Exception as e:
             logger.critical("Error in reset() in New Genome.")
@@ -688,7 +709,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 if self.exit == False:
                     msgBox = QtWidgets.QMessageBox()
                     msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
-                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                     msgBox.setWindowTitle("No CSPR file generated")
                     msgBox.setText("No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
                                                             "Alternatively, you could quit the program. Would you like to quit?")
@@ -712,6 +733,8 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.strainName.clear()
                 self.orgCode.clear()
                 self.output_browser.clear()
+                self.output_browser.setText("Waiting for program initiation...")
+                self.selectedFile.clear()
                 self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
                 self.progressBar.setValue(0)
                 self.first = False
@@ -754,7 +777,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                 msgBox.setWindowTitle("No CSPR file generated")
                 msgBox.setText(
                     "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
@@ -776,6 +799,8 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.strainName.clear()
                 self.orgCode.clear()
                 self.output_browser.clear()
+                self.output_browser.setText("Waiting for program initiation...")
+                self.selectedFile.clear()
                 self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
                 self.progressBar.setValue(0)
                 self.first = False
@@ -790,12 +815,9 @@ class NewGenome(QtWidgets.QMainWindow):
                 GlobalSettings.pop_Analysis.launch()
 
                 # center main on current screen
-                frameGm = GlobalSettings.mainWindow.frameGeometry()
-                screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-                centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-                frameGm.moveCenter(centerPoint)
-                GlobalSettings.mainWindow.move(frameGm.topLeft())
-
+                if GlobalSettings.mainWindow.first_show == True:
+                    GlobalSettings.mainWindow.first_show = False
+                    GlobalSettings.mainWindow.centerUI()
                 GlobalSettings.mainWindow.show()
                 self.hide()
         except Exception as e:
@@ -818,7 +840,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                 msgBox.setWindowTitle("No CSPR file generated")
                 msgBox.setText(
                     "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
@@ -841,6 +863,8 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.strainName.clear()
                 self.orgCode.clear()
                 self.output_browser.clear()
+                self.output_browser.setText("Waiting for program initiation...")
+                self.selectedFile.clear()
                 self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
                 self.progressBar.setValue(0)
                 self.first = False
@@ -855,11 +879,9 @@ class NewGenome(QtWidgets.QMainWindow):
                 GlobalSettings.pop_Analysis.launch()
 
                 # center multi-targeting on current screen
-                frameGm = GlobalSettings.MTWin.frameGeometry()
-                screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-                centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-                frameGm.moveCenter(centerPoint)
-                GlobalSettings.MTWin.move(frameGm.topLeft())
+                if GlobalSettings.MTWin.first_show == True:
+                    GlobalSettings.MTWin.first_show = False
+                    GlobalSettings.MTWin.centerUI()
 
                 GlobalSettings.MTWin.show()
                 self.hide()
@@ -883,7 +905,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                 msgBox.setWindowTitle("No CSPR file generated")
                 msgBox.setText(
                     "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
@@ -904,6 +926,8 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.strainName.clear()
                 self.orgCode.clear()
                 self.output_browser.clear()
+                self.output_browser.setText("Waiting for program initiation...")
+                self.selectedFile.clear()
                 self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
                 self.progressBar.setValue(0)
                 self.first = False
@@ -917,12 +941,9 @@ class NewGenome(QtWidgets.QMainWindow):
                 GlobalSettings.MTWin.launch()
                 GlobalSettings.pop_Analysis.launch()
 
-                # center pop analysis on current screen
-                frameGm = GlobalSettings.pop_Analysis.frameGeometry()
-                screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-                centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-                frameGm.moveCenter(centerPoint)
-                GlobalSettings.pop_Analysis.move(frameGm.topLeft())
+                if GlobalSettings.pop_Analysis.first_show == True:
+                    GlobalSettings.pop_Analysis.first_show = False
+                    GlobalSettings.pop_Analysis.centerUI()
 
                 GlobalSettings.pop_Analysis.show()
                 self.hide()

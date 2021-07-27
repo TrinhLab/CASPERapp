@@ -1024,6 +1024,18 @@
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>orgChoice</tabstop>
+  <tabstop>endoChoice</tabstop>
+  <tabstop>launch_ncbi_button</tabstop>
+  <tabstop>annotation_files</tabstop>
+  <tabstop>radioButton_Gene</tabstop>
+  <tabstop>radioButton_Position</tabstop>
+  <tabstop>geneEntryField</tabstop>
+  <tabstop>pushButton_FindTargets</tabstop>
+  <tabstop>pushButton_ViewTargets</tabstop>
+  <tabstop>GenerateLibrary</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

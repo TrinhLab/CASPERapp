@@ -27,7 +27,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         try:
             super(Pop_Analysis, self).__init__()
             uic.loadUi(GlobalSettings.appdir + 'populationanalysis.ui', self)
-            self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.goBackButton.clicked.connect(self.go_back)
             self.analyze_button.clicked.connect(self.pre_analyze)
             self.clear_Button.clicked.connect(self.clear)
@@ -195,8 +195,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
             # window scaling
             # 1920x1080 => 1150x650
-            scaledWidth = int((width * 1100) / 1920)
-            scaledHeight = int((height * 750) / 1080)
+            scaledWidth = int((width * 1150) / 1920)
+            scaledHeight = int((height * 650) / 1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1111,6 +1111,7 @@ class loading_window(QtWidgets.QMainWindow):
             uic.loadUi(GlobalSettings.appdir + "loading_data_form.ui", self)
             self.loading_bar.setValue(0)
             self.setWindowTitle("Loading Data")
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.scaleUI()
         except Exception as e:
             logger.critical("Error initializing loading_window class in population analysis.")
@@ -1133,6 +1134,10 @@ class loading_window(QtWidgets.QMainWindow):
             # 14px is used for 92 dpi
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # progress bar scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QProgressBar { height: " + str(scaledHeight) + "px }")
 
             # scale/center window
             scaledWidth = int((width * 450) / 1920)

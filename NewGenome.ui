@@ -964,6 +964,28 @@ and references for the organism you are importing here.</string>
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>orgName</tabstop>
+  <tabstop>strainName</tabstop>
+  <tabstop>comboBoxEndo</tabstop>
+  <tabstop>orgCode</tabstop>
+  <tabstop>seed_length</tabstop>
+  <tabstop>five_length</tabstop>
+  <tabstop>three_length</tabstop>
+  <tabstop>repeats_box</tabstop>
+  <tabstop>mt</tabstop>
+  <tabstop>NCBI_File_Search</tabstop>
+  <tabstop>browseForFile</tabstop>
+  <tabstop>selectedFile</tabstop>
+  <tabstop>submitButton</tabstop>
+  <tabstop>clearButton</tabstop>
+  <tabstop>remove_job</tabstop>
+  <tabstop>runButton</tabstop>
+  <tabstop>job_Table</tabstop>
+  <tabstop>output_browser</tabstop>
+  <tabstop>resetButton</tabstop>
+  <tabstop>contButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
