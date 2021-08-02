@@ -259,6 +259,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
             #spacers
             spacerSize =  int((height * 1) / 1080)
+            spacerSize = spacerSize ** 4
             self.spacer_1.setStyleSheet("font: " + str(spacerSize) + "pt;")
             self.spacer_2.setStyleSheet("font: " + str(spacerSize) + "pt;")
             self.spacer_3.setStyleSheet("font: " + str(spacerSize) + "pt;")
@@ -313,12 +314,9 @@ class NewGenome(QtWidgets.QMainWindow):
     def open_ncbi_tool(self):
         try:
             #center ncbi on current screen
-            frameGm = GlobalSettings.mainWindow.ncbi.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            GlobalSettings.mainWindow.ncbi.move(frameGm.topLeft())
-
+            if GlobalSettings.mainWindow.ncbi.first_show == True:
+                GlobalSettings.mainWindow.ncbi.first_show = False
+                GlobalSettings.mainWindow.ncbi.centerUI()
             GlobalSettings.mainWindow.ncbi.show()
         except Exception as e:
             logger.critical("Error in open_ncbi_tool() in New Genome.")

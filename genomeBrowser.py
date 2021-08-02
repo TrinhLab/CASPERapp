@@ -11,6 +11,7 @@ import platform
 import glob
 import ssl
 import traceback
+import webbrowser
 
 #global logger
 logger = GlobalSettings.logger
@@ -25,7 +26,6 @@ class WebEnginePage(PyQt5.QtWebEngineWidgets.QWebEnginePage):
 class genomebrowser(QtWidgets.QWidget):
 	def __init__(self, parent=None):
 		try:
-			self.loadingWindow = loading_window()
 			default_config = QtNetwork.QSslConfiguration.defaultConfiguration()
 			default_config.setProtocol(QtNetwork.QSsl.TlsV1_2)
 			QtNetwork.QSslConfiguration.setDefaultConfiguration(default_config)
@@ -127,9 +127,6 @@ class genomebrowser(QtWidgets.QWidget):
 
 	def createGraph(self, p):
 		try:
-			#launch loading window
-			self.loadingWindow.show()
-			QtCore.QCoreApplication.processEvents()
 			selectedGenome = p.annotation_files.currentText()
 			gciVariable = self.splitStringLocal(selectedGenome)
 
@@ -157,29 +154,9 @@ class genomebrowser(QtWidgets.QWidget):
 			self.browser = QWebEngineView()
 
 			file_path = GlobalSettings.appdir + "genomeBrowserTemplate.html"
-			local_url = QUrl.fromLocalFile(file_path)
-			self.browser.load(local_url)
-			self.browser.show()
-			self.loadingWindow.hide()
+			webbrowser.open(file_path, new=2)
 		except Exception as e:
 			logger.critical("Error in createGraph() in genomebrowser.")
-			logger.critical(e)
-			logger.critical(traceback.format_exc())
-			exit(-1)
-
-
-#progress bar gui
-class loading_window(QtWidgets.QMainWindow):
-	def __init__(self):
-		try:
-			super(loading_window, self).__init__()
-			uic.loadUi(GlobalSettings.appdir + "loading_data_form.ui", self)
-			self.loading_bar.hide()
-			self.setWindowTitle("Loading Genome Browser")
-			self.info_label.setText("Loading Genome Browser")
-			self.hide()
-		except Exception as e:
-			logger.critical("Error initializing loading_window class in genomebrowser.")
 			logger.critical(e)
 			logger.critical(traceback.format_exc())
 			exit(-1)

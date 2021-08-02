@@ -297,7 +297,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.organismDict = dict()  # the dictionary for the links to download. Key is the description of the organism, value is the ID that can be found in link_list
         self.organismData = list()
         self.ncbi = ncbi.NCBI_search_tool()
-        self.ncbi.hide()
 
         groupbox_style = """
         QGroupBox:title{subcontrol-origin: margin;
@@ -376,7 +375,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-            print(fontSize)
             self.fontSize = fontSize
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
@@ -908,12 +906,10 @@ class CMainWindow(QtWidgets.QMainWindow):
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
             msgBox.exec()
 
-            #center ncbi window on current screen
-            frameGm =  self.ncbi.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.ncbi.move(frameGm.topLeft())
+            if self.ncbi.first_show == True:
+                self.ncbi.first_show = False
+                self.ncbi.centerUI()
+
             self.ncbi.show()
         except Exception as e:
             logger.critical("Error in launch_ncbi() in main.")
@@ -1873,8 +1869,6 @@ def main():
     app = QtWidgets.QApplication(sys.argv)
     app.setOrganizationName("TrinhLab-UTK")
     app.setApplicationName("CASPER")
-
-    print(app.screens()[0].physicalDotsPerInch())
 
     #setup logger
     fh = logging.FileHandler(GlobalSettings.appdir + 'CASPER.log', mode='w')

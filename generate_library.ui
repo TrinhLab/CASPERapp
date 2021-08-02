@@ -435,10 +435,16 @@
       <item row="4" column="0" alignment="Qt::AlignLeft">
        <widget class="QPushButton" name="cancel_button">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>125</width>
+          <height>0</height>
+         </size>
         </property>
         <property name="text">
          <string>Cancel</string>
@@ -448,10 +454,16 @@
       <item row="4" column="1" alignment="Qt::AlignRight">
        <widget class="QPushButton" name="submit_button">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>125</width>
+          <height>0</height>
+         </size>
         </property>
         <property name="text">
          <string>Submit</string>
