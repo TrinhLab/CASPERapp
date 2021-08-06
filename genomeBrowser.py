@@ -154,6 +154,9 @@ class genomebrowser(QtWidgets.QWidget):
 			self.browser = QWebEngineView()
 
 			file_path = GlobalSettings.appdir + "genomeBrowserTemplate.html"
+			if platform.system() == "Darwin":
+				file_path = "file:///"+file_path
+			### Add logic for Linux ?
 			webbrowser.open(file_path, new=2)
 		except Exception as e:
 			logger.critical("Error in createGraph() in genomebrowser.")
