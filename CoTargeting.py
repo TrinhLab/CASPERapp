@@ -1,7 +1,7 @@
-
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 import GlobalSettings
 import traceback
+import math
 
 #global logger
 logger = GlobalSettings.logger
@@ -12,14 +12,15 @@ logger = GlobalSettings.logger
 # from results: the organism name and the list of endonucleases for that organism
 # from user: which endonucleases to co-target
 ######################################################
-class CoTargeting(QtWidgets.QDialog):
+class CoTargeting(QtWidgets.QMainWindow):
 
     def __init__(self, path):
         try:
             # pyqt stuff
             super(CoTargeting, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'co_targeting.ui', self)
-            self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
+            uic.loadUi(GlobalSettings.appdir + 'cotargeting.ui', self)
+            self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.ico"))
+            self.setWindowTitle("Co-targeting")
 
             # endo_table stuff
             self.endo_table.setColumnCount(1)  # hardcoded because there will always be 1 columns
@@ -40,8 +41,91 @@ class CoTargeting(QtWidgets.QDialog):
             #set pixel width for scroll bars
             self.endo_table.verticalScrollBar().setStyleSheet("width: 16px;")
             self.endo_table.horizontalScrollBar().setStyleSheet("height: 16px;")
+
+            #scale UI
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing CoTargeting class.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton, QLineEdit { height: " + str(scaledHeight) + "px }")
+
+            #scroll bar scaling
+            scrollbarWidth = int((width * 15) / 1920)
+            scrollbarHeight = int((height * 15) / 1080)
+            self.endo_table.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.endo_table.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+
+            # CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 20) // (92)))))
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            #resize table
+            self.endo_table.resizeColumnsToContents()
+
+            # window scaling
+            # 1920x1080 => 850x750
+            scaledWidth = int((width * 450) / 1920)
+            scaledHeight = int((height * 375) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in scaleUI() in cotargeting in results.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            # center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in cotargeting in results.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -70,6 +154,7 @@ class CoTargeting(QtWidgets.QDialog):
             self.endo_table.resizeColumnsToContents()
 
             # now show
+            self.centerUI()
             self.show()
         except Exception as e:
             logger.critical("Error in launch() in CoTargeting.")
@@ -116,8 +201,15 @@ class CoTargeting(QtWidgets.QDialog):
             # set the selected_list, and make sure they select at least 2 endonucleases
             selected_list = self.endo_table.selectedItems()
             if len(selected_list) <= 1:
-                QtWidgets.QMessageBox.question(self, "Nothing Selected", "No endonucleases selected. Please select at least 2 endonucleases",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Nothing Selected")
+                msgBox.setText(
+                    "No endonucleases selected. Please select at least 2 endonucleases")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
             # go through and get which endonuclease's have been selected
@@ -130,7 +222,15 @@ class CoTargeting(QtWidgets.QDialog):
             for endo1 in ret_endo_list:
                 for endo2 in ret_endo_list:
                     if self.Endos[endo1][0] != self.Endos[endo2][0] or self.Endos[endo1][1] != self.Endos[endo2][1] or self.Endos[endo1][2] != self.Endos[endo2][2]:
-                        QtWidgets.QMessageBox.critical(self, "Invalid Endonucleases", "The selected endonucleases are not compatible.",QtWidgets.QMessageBox.Ok)
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("Invalid Endonucleases")
+                        msgBox.setText(
+                            "The selected endonucleases are not compatible.")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
                         return
 
             GlobalSettings.mainWindow.Results.co_target_endo_list = ret_endo_list

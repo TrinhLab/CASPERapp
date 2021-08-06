@@ -1,31 +1,31 @@
 import os, platform
-from PyQt5 import QtWidgets, uic, QtCore, QtGui
+from PyQt5 import QtWidgets, uic, QtCore, QtGui, Qt
 from functools import partial
 import GlobalSettings
 import gzip
 import traceback
+import math
 
 #global logger
 logger = GlobalSettings.logger
 
-class OffTarget(QtWidgets.QDialog):
+class OffTarget(QtWidgets.QMainWindow):
 
     def __init__(self):
         try:
             super(OffTarget, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'OffTargetAnalysis.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'off_target.ui', self)
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.setWindowTitle("Off-Target Analysis")
-            self.show()
             self.progressBar.setMinimum(0)
             self.progressBar.setMaximum(100)
-            self.progressBar.reset()
+            self.progressBar.setValue(0)
             self.Run.clicked.connect(self.run_analysis)
-            self.tolerancehorizontalSlider.valueChanged.connect(self.tol_change)
-            self.tolerancehorizontalSlider.setMaximum(100)
-            self.tolerancehorizontalSlider.setMinimum(0)
+            # self.tolerancehorizontalSlider.valueChanged.connect(self.tol_change)
+            # self.tolerancehorizontalSlider.setMaximum(100)
+            # self.tolerancehorizontalSlider.setMinimum(0)
             self.tolerance = 0.0
-            self.tolerancelineEdit.setText("0")
-            self.pushButton.clicked.connect(self.tol_change)
+
             self.cancelButton.clicked.connect(self.exit)
             self.fill_data_dropdown()
             self.perc = False
@@ -48,8 +48,83 @@ class OffTarget(QtWidgets.QDialog):
             self.Step1.setStyleSheet(groupbox_style)
             self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2"))
             self.Step3.setStyleSheet(groupbox_style.replace("Step1", "Step3"))
+
+            #scale UI
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing OffTarget class.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton, QLineEdit, QComboBox, QProgressBar, QDoubleSpinBox  { height: " + str(scaledHeight) + "px }")
+
+            # CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 20) // (92)))))
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            # window scaling
+            # 1920x1080 => 850x750
+            scaledWidth = int((width * 400) / 1920)
+            scaledHeight = int((height * 450) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in Off-Target.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            # center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in Off-Target.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -156,25 +231,28 @@ class OffTarget(QtWidgets.QDialog):
             exit(-1)
 
     #tolerance slider / entry box. Allows for slider to update, or the user to input in text box
-    def tol_change(self):
-        try:
-            if(self.tolerance == float(self.tolerancelineEdit.text())):
-                self.tolerance = self.tolerancehorizontalSlider.value() / 100 * 0.5
-                self.tolerance = round(self.tolerance, 3)
-                self.tolerancelineEdit.setText(str(self.tolerance))
-            else:
-                self.tolerance = float(self.tolerancelineEdit.text())
-                self.tolerance = round(self.tolerance, 3)
-                self.tolerancehorizontalSlider.setValue(round(self.tolerance/0.5 * 100))
-        except Exception as e:
-            logger.critical("Error in tol_change() in OffTarget.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            exit(-1)
+    # def tol_change(self):
+    #     try:
+    #         if(self.tolerance == float(self.tolerancelineEdit.text())):
+    #             self.tolerance = self.tolerancehorizontalSlider.value() / 100 * 0.5
+    #             self.tolerance = round(self.tolerance, 3)
+    #             self.tolerancelineEdit.setText(str(self.tolerance))
+    #         else:
+    #             self.tolerance = float(self.tolerancelineEdit.text())
+    #             self.tolerance = round(self.tolerance, 3)
+    #             self.tolerancehorizontalSlider.setValue(round(self.tolerance/0.5 * 100))
+    #     except Exception as e:
+    #         logger.critical("Error in tol_change() in OffTarget.")
+    #         logger.critical(e)
+    #         logger.critical(traceback.format_exc())
+    #         exit(-1)
 
     #run button linked to run_analysis, which is linked to the run button
     def run_command(self):
         try:
+            #get tolerance value
+            self.tolerance = self.toleranceSpinBox.value()
+
             #reset bools for new command to run
             self.perc = False
             self.bool_temp = False
@@ -199,7 +277,7 @@ class OffTarget(QtWidgets.QDialog):
             data_path = ' "' + app_path + 'OffTargetFolder/temp.txt' + '"' ##
             cspr_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.cspr_file + '"'
             db_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.db_file + '"'
-            self.output_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.FileName.text() + '_OffTargetResults.txt"'
+            self.output_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.FileName.text() + '"'
             filename = self.output_path
             filename = filename[:len(filename) - 1]
             filename = filename[1:]
@@ -267,11 +345,14 @@ class OffTarget(QtWidgets.QDialog):
                 self.process.finished.connect(finished)
 
             else: #error message about file already being created
-                msg = QtWidgets.QMessageBox()
-                msg.setWindowTitle("Error")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.setText("Output file already exists. Please choose a new output file name.")
-                msg.exec()
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText("Output file already exists. Please choose a new output file name.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
         except Exception as e:
             logger.critical("Error in run_command() in OffTarget.")
             logger.critical(e)

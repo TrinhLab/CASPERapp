@@ -274,13 +274,6 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             #resize table
             self.ncbi_table.resizeColumnsToContents()
 
-            #spacers
-            spacerSize =  int((height * 1) / 1080)
-            spacerSize = spacerSize ** 4
-            self.spacer1.setStyleSheet("font: " + str(spacerSize) + "px;")
-            self.spacer2.setStyleSheet("font: " + str(spacerSize) + "px;")
-            self.spacer3.setStyleSheet("font: " + str(spacerSize) + "px;")
-
             # window scaling
             # 1920x1080 => 850x750
             scaledWidth = int((width * 1000) / 1920)
@@ -339,7 +332,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             """ Clear all line edits """
             self.organism_line_edit.clear()
             self.infra_name_line_edit.clear()
-            self.ret_max_line_edit.setText("1000")
+            self.ret_max_line_edit.setText("100")
             self.infra_name_line_edit.clear()
             """ Reset all checkboxes """
             self.yes_box.setChecked(False)
@@ -372,7 +365,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             #Build Query commands
             retmax = int(self.ret_max_line_edit.text())
             if retmax == "":
-                retmax = 1000
+                retmax = 100
             org = self.organism_line_edit.text()
             term = '"' + org + '"[Organism]'
             if self.yes_box.isChecked():

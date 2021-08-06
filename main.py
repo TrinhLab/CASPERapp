@@ -1358,11 +1358,9 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.Results.get_endo_data()
 
             #center results window on current screen
-            frameGm = self.Results.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.Results.move(frameGm.topLeft())
+            if self.Results.first_show == True:
+                self.Results.first_show = False
+                self.Results.centerUI()
 
             self.Results.show()
             self.hide()
@@ -1558,6 +1556,7 @@ class StartupWindow(QtWidgets.QMainWindow):
                 return
 
             #make sure directory contains correct filepath format based on OS
+            print(platform.system())
             if platform.system() == "Windows":
                 newDirectory = newDirectory.replace("/","\\")
 

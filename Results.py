@@ -6,6 +6,7 @@ import os
 import OffTarget
 import platform
 import traceback
+import math
 
 #global logger
 logger = GlobalSettings.logger
@@ -15,13 +16,13 @@ logger = GlobalSettings.logger
 # Inputs: Takes information from the main application window and displays the gRNA results
 # Outputs: The display of the gRNA results search
 # =========================================================================================
-
 class Results(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
         try:
             super(Results, self).__init__(parent)
-            uic.loadUi(GlobalSettings.appdir + 'resultsWindow.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'results.ui', self)
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.setWindowTitle('Results')
             self.geneViewer.setReadOnly(True)
             self.curgene = ""
@@ -77,7 +78,6 @@ class Results(QtWidgets.QMainWindow):
             self.filter_options.scoreSlider.setMinimum(0)
             self.filter_options.scoreSlider.setMaximum(100)
             self.filter_options.scoreSlider.setTracking(False)
-
             self.filter_options.scoreSlider.valueChanged.connect(self.update_score_filter)
 
             #bool used to make sure only 1 instance of the OffTarget window is created
@@ -116,8 +116,101 @@ class Results(QtWidgets.QMainWindow):
             self.geneViewer.horizontalScrollBar().setStyleSheet("height: 16px;")
 
             self.get_endo_data()
+
+            #scale UI
+            self.first_show = True
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing results class.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton, QLineEdit, QComboBox { height: " + str(scaledHeight) + "px }")
+
+            #scroll bar scaling
+            scrollbarWidth = int((width * 15) / 1920)
+            scrollbarHeight = int((height * 15) / 1080)
+            self.targetTable.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.targetTable.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+            self.geneViewer.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.geneViewer.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+
+            # CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            #resize table
+            self.targetTable.resizeColumnsToContents()
+
+            # #spacers
+            # spacerSize =  int((height * 1) / 1080)
+            # spacerSize = spacerSize ** 4
+            # self.spacer1.setStyleSheet("font: " + str(spacerSize) + "px;")
+            # self.spacer2.setStyleSheet("font: " + str(spacerSize) + "px;")
+            # self.spacer3.setStyleSheet("font: " + str(spacerSize) + "px;")
+
+            # window scaling
+            # 1920x1080 => 850x750
+            scaledWidth = int((width * 1250) / 1920)
+            scaledHeight = int((height * 750) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in scaleUI() in results.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            # center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in results.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -158,10 +251,14 @@ class Results(QtWidgets.QMainWindow):
         try:
             select_items = self.targetTable.selectedItems()
             if len(select_items) <= 0:
-                QtWidgets.QMessageBox.question(self, "Nothing Selected",
-                                               "No targets were highlighted."
-                                               "Please highlight the targets you want to be exported to a CSV File!",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Nothing Selected")
+                msgBox.setText("No targets were highlighted. Please highlight the targets you want to be exported to a CSV File!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
             # now launch the window
             GlobalSettings.mainWindow.export_csv_window.launch(select_items, 7)
@@ -175,10 +272,14 @@ class Results(QtWidgets.QMainWindow):
         try:
             # make sure the gene viewer is on
             if not self.displayGeneViewer.isChecked():
-                QtWidgets.QMessageBox.question(self, "Gene Viewer Error",
-                                               "Gene Viewer display is off! "
-                                               "Please turn the Gene Viewer on in order to highlight the sequences selected",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Gene Viewer Error")
+                msgBox.setText("Gene Viewer display is off! Please turn the Gene Viewer on in order to highlight the sequences selected")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
 
@@ -188,11 +289,14 @@ class Results(QtWidgets.QMainWindow):
 
             # make sure that the difference between indicies is not too large
             if abs(tempTuple[1] - tempTuple[2]) > 50000:
-                #print(abs(tempTuple[1] - tempTuple[2]))
-                QtWidgets.QMessageBox.question(self, "Sequence Too Long",
-                                               "The sequence is too long! "
-                                               "Please choose indicies that will make the sequence less than 50,000!",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Sequence Too Long")
+                msgBox.setText("The sequence is too long! Please choose indicies that will make the sequence less than 50,000!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 self.lineEditStart.setText(str(self.geneDict[self.curgene][1]))
                 self.lineEditEnd.setText(str(self.geneDict[self.curgene][2]))
                 return
@@ -255,10 +359,14 @@ class Results(QtWidgets.QMainWindow):
         try:
             # make sure gene viewer is enabled
             if not self.displayGeneViewer.isChecked():
-                QtWidgets.QMessageBox.question(self, "Gene Viewer Error",
-                                               "Gene Viewer display is off! "
-                                               "Please turn the Gene Viewer on in order to highlight the sequences selected",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Gene Viewer Error")
+                msgBox.setText("Gene Viewer display is off! Please turn the Gene Viewer on in order to highlight the sequences selected")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
             # variables needed
@@ -272,10 +380,14 @@ class Results(QtWidgets.QMainWindow):
             # check and make sure still is actually highlighted!
             selectedList = self.targetTable.selectedItems()
             if len(selectedList) <= 0:
-                QtWidgets.QMessageBox.question(self, "Nothing Selected",
-                                               "No targets were highlighted."
-                                               "Please highlight the targets you want to be highlighted in the gene viewer!",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Nothing Selected")
+                msgBox.setText("No targets were highlighted. Please highlight the targets you want to be highlighted in the gene viewer!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
             # this is the loop that actually goes in and highlights all the things
             for i in range(self.targetTable.rowCount()):
@@ -295,7 +407,15 @@ class Results(QtWidgets.QMainWindow):
                     try:
                         movementIndex = self.endo_data[self.endonucleaseBox.currentText()][0]
                     except:
-                        QtWidgets.QMessageBox.critical(self, "Endo data not found.", "Could not find length of sequences in CASPERinfo file based on endo selected.", QtWidgets.QMessageBox.Ok)
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("Endo data not found.")
+                        msgBox.setText(
+                            "Could not find length of sequences in CASPERinfo file based on endo selected.")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
                         return
 
                     # get which way it's moving, and the real location. This is for checking edge cases
@@ -382,8 +502,15 @@ class Results(QtWidgets.QMainWindow):
 
             # if any of the sequences return 0 matches, show the user which ones were not found
             if len(noMatchString) >= 5:
-                QtWidgets.QMessageBox.question(self, "Warning", "The following sequence(s) were not found in the Gene Viewer"
-                                                                    "text:\n\t" + noMatchString, QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Warning")
+                msgBox.setText(
+                    "The following sequence(s) were not found in the Gene Viewer text:\n\t" + noMatchString)
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
         except Exception as e:
             logger.critical("Error in highlight_gene_viewer() in results.")
             logger.critical(e)
@@ -414,11 +541,15 @@ class Results(QtWidgets.QMainWindow):
         try:
             endo_list = list()
             if self.endonucleaseBox.count() <= 1:
-                QtWidgets.QMessageBox.question(self, "Not Enough Endonucleases",
-                                               "There are not enough endonucleases with this organism. "
-                                               "At least 2 endonucleases are required for this function. "
-                                               "Use Analyze New Genome to create CSPR files with other endonucleases.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Not Enough Endonucleases")
+                msgBox.setText(
+                    "There are not enough endonucleases with this organism. At least 2 endonucleases are required for this function. Use Analyze New Genome to create CSPR files with other endonucleases.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
             for i in range(self.endonucleaseBox.count()):
@@ -443,9 +574,15 @@ class Results(QtWidgets.QMainWindow):
 
             # make sure the user actually selects a new endonuclease
             if self.endo == endoChoice:
-                QtWidgets.QMessageBox.question(self, "Select a different Endonuclease",
-                                               "Please be sure to select a different endonuclease!",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Select a different Endonuclease")
+                msgBox.setText(
+                    "Please be sure to select a different endonuclease!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
             # enable the cotarget checkbox if needed
@@ -768,8 +905,6 @@ class Results(QtWidgets.QMainWindow):
                     break
             f.close()
 
-
-
             # get the endo list data
             for i in range(len(self.AllData[genename])):
                 # if one of them is empty, just return because co-targeting is useless for that one
@@ -842,8 +977,6 @@ class Results(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    ########################################## END UPDATING FUNCTION #############################################
-
     def search_gene(self):
         try:
             search_trms = []
@@ -882,6 +1015,15 @@ class Results(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    def update_score_filter(self):
+        try:
+            self.filter_options.minScoreLine.setText(str(self.filter_options.scoreSlider.value()))
+        except Exception as e:
+            logger.critical("Error in update_score_filter() in results.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
     #linked to when the user pushes tools->off target analysis
     def Off_Target_Analysis(self):
         try:
@@ -896,9 +1038,15 @@ class Results(QtWidgets.QMainWindow):
             indexes = self.targetTable.selectionModel().selectedRows()
 
             if len(indexes) == 0:
-                QtWidgets.QMessageBox.critical(self, "No Rows Selected",
-                                               "Please rows from the table to pass into the off target analysis!",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("No Rows Selected")
+                msgBox.setText(
+                    "Please rows from the table to pass into the off target analysis!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
             for index in indexes:
@@ -921,6 +1069,7 @@ class Results(QtWidgets.QMainWindow):
                 self.first_boot = False
                 self.off_tar_win = OffTarget.OffTarget()
                 self.off_tar_win.submitButton.clicked.connect(self.refresh_data)
+            self.off_tar_win.centerUI()
             self.off_tar_win.show()
             f.close()
         except Exception as e:
@@ -937,9 +1086,15 @@ class Results(QtWidgets.QMainWindow):
 
             # if the user hits submit without running thr program, do nothing
             if filename == '':
-                QtWidgets.QMessageBox.critical(self, "File Not Found",
-                                                        "There was an error with the Off Target execution. No results file was found.",
-                                                        QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("File Not Found")
+                msgBox.setText(
+                    "There was an error with the Off Target execution. No results file was found.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
 
@@ -956,9 +1111,15 @@ class Results(QtWidgets.QMainWindow):
             try:
                 out_file = open(filename, "r")
             except:
-                QtWidgets.QMessageBox.critical(self, "Unable to Open File",
-                                                        "There was an error with the Off Target execution. The results file was either not found or not able to be opened.",
-                                                        QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Unable to Open File")
+                msgBox.setText(
+                    "There was an error with the Off Target execution. The results file was either not found or not able to be opened.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
             #read the first line : either AVG or DETAILED OUTPUT
@@ -1009,9 +1170,15 @@ class Results(QtWidgets.QMainWindow):
 
                 #make sure OT output file had lines
                 if line_cnt < 1:
-                    QtWidgets.QMessageBox.critical(self, "File Empty",
-                                                        "There was an error with the Off Target execution. No results were found in the results file.",
-                                                        QtWidgets.QMessageBox.Ok)
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("File Empty")
+                    msgBox.setText(
+                        "There was an error with the Off Target execution. No results were found in the results file.")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
                     return
 
                 #print(self.detail_output_list)
@@ -1030,6 +1197,8 @@ class Results(QtWidgets.QMainWindow):
             index = self.targetTable.indexAt(button.pos())
             msg = QtWidgets.QMessageBox()
             msg.setWindowTitle("Details")
+            msg.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             key = str(self.targetTable.item(index.row(),2).text())
             temp_str = ''
@@ -1043,6 +1212,7 @@ class Results(QtWidgets.QMainWindow):
             detail_str = "<html><b>Deatailed Output: Score, Chromosome, Location, Sequence:<br></b></html>"
             msg.setText(chromo_str + input_str + detail_str + temp_str)
             msg.exec()
+
         except Exception as e:
             logger.critical("Error in show_details() in results.")
             logger.critical(e)
@@ -1064,89 +1234,6 @@ class Results(QtWidgets.QMainWindow):
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
-
-    # -----------------------------------------------------------------------------------------------------#
-    # ---- All Filter functions below ---------------------------------------------------------------------#
-    # -----------------------------------------------------------------------------------------------------#
-    def update_score_filter(self):
-        try:
-            self.filter_options.minScoreLine.setText(str(self.filter_options.scoreSlider.value()))
-        except Exception as e:
-            logger.critical("Error in update_score_filter() in results.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            exit(-1)
-
-    ###Save data and open data functions are currently deprecated
-    """
-    #allows user to save what is currently in the table
-    def save_data(self):
-        filename = QtWidgets.QFileDialog.getSaveFileName(self,
-                                      "Enter Text File Name", ".txt",
-                                      "Text Document (*.txt)" )
-
-        if (str(filename[0]) != ''):
-            f = open(str(filename[0]), "w+")
-            for genomes in self.AllData:
-                f.write("***"+genomes + "\n")
-                for items in self.AllData[genomes]:
-                    for i in items:
-                        for j in i:
-                            f.write(str(j) + '|')
-
-                        f.write(str(self.highlighted[items[1][1]]))
-                        f.write("\n")
-            f.close()
-
-    #open any saved .txt of previous tables opened
-    def open_data(self):
-        filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')
-        if (os.path.isfile(str(filename[0]))):
-            f = open(str(filename[0]), "r+")
-            temp_str = f.readline()
-            if(temp_str.startswith("***") == False):
-                msg = QtWidgets.QMessageBox()
-                msg.setWindowTitle("Error")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.setIcon(QtWidgets.QMessageBox.Critical)
-                msg.setText("<font size=4>" + "Not correct file format" + "</font>")
-                msg.exec()
-                f.close()
-            else:
-                f.close()
-                self.AllData.clear()
-                self.highlighted.clear()
-                first = 1
-                list1 = []
-                list2 = []
-                s = ""
-                self.comboBoxGene.clear()
-                if (os.path.isfile(str(filename[0]))):
-                    f = open(str(filename[0]), "r+")
-                    for line in f:
-                        if(line.startswith("***")):
-                            if(first == 0):
-                                list2.append(list1)
-                                self.AllData[s] = list2
-                            else:
-                                first = 0
-                            s = line[3:]
-                            s = s.strip('\n')
-                            list1 = []
-                            self.comboBoxGene.addItem(s)
-                        else:
-                            temp = line.split("|")
-                            h = temp.pop()
-                            h = h.strip('\n')
-                            self.highlighted[temp[1]] = eval(h)
-                            tup = tuple(temp)
-                            list1.append(tup)
-                    list2.append(list1)
-                    self.AllData[s] = list2
-                    f.close()
-                    self.displayGeneData()
-
-    """
 
     # this function calls the closingWindow class.
     def closeEvent(self, event):
@@ -1262,8 +1349,10 @@ class Results(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #show filters UI
     def show_filter_options(self):
         try:
+            self.filter_options.centerUI()
             self.filter_options.show()
         except Exception as e:
             logger.critical("Error in show_filter_options() in results.")
@@ -1271,13 +1360,15 @@ class Results(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-class Filter_Options(QtWidgets.QDialog):
+
+class Filter_Options(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         try:
             super(Filter_Options, self).__init__(parent)
             uic.loadUi(GlobalSettings.appdir + 'filter_options.ui', self)
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
+            self.setWindowTitle("Filter Options")
             self.minScoreLine.setText("0")
-            self.hide()
             groupbox_style = """
             QGroupBox:title{subcontrol-origin: margin;
                             left: 10px;
@@ -1286,8 +1377,84 @@ class Filter_Options(QtWidgets.QDialog):
                             border-radius: 9px;
                             margin-top: 10px;}"""
             self.filterBox.setStyleSheet(groupbox_style)
+
+            #scale UI
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing Filter_Options class in results.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
+
+    # scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton, QLineEdit, QComboBox, QSlider { height: " + str(scaledHeight) + "px }")
+
+            # CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 20) // (92)))))
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            # window scaling
+            # 1920x1080 => 850x750
+            scaledWidth = int((width * 350) / 1920)
+            scaledHeight = int((height * 250) / 1080)
+
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in scaleUI() in filter options in results.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    # center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            # center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in filter options in results.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
