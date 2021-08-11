@@ -163,13 +163,6 @@ class Results(QtWidgets.QMainWindow):
             #resize table
             self.targetTable.resizeColumnsToContents()
 
-            # #spacers
-            # spacerSize =  int((height * 1) / 1080)
-            # spacerSize = spacerSize ** 4
-            # self.spacer1.setStyleSheet("font: " + str(spacerSize) + "px;")
-            # self.spacer2.setStyleSheet("font: " + str(spacerSize) + "px;")
-            # self.spacer3.setStyleSheet("font: " + str(spacerSize) + "px;")
-
             # window scaling
             # 1920x1080 => 850x750
             scaledWidth = int((width * 1250) / 1920)

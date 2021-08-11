@@ -33,7 +33,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
     #init annotation window class
     def __init__(self, info_path):
         super(AnnotationsWindow, self).__init__()
-        uic.loadUi(GlobalSettings.appdir + 'Annotation Details.ui', self)
+        uic.loadUi(GlobalSettings.appdir + 'annotation_details.ui', self)
         self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
         self.Submit_button.clicked.connect(self.submit)
         self.Go_Back_Button.clicked.connect(self.go_Back)

@@ -17,12 +17,12 @@ import math
 logger = GlobalSettings.logger
 
 class Multitargeting(QtWidgets.QMainWindow):
-
+    resized = QtCore.pyqtSignal()
     def __init__(self):
         try:
             super(Multitargeting, self).__init__()
             uic.loadUi(GlobalSettings.appdir + 'multitargetingwindow.ui', self)
-            self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.multitargeting_statistics = Multitargeting_Statistics()
 
             self.sq = SeqTranslate()  # SeqTranslate object used in class
@@ -103,6 +103,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.scene2 = QtWidgets.QGraphicsScene()
             self.graphicsView_2.setScene(self.scene2)
             self.graphicsView.viewport().installEventFilter(self)
+            self.graphicsView_2.viewport().installEventFilter(self)
 
             self.loading_window = loading_window()
 
@@ -117,6 +118,9 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.table.horizontalScrollBar().setStyleSheet("height: 14px;")
             self.graphicsView_2.verticalScrollBar().setStyleSheet("width: 10px;")
             self.graphicsView_2.horizontalScrollBar().setStyleSheet("height: 10px;")
+
+            #resize event
+            self.resized.connect(self.chromosomeViewerResize)
 
             #scale UI
             self.first_show = True
@@ -141,28 +145,26 @@ class Multitargeting(QtWidgets.QMainWindow):
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
 
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
-            #radio button scaling
-
-            #scroll bar scaling
+            #button and qcombobox scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton, QComboBox { height: " + str(scaledHeight) + "px }")
 
             #CASPER header scaling
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.label.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
 
             #resize columns in table
             self.table.resizeColumnsToContents()
 
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
             # window scaling
             # 1920x1080 => 1150x650
-            scaledWidth = int((width * 1200)/1920)
-            scaledHeight = int((height * 850)/1080)
+            scaledWidth = int((width * 1215)/1920)
+            scaledHeight = int((height * 915)/1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -200,14 +202,22 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.repaint()
         QtWidgets.QApplication.processEvents()
 
+    def resizeEvent(self, event):
+        self.resized.emit()
+        return super(Multitargeting, self).resizeEvent(event)
+
     def export_to_csv(self):
         try:
             select_items = self.table.selectedItems()
             if len(select_items) <= 0:
-                QtWidgets.QMessageBox.question(self, "Nothing Selected",
-                                               "No targets were highlighted."
-                                               "Please highlight the targets you want to be exported to a CSV File!",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Nothing Selected")
+                msgBox.setText("No targets were highlighted. Please highlight the targets you want to be exported to a CSV File!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
             GlobalSettings.mainWindow.export_csv_window.launch(select_items,8)
         except Exception as e:
@@ -219,9 +229,17 @@ class Multitargeting(QtWidgets.QMainWindow):
     def show_statistics(self):
         try:
             if (self.line_bool and self.bar_bool):
+                self.multitargeting_statistics.centerUI()
                 self.multitargeting_statistics.show()
             else:
-                QtWidgets.QMessageBox.question(self, "No analysis run.", 'Multitargeting Analysis must be performed before viewing statistics.\n\nSelect an organism and endonuclease and click "Analyze" then try again.', QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("No analysis run.")
+                msgBox.setText('Multitargeting Analysis must be performed before viewing statistics.\n\nSelect an organism and endonuclease and click "Analyze" then try again.')
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return True
         except Exception as e:
             logger.critical("Error in show_statistics() in multi-targeting.")
@@ -229,8 +247,11 @@ class Multitargeting(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #even filter to update chromosome viewer text when user hovers over a red line in the viewer
     def eventFilter(self, source, event):
         try:
+            # print(event.type())
+            # print(source)
             if (event.type() == QtCore.QEvent.MouseMove and source is self.graphicsView.viewport()):
                 coord = self.graphicsView.mapToScene(event.pos())
                 for i in self.bar_coords:
@@ -263,7 +284,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                             i += 1
                         text = self.scene2.addText(output)
                         font = QtGui.QFont()
-                        font.setPixelSize(12)
+                        font.setPixelSize(self.fontSize)
                         text.setFont(font)
 
             return Qt.QWidget.eventFilter(self, source, event)
@@ -272,6 +293,9 @@ class Multitargeting(QtWidgets.QMainWindow):
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
+
+    def chromosomeViewerResize(self):
+        print('resize')
 
     def launch(self):
         try:
@@ -285,6 +309,7 @@ class Multitargeting(QtWidgets.QMainWindow):
     #button trigger for sql settings
     def update_sql_query_settings(self):
         try:
+            self.sql_settings.centerUI()
             self.sql_settings.show()
             self.sql_settings.activateWindow()
         except Exception as e:
@@ -608,6 +633,12 @@ class Multitargeting(QtWidgets.QMainWindow):
             c.close()
 
             if data != None:
+
+                #get scaled pointsize for visuals
+                screen = self.screen()
+                dpi = screen.physicalDotsPerInch()
+                pointSize = max(10, int(math.ceil(((math.ceil(dpi) * 10) // (92)))))
+
                 # sort data on chromosome
                 data = list(data)
                 chromo = data[0].split(',')
@@ -644,14 +675,14 @@ class Multitargeting(QtWidgets.QMainWindow):
                         text.setPos(0, 0)
                         font = QtGui.QFont()
                         font.setBold(True)
-                        font.setPointSize(10)
+                        font.setPointSize(pointSize)
                         text.setFont(font)
                         self.scene.addRect(40, (i * 25), 375, 25, pen_blk)
                     else:
                         text = self.scene.addText(str(chromo))
                         font = QtGui.QFont()
                         font.setBold(True)
-                        font.setPointSize(10)
+                        font.setPointSize(pointSize)
                         text.setFont(font)
                         text.setPos(0, i * 25 + 10 * i)
                         self.scene.addRect(40, (i * 25) + 10 * i, 375, 25, pen_blk)
@@ -666,11 +697,17 @@ class Multitargeting(QtWidgets.QMainWindow):
                         ind += 1
                     i = i + 1
                 self.generate_event_data(seed)
+
                 return True
             else:
-                QtWidgets.QMessageBox.information(self, "Seed Error",
-                                               "No such seed exists in the repeats section of this organism.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Seed Error")
+                msgBox.setText("No such seed exists in the repeats section of this organism.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return False
         except Exception as e:
             logger.critical("Error in fill_Chromo_text() in multi-targeting.")
@@ -909,8 +946,11 @@ class loading_window(QtWidgets.QMainWindow):
         try:
             super(loading_window, self).__init__()
             uic.loadUi(GlobalSettings.appdir + "loading_data_form.ui", self)
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.loading_bar.setValue(0)
             self.setWindowTitle("Loading Data")
+
+            #scale UI
             self.scaleUI()
 
         except Exception as e:
@@ -920,50 +960,67 @@ class loading_window(QtWidgets.QMainWindow):
             exit(-1)
 
     def scaleUI(self):
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
-        screen = self.screen()
-        dpi = screen.physicalDotsPerInch()
-        width = screen.geometry().width()
-        height = screen.geometry().height()
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
 
-        # font scaling
-        # 14px is used for 92 dpi
-        fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-        self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+            # font scaling
+            # 14px is used for 92 dpi
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
 
-        # scale/center window
-        scaledWidth = int((width * 450) / 1920)
-        scaledHeight = int((height * 125) / 1080)
-        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-        x = centerPoint.x()
-        y = centerPoint.y()
-        x = x - (math.ceil(scaledWidth / 2))
-        y = y - (math.ceil(scaledHeight / 2))
-        self.setGeometry(x, y, scaledWidth, scaledHeight)
+            # progress bar scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QProgressBar { height: " + str(scaledHeight) + "px }")
 
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+            # scale/center window
+            scaledWidth = int((width * 450) / 1920)
+            scaledHeight = int((height * 125) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in scaleUI() in loading_window() class in multitargeting.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
 
     def centerUI(self):
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
-        width = self.width()
-        height = self.height()
-        #scale/center window
-        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-        x = centerPoint.x()
-        y = centerPoint.y()
-        x = x - (math.ceil(width / 2))
-        y = y - (math.ceil(height / 2))
-        self.setGeometry(x, y, width, height)
+            # center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
 
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in loading window in multitargeting.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
 
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
@@ -990,46 +1047,178 @@ class MplCanvas(FigureCanvasQTAgg):
             exit(-1)
 
 
-class Multitargeting_Statistics(QtWidgets.QDialog):
+class Multitargeting_Statistics(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         try:
             super(Multitargeting_Statistics, self).__init__(parent)
-            uic.loadUi(GlobalSettings.appdir + 'multitargeting_statistics.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'multitargeting_stats.ui', self)
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.setWindowTitle("Statistics")
-            self.hide()
+
+            #scale UI
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing Multitargeting_Statistics class in multi-targeting.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #scale UI based on current screen
     def scaleUI(self):
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QLineEdit { height: " + str(scaledHeight) + "px }")
+
+            # CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 20) // (92)))))
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            # window scaling
+            # 1920x1080 => 425x200
+            scaledWidth = int((width * 275) / 1920)
+            scaledHeight = int((height * 185) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in scaleUI() in multitargeting statistics in multitargeting.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    # center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            # center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in multitargeting statistics in multitargeting.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
 
 
-class sql_query_settings(QtWidgets.QWidget):
+class sql_query_settings(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(sql_query_settings, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + "sql_settings_form.ui", self)
+            uic.loadUi(GlobalSettings.appdir + "multitargeting_sql_settings.ui", self)
             self.setWindowTitle("SQL Settings")
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.row_count.setValidator(QtGui.QIntValidator())
-            self.hide()
+
+            #scale the UI
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing sql_query_settings class in multi-targeting.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #scale UI based on current screen
     def scaleUI(self):
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
 
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
 
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QLineEdit { height: " + str(scaledHeight) + "px }")
+
+            # CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 20) // (92)))))
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            # window scaling
+            # 1920x1080 => 425x200
+            scaledWidth = int((width * 375) / 1920)
+            scaledHeight = int((height * 140) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in scaleUI() in sql settings in multitargeting.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            # center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in sql settings in multitargeting.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)

@@ -460,17 +460,17 @@ and references for the organism you are importing here.</string>
     </item>
     <item row="8" column="2" colspan="2">
      <layout class="QHBoxLayout" name="horizontalLayout_5">
-      <item>
+      <item alignment="Qt::AlignLeft">
        <widget class="QPushButton" name="resetButton">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
          <size>
-          <width>0</width>
+          <width>125</width>
           <height>0</height>
          </size>
         </property>
@@ -485,17 +485,17 @@ and references for the organism you are importing here.</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item alignment="Qt::AlignRight">
        <widget class="QPushButton" name="contButton">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
          <size>
-          <width>0</width>
+          <width>125</width>
           <height>0</height>
          </size>
         </property>
@@ -897,23 +897,34 @@ and references for the organism you are importing here.</string>
           </layout>
          </item>
          <item>
-          <widget class="QPushButton" name="submitButton">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Add Job to Queue</string>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout_11">
+           <item>
+            <widget class="QPushButton" name="submitButton">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Add Job to Queue</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </item>
@@ -977,7 +988,6 @@ and references for the organism you are importing here.</string>
   <tabstop>NCBI_File_Search</tabstop>
   <tabstop>browseForFile</tabstop>
   <tabstop>selectedFile</tabstop>
-  <tabstop>submitButton</tabstop>
   <tabstop>clearButton</tabstop>
   <tabstop>remove_job</tabstop>
   <tabstop>runButton</tabstop>
