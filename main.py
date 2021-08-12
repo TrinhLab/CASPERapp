@@ -61,36 +61,22 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
-            screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
-            self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
-
-            #button, scroll bar scaling
-            scaledHeight = int((height * 25) / 1080)
-            scrollbarWidth = int((width * 15) / 1920)
-            scrollbarHeight = int((height * 15) / 1080)
-            self.setStyleSheet('QPushButton {height: ' + str(scaledHeight) + 'px;}')
-            self.tableWidget.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
-            self.tableWidget.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+            fontSize = 10
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
+            self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
 
             #CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 30
+            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
             #resize columns in table
             self.tableWidget.resizeColumnsToContents()
 
             # window scaling
-            # 1920x1080 => 1150x650
-            scaledWidth = int((width * 900) / 1920)
-            scaledHeight = int((height * 600) / 1080)
+            scaledWidth = 900
+            scaledHeight = 600
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -355,36 +341,20 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
-            screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
-            print(width)
-            print(height)
-
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 10
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
-            self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
-
-            #push button, radio button, combo box scaling
-            #scaledWidth = int((width * 1150) / 1920)
-            scaledHeight = int((height * 25) / 1080)
-            scrollbarWidth = int((width * 15) / 1920)
-            scrollbarHeight = int((height * 15) / 1080)
-            self.setStyleSheet('QPushButton, QProgressBar, QComboBox {height: ' + str(scaledHeight) + 'px;}' + ' QScrollBar::vertical { width: ' + str(scrollbarWidth) + 'px; }' + ' QScrollBar::horizontal { height: ' + str(scrollbarHeight) + 'px; }')
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
+            self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
 
             #CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 30
+            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
             #window resize and center
-            #1920x1080 => 1150x650
-            scaledWidth = int((width * 1150)/1920)
-            scaledHeight = int((height * 650)/1080)
+            scaledWidth = 1150
+            scaledHeight = 650
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1269,6 +1239,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 GlobalSettings.MTWin.centerUI()
                 GlobalSettings.MTWin.first_show = False
             GlobalSettings.MTWin.show()
+            print(GlobalSettings.MTWin.geometry())
             GlobalSettings.mainWindow.hide()
 
         except Exception as e:
@@ -1470,22 +1441,17 @@ class StartupWindow(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 10
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
 
             #set logo image
             pixmapOriginal = QtGui.QPixmap(GlobalSettings.appdir + "CASPER-logo.jpg")
             self.logo.setPixmap(pixmapOriginal)
 
-            #scale buttons and line edit
-            scaledHeight = int((height * 25) // 1080)
-            self.setStyleSheet("QPushButton, QLineEdit {height: " + str(scaledHeight) + "px}")
-
             #scale and center UI
-            scaledWidth = int((width * 850) // 1920)
-            scaledHeight = int((height * 550) // 1080)
-
+            scaledWidth = 850
+            scaledHeight = 550
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1856,8 +1822,8 @@ def main():
         else:
             GlobalSettings.appdir += '/'
 
-    # QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
-    # QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+    #QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
+    #QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
 
     app = QtWidgets.QApplication(sys.argv)
     app.setOrganizationName("TrinhLab-UTK")

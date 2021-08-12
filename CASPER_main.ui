@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>829</width>
-    <height>522</height>
+    <width>968</width>
+    <height>510</height>
    </rect>
   </property>
   <property name="font">
@@ -195,7 +195,7 @@
       <item row="0" column="0" rowspan="2">
        <widget class="QGroupBox" name="Step1">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -370,7 +370,7 @@
       <item row="2" column="0" rowspan="2">
        <widget class="QGroupBox" name="Step2">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -445,7 +445,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>0</width>
+             <width>125</width>
              <height>0</height>
             </size>
            </property>
@@ -569,7 +569,7 @@
          <item row="1" column="0" colspan="2">
           <widget class="QPlainTextEdit" name="geneEntryField">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -786,7 +786,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>829</width>
+     <width>968</width>
      <height>20</height>
     </rect>
    </property>
