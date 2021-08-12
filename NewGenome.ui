@@ -461,31 +461,6 @@ and references for the organism you are importing here.</string>
     <item row="8" column="2" colspan="2">
      <layout class="QHBoxLayout" name="horizontalLayout_5">
       <item alignment="Qt::AlignLeft">
-       <widget class="QPushButton" name="resetButton">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>125</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Reset Form</string>
-        </property>
-       </widget>
-      </item>
-      <item alignment="Qt::AlignRight">
        <widget class="QPushButton" name="contButton">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -518,6 +493,31 @@ and references for the organism you are importing here.</string>
         </property>
         <property name="text">
          <string>Exit</string>
+        </property>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignRight">
+       <widget class="QPushButton" name="resetButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>125</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Reset Form</string>
         </property>
        </widget>
       </item>
@@ -993,8 +993,6 @@ and references for the organism you are importing here.</string>
   <tabstop>runButton</tabstop>
   <tabstop>job_Table</tabstop>
   <tabstop>output_browser</tabstop>
-  <tabstop>resetButton</tabstop>
-  <tabstop>contButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>

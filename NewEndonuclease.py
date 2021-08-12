@@ -81,10 +81,14 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             scaledHeight = int((height * 25) / 1080)
             self.setStyleSheet("QPushButton, QComboBox, QLineEdit { height: " + str(scaledHeight) + "px }")
 
+            #title scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 20) // (92)))))
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
             # window scaling
-            # 1920x1080 => 850x750
-            scaledWidth = int((width * 450) / 1920)
-            scaledHeight = int((height * 550) / 1080)
+            # 1920x1080 => 480x615
+            scaledWidth = int((width * 480) / 1920)
+            scaledHeight = int((height * 615) / 1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -92,7 +96,6 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             x = x - (math.ceil(scaledWidth / 2))
             y = y - (math.ceil(scaledHeight / 2))
             self.setGeometry(x, y, scaledWidth, scaledHeight)
-            #self.setFixedSize(scaledWidth, scaledHeight)
 
             self.repaint()
             QtWidgets.QApplication.processEvents()

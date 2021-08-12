@@ -35,6 +35,9 @@
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_2">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This is the reference organism that off-target will be run against. List is populated based on currenet CSPR files in CASPER database directory.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Organism:</string>
            </property>
@@ -68,6 +71,9 @@
          </item>
          <item row="2" column="0">
           <widget class="QLabel" name="label_3">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This is the reference endonuclease that will be used for off-target analysis.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Endonuclease:</string>
            </property>
@@ -117,6 +123,9 @@
          </item>
          <item row="2" column="0">
           <widget class="QLabel" name="label_5">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the number of mismatches in a putative off-target site exceeds this number, CASPER will not score the site. Computational time increases as this number increases.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Max No. Mismatches:</string>
            </property>
@@ -124,6 +133,9 @@
          </item>
          <item row="3" column="0">
           <widget class="QLabel" name="label_6">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check this option if you only want to see the average off-target score for each gRNA. Leaving this option unchecked will report the average off-target score as well as the putatitve off-target sequences, their locations, and individual off-target scores.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Average Output</string>
            </property>
@@ -167,6 +179,9 @@
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_4">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Potential off-target sites scoring lower than this value are dismissed (I.e. they do not pose a threat for off-target activity). Computational time increases as tolerance value decreases.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Tolerance:</string>
            </property>
