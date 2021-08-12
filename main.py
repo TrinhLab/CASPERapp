@@ -360,6 +360,9 @@ class CMainWindow(QtWidgets.QMainWindow):
             width = screen.geometry().width()
             height = screen.geometry().height()
 
+            print(width)
+            print(height)
+
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
@@ -1468,6 +1471,7 @@ class StartupWindow(QtWidgets.QMainWindow):
             # font scaling
             # 16px is used for 92 dpi 1920x1080
             fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
             #set logo image
@@ -1852,8 +1856,8 @@ def main():
         else:
             GlobalSettings.appdir += '/'
 
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+    # QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
+    # QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
 
     app = QtWidgets.QApplication(sys.argv)
     app.setOrganizationName("TrinhLab-UTK")
