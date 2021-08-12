@@ -131,6 +131,11 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
             fontSize = 10
@@ -150,8 +155,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.table.resizeColumnsToContents()
 
             # window scaling
-            scaledWidth = 1100
-            scaledHeight = 800
+            scaledWidth = int((width * 1100) / 1920)
+            scaledHeight = int((height * 8500) / 1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -952,14 +957,19 @@ class loading_window(QtWidgets.QMainWindow):
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
             # font scaling
             # 14px is used for 92 dpi
             fontSize = 10
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
 
             # scale/center window
-            scaledWidth = 450
-            scaledHeight = 125
+            scaledWidth = int((width * 450) / 1920)
+            scaledHeight = int((height * 125) / 1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1038,6 +1048,11 @@ class Multitargeting_Statistics(QtWidgets.QMainWindow):
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
             fontSize = 10
@@ -1049,8 +1064,8 @@ class Multitargeting_Statistics(QtWidgets.QMainWindow):
             self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
             # window scaling
-            scaledWidth = 275
-            scaledHeight = 185
+            scaledWidth = int((width * 275) / 1920)
+            scaledHeight = int((height * 185) / 1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1117,6 +1132,11 @@ class sql_query_settings(QtWidgets.QMainWindow):
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
             fontSize = 10
@@ -1130,6 +1150,8 @@ class sql_query_settings(QtWidgets.QMainWindow):
             # window scaling
             scaledWidth = 375
             scaledHeight = 140
+            scaledWidth = int((width * 375) / 1920)
+            scaledHeight = int((height * 140) / 1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
