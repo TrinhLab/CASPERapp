@@ -3,23 +3,22 @@ import os
 from PyQt5 import QtWidgets, Qt, uic, QtCore
 import platform
 import traceback
+import math
 
 #global logger
 logger = GlobalSettings.logger
 
-########################################################################################################################
 # Class: export_csv_window
 # This class opens a window for the user to select where they want the CSV file exported to, and the name of the file
 # It takes the highlighted data from the Results page, and creates a CSV file from that
-########################################################################################################################
-class export_csv_window(QtWidgets.QDialog):
+class export_csv_window(QtWidgets.QMainWindow):
     # init function. Sets all of the buttons
     def __init__(self):
         try:
             # qt stuff
             super(export_csv_window, self).__init__()
             uic.loadUi(GlobalSettings.appdir + 'export_to_csv_window.ui', self)
-            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.png"))
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
 
             # button connections
             self.browse_button.clicked.connect(self.browseForFolder)
@@ -30,8 +29,81 @@ class export_csv_window(QtWidgets.QDialog):
             self.location = self.fileLocation_line_edit.text()
             self.selected_table_items = []
             self.num_columns = []
+
+            self.setWindowTitle("Export to CSV")
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing export_to_csv_window class.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            screen = QtWidgets.QApplication.screens()[screen]
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton, QLineEdit { height: " + str(scaledHeight) + "px }")
+
+            # window scaling
+            # 1920x1080 => 1150x650
+            scaledWidth = int((width * 650) / 1920)
+            scaledHeight = int((height * 200) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in export to csv.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            #center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in export to csv.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -46,7 +118,9 @@ class export_csv_window(QtWidgets.QDialog):
                 self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
             self.selected_table_items = select_items
             self.num_columns = num_columns
+            self.centerUI()
             self.show()
+            self.activateWindow()
         except Exception as e:
             logger.critical("Error in launch() in export to csv.")
             logger.critical(e)
@@ -96,9 +170,15 @@ class export_csv_window(QtWidgets.QDialog):
                         i += 1
             # catch the permission exception
             except PermissionError:
-                QtWidgets.QMessageBox.question(self, "File Cannot Open",
-                                               "This file cannot be opened. Please make sure that the file is not opened elsewhere and try again.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("File Cannot Open")
+                msgBox.setText("This file cannot be opened. Please make sure that the file is not opened elsewhere and try again.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
+
                 return
             # catch any other exception
             except Exception as e:

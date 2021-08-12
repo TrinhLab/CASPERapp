@@ -6,27 +6,25 @@ from CSPRparser import CSPRparser
 import re
 import platform
 import traceback
+import math
 
 #global logger
 logger = GlobalSettings.logger
 
-########################################################################################################################
 # Class Name: genLibrary
 # this class is a window that allows the user to select the settings for Generate Library
 # When the user clicks Generate Library, it goes ahead and gets the Annotation Data needed
 #   Then the user can select the settings they want, and then hit submit.
 #   It creates a txt file with the data
-########################################################################################################################
-
-class genLibrary(QtWidgets.QDialog):
+class genLibrary(QtWidgets.QMainWindow):
 
     def __init__(self):
         try:
             # qt stuff
             super(genLibrary, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'library_prompt.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'generate_library.ui', self)
             self.setWindowTitle('Generate Library')
-            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + 'cas9image.png'))
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + 'cas9image.ico'))
 
             groupbox_style = """
             QGroupBox:title{subcontrol-origin: margin;
@@ -66,8 +64,85 @@ class genLibrary(QtWidgets.QDialog):
             # set the numbers for the minOn combo box
             for i in range(19, 70):
                 self.minON_comboBox.addItem(str(i + 1))
+
+            #scale UI
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing generate library class.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            screen = QtWidgets.QApplication.screens()[screen]
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # button, line edit, progressbar, and combobox scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton, QLineEdit, QProgressBar, QComboBox { height: " + str(scaledHeight) + "px }")
+
+            #scale title
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
+            self.label.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+
+            # window scaling
+            # 1920x1080 => 800x650
+            scaledWidth = int((width * 950) / 1920)
+            scaledHeight = int((height * 500) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in generate library.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            #center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in generate library.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -109,7 +184,11 @@ class genLibrary(QtWidgets.QDialog):
             # get the gRNA data from the cspr file
             self.cspr_data = self.parser.gen_lib_parser(self.gen_lib_dict, GlobalSettings.mainWindow.endoChoice.currentText())
             self.get_endo_data()
+
+            #center UI
+            self.centerUI()
             self.show()
+            self.activateWindow()
         except Exception as e:
             logger.critical("Error in launch() in generate library.")
             logger.critical(e)

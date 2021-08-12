@@ -1,12 +1,12 @@
-import sys, os
+import os
 from PyQt5 import QtWidgets, uic, QtGui, QtCore, Qt
 import GlobalSettings
 from functools import partial
 from Algorithms import SeqTranslate
-from PyQt5.QtWidgets import *
 import webbrowser
 import platform
 import traceback
+import math
 
 #global logger
 logger = GlobalSettings.logger
@@ -19,11 +19,13 @@ def iter_except(function, exception):
     except exception:
         return
 
-class goToPrompt(QtWidgets.QWidget):
+
+#UI prompt for when the user has finished running jobs in new genome to allow them to choose where the want to proceed
+class goToPrompt(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(goToPrompt, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'newgenomenavigatepage.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'newgenomenavigationpage.ui', self)
 
             groupbox_style = """
             QGroupBox:title{subcontrol-origin: margin;
@@ -34,15 +36,87 @@ class goToPrompt(QtWidgets.QWidget):
                             font: bold;
                             margin-top: 10px;}"""
             self.groupBox.setStyleSheet(groupbox_style)
+            self.scaleUI()
+            self.setWindowTitle("New Genome")
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.hide()
+
         except Exception as e:
             logger.critical("Unable to initialize goToPrompt class in New Genome.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px; } QWidget { font: " + str(fontSize) + "px 'Arial'; }")
+
+            # window scaling
+            # 1920x1080 => 550x200
+            scaledWidth = int((width * 575) / 1920)
+            scaledHeight = int((height * 175) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in new genome navigation window.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            #center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in new genome navigation window.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+
+#New genome class to allow users to generate new CSPR files
 class NewGenome(QtWidgets.QMainWindow):
 
+    #init class
     def __init__(self, info_path):
         try:
             super(NewGenome, self).__init__()
@@ -68,7 +142,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
             #---Button Modifications---#
 
-            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.png"))
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.resetButton.clicked.connect(self.reset)
             self.submitButton.clicked.connect(self.submit)
             self.browseForFile.clicked.connect(self.selectFasta)
@@ -95,18 +169,12 @@ class NewGenome(QtWidgets.QMainWindow):
             self.first = False
             #show functionalities on window
             self.fillEndo()
-            #self.show()
 
             self.num_chromo_next = False
 
-
             #Jobs Table
-            #self.job_Table.setColumnCount(3)
             self.job_Table.setShowGrid(False)
-            #self.job_Table.setHorizontalHeaderLabels(["Job Queue","Job in Progress", "Completed Jobs"])
             self.job_Table.horizontalHeader().setSectionsClickable(True)
-            #self.job_Table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-            #self.job_Table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
             self.job_Table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
             self.job_Table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
             self.job_Table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
@@ -134,42 +202,130 @@ class NewGenome(QtWidgets.QMainWindow):
             self.three_length.setEnabled(False)
             self.repeats_box.setEnabled(False)
 
-
-            #set pixel widths for scroll bars
-            self.output_browser.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.output_browser.horizontalScrollBar().setStyleSheet("height: 16px;")
-            self.job_Table.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.job_Table.horizontalScrollBar().setStyleSheet("height: 16px;")
-
-
             #user prompt class
             self.goToPrompt = goToPrompt()
             self.goToPrompt.goToMain.clicked.connect(self.continue_to_main)
             self.goToPrompt.goToMT.clicked.connect(self.continue_to_MT)
             self.goToPrompt.goToPop.clicked.connect(self.continue_to_pop)
+
+            self.orgName.setFocus()
+
+            #scale UI
+            self.scaleUI()
+            self.first_show = True
+
         except Exception as e:
             logger.critical("Unable to initialize New Genome class.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    ####---FUNCTIONS TO RUN EACH BUTTON---####
+    #scale the UI
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+            self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton, QProgressBar, QComboBox, QLineEdit { height: " + str(scaledHeight) + "px }")
+
+            #scroll bar scaling
+            scrollbarWidth = int((width * 15) / 1920)
+            scrollbarHeight = int((height * 15) / 1080)
+            self.job_Table.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.job_Table.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+            self.output_browser.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.output_browser.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+
+            # CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
+            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            # resize columns in table
+            self.job_Table.resizeColumnsToContents()
+
+            #spacers
+            spacerSize =  int((height * 1) / 1080)
+            spacerSize = spacerSize ** 4
+            self.spacer_1.setStyleSheet("font: " + str(spacerSize) + "pt;")
+            self.spacer_2.setStyleSheet("font: " + str(spacerSize) + "pt;")
+            self.spacer_3.setStyleSheet("font: " + str(spacerSize) + "pt;")
+
+            # window scaling
+            # 1920x1080 => 850x750
+            scaledWidth = int((width * 850) / 1920)
+            scaledHeight = int((height * 750) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in new genome.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center the UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            #center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in new genome.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #open the ncbi search tool window
     def open_ncbi_tool(self):
         try:
             #center ncbi on current screen
-            frameGm = GlobalSettings.mainWindow.ncbi.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            GlobalSettings.mainWindow.ncbi.move(frameGm.topLeft())
-
+            if GlobalSettings.mainWindow.ncbi.first_show == True:
+                GlobalSettings.mainWindow.ncbi.first_show = False
+                GlobalSettings.mainWindow.ncbi.centerUI()
             GlobalSettings.mainWindow.ncbi.show()
+            GlobalSettings.mainWindow.ncbi.activateWindow()
         except Exception as e:
             logger.critical("Error in open_ncbi_tool() in New Genome.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #remove jobs from queue
     def remove_from_queue(self):
         try:
             while(True):
@@ -183,6 +339,7 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #prompt user with file browser to select fasta/fna files
     def selectFasta(self):
         try:
             filed = QtWidgets.QFileDialog()
@@ -190,25 +347,26 @@ class NewGenome(QtWidgets.QMainWindow):
             if (myFile[0] != ""):
 
                 if not myFile[0].endswith(".fa") and not myFile[0].endswith(".fna") and not myFile[0].endswith(".gbff") and not myFile[0].endswith(".fasta"):
-                    QtWidgets.QMessageBox.question(self, "File Selection Error",
-                                                   "You have selected an incorrect type of file. "
-                                                   "Please choose a FASTA/FNA file.",
-                                                   QtWidgets.QMessageBox.Ok)
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("File Selection Error")
+                    msgBox.setText("You have selected an incorrect type of file. Please choose a FASTA/FNA file.")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
                     return
                 else:
                     self.file = myFile[0]
-                    self.s_file.setText(str(myFile[0]))
-            """cdir = self.lineEdit.text()
-            os.chdir(mydir)
-            self.gdirectory = mydir
-            print(mydir)
-            print(cdir)"""
+                    self.selectedFile.setText(str(myFile[0]))
+
         except Exception as e:
             logger.critical("Error in selectFasta() in New Genome.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #submit jobs to queue
     def submit(self):
         try:
             warning = ""
@@ -217,7 +375,15 @@ class NewGenome(QtWidgets.QMainWindow):
             if len(self.file) == 0:
                 warning = warning + "\nYou need to select a file."
             if len(warning) != 0:
-                QtWidgets.QMessageBox.information(self, "Required Information", warning, QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Required Information")
+                msgBox.setText(warning)
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
+
                 return
 
             if len(self.strainName.text()) == 0:
@@ -225,12 +391,16 @@ class NewGenome(QtWidgets.QMainWindow):
             if len(self.orgCode.text()) == 0:
                 warning = warning + "\nYou must include an organism code."
             if len(warning) != 0:
-                hold = QtWidgets.QMessageBox.question(self, "Missing Information", warning +
-                                                      "\n\nDo you wish to continue without including this information?"
-                                                      , QtWidgets.QMessageBox.Yes |
-                                                      QtWidgets.QMessageBox.No,
-                                                      QtWidgets.QMessageBox.No)
-                if hold == QtWidgets.QMessageBox.No:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
+                msgBox.setWindowTitle("Missing Information")
+                msgBox.setText(warning + "\n\nDo you wish to continue without including this information?")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.No)
+                msgBox.exec()
+
+                if msgBox.result() == QtWidgets.QMessageBox.No:
                     return
 
 
@@ -283,6 +453,7 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #fill the endo dropdown
     def fillEndo(self):
         try:
             #disconnect signal
@@ -329,6 +500,7 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #event handler for endo changing - update endo length data
     def changeEndos(self):
         try:
             key = str(self.comboBoxEndo.currentText())
@@ -341,6 +513,7 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #check if endo is 3' or 5'
     def endo_settings(self):
         try:
             # check the if it's 3' or 5', and check the box accordingly
@@ -354,20 +527,7 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    def findFasta(self):
-        try:
-            choice = QtWidgets.QMessageBox.question(self, "Extract!", "Are you sure you want to quit?",
-                                                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-            if choice == QtWidgets.QMessageBox.Yes:
-                sys.exit()
-            else:
-                pass
-        except Exception as e:
-            logger.critical("Error in findFasta() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            exit(-1)
-
+    #wrapper for running jobs
     def run_jobs_wrapper(self):
         try:
             self.indexes = []
@@ -383,6 +543,7 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #run job in queue
     def run_job(self):
         try:
             if len(self.indexes) > 0:
@@ -443,15 +604,21 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
                 self.process.start(program)
             else:
-                error = QtWidgets.QMessageBox.critical(self, "No Jobs To Run",
-                                                       "No jobs are in the queue to run. Please add a job before running.",
-                                                       QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("No Jobs To Run")
+                msgBox.setText("No jobs are in the queue to run. Please add a job before running.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
         except Exception as e:
             logger.critical("Error in run_job() in New Genome.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #even handler for when jobs finish execution
     def upon_process_finishing(self):
         try:
             row_index = self.indexes[0]
@@ -465,13 +632,16 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.run_job()
             else:
                 #prompt user if they want to analyze their new files
+                self.goToPrompt.centerUI()
                 self.goToPrompt.show()
+                self.goToPrompt.activateWindow()
         except Exception as e:
             logger.critical("Error in upon_process_finishing() in New Genome.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #clear the job table
     def clear_job_queue(self):
         try:
             self.process.kill()
@@ -488,12 +658,16 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #reset the whole form
     def reset(self):
         try:
             self.orgName.clear()
             self.strainName.clear()
             self.orgCode.clear()
-            self.s_file.setText("Name of File")
+            self.selectedFile.clear()
+            self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
+            self.output_browser.clear()
+            self.output_browser.setText("Waiting for program initiation...")
             self.file = ""
         except Exception as e:
             logger.critical("Error in reset() in New Genome.")
@@ -501,6 +675,7 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #menu button for launching NCBI web page
     def open_ncbi_web_page(self):
         try:
             webbrowser.open('https://www.ncbi.nlm.nih.gov/', new=2)
@@ -510,6 +685,7 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #menu button for launching github repo
     def visit_repo_func(self):
         try:
             webbrowser.open('https://github.com/TrinhLab/CASPERapp')
@@ -519,6 +695,7 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #event handler for user wanting to close the window
     def closeEvent(self, event):
         try:
             # make sure that there are cspr files in the DB
@@ -530,13 +707,17 @@ class NewGenome(QtWidgets.QMainWindow):
                     break
             if noCSPRFiles == True:
                 if self.exit == False:
-                    error = QtWidgets.QMessageBox.question(self, "No CSPR file generated",
-                                                            "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
-                                                            "Alternatively, you could quit the program. Would you like to quit?",
-                                                            QtWidgets.QMessageBox.Yes |
-                                                            QtWidgets.QMessageBox.No,
-                                                            QtWidgets.QMessageBox.No)
-                    if (error == QtWidgets.QMessageBox.No):
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
+                    msgBox.setWindowTitle("No CSPR file generated")
+                    msgBox.setText("No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
+                                                            "Alternatively, you could quit the program. Would you like to quit?")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.No)
+                    msgBox.exec()
+
+                    if (msgBox.result() == QtWidgets.QMessageBox.No):
                         event.ignore()
                     else:
                         event.accept()
@@ -552,13 +733,13 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.strainName.clear()
                 self.orgCode.clear()
                 self.output_browser.clear()
-                self.s_file.setText("Name of File")
+                self.output_browser.setText("Waiting for program initiation...")
+                self.selectedFile.clear()
+                self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
                 self.progressBar.setValue(0)
                 self.first = False
                 self.goToPrompt.hide()
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
-                GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
-                GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
                 if GlobalSettings.mainWindow.orgChoice.currentText() != '':
                     GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
                 GlobalSettings.mainWindow.orgChoice.clear()
@@ -567,13 +748,9 @@ class NewGenome(QtWidgets.QMainWindow):
                 GlobalSettings.MTWin.launch()
                 GlobalSettings.pop_Analysis.launch()
 
-                # center main on current screen
-                frameGm = GlobalSettings.mainWindow.frameGeometry()
-                screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-                centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-                frameGm.moveCenter(centerPoint)
-                GlobalSettings.mainWindow.move(frameGm.topLeft())
-
+                if GlobalSettings.mainWindow.first_show == True:
+                    GlobalSettings.mainWindow.first_show = False
+                    GlobalSettings.mainWindow.centerUI()
                 GlobalSettings.mainWindow.show()
                 event.accept()
         except Exception as e:
@@ -582,6 +759,7 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #event handler for user wanting to go to Main once jobs complete
     def continue_to_main(self):
         try:
             # make sure that there are cspr files in the DB
@@ -593,14 +771,19 @@ class NewGenome(QtWidgets.QMainWindow):
                     break
             if noCSPRFiles == True:
 
-                error = QtWidgets.QMessageBox.question(self, "No CSPR file generated",
-                                                       "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
-                                                       "Alternatively, you could quit the program. Would you like to quit?",
-                                                       QtWidgets.QMessageBox.Yes |
-                                                       QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
+                msgBox.setWindowTitle("No CSPR file generated")
+                msgBox.setText(
+                    "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
+                    "Alternatively, you could quit the program. Would you like to quit?")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.No)
+                msgBox.exec()
 
 
-                if (error == QtWidgets.QMessageBox.Yes):
+                if (msgBox.result() == QtWidgets.QMessageBox.Yes):
                     self.exit = True
                     self.close()
 
@@ -612,13 +795,13 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.strainName.clear()
                 self.orgCode.clear()
                 self.output_browser.clear()
-                self.s_file.setText("Name of File")
+                self.output_browser.setText("Waiting for program initiation...")
+                self.selectedFile.clear()
+                self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
                 self.progressBar.setValue(0)
                 self.first = False
                 self.goToPrompt.hide()
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
-                GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
-                GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
                 if GlobalSettings.mainWindow.orgChoice.currentText() != '':
                     GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
                 GlobalSettings.mainWindow.orgChoice.clear()
@@ -628,12 +811,9 @@ class NewGenome(QtWidgets.QMainWindow):
                 GlobalSettings.pop_Analysis.launch()
 
                 # center main on current screen
-                frameGm = GlobalSettings.mainWindow.frameGeometry()
-                screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-                centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-                frameGm.moveCenter(centerPoint)
-                GlobalSettings.mainWindow.move(frameGm.topLeft())
-
+                if GlobalSettings.mainWindow.first_show == True:
+                    GlobalSettings.mainWindow.first_show = False
+                    GlobalSettings.mainWindow.centerUI()
                 GlobalSettings.mainWindow.show()
                 self.hide()
         except Exception as e:
@@ -642,6 +822,7 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #event handler for user wanting to go to multi-targeting once jobs complete
     def continue_to_MT(self):
         try:
             # make sure that there are cspr files in the DB
@@ -653,13 +834,20 @@ class NewGenome(QtWidgets.QMainWindow):
                     break
             if noCSPRFiles == True:
 
-                error = QtWidgets.QMessageBox.question(self, "No CSPR file generated",
-                                                       "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
-                                                       "Alternatively, you could quit the program. Would you like to quit?",
-                                                       QtWidgets.QMessageBox.Yes |
-                                                       QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
+                msgBox.setWindowTitle("No CSPR file generated")
+                msgBox.setText(
+                    "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
+                    "Alternatively, you could quit the program. Would you like to quit?")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.No)
+                msgBox.exec()
 
-                if (error == QtWidgets.QMessageBox.Yes):
+
+
+                if (msgBox.result() == QtWidgets.QMessageBox.Yes):
                     self.exit = True
                     self.close()
 
@@ -671,29 +859,25 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.strainName.clear()
                 self.orgCode.clear()
                 self.output_browser.clear()
-                self.s_file.setText("Name of File")
+                self.output_browser.setText("Waiting for program initiation...")
+                self.selectedFile.clear()
+                self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
                 self.progressBar.setValue(0)
                 self.first = False
                 self.goToPrompt.hide()
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
-                GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
-                GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
                 if GlobalSettings.mainWindow.orgChoice.currentText() != '':
                     GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
                 GlobalSettings.mainWindow.orgChoice.clear()
                 GlobalSettings.mainWindow.endoChoice.clear()
                 GlobalSettings.mainWindow.getData()
-                GlobalSettings.MTWin.mwfg.moveCenter(GlobalSettings.MTWin.cp)  ##Center window
-                GlobalSettings.MTWin.move(GlobalSettings.MTWin.mwfg.topLeft())  ##Center window
                 GlobalSettings.MTWin.launch()
                 GlobalSettings.pop_Analysis.launch()
 
                 # center multi-targeting on current screen
-                frameGm = GlobalSettings.MTWin.frameGeometry()
-                screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-                centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-                frameGm.moveCenter(centerPoint)
-                GlobalSettings.MTWin.move(frameGm.topLeft())
+                if GlobalSettings.MTWin.first_show == True:
+                    GlobalSettings.MTWin.first_show = False
+                    GlobalSettings.MTWin.centerUI()
 
                 GlobalSettings.MTWin.show()
                 self.hide()
@@ -703,6 +887,7 @@ class NewGenome(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #event handler for user wanting to go to population analysis once jobs complete
     def continue_to_pop(self):
         try:
             # make sure that there are cspr files in the DB
@@ -714,13 +899,18 @@ class NewGenome(QtWidgets.QMainWindow):
                     break
             if noCSPRFiles == True:
 
-                error = QtWidgets.QMessageBox.question(self, "No CSPR file generated",
-                                                       "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
-                                                       "Alternatively, you could quit the program. Would you like to quit?",
-                                                       QtWidgets.QMessageBox.Yes |
-                                                       QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
+                msgBox.setWindowTitle("No CSPR file generated")
+                msgBox.setText(
+                    "No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
+                    "Alternatively, you could quit the program. Would you like to quit?")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.No)
+                msgBox.exec()
 
-                if (error == QtWidgets.QMessageBox.Yes):
+                if (msgBox.result() == QtWidgets.QMessageBox.Yes):
                     self.exit = True
                     self.close()
 
@@ -732,29 +922,24 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.strainName.clear()
                 self.orgCode.clear()
                 self.output_browser.clear()
-                self.s_file.setText("Name of File")
+                self.output_browser.setText("Waiting for program initiation...")
+                self.selectedFile.clear()
+                self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
                 self.progressBar.setValue(0)
                 self.first = False
                 self.goToPrompt.hide()
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
-                GlobalSettings.mainWindow.mwfg.moveCenter(GlobalSettings.mainWindow.cp)  ##Center window
-                GlobalSettings.mainWindow.move(GlobalSettings.mainWindow.mwfg.topLeft())  ##Center window
                 if GlobalSettings.mainWindow.orgChoice.currentText() != '':
                     GlobalSettings.mainWindow.orgChoice.currentIndexChanged.disconnect()
                 GlobalSettings.mainWindow.orgChoice.clear()
                 GlobalSettings.mainWindow.endoChoice.clear()
                 GlobalSettings.mainWindow.getData()
-                GlobalSettings.pop_Analysis.mwfg.moveCenter(GlobalSettings.pop_Analysis.cp)  ##Center window
-                GlobalSettings.pop_Analysis.move(GlobalSettings.pop_Analysis.mwfg.topLeft())  ##Center window
                 GlobalSettings.MTWin.launch()
                 GlobalSettings.pop_Analysis.launch()
 
-                # center pop analysis on current screen
-                frameGm = GlobalSettings.pop_Analysis.frameGeometry()
-                screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-                centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-                frameGm.moveCenter(centerPoint)
-                GlobalSettings.pop_Analysis.move(frameGm.topLeft())
+                if GlobalSettings.pop_Analysis.first_show == True:
+                    GlobalSettings.pop_Analysis.first_show = False
+                    GlobalSettings.pop_Analysis.centerUI()
 
                 GlobalSettings.pop_Analysis.show()
                 self.hide()

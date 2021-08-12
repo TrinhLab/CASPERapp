@@ -28,16 +28,13 @@ import logging
 #logger alias for global logger
 logger = GlobalSettings.logger
 
-# =========================================================================================
-# CLASS NAME: AnnotationsWindow
-# Inputs: Annotation file and search query from MainWindow
-# Outputs: Greg: AnnotationWindow showing entries matching search query 
-# =========================================================================================
+#Annotation file and search query from MainWindow
 class AnnotationsWindow(QtWidgets.QMainWindow):
+    #init annotation window class
     def __init__(self, info_path):
         super(AnnotationsWindow, self).__init__()
-        uic.loadUi(GlobalSettings.appdir + 'Annotation Details.ui', self)
-        self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
+        uic.loadUi(GlobalSettings.appdir + 'annotation_details.ui', self)
+        self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
         self.Submit_button.clicked.connect(self.submit)
         self.Go_Back_Button.clicked.connect(self.go_Back)
         self.select_all_checkbox.stateChanged.connect(self.select_all_genes)
@@ -52,20 +49,94 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.tableWidget.setAutoScroll(False)
 
         #setting pixel width for scroll bars
-        self.tableWidget.verticalScrollBar().setStyleSheet("width: 16px;")
-        self.tableWidget.horizontalScrollBar().setStyleSheet("height: 16px;")
+        self.tableWidget.verticalScrollBar().setStyleSheet("width: 14px;")
+        self.tableWidget.horizontalScrollBar().setStyleSheet("height: 14px;")
 
+        #scale UI
+        self.scaleUI()
+
+    #scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
+            self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
+
+            #button, scroll bar scaling
+            scaledHeight = int((height * 25) / 1080)
+            scrollbarWidth = int((width * 15) / 1920)
+            scrollbarHeight = int((height * 15) / 1080)
+            self.setStyleSheet('QPushButton {height: ' + str(scaledHeight) + 'px;}')
+            self.tableWidget.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.tableWidget.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+
+            #CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
+            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            #resize columns in table
+            self.tableWidget.resizeColumnsToContents()
+
+            # window scaling
+            # 1920x1080 => 1150x650
+            scaledWidth = int((width * 900) / 1920)
+            scaledHeight = int((height * 600) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in AnnotationWindow.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            #center UI on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+
+            self.setGeometry(x, y, width, height)
+            self.repaint()
+        except Exception as e:
+            logger.critical("Error in centerUI() in AnnotationWindow.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #submit selected rows for results to process
     def submit(self):
         try:
             self.mainWindow.collect_table_data_nonkegg()
             self.hide()
-
-            #show main window on current screen
-            frameGm = self.mainWindow.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.mainWindow.move(frameGm.topLeft())
             self.mainWindow.show()
         except Exception as e:
             logger.critical("Error in submit() in AnnotationsWindow.")
@@ -73,19 +144,13 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #go back to main
     def go_Back(self):
         try:
             self.tableWidget.clear()
             self.mainWindow.checkBoxes.clear()
             self.mainWindow.searches.clear()
             self.tableWidget.setColumnCount(0)
-
-            #center main window on current screen
-            frameGm = self.mainWindow.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.mainWindow.move(frameGm.topLeft())
 
             self.mainWindow.show()
             self.mainWindow.progressBar.setValue(0)
@@ -150,13 +215,10 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             mainWindow.hide()
 
             #center on current screen
-            frameGm = self.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.move(frameGm.topLeft())
-
+            self.centerUI()
             self.show()
+            self.activateWindow()
+
             return 0
         except Exception as e:
             logger.critical("Error in fill_table_nonKegg() in AnnotationsWindow.")
@@ -164,8 +226,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    # this is the connection for the select all checkbox
-    # selects/deselects all the genes in the table
+    # this is the connection for the select all checkbox - selects/deselects all the genes in the table
     def select_all_genes(self):
         try:
             # check to see if we're selecting all of them or not
@@ -198,6 +259,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+
 # =========================================================================================
 # CLASS NAME: CMainWindow
 # Inputs: Takes in the path information from the startup window and also all input parameters
@@ -223,7 +285,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.organismDict = dict()  # the dictionary for the links to download. Key is the description of the organism, value is the ID that can be found in link_list
         self.organismData = list()
         self.ncbi = ncbi.NCBI_search_tool()
-        self.ncbi.hide()
 
         groupbox_style = """
         QGroupBox:title{subcontrol-origin: margin;
@@ -239,7 +300,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2"))
         self.Step3.setStyleSheet(groupbox_style.replace("Step1", "Step3"))
 
-        self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + 'cas9image.png'))
+        self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
         self.pushButton_FindTargets.clicked.connect(self.gather_settings)
         self.pushButton_ViewTargets.clicked.connect(self.view_results)
         self.pushButton_ViewTargets.setEnabled(False)
@@ -280,40 +341,84 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.export_csv_window = export_csv_window()
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
-        self.mwfg = self.frameGeometry()  ##Center window
-        self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
+
         self.genomebrowser = genomeBrowser.genomebrowser()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
+        #scale UI
+        self.first_show = True
         self.scaleUI()
 
-    #function for scaling the font size and logo size based on resolution and DPI of screen
+    #scale UI based on current screen
     def scaleUI(self):
         try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi
-            fontSize = int((math.ceil(dpi) * 16) // 92)
-
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
-            # window scaling
-            # 1920x1080 => 1000x500
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-            scaledWidth = int( (width * 1000) //  1980)
-            scaledHeight = int( (height * 500) //  1080)
-            self.resize(scaledWidth, scaledHeight)
+            #push button, radio button, combo box scaling
+            #scaledWidth = int((width * 1150) / 1920)
+            scaledHeight = int((height * 25) / 1080)
+            scrollbarWidth = int((width * 15) / 1920)
+            scrollbarHeight = int((height * 15) / 1080)
+            self.setStyleSheet('QPushButton, QProgressBar, QComboBox {height: ' + str(scaledHeight) + 'px;}' + ' QScrollBar::vertical { width: ' + str(scrollbarWidth) + 'px; }' + ' QScrollBar::horizontal { height: ' + str(scrollbarHeight) + 'px; }')
 
-            #radio button scaling
+            #CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
+            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
 
+            #window resize and center
+            #1920x1080 => 1150x650
+            scaledWidth = int((width * 1150)/1920)
+            scaledHeight = int((height * 650)/1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
 
-            #scroll bar scaling
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
         except Exception as e:
             logger.critical("Error in scaleUI() in main.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            width = self.width()
+            height = self.height()
+            # scale/center window
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+        except Exception as e:
+            logger.critical("Error in centerUI() in main.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -327,9 +432,14 @@ class CMainWindow(QtWidgets.QMainWindow):
         try:
             inputstring = str(self.geneEntryField.toPlainText())
             if (inputstring.startswith("Example Inputs:") or inputstring == ""):
-                QtWidgets.QMessageBox.question(self, "Error",
-                                               "No gene has been entered.  Please enter a gene.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText("No gene has been entered.  Please enter a gene.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
             else:
                 # standardize the input
                 inputstring = inputstring.lower()
@@ -343,8 +453,14 @@ class CMainWindow(QtWidgets.QMainWindow):
                     else:
                         found_matches_bool = False
                 elif self.radioButton_Position.isChecked() or self.radioButton_Sequence.isChecked():
-                    QtWidgets.QMessageBox.question(self, "Error", "Generate Library can only work with gene names (Locus ID).",
-                                                   QtWidgets.QMessageBox.Ok)
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Error")
+                    msgBox.setText("Generate Library can only work with gene names (Locus ID).")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
                     return
                 """
                 elif self.radioButton_Position.isChecked():
@@ -383,13 +499,16 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                     # warn the user if the number is greater than 50
                     if tempSum > 50:
-                        error = QtWidgets.QMessageBox.question(self, "Many Matches Found",
-                                                               "More than 50 matches have been found. Continuing could cause a slow down...\n\n"
-                                                               "Do you wish to continue?",
-                                                               QtWidgets.QMessageBox.Yes |
-                                                               QtWidgets.QMessageBox.No,
-                                                               QtWidgets.QMessageBox.No)
-                        if (error == QtWidgets.QMessageBox.No):
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
+                        msgBox.setWindowTitle("Many Matches Found")
+                        msgBox.setText("More than 50 matches have been found. Continuing could cause a slow down...\n\n Do you wish to continue?")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.No)
+                        msgBox.exec()
+
+                        if (msgBox.result() == QtWidgets.QMessageBox.No):
                             self.searches.clear()
                             self.progressBar.setValue(0)
                             return -2
@@ -410,9 +529,15 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             # Error check: make sure the user actually inputs something
             if (inputstring.startswith("Example Inputs:") or inputstring == ""):
-                QtWidgets.QMessageBox.question(self, "Error",
-                                               "No gene has been entered. Please enter a gene.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText(
+                    "No gene has been entered. Please enter a gene.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
             else:
                 # standardize the input
                 inputstring = inputstring.lower()
@@ -454,9 +579,15 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             # if the parser retuns the 'wrong file type' error
             if fileType == -1:
-                QtWidgets.QMessageBox.question(self, "Error:",
-                                               "We cannot parse the file type given. Please make sure to choose a GBFF, GFF, or Feature Table file."
-                                               , QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error:")
+                msgBox.setText(
+                    "We cannot parse the file type given. Please make sure to choose a GBFF, GFF, or Feature Table file.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 self.progressBar.setValue(0)
                 return
 
@@ -474,9 +605,14 @@ class CMainWindow(QtWidgets.QMainWindow):
             own_cspr_parser.read_first_lines()
 
             if len(own_cspr_parser.karystatsList) != self.annotation_parser.max_chrom:
-                QtWidgets.QMessageBox.question(self, "Warning:",
-                                               "The number of chromosomes do not match. This could cause errors."
-                                               , QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Warning:")
+                msgBox.setText(
+                    "The number of chromosomes do not match. This could cause errors.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
 
             # now go through and search for the actual locus tag, in the case the user input that
             searchValues = self.separate_line(inputstring[0])
@@ -502,9 +638,15 @@ class CMainWindow(QtWidgets.QMainWindow):
                                     self.searches[search][item].append(match)
             # if the search returns nothing, throw an error
             if len(self.searches[searchValues[0]]) <= 0:
-                QtWidgets.QMessageBox.question(self, "No Matches Found",
-                                               "No matches found with that search, please try again.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("No Matches Found")
+                msgBox.setText(
+                    "No matches found with that search, please try again.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 self.progressBar.setValue(0)
                 if openAnnoWindow:
                     return
@@ -528,8 +670,15 @@ class CMainWindow(QtWidgets.QMainWindow):
         try:
             #print("run results")
             if(str(self.annotation_files.currentText()).find('.gbff') == -1):
-                QtWidgets.QMessageBox.information(self, "Genomebrowser Error", "Filetype must be GBFF.",
-                                                  QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Genomebrowser Error")
+                msgBox.setText(
+                    "Filetype must be GBFF.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 self.progressBar.setValue(0)
                 return
 
@@ -545,7 +694,15 @@ class CMainWindow(QtWidgets.QMainWindow):
             if inputtype == "gene":
                 # make sure an annotation file has been selected
                 if self.annotation_files.currentText() == "":
-                    error = QtWidgets.QMessageBox.question(self, "No Annotation", "Please select an annotation from NCBI or provide you own annotation file", QtWidgets.QMessageBox.Ok)
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("No Annotation")
+                    msgBox.setText(
+                        "Please select an annotation from NCBI or provide you own annotation file")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
                     self.progressBar.setValue(0)
                     return
                 # this now just goes onto the other version of run_results
@@ -568,24 +725,42 @@ class CMainWindow(QtWidgets.QMainWindow):
                     searchIndicies = item.split(',')
                     # make sure the right amount of arguments were passed
                     if len(searchIndicies) != 3:
-                        QtWidgets.QMessageBox.question(self, "Position Error: Invalid Input",
-                                                       "There are 3 arguments required for this function: chromosome, start position, and end position.",
-                                                       QtWidgets.QMessageBox.Ok)
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("Position Error: Invalid Input")
+                        msgBox.setText(
+                            "There are 3 arguments required for this function: chromosome, start position, and end position.")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
                         self.progressBar.setValue(0)
                         return
 
                     # make sure user inputs digits
                     if not searchIndicies[0].isdigit() or not searchIndicies[1].isdigit() or not searchIndicies[2].isdigit():
-                        QtWidgets.QMessageBox.question(self, "Position Error: Invalid Input",
-                                                       "The positions given must be integers. Please try again.",
-                                                       QtWidgets.QMessageBox.Ok)
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("Position Error: Invalid Input")
+                        msgBox.setText(
+                            "The positions given must be integers. Please try again.")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
                         self.progressBar.setValue(0)
                         return
                     # make sure start is less than end
                     elif int(searchIndicies[1]) >= int(searchIndicies[2]):
-                        QtWidgets.QMessageBox.question(self, "Position Error: Start Must Be Less Than End",
-                                                       "The start index must be less than the end index.",
-                                                       QtWidgets.QMessageBox.Ok)
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("Position Error: Start Must Be Less Than End")
+                        msgBox.setText(
+                            "The start index must be less than the end index.")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
                         self.progressBar.setValue(0)
                         return
                     # append the data into the checked_info
@@ -607,21 +782,31 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 # check to make sure that the use gave a long enough sequence
                 if len(inputstring) < 100:
-                    QtWidgets.QMessageBox.question(self, "Error",
-                                                   "The sequence given is too small. At least 100 characters are required.",
-                                                   QtWidgets.QMessageBox.Ok)
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Error")
+                    msgBox.setText(
+                        "The sequence given is too small. At least 100 characters are required.")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
                     self.progressBar.setValue(0)
                     return
 
                 # give a warning if the length of the sequence is long
                 if len(inputstring) > 30000:
-                    error = QtWidgets.QMessageBox.question(self, "Large Sequence Detected",
-                                                           "The sequence given is a large one and could slow down the process.\n\n"
-                                                           "Do you wish to continue?",
-                                                           QtWidgets.QMessageBox.Yes |
-                                                           QtWidgets.QMessageBox.No,
-                                                           QtWidgets.QMessageBox.No)
-                    if (error == QtWidgets.QMessageBox.No):
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
+                    msgBox.setWindowTitle("Large Sequence Detected")
+                    msgBox.setText(
+                        "The sequence given is a large one and could slow down the process.\n\nDo you wish to continue?")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.No)
+                    msgBox.exec()
+
+                    if (msgBox.result() == QtWidgets.QMessageBox.No):
                         self.progressBar.setValue(0)
                         return
 
@@ -631,9 +816,15 @@ class CMainWindow(QtWidgets.QMainWindow):
                     if letter == '\n':
                         continue
                     if letter not in checkString:
-                        QtWidgets.QMessageBox.question(self, "Sequence Error",
-                                                       "The sequence must consist of A, G, T, C, or N. No other characters are allowed.",
-                                                       QtWidgets.QMessageBox.Ok)
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("Sequence Error")
+                        msgBox.setText(
+                            "The sequence must consist of A, G, T, C, or N. No other characters are allowed.")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
                         self.progressBar.setValue(0)
                         return
                 self.progressBar.setValue(30)
@@ -654,22 +845,15 @@ class CMainWindow(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #launch new genome tool
     def launch_newGenome(self):
         try:
-            self.hide()
-            self.newGenome.mwfg.moveCenter(self.newGenome.cp)  ##Center window
-            self.newGenome.move(self.newGenome.mwfg.topLeft())  ##Center window
-            #update endo list
+            # update endo list
             self.newGenome.fillEndo()
-            #show new genome window
-
-            #show new genome window and center on current screen
-            frameGm = self.newGenome.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.newGenome.move(frameGm.topLeft())
-
+            if self.newGenome.first_show == True:
+                self.newGenome.centerUI()
+                self.newGenome.first_show = False
+            self.hide()
             self.newGenome.show()
         except Exception as e:
             logger.critical("Error in launch_newGenome() in main.")
@@ -677,21 +861,19 @@ class CMainWindow(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #launch new endo tool
     def launch_newEndonuclease(self):
         try:
-            #center new endo window on current screen
-            frameGm =  self.newEndonuclease.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.newEndonuclease.move(frameGm.topLeft())
+            self.newEndonuclease.centerUI()
             self.newEndonuclease.show()
+            self.newEndonuclease.activateWindow()
         except Exception as e:
             logger.critical("Error in launch_newEndonuclease() in main.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #launch genome browser tool
     def launch_newGenomeBrowser(self):
         try:
             self.genomebrowser.createGraph(self)
@@ -701,19 +883,24 @@ class CMainWindow(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #launch ncbi tool
     def launch_ncbi(self):
         try:
-            QtWidgets.QMessageBox.information(self, "Note:",
-            "NCBI Annotation Guidelines:\n\nDownload annotation files of the exact species and strain used in Analyze New Genome.\n\nMismatched annotation files will inhibit downstream analyses.",
-            QtWidgets.QMessageBox.Ok)
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Information)
+            msgBox.setWindowTitle("Note:")
+            msgBox.setText(
+                "NCBI Annotation Guidelines:\n\nDownload annotation files of the exact species and strain used in Analyze New Genome.\n\nMismatched annotation files will inhibit downstream analyses.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+            msgBox.exec()
 
-            #center ncbi window on current screen
-            frameGm =  self.ncbi.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.ncbi.move(frameGm.topLeft())
+            if self.ncbi.first_show == True:
+                self.ncbi.first_show = False
+                self.ncbi.centerUI()
+
             self.ncbi.show()
+            self.ncbi.activateWindow()
         except Exception as e:
             logger.critical("Error in launch_ncbi() in main.")
             logger.critical(e)
@@ -723,6 +910,26 @@ class CMainWindow(QtWidgets.QMainWindow):
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
     def collect_table_data_nonkegg(self):
         try:
+            self.Results.annotation_path = self.annotation_parser.annotationFileName  ### Set annotation path
+            try:
+                self.Results.endonucleaseBox.currentIndexChanged.disconnect()
+            except Exception as e:
+                pass
+            # set Results endo combo box
+            self.Results.endonucleaseBox.clear()
+
+            # set GeneViewer to appropriate annotation file
+
+            # set the results window endoChoice box menu
+            # set the mainWindow's endoChoice first, and then loop through and set the rest of them
+            self.Results.endonucleaseBox.addItem(self.endoChoice.currentText())
+            for item in self.organisms_to_endos[str(self.orgChoice.currentText())]:
+                if item != self.Results.endonucleaseBox.currentText():
+                    self.Results.endonucleaseBox.addItem(item)
+
+            self.Results.endonucleaseBox.currentIndexChanged.connect(self.Results.changeEndonuclease)
+            self.Results.get_endo_data()
+
             # start out the same as the other collect_table_data
             self.checked_info.clear()
             self.check_ntseq_info.clear()
@@ -756,6 +963,9 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.progressBar.setValue(95)
             self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
                                        self.checked_info, self.check_ntseq_info, "")
+
+            self.Results.load_gene_viewer()
+
             self.progressBar.setValue(100)
             self.pushButton_ViewTargets.setEnabled(True)
             self.GenerateLibrary.setEnabled(True)
@@ -892,9 +1102,17 @@ class CMainWindow(QtWidgets.QMainWindow):
     # This method is for testing the execution of a button call to make sure the button is linked properly
     def testexe(self):
         try:
-            choice = QtWidgets.QMessageBox.question(self, "Extract!", "Are you sure you want to quit?",
-                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-            if choice == QtWidgets.QMessageBox.Yes:
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
+            msgBox.setWindowTitle("Extract!")
+            msgBox.setText(
+                "Are you sure you want to quit?")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.No)
+            msgBox.exec()
+
+            if msgBox.result() == QtWidgets.QMessageBox.Yes:
                 # print(self.orgChoice.currentText())
                 sys.exit()
             else:
@@ -910,7 +1128,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             try:
                 self.orgChoice.currentIndexChanged.disconnect()
             except Exception as e:
-                pass
+                 pass
 
             self.orgChoice.clear()
             self.endoChoice.clear()
@@ -992,8 +1210,15 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             if os.path.isdir(mydir) == False:
                 #check if directory is a valid directory
-                QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Not a directory")
+                msgBox.setText(
+                    "The directory you selected does not exist.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
 
@@ -1004,9 +1229,15 @@ class CMainWindow(QtWidgets.QMainWindow):
                     found = True
                     break
             if (found == False):
-                QtWidgets.QMessageBox.critical(self, "Directory is invalid!",
-                                               "You must select a directory with CSPR Files!",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Directory is invalid!")
+                msgBox.setText(
+                    "You must select a directory with CSPR Files!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
 
@@ -1027,38 +1258,29 @@ class CMainWindow(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #change to multi-targeting window
     def changeto_multitargeting(self):
         try:
             os.chdir(os.getcwd())
-
-            #get frame of MT window and center it on current screen
-            frameGm = GlobalSettings.MTWin.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            GlobalSettings.MTWin.move(frameGm.topLeft())
-
+            if GlobalSettings.MTWin.first_show == True:
+                GlobalSettings.MTWin.centerUI()
+                GlobalSettings.MTWin.first_show = False
             GlobalSettings.MTWin.show()
             GlobalSettings.mainWindow.hide()
+
         except Exception as e:
             logger.critical("Error in changeto_multitargeting() in main.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #change to population analysis window
     def changeto_population_Analysis(self):
         try:
-            GlobalSettings.pop_Analysis.mwfg.moveCenter(GlobalSettings.pop_Analysis.cp)  ##Center window
-            GlobalSettings.pop_Analysis.move(GlobalSettings.pop_Analysis.mwfg.topLeft())  ##Center window
-
-            # get frame of pop analysis window and center it on current screen
-            frameGm = GlobalSettings.pop_Analysis.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            GlobalSettings.pop_Analysis.move(frameGm.topLeft())
-
             GlobalSettings.pop_Analysis.launch()
+            if GlobalSettings.pop_Analysis.first_show == True:
+                GlobalSettings.pop_Analysis.centerUI()
+                GlobalSettings.pop_Analysis.first_show = False
             GlobalSettings.pop_Analysis.show()
             GlobalSettings.mainWindow.hide()
         except Exception as e:
@@ -1071,7 +1293,15 @@ class CMainWindow(QtWidgets.QMainWindow):
         try:
             info = "Annotation files are used for searching for spacers on a gene/locus basis and can be selected here using either " \
                    "NCBI databases or a local file."
-            QtWidgets.QMessageBox.information(self, "Annotation Information", info, QtWidgets.QMessageBox.Ok)
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Annotation Information")
+            msgBox.setText(
+                info)
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+            msgBox.exec()
+
         except Exception as e:
             logger.critical("Error in annotation_information() in main.")
             logger.critical(e)
@@ -1117,35 +1347,10 @@ class CMainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def view_results(self):
         try:
-            self.Results.annotation_path = self.annotation_parser.annotationFileName ### Set annotation path
-            try:
-                self.Results.endonucleaseBox.currentIndexChanged.disconnect()
-            except Exception as e:
-                pass
-            # set Results endo combo box
-            self.Results.endonucleaseBox.clear()
-
-            # set GeneViewer to appropriate annotation file
-
-            # set the results window endoChoice box menu
-            # set the mainWindow's endoChoice first, and then loop through and set the rest of them
-            self.Results.endonucleaseBox.addItem(self.endoChoice.currentText())
-            for item in self.organisms_to_endos[str(self.orgChoice.currentText())]:
-                if item != self.Results.endonucleaseBox.currentText():
-                    self.Results.endonucleaseBox.addItem(item)
-
-            self.Results.mwfg.moveCenter(self.Results.cp)  ##Center window
-            self.Results.move(self.Results.mwfg.topLeft())  ##Center window
-            self.Results.endonucleaseBox.currentIndexChanged.connect(self.Results.changeEndonuclease)
-            self.Results.load_gene_viewer()
-            self.Results.get_endo_data()
-
             #center results window on current screen
-            frameGm = self.Results.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.Results.move(frameGm.topLeft())
+            if self.Results.first_show == True:
+                self.Results.first_show = False
+                self.Results.centerUI()
 
             self.Results.show()
             self.hide()
@@ -1173,6 +1378,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             except Exception as e:
                 print("no ncbi window to close")
             self.myClosingWindow.get_files()
+            self.myClosingWindow.centerUI()
             self.myClosingWindow.show()
         except Exception as e:
             logger.critical("Error in closeFunction() in main.")
@@ -1195,8 +1401,8 @@ class CMainWindow(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+
 #startup window class
-#class StartupWindow(QtWidgets.QDialog):
 class StartupWindow(QtWidgets.QMainWindow):
     def __init__(self):
         try:
@@ -1230,10 +1436,12 @@ class StartupWindow(QtWidgets.QMainWindow):
             self.goToMain.clicked.connect(self.launchMainWindow)
             self.goToNewGenome.clicked.connect(self.launchNewGenome)
 
-            #scale the UI properly
+            self.setWindowTitle("CASPER")
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
+
+            #scale UI
             self.scaleUI()
 
-            self.show()
         except Exception as e:
             logger.critical("Error initializing StartupWindow class.")
             logger.critical(e)
@@ -1243,35 +1451,75 @@ class StartupWindow(QtWidgets.QMainWindow):
     #function for scaling the font size and logo size based on resolution and DPI of screen
     def scaleUI(self):
         try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
             screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
-
-            # log DPI information
-            logger.info("DPI = %d" % (dpi))
-
-            # font scaling
-            # 16px is used for 92 dpi
-            fontSize = int((math.ceil(dpi) * 16) // 92)
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
-
-            # logo scaling
-            # 1920x1080 => 766x388
+            dpi = math.ceil(screen.physicalDotsPerInch())
             width = screen.geometry().width()
             height = screen.geometry().height()
 
             #log width x height
             logger.info("Resolution: %s x %s", width, height)
 
-            #scale logo image
-            scaledWidth = int( (width * 766) // 1920)
-            scaledHeight = int( (height * 388) // 1080)
+            # log DPI information
+            logger.info("DPI = %d" % (dpi))
+
+            # font scaling
+            # 16px is used for 92 dpi 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
 
             #set logo image
             pixmapOriginal = QtGui.QPixmap(GlobalSettings.appdir + "CASPER-logo.jpg")
-            pixmapScaled = pixmapOriginal.scaled(scaledWidth, scaledHeight)
-            self.logo.setPixmap(pixmapScaled)
+            self.logo.setPixmap(pixmapOriginal)
+
+            #scale buttons and line edit
+            scaledHeight = int((height * 25) // 1080)
+            self.setStyleSheet("QPushButton, QLineEdit {height: " + str(scaledHeight) + "px}")
+
+            #scale and center UI
+            scaledWidth = int((width * 850) // 1920)
+            scaledHeight = int((height * 550) // 1080)
+
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
         except Exception as e:
             logger.critical("Error in scaleUI() in startup window.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            #center UI
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in startup window.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -1286,11 +1534,19 @@ class StartupWindow(QtWidgets.QMainWindow):
 
             #check if selected path is a directory in the system
             if (os.path.isdir(newDirectory) == False):
-                QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Not a directory")
+                msgBox.setText(
+                    "The directory you selected does not exist.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
             #make sure directory contains correct filepath format based on OS
+            print(platform.system())
             if platform.system() == "Windows":
                 newDirectory = newDirectory.replace("/","\\")
 
@@ -1441,8 +1697,15 @@ class StartupWindow(QtWidgets.QMainWindow):
 
                 self.close()
             else:
-                QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Not a directory")
+                msgBox.setText(
+                    "The directory you selected does not exist.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
         except Exception as e:
             logger.critical("Error in launchNewGenome() in startup window.")
             logger.critical(e)
@@ -1528,26 +1791,35 @@ class StartupWindow(QtWidgets.QMainWindow):
                         exit(-1)
 
                     #show main window
-                    frameGm = GlobalSettings.mainWindow.frameGeometry()
-                    screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-                    centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-                    frameGm.moveCenter(centerPoint)
-                    GlobalSettings.mainWindow.move(frameGm.topLeft())
-
+                    if GlobalSettings.mainWindow.first_show == True:
+                        GlobalSettings.mainWindow.centerUI()
+                        GlobalSettings.mainWindow.first_show = False
                     GlobalSettings.mainWindow.show()
-
                     self.close()
 
                 #no cspr file found
                 else:
-                    QtWidgets.QMessageBox.critical(self, "Directory is invalid!",
-                                                   "You must select a directory with CSPR Files!",
-                                                   QtWidgets.QMessageBox.Ok)
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Directory is invalid!")
+                    msgBox.setText(
+                        "You must select a directory with CSPR Files!")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
                     return
             #not a directory
             else:
-                QtWidgets.QMessageBox.question(self, "Not a directory", "The directory you selected does not exist.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Not a directory")
+                msgBox.setText(
+                    "The directory you selected does not exist.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
         except Exception as e:
             logger.critical("Error in launchMain() in startup window.")
@@ -1555,6 +1827,8 @@ class StartupWindow(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+
+#initial function called during startup
 def main():
     #log OS
     logger.info("System OS: %s" % (platform.system()))
@@ -1578,7 +1852,10 @@ def main():
         else:
             GlobalSettings.appdir += '/'
 
-    app = Qt.QApplication(sys.argv)
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+
+    app = QtWidgets.QApplication(sys.argv)
     app.setOrganizationName("TrinhLab-UTK")
     app.setApplicationName("CASPER")
 
@@ -1632,8 +1909,12 @@ def main():
         logger.critical(traceback.format_exc())
         exit(-1)
 
+    startup.centerUI()
+    startup.show()
 
     sys.exit(app.exec_())
 
+
+#call initial startup function main()
 if __name__ == '__main__':
     main()

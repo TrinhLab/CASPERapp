@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import GlobalSettings
 import os
@@ -9,23 +9,25 @@ from PyQt5.QtWidgets import *
 import gzip
 import sqlite3
 import itertools
-from matplotlib import cm
-import matplotlib
 import matplotlib.patches as patches
 import mplcursors
 import copy
 import traceback
+import math
 
 #global logger
 logger = GlobalSettings.logger
 
+
+#population analysis class
 class Pop_Analysis(QtWidgets.QMainWindow):
 
+    #init class
     def __init__(self):
         try:
             super(Pop_Analysis, self).__init__()
             uic.loadUi(GlobalSettings.appdir + 'populationanalysis.ui', self)
-            self.setWindowIcon(QtGui.QIcon(GlobalSettings.appdir + "cas9image.png"))
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.goBackButton.clicked.connect(self.go_back)
             self.analyze_button.clicked.connect(self.pre_analyze)
             self.clear_Button.clicked.connect(self.clear)
@@ -41,7 +43,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             """ Colormap Graph initialization """
             self.colormap_layout = QtWidgets.QVBoxLayout()
             self.colormap_layout.setContentsMargins(0,0,0,0)
-            self.colormap_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
+            self.colormap_canvas = MplCanvas(self) ###Initialize new Canvas
 
 
             groupbox_style = """
@@ -100,14 +102,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                                     1]  # for keeping track of where we are in the sorting clicking for each column
             self.switcher_loc_table = [1, 1, 1, 1, 1]
 
-            #Window centering stuff
-            self.mwfg = self.frameGeometry()  ##Center window
-            self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
-            self.mwfg.moveCenter(self.cp)  ##Center window
-            self.move(self.mwfg.topLeft())  ##Center window
-            #screen = QtGui.QGuiApplication.screenAt(QtGui.QCursor().pos())
-
-
             #Initialize variables
             self.index_to_cspr = {}
             self.index_to_db = {}
@@ -117,43 +111,151 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.Endos = {}
             self.seeds = []
 
-
-            #set pixel widths on scroll bars
-            self.org_Table.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.org_Table.horizontalScrollBar().setStyleSheet("height: 16px;")
-            self.table2.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.table2.horizontalScrollBar().setStyleSheet("height: 16px;")
-            self.loc_finder_table.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.loc_finder_table.horizontalScrollBar().setStyleSheet("height: 16px;")
-
             self.loading_window = loading_window()
+
+            #scale UI
+            self.first_show = True
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    def export_to_csv(self):
+    #scale the UI based on current screen
+    def scaleUI(self):
         try:
-            select_items = self.table2.selectedItems()
-            if len(select_items) <= 0:
-                QtWidgets.QMessageBox.question(self, "Nothing Selected",
-                                               "No targets were highlighted."
-                                               "Please highlight the targets you want to be exported to a CSV File!",
-                                               QtWidgets.QMessageBox.Ok)
-                return
-            GlobalSettings.mainWindow.export_csv_window.launch(select_items,9)
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            screen = QtWidgets.QApplication.screens()[screen]
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+            self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px }")
+
+            #scroll bar scaling
+            scrollbarWidth = int((width * 15) / 1920)
+            scrollbarHeight = int((height * 15) / 1080)
+            self.org_Table.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.org_Table.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+            self.table2.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.table2.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+            self.loc_finder_table.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.loc_finder_table.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+
+            #scaling group boxes
+            minGroupBoxWidth = int((width * 400) // 1920)
+            maxGroupBoxWidth = int((width * 400) // 1920)
+            minGroupBoxHeight = int((height * 250) // 1080)
+            maxGroupBoxHeight = int((height * 500) // 1080)
+            self.groupBox.setMinimumWidth(minGroupBoxWidth)
+            self.groupBox.setMaximumWidth(maxGroupBoxWidth)
+            self.groupBox.setMinimumHeight(minGroupBoxHeight)
+            self.groupBox.setMaximumHeight(maxGroupBoxHeight)
+            self.tabWidget.setMinimumWidth(minGroupBoxWidth)
+            self.tabWidget.setMaximumWidth(maxGroupBoxWidth)
+            self.tabWidget.setMinimumHeight(minGroupBoxHeight)
+            self.tabWidget.setMaximumHeight(maxGroupBoxHeight)
+
+            #scaling tables
+            minTable2Height = int((height * 200) // 1080)
+            maxTable2Height = int((height * 600) // 1080)
+            minLocTableHeight = int((height * 200) // 1080)
+            maxLocTableHeight = int((height * 200) // 1080)
+            self.table2.setMinimumHeight(minTable2Height)
+            self.table2.setMaximumHeight(maxTable2Height)
+            self.loc_finder_table.setMinimumHeight(minLocTableHeight)
+            self.loc_finder_table.setMaximumHeight(maxLocTableHeight)
+
+            # CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
+            self.label.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            # resize columns in table
+            self.table2.resizeColumnsToContents()
+            self.loc_finder_table.resizeColumnsToContents()
+
+            # spacers
+            spacerSize = int((height * 1) / 1080)
+            self.spacer_1.setStyleSheet("font: " + str(spacerSize) + "pt;")
+            self.spacer_2.setStyleSheet("font: " + str(spacerSize) + "pt;")
+
+            # window scaling
+            # 1920x1080 => 1150x650
+            scaledWidth = int((width * 1150) / 1920)
+            scaledHeight = int((height * 650) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
         except Exception as e:
-            logger.critical("Error in export_to_csv() in population analysis.")
+            logger.critical("Error in scaleUI() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    def prevent_toggle(self):
+    #center UI on current screen
+    def centerUI(self):
         try:
-            self.meta_genomic_cspr_checkbox.setChecked(QtCore.Qt.Checked)
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            #center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
         except Exception as e:
-            logger.critical("Error in prevent_toggle() in population analysis.")
+            logger.critical("Error in centerUI() in population analysis.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #export shared seed table to csv function
+    def export_to_csv(self):
+        try:
+            select_items = self.table2.selectedItems()
+            if len(select_items) <= 0:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Nothing Selected")
+                msgBox.setText("No targets were highlighted. Please highlight the targets you want to be exported to a CSV File!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
+                return
+            GlobalSettings.mainWindow.export_csv_window.launch(select_items,9)
+        except Exception as e:
+            logger.critical("Error in export_to_csv() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -171,9 +273,14 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
             # error check
             if len(selected_indexes) == 0:
-                QtWidgets.QMessageBox.question(self, "Error",
-                                               "Please select CSPR file(s) for analysis.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText("Please select CSPR file(s) for analysis.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
             #get cspr and db filenames
@@ -190,6 +297,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #wrapper for calling get_data()
     def launch(self):
         try:
             self.get_data()
@@ -199,6 +307,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #responsible for calling all loading/analysis functions for loading the shared seeds table and generating the heatmap based on selected organisms
     def get_data(self):
         try:
             self.fillEndo()
@@ -249,6 +358,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #event handler for updating the organism options based on the endo selected
     def change_endo(self):
         try:
             self.org_Table.clearContents()
@@ -298,10 +408,12 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #fills shared seed table with data from analysis
     def fill_data(self):
         try:
             #update progress bar
             self.loading_window.loading_bar.setValue(5)
+            self.loading_window.centerUI()
             self.loading_window.show()
             QtCore.QCoreApplication.processEvents()
 
@@ -479,6 +591,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #function to allow user to search for a specific seed amongst the organisms analyzed
     def custom_seed_search(self):
         try:
             seeds = str(self.seed_input.text())
@@ -498,7 +611,6 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
             # prep table
             self.total_org_number = len(self.cspr_files)
-            self.table2.setRowCount(0)
             self.loading_window.loading_bar.setValue(10)
             index = 0
 
@@ -506,10 +618,23 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 self.loading_window.hide()
                 return
 
+            if len(self.seeds) == 0:
+                self.loading_window.hide()
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText("No analysis has been run to be able to search for a specific seed.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+                return
+
             increase_val = float(15 / len(self.seeds))
             running_val = self.loading_window.loading_bar.value()
             self.loading_window.info_label.setText("Parsing Seed Data")
             # QtCore.QCoreApplication.processEvents()
+
+            self.table2.setRowCount(0)
 
             # retrieve data on shared seeds
             self.counts = []
@@ -539,10 +664,16 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         locs += data[5].split(",")
 
                 if none_data == True:
-                    QtWidgets.QMessageBox.information(self, "Seed Error",
-                                                      seed + " : No such seed exists in the repeats section of any organism selected.",
-                                                      QtWidgets.QMessageBox.Ok)
                     self.loading_window.hide()
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Seed Error")
+                    msgBox.setText(seed + " : No such seed exists in the repeats section of any organism selected.")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+                    return
+
                 else:
 
                     # increase row count
@@ -725,6 +856,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #get the names of organism in current directory
     def get_org_names(self):
         try:
             self.org_names = {}
@@ -749,6 +881,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #plot the heatmap graph
     def plot_3D_graph(self):
         try:
             for i in reversed(range(self.colormap_layout.count())): ### Clear out old widges in layout
@@ -824,12 +957,19 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #find the locations of selected seeds to load into the location table
     def find_locations(self):
         try:
             #error checking
             if len(self.table2.selectedItems()) == 0:
-                QtWidgets.QMessageBox.question(self, "Error", "Please select at least 1 seed to find locations of.",
-                                                    QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText("Please select at least 1 seed to find locations of.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 self.loc_finder_table.setRowCount(0)
                 return
 
@@ -902,20 +1042,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    def table_sorting(self, logicalIndex):
-        try:
-            self.switcher[logicalIndex] *= -1
-            if self.switcher[logicalIndex] == -1:
-                self.table2.sortItems(logicalIndex, QtCore.Qt.DescendingOrder)
-            else:
-                self.table2.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
-        except Exception as e:
-            logger.critical("Error in table_sorting() in population analysis.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            exit(-1)
-
-    # sorting to table2: IE the table in top-right
+    # sorting function for table2 - shared seeds table: IE the table in top-right
     def table2_sorting(self, logicalIndex):
         try:
             self.switcher_table2[logicalIndex] *= -1
@@ -943,6 +1070,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #clears the table showcasing shared seeds
     def clear(self):
         try:
             self.table2.setRowCount(0)
@@ -952,15 +1080,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #return to main function
     def go_back(self):
         try:
-            GlobalSettings.mainWindow.getData()
-            # center main on current screen
-            frameGm = GlobalSettings.mainWindow.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            GlobalSettings.mainWindow.move(frameGm.topLeft())
             GlobalSettings.mainWindow.show()
             self.hide()
         except Exception as e:
@@ -981,25 +1103,94 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             exit(-1)
 
 
-class loading_window(QtWidgets.QWidget):
+#loading window UI class for when data is loading
+class loading_window(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(loading_window, self).__init__()
             uic.loadUi(GlobalSettings.appdir + "loading_data_form.ui", self)
             self.loading_bar.setValue(0)
             self.setWindowTitle("Loading Data")
-            self.hide()
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
+            self.scaleUI()
         except Exception as e:
             logger.critical("Error initializing loading_window class in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
-
-class MplCanvas(FigureCanvasQTAgg):
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
+    #scale UI based on current screen
+    def scaleUI(self):
         try:
-            fig = Figure(figsize=(width, height), dpi=dpi,tight_layout=True)
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 14px is used for 92 dpi
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # progress bar scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QProgressBar { height: " + str(scaledHeight) + "px }")
+
+            # scale/center window
+            scaledWidth = int((width * 450) / 1920)
+            scaledHeight = int((height * 125) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in scaleUI() in loading_window() class in population analysis.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            width = self.width()
+            height = self.height()
+            #scale/center window
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in loading_window() class in population analysis.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+
+#matplotlib canvas class for the heatmap graph
+class MplCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=400, height=250, dpi=100):
+        try:
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            dpi = QtWidgets.QApplication.screens()[screen].physicalDotsPerInch()
+            fig = Figure(dpi=dpi, tight_layout=True)
             self.axes = fig.add_subplot(111)
             self.axes.clear()
             super(MplCanvas, self).__init__(fig)

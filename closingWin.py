@@ -2,6 +2,7 @@ import GlobalSettings
 import os
 from PyQt5 import QtWidgets, Qt, uic
 import traceback
+import math
 
 #global logger
 logger = GlobalSettings.logger
@@ -13,14 +14,14 @@ logger = GlobalSettings.logger
 # Inputs are taking from the user (selecting files to delete and hitting submit), as well as GlobalSettings for the files in CSPR_DB
 # Outputs are the files are deleting, and the program is closed
 ###########################################################
-class closingWindow(QtWidgets.QDialog):
+class closingWindow(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             # qt stuff
             super(closingWindow, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + "closingWindow.ui", self)
-            self.setWindowTitle("Choose which files to keep or delete")
-            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.png"))
+            uic.loadUi(GlobalSettings.appdir + "closing_window.ui", self)
+            self.setWindowTitle("Delete Files")
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
 
             # button connections
             self.submit_button.clicked.connect(self.submit_and_close)
@@ -36,8 +37,80 @@ class closingWindow(QtWidgets.QDialog):
             #setting pixel width for scroll bars
             self.files_table.verticalScrollBar().setStyleSheet("width: 16px;")
             self.files_table.horizontalScrollBar().setStyleSheet("height: 16px;")
+
+            #scale UI
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing closingWindow class.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font, button, and scroll bar scaling
+            # 16px is used for 92 dpi / 1920x1080
+            scaledHeight = int((height * 25) / 1080)
+            scrollbarWidth = int((width * 15) / 1920)
+            scrollbarHeight = int((height * 15) / 1080)
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px } * {font: " + str(fontSize) + "px 'Arial';}" + ' QScrollBar::vertical { width: ' + str(scrollbarWidth) + 'px; }' + ' QScrollBar::horizontal { height: ' + str(scrollbarHeight) + 'px; }')
+
+            # resize columns in table
+            self.files_table.resizeColumnsToContents()
+
+            # window scaling
+            # 1920x1080 => 1150x650
+            scaledWidth = int((width * 400) / 1920)
+            scaledHeight = int((height * 300) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in closing window.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            #center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in closing window.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)

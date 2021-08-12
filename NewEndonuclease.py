@@ -3,19 +3,21 @@ from PyQt5 import QtWidgets, uic, QtGui, QtCore, Qt
 import GlobalSettings
 from PyQt5.QtGui import QIntValidator
 import traceback
+import math
 
 #global logger
 logger = GlobalSettings.logger
 
-class NewEndonuclease(QtWidgets.QDialog):
+class NewEndonuclease(QtWidgets.QMainWindow):
 
     def __init__(self):
         try:
             super(NewEndonuclease, self).__init__()
             uic.loadUi(GlobalSettings.appdir + 'newendonuclease.ui', self)
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.setWindowTitle('New Endonuclease')
             self.error = False
-            pamFlag = False;
+            pamFlag = False
 
             self.onList = []
             self.offList = []
@@ -48,12 +50,88 @@ class NewEndonuclease(QtWidgets.QDialog):
             self.groupBox.setStyleSheet(groupbox_style)
             self.groupBox_2.setStyleSheet(groupbox_style.replace("groupBox","groupBox_2"))
             self.groupBox_3.setStyleSheet(groupbox_style.replace("groupBox","groupBox_3"))
+
+            #scale UI
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing NewEndonuclease class.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton, QComboBox, QLineEdit { height: " + str(scaledHeight) + "px }")
+
+            #title scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 20) // (92)))))
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            # window scaling
+            # 1920x1080 => 480x615
+            scaledWidth = int((width * 480) / 1920)
+            scaledHeight = int((height * 615) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in new endo.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            #center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in new endo.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #helper function for writing new endo information to CASPERinfo - used by submit()
     def writeNewEndonuclease(self, newEndonucleaseStr):
         try:
             with open(GlobalSettings.appdir + 'CASPERinfo', 'r') as f, open(GlobalSettings.appdir + "new_file", 'w+') as f1:
@@ -70,6 +148,7 @@ class NewEndonuclease(QtWidgets.QDialog):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #submit new endo to CASPERinfo file
     def submit(self):
         try:
             # This is executed when the button is pressed
@@ -99,20 +178,35 @@ class NewEndonuclease(QtWidgets.QDialog):
             ### Error checking for PAM alphabet
             for letter in pam:
                 if (letter not in validPAM):
-                    QtWidgets.QMessageBox.question(self, "Invalid PAM", "Invalid characters in PAM Sequence.",
-                                                   QtWidgets.QMessageBox.Ok)
-                    self.exec()
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Invalid PAM")
+                    msgBox.setText("Invalid characters in PAM Sequence.")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
                     return True
             ### Error checking for filling out all fields
             for arg in argument_list:
                 if ';' in arg:
-                    QtWidgets.QMessageBox.question(self, "Invalid Semicolon", "Invalid character used: ';'",
-                                                   QtWidgets.QMessageBox.Ok)
-                    self.exec()
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Invalid Semicolon")
+                    msgBox.setText("Invalid character used: ';'")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
                     return True
                 elif arg == "":
-                    QtWidgets.QMessageBox.question(self, "Empty Field", "Please fill in all fields.", QtWidgets.QMessageBox.Ok)
-                    self.exec()
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Empty Field")
+                    msgBox.setText("Please fill in all fields.")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
                     return True
                 else:
                     pass
@@ -121,8 +215,14 @@ class NewEndonuclease(QtWidgets.QDialog):
             for key in GlobalSettings.mainWindow.organisms_to_endos:
                 endo = GlobalSettings.mainWindow.organisms_to_endos[key]
                 if abbr in endo:
-                    QtWidgets.QMessageBox.question(self, "Duplicate endo name.", "The given abbreviation already exists.  Please choose a unique identifier.", QtWidgets.QMessageBox.Ok)
-                    self.exec()
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Duplicate endo name.")
+                    msgBox.setText("The given abbreviation already exists.  Please choose a unique identifier.")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
                     return True
                 else:
                     pass
@@ -143,6 +243,7 @@ class NewEndonuclease(QtWidgets.QDialog):
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #cancel and close window
     def cancel(self):
         try:
             self.clear_all()
@@ -153,7 +254,7 @@ class NewEndonuclease(QtWidgets.QDialog):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    ### This function clears all of the line edits
+    # This function clears all of the line edits
     def clear_all(self):
         try:
             self.organism_name.clear()
@@ -169,7 +270,7 @@ class NewEndonuclease(QtWidgets.QDialog):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    ### This function parses CASPERinfo to return the names (in lists) of all on-target and off-target scoring data
+    # This function parses CASPERinfo to return the names (in lists) of all on-target and off-target scoring data
     def get_on_off_data(self):
         try:
             filename = GlobalSettings.appdir + "CASPERinfo"

@@ -10,6 +10,7 @@ import ssl
 import GlobalSettings
 import platform
 import traceback
+import math
 
 #global logger
 logger = GlobalSettings.logger
@@ -187,12 +188,14 @@ class PandasModel(QtCore.QAbstractTableModel):
 
 
 #ncbi
-class NCBI_search_tool(QtWidgets.QWidget):
+class NCBI_search_tool(QtWidgets.QMainWindow):
 
     def __init__(self):
         try:
             super(NCBI_search_tool, self).__init__()
             uic.loadUi(GlobalSettings.appdir + 'ncbi.ui', self)
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
+            self.setWindowTitle("NCBI Download Tool")
             self.logicalIndex = 0
             self.filters = dict()
             self.download_button.clicked.connect(self.download_files_wrapper)
@@ -224,14 +227,95 @@ class NCBI_search_tool(QtWidgets.QWidget):
             self.goToPrompt.stay.clicked.connect(self.stay)
             self.goToPrompt.close.clicked.connect(self.close)
 
-            #set pixel width for scroll bar
-            self.ncbi_table.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.ncbi_table.horizontalScrollBar().setStyleSheet("height: 16px;")
-
             #loading label
-            self.loading = loadingScreen()
+            self.loading_window = loading_window()
+
+            #scale UI
+            self.first_show = True
+            self.scaleUI()
+
         except Exception as e:
             logger.critical("Error initializing NCBI_search_tool class.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton, QProgressBar, QLineEdit { height: " + str(scaledHeight) + "px }")
+
+            #scroll bar scaling
+            scrollbarWidth = int((width * 15) / 1920)
+            scrollbarHeight = int((height * 15) / 1080)
+            self.ncbi_table.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
+            self.ncbi_table.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+
+            # CASPER header scaling
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+
+            #resize table
+            self.ncbi_table.resizeColumnsToContents()
+
+            # window scaling
+            # 1920x1080 => 850x750
+            scaledWidth = int((width * 1000) / 1920)
+            scaledHeight = int((height * 750) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in NCBI tool.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            # center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in NCBI tool.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -248,7 +332,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
             """ Clear all line edits """
             self.organism_line_edit.clear()
             self.infra_name_line_edit.clear()
-            self.ret_max_line_edit.setText("1000")
+            self.ret_max_line_edit.setText("100")
             self.infra_name_line_edit.clear()
             """ Reset all checkboxes """
             self.yes_box.setChecked(False)
@@ -268,11 +352,9 @@ class NCBI_search_tool(QtWidgets.QWidget):
     def query_db(self):
         try:
             #show loading
-            position = self.frameGeometry().center()
-            position.setX(position.x()-50)
-            self.loading.move(position)
-            self.loading.show()
-
+            self.loading_window.loading_bar.setValue(5)
+            self.loading_window.centerUI()
+            self.loading_window.show()
             QtCore.QCoreApplication.processEvents()
 
             #setup table
@@ -283,7 +365,7 @@ class NCBI_search_tool(QtWidgets.QWidget):
             #Build Query commands
             retmax = int(self.ret_max_line_edit.text())
             if retmax == "":
-                retmax = 1000
+                retmax = 100
             org = self.organism_line_edit.text()
             term = '"' + org + '"[Organism]'
             if self.yes_box.isChecked():
@@ -297,10 +379,16 @@ class NCBI_search_tool(QtWidgets.QWidget):
             content = "".join(str(content))
             bs_content = BeautifulSoup(content, "lxml")
 
+            self.loading_window.loading_bar.setValue(20)
+            QtCore.QCoreApplication.processEvents()
+
             #Extract IDs
             idlist = bs_content.find('idlist')
             ids = idlist.find_all('id')
             ids = [i.text for i in ids]
+
+            self.loading_window.loading_bar.setValue(35)
+            QtCore.QCoreApplication.processEvents()
 
             # Get Details on IDs
             handle = Entrez.esummary(db="assembly", id=','.join(ids))
@@ -309,6 +397,8 @@ class NCBI_search_tool(QtWidgets.QWidget):
             content = "".join(str(content))
             bs_content = BeautifulSoup(content, 'lxml')
 
+            self.loading_window.loading_bar.setValue(55)
+            QtCore.QCoreApplication.processEvents()
 
             #Prep Data for Table
             assembly_name = bs_content.find_all('assemblyname')
@@ -333,6 +423,9 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 else:
                     strains.append('N/A')
 
+            self.loading_window.loading_bar.setValue(65)
+            QtCore.QCoreApplication.processEvents()
+
             #Get ftp links
             genbank_links = bs_content.find_all('ftppath_genbank')
             refseq_links = bs_content.find_all('ftppath_refseq')
@@ -350,6 +443,8 @@ class NCBI_search_tool(QtWidgets.QWidget):
                 else:
                     self.refseq_ftp_dict[ids[i]] = refseq_links[i] + '/'
 
+            self.loading_window.loading_bar.setValue(80)
+            QtCore.QCoreApplication.processEvents()
 
             #Build dataframe
             self.df = pd.DataFrame({'ID': ids,
@@ -359,6 +454,9 @@ class NCBI_search_tool(QtWidgets.QWidget):
                                'GenBank assembly accession': genbank_ids,
                                'RefSeq assembly accession': refseq_ids,
                                'Assembly Status': assembly_status})
+
+            self.loading_window.loading_bar.setValue(90)
+            QtCore.QCoreApplication.processEvents()
 
             #Build table view
             self.df.replace('', 'N/A', inplace=True)
@@ -371,7 +469,9 @@ class NCBI_search_tool(QtWidgets.QWidget):
             self.activateWindow()
 
             #close loading gif
-            self.loading.hide()
+            self.loading_window.hide()
+            self.loading_window.loading_bar.setValue(0)
+            QtCore.QCoreApplication.processEvents()
         except Exception as e:
             logger.critical("Error in query_db() in ncbi tool.")
             logger.critical(e)
@@ -475,26 +575,39 @@ class NCBI_search_tool(QtWidgets.QWidget):
 
             #make sure rows are present in table
             if self.df.shape[0] == 0:
-                QtWidgets.QMessageBox.critical(self, "No Query Results",
-                                               "Please run an NCBI query to fill the table with results to choose from!",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("No Query Results")
+                msgBox.setText("Please run an NCBI query to fill the table with results to choose from!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
 
                 return
 
             #make sure user has selected at least one row
             indexes = self.ncbi_table.selectionModel().selectedRows()
             if len(indexes) == 0:
-                QtWidgets.QMessageBox.critical(self, "No Rows Selected",
-                                               "Please select rows from the table!",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("No Rows Selected")
+                msgBox.setText("Please select rows from the table!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
             #make sure file type is selected
             if self.gbff_checkbox.isChecked() == False and self.fna_checkbox.isChecked() == False:
-                QtWidgets.QMessageBox.critical(self, "No File Type Selected",
-                                               "No file type selected."
-                                               "Please select the file types you want to download!",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("No File Type Selected")
+                msgBox.setText("No file type selected. Please select the file types you want to download!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
             self.download_files()
@@ -582,10 +695,13 @@ class NCBI_search_tool(QtWidgets.QWidget):
             if len(files) > 0:
                 self.rename_files(files)
             else:
-                QtWidgets.QMessageBox.critical(self, "No Files Downloaded",
-                                               "No files were downloaded from the selected NCBI files. Please make sure the selected files are available in the database selected.",
-                                               QtWidgets.QMessageBox.Ok)
-
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("No Files Downloaded")
+                msgBox.setText("No files were downloaded from the selected NCBI files. Please make sure the selected files are available in the database selected.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
                 return
 
         except Exception as e:
@@ -622,8 +738,16 @@ class NCBI_search_tool(QtWidgets.QWidget):
 
     def rename_files(self, files):
         try:
-            ans = QtWidgets.QMessageBox.question(self, "Rename Files", "Would you like to rename the downloaded files?", QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
-            if ans == QtWidgets.QMessageBox.Yes:
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
+            msgBox.setWindowTitle("Rename Files")
+            msgBox.setText("Would you like to rename the downloaded files?")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.No)
+            msgBox.exec()
+
+            if msgBox.result() == QtWidgets.QMessageBox.Yes:
                 self.rename_window.rename_table.setRowCount(len(files))
                 cnt = 0
                 for file in files:
@@ -632,16 +756,17 @@ class NCBI_search_tool(QtWidgets.QWidget):
                     cnt += 1
 
                 header = self.rename_window.rename_table.horizontalHeader()
-                #header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-                #self.rename_window.rename_table.setColumnWidth(1, self.rename_window.rename_table.columnWidth(0))
                 self.rename_window.rename_table.resizeColumnsToContents()
                 header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
                 header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
                 self.rename_window.resize(self.rename_window.sizeHint())
+                self.rename_window.centerUI()
                 self.rename_window.show()
+                self.rename_window.activateWindow()
             else:
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
                 self.goToPrompt.show()
+                self.goToPrompt.activateWindow()
         except Exception as e:
             logger.critical("Error in rename_files() in ncbi tool.")
             logger.critical(e)
@@ -675,22 +800,66 @@ class NCBI_search_tool(QtWidgets.QWidget):
 
                     if platform.system() == "Windows":
                         if new.find(".gbff") != -1:
-                            os.rename(GlobalSettings.CSPR_DB + "\\GBFF\\" + orig, GlobalSettings.CSPR_DB + "\\GBFF\\" + new)
+                            if os.path.isfile(GlobalSettings.CSPR_DB + "\\GBFF\\" + new) == False:
+                                os.rename(GlobalSettings.CSPR_DB + "\\GBFF\\" + orig, GlobalSettings.CSPR_DB + "\\GBFF\\" + new)
+                            else:
+                                msgBox = QtWidgets.QMessageBox()
+                                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                                msgBox.setWindowTitle("Renaming Error")
+                                msgBox.setText("The filename: " + str(new) + " already exists. Please use a different name." )
+                                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                                msgBox.exec()
+                                return
                         else:
-                            os.rename(GlobalSettings.CSPR_DB + "\\FNA\\" + orig, GlobalSettings.CSPR_DB + "\\FNA\\" + new)
+                            if os.path.isfile(GlobalSettings.CSPR_DB + "\\FNA\\" + new) == False:
+                                os.rename(GlobalSettings.CSPR_DB + "\\FNA\\" + orig, GlobalSettings.CSPR_DB + "\\FNA\\" + new)
+                            else:
+                                msgBox = QtWidgets.QMessageBox()
+                                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                                msgBox.setWindowTitle("Renaming Error")
+                                msgBox.setText("The filename: " + str(new) + " already exists. Please use a different name." )
+                                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                                msgBox.exec()
+                                return
 
                     else:
                         #unix cannot have spaces in paths
                         new = new.replace(" ","")
                         if new.find(".gbff") != -1:
-                            os.rename(GlobalSettings.CSPR_DB + "/GBFF/" + orig, GlobalSettings.CSPR_DB + "/GBFF/" + new)
+                            if os.path.isfile(GlobalSettings.CSPR_DB + "/GBFF/" + new) == False:
+                                os.rename(GlobalSettings.CSPR_DB + "/GBFF/" + orig, GlobalSettings.CSPR_DB + "/GBFF/" + new)
+                            else:
+                                msgBox = QtWidgets.QMessageBox()
+                                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                                msgBox.setWindowTitle("Renaming Error")
+                                msgBox.setText(
+                                    "The filename: " + str(new) + " already exists. Please use a different name.")
+                                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                                msgBox.exec()
+                                return
                         else:
-                            os.rename(GlobalSettings.CSPR_DB + "/FNA/" + orig, GlobalSettings.CSPR_DB + "/FNA/" + new)
+                            if os.path.isfile(GlobalSettings.CSPR_DB + "/FNA/" + new) == False:
+                                os.rename(GlobalSettings.CSPR_DB + "/FNA/" + orig, GlobalSettings.CSPR_DB + "/FNA/" + new)
+                            else:
+                                msgBox = QtWidgets.QMessageBox()
+                                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                                msgBox.setWindowTitle("Renaming Error")
+                                msgBox.setText(
+                                    "The filename: " + str(new) + " already exists. Please use a different name.")
+                                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                                msgBox.exec()
+                                return
 
             self.rename_window.rename_table.setRowCount(0)
             self.rename_window.close()
             GlobalSettings.mainWindow.fill_annotation_dropdown()
+            self.goToPrompt.centerUI()
             self.goToPrompt.show()
+            self.goToPrompt.activateWindow()
         except Exception as e:
             logger.critical("Error in submit_rename() in ncbi tool.")
             logger.critical(e)
@@ -717,11 +886,13 @@ class NCBI_search_tool(QtWidgets.QWidget):
             exit(-1)
 
 
-class goToPrompt(QtWidgets.QWidget):
+class goToPrompt(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(goToPrompt, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'NCBI_navigation_page.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'NCBI_nav_page.ui', self)
+            self.setWindowTitle("Navigate")
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.label.setText("Successfully downloaded file(s) to the CASPERdb directory:\n" + GlobalSettings.CSPR_DB)
             self.label.setAlignment(QtCore.Qt.AlignCenter)
             groupbox_style = """
@@ -733,19 +904,87 @@ class goToPrompt(QtWidgets.QWidget):
                             font: bold;
                             margin-top: 10px;}"""
             self.groupBox.setStyleSheet(groupbox_style)
-            self.hide()
+
+            self.scaleUI()
         except Exception as e:
             logger.critical("Error initializing goToPrompt class in ncbi tool.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
+    #scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
-class rename_window(QtWidgets.QWidget):
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px; } QWidget { font: " + str(
+                fontSize) + "px 'Arial'; }")
+
+            # window scaling
+            # 1920x1080 => 550x200
+            scaledWidth = int((width * 575) / 1920)
+            scaledHeight = int((height * 225) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+        except Exception as e:
+            logger.critical("Error in scaleUI() in goToPrompt in NCBI tool.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            # center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in goToPrompt in NCBI tool.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+
+class rename_window(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(rename_window, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + "rename_window.ui", self)
+            uic.loadUi(GlobalSettings.appdir + "ncbi_rename_window.ui", self)
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.setWindowTitle("Rename Files")
             self.rename_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
             self.rename_table.setColumnCount(2)
@@ -755,28 +994,156 @@ class rename_window(QtWidgets.QWidget):
             self.rename_table.verticalScrollBar().setStyleSheet("width: 16px;")
             self.rename_table.horizontalScrollBar().setStyleSheet("height: 16px;")
 
-            self.hide()
+            self.scaleUI()
         except Exception as e:
             logger.critical("Error initializing rename_window class in ncbi tool.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
 
-
-class loadingScreen(QtWidgets.QWidget):
-    def __init__(self):
+    #scale UI based on current screen
+    def scaleUI(self):
         try:
-            super().__init__()
-            self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.FramelessWindowHint)
-            self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
 
-            self.label = QtWidgets.QLabel(self)
-            self.label.setText("Loading...")
-            self.label.setFont((QtGui.QFont('Arial', 15)))
-            self.hide()
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 16px is used for 92 dpi / 1920x1080
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+
+            # button scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px; } QWidget { font: " + str(
+                fontSize) + "px 'Arial'; }")
+
+            # window scaling
+            # 1920x1080 => 550x200
+            scaledWidth = int((width * 575) / 1920)
+            scaledHeight = int((height * 300) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
         except Exception as e:
-            logger.critical("Error initializing loadingScreen class in ncbi tool.")
+            logger.critical("Error in scaleUI() in rename window in NCBI tool.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
-            
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            # center window on current screen
+            width = self.width()
+            height = self.height()
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in rename window in NCBI tool.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+
+#loading window UI class for when data is loading
+class loading_window(QtWidgets.QMainWindow):
+    def __init__(self):
+        try:
+            super(loading_window, self).__init__()
+            uic.loadUi(GlobalSettings.appdir + "loading_data_form.ui", self)
+            self.loading_bar.setValue(0)
+            self.setWindowTitle("Loading NCBI Data")
+            self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
+            self.scaleUI()
+        except Exception as e:
+            logger.critical("Error initializing loading_window class in ncbi tool.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #scale UI based on current screen
+    def scaleUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
+            # font scaling
+            # 14px is used for 92 dpi
+            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+
+            # progress bar scaling
+            scaledHeight = int((height * 25) / 1080)
+            self.setStyleSheet("QProgressBar { height: " + str(scaledHeight) + "px }")
+
+            # scale/center window
+            scaledWidth = int((width * 450) / 1920)
+            scaledHeight = int((height * 125) / 1080)
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(scaledWidth / 2))
+            y = y - (math.ceil(scaledHeight / 2))
+            self.setGeometry(x, y, scaledWidth, scaledHeight)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in scaleUI() in loading_window() class in ncbi tool.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+
+    #center UI on current screen
+    def centerUI(self):
+        try:
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
+            width = self.width()
+            height = self.height()
+            #scale/center window
+            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+            x = centerPoint.x()
+            y = centerPoint.y()
+            x = x - (math.ceil(width / 2))
+            y = y - (math.ceil(height / 2))
+            self.setGeometry(x, y, width, height)
+
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+        except Exception as e:
+            logger.critical("Error in centerUI() in loading_window() class in ncbi tool.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)

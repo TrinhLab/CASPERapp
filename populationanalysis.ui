@@ -6,14 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1138</width>
-    <height>839</height>
+    <width>1087</width>
+    <height>749</height>
    </rect>
   </property>
   <property name="font">
    <font>
     <family>Arial</family>
-    <pointsize>-1</pointsize>
     <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
@@ -23,24 +22,143 @@
    <string>Population Analysis</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 16px 'Arial';</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
-    <string notr="true">font: 16px 'Arial';</string>
+    <string notr="true"/>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="4" column="1">
+    <item row="8" column="1" colspan="2">
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="3" column="1" colspan="2" alignment="Qt::AlignLeft">
+     <widget class="QLabel" name="label">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Population Analysis&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="3" rowspan="2">
+     <spacer name="horizontalSpacer_2">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="7" column="1" colspan="2">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
+      <item alignment="Qt::AlignLeft">
+       <widget class="QPushButton" name="goBackButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>125</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Back</string>
+        </property>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignRight">
+       <widget class="QPushButton" name="export_button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>125</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to export selected gRNAs. &lt;span style=&quot; font-weight:600;&quot;&gt;Note: &lt;/span&gt;only rows from the first (top right) table can be selected and exported.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Export Selected gRNAs</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="5" column="1">
      <widget class="QGroupBox" name="groupBox">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
       <property name="maximumSize">
        <size>
-        <width>488</width>
+        <width>16777215</width>
         <height>16777215</height>
        </size>
       </property>
@@ -51,10 +169,10 @@
        <string>Select Organism(s) and Endonuclease:</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
-       <item row="0" column="0" alignment="Qt::AlignLeft">
-        <widget class="QLabel" name="label_3">
+       <item row="3" column="0" colspan="3">
+        <widget class="QTableWidget" name="org_Table">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -69,68 +187,6 @@
           <size>
            <width>16777215</width>
            <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Endonuclease:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="4">
-        <widget class="QPushButton" name="analyze_button">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>300</width>
-           <height>32</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>32</height>
-          </size>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">font: 16px 'Arial';</string>
-         </property>
-         <property name="text">
-          <string>Analyze Organism(s)</string>
-         </property>
-         <property name="default">
-          <bool>false</bool>
-         </property>
-         <property name="flat">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="4">
-        <widget class="QTableWidget" name="org_Table">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>209</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>468</width>
-           <height>225</height>
           </size>
          </property>
          <property name="sizeAdjustPolicy">
@@ -159,7 +215,7 @@
          </attribute>
         </widget>
        </item>
-       <item row="0" column="1" colspan="3">
+       <item row="1" column="1" colspan="2">
         <widget class="QComboBox" name="endoBox">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -170,7 +226,7 @@
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>32</height>
+           <height>0</height>
           </size>
          </property>
          <property name="maximumSize">
@@ -181,70 +237,44 @@
          </property>
         </widget>
        </item>
-      </layout>
-     </widget>
-    </item>
-    <item row="6" column="2" alignment="Qt::AlignRight">
-     <widget class="QPushButton" name="export_button">
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to export selected gRNAs. &lt;span style=&quot; font-weight:600;&quot;&gt;Note: &lt;/span&gt;only rows from the first (top right) table can be selected and exported.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="text">
-       <string>Export Selected gRNAs</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="1">
-     <widget class="QPushButton" name="goBackButton">
-      <property name="minimumSize">
-       <size>
-        <width>150</width>
-        <height>32</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>150</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="text">
-       <string>Back</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1" colspan="2">
-     <widget class="Line" name="line">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="2" rowspan="2">
-     <widget class="QGroupBox" name="groupBox_2">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;These tables show the seeds that are conserved among &lt;span style=&quot; font-weight:600;&quot;&gt;all &lt;/span&gt;selected organisms.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="title">
-       <string>Seed Analysis:</string>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_3">
-       <item row="0" column="0">
-        <widget class="QLabel" name="seed_label">
+       <item row="4" column="0" colspan="3">
+        <widget class="QPushButton" name="analyze_button">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>Analyze Organism(s)</string>
+         </property>
+         <property name="default">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" alignment="Qt::AlignLeft">
+        <widget class="QLabel" name="label_3">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -262,39 +292,131 @@
           </size>
          </property>
          <property name="text">
-          <string>Seed Search:</string>
+          <string>Endonuclease:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QPushButton" name="query_seed_button">
+       <item row="0" column="0" colspan="3">
+        <widget class="QLabel" name="spacer_2">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
-         <property name="minimumSize">
-          <size>
-           <width>150</width>
-           <height>32</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>200</width>
-           <height>32</height>
-          </size>
+         <property name="font">
+          <font>
+           <pointsize>1</pointsize>
+          </font>
          </property>
          <property name="text">
-          <string>Query Seed</string>
+          <string/>
          </property>
         </widget>
        </item>
-       <item row="0" column="1" colspan="3">
-        <widget class="QLineEdit" name="seed_input">
+      </layout>
+     </widget>
+    </item>
+    <item row="5" column="0" rowspan="2">
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="4" column="1" colspan="2">
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="1">
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Heatmap of shared repeats between all selected organisms. Diagonals show number of self-contained repeats. Axis labels correspond to the rows of the organism selection table.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tab_3">
+       <attribute name="title">
+        <string>Shared Seed Heatmap</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QWidget" name="colormap_figure" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item row="2" column="1" colspan="2">
+     <spacer name="verticalSpacer_2">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="5" column="2" rowspan="2">
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;These tables show the seeds that are conserved among &lt;span style=&quot; font-weight:600;&quot;&gt;all &lt;/span&gt;selected organisms.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="title">
+       <string>Seed Analysis:</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="7" column="2">
+        <widget class="QPushButton" name="find_locs_button">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -302,7 +424,7 @@
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>28</height>
+           <height>0</height>
           </size>
          </property>
          <property name="maximumSize">
@@ -311,71 +433,33 @@
            <height>16777215</height>
           </size>
          </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
-        <widget class="QLabel" name="label_4">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>-1</pointsize>
-           <weight>50</weight>
-           <italic>false</italic>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Highlight a seed and click &amp;quot;Find Locations&amp;quot; to view the exact location and organism of every repeat belonging to that seed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Location Finder:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          <string>Find Locations</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
-        <widget class="QPushButton" name="find_locs_button">
+       <item row="6" column="1" colspan="3">
+        <widget class="QTableWidget" name="table2">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
           <size>
-           <width>159</width>
-           <height>32</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>159</width>
-           <height>30</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Find Locations</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0" colspan="4">
-        <widget class="QTableWidget" name="table2">
-         <property name="minimumSize">
-          <size>
-           <width>462</width>
-           <height>247</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>678967</width>
+           <width>16777215</width>
            <height>16777215</height>
           </size>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;- % Coverage:&lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt; percentage of analyzed organisms covered by the given seed sequence. (Ex. a coverage of 75% for an analysis of 4 organisms means that the seed appears in 3/4 of the organisms) &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMBX12'; font-size:12pt; font-weight:600;&quot;&gt;– &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;Total Repeats: &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;the total number of times the seed sequence is repeated across all organisms analyzed &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMBX12'; font-size:12pt; font-weight:600;&quot;&gt;– &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;Avg. Repeats/Scaffold: &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;the average number of times the seed sequence is repeated per scaffold/chromosome/contig (varies depending on how the organism’s FASTA file is arranged) &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMBX12'; font-size:12pt; font-weight:600;&quot;&gt;– &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;Consensus Sequence: &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;the full length guide RNA sequence that appears most commonly amongst all occurrences of the given seed. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMBX12'; font-size:12pt; font-weight:600;&quot;&gt;– &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;% Consensus: &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;the percentage of all seed repeats that have the tail of the consensus sequence. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;- Score:&lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt; on-target score for the consensus sequence.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;- PAM:&lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt; the protospacer adjacent motif of the consensus sequence.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt; font-weight:600;&quot;&gt;- Strand: &lt;/span&gt;&lt;span style=&quot; font-family:'CMR12'; font-size:12pt;&quot;&gt;the strand directionality (+ or -) of the consensus sequence.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;% Coverage&lt;/span&gt;: percentage of analyzed organisms covered by the given seed sequence. (Ex. a coverage of 75% for an analysis of 4 organisms means that the seed appears in 3/4 of the organisms) &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Total Repeats&lt;/span&gt;: the total number of times the seed sequence is repeated across all organisms analyzed &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Avg. Repeats/Scaffold&lt;/span&gt;: the average number of times the seed sequence is repeated per scaffold/chromosome/contig (varies depending on how the organism’s FASTA file is arranged) &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Consensus Sequence&lt;/span&gt;: the full length guide RNA sequence that appears most commonly amongst all occurrences of the given seed. &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;% Consensus&lt;/span&gt;: the percentage of all seed repeats that have the tail of the consensus sequence. &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Score&lt;/span&gt;: on-target score for the consensus sequence.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;PAM&lt;/span&gt;: the protospacer adjacent motif of the consensus sequence.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Strand&lt;/span&gt;: the strand directionality (+ or -) of the consensus sequence.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="toolTipDuration">
           <number>-1</number>
@@ -397,12 +481,18 @@
          </attribute>
         </widget>
        </item>
-       <item row="9" column="0" colspan="4">
+       <item row="10" column="1" colspan="3">
         <widget class="QTableWidget" name="loc_finder_table">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>247</height>
+           <height>0</height>
           </size>
          </property>
          <property name="maximumSize">
@@ -428,24 +518,45 @@
          </attribute>
         </widget>
        </item>
-       <item row="6" column="3">
+       <item row="7" column="1">
+        <widget class="QLabel" name="label_4">
+         <property name="font">
+          <font>
+           <family>Arial</family>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Highlight a seed and click &amp;quot;Find Locations&amp;quot; to view the exact location and organism of every repeat belonging to that seed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Location Finder:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="3">
         <widget class="QPushButton" name="clear_loc_button">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
           <size>
-           <width>159</width>
-           <height>32</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>159</width>
-           <height>30</height>
+           <width>16777215</width>
+           <height>16777215</height>
           </size>
          </property>
          <property name="text">
@@ -453,24 +564,24 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="3">
+       <item row="4" column="3" alignment="Qt::AlignRight">
         <widget class="QPushButton" name="clear_Button">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
           <size>
-           <width>150</width>
-           <height>32</height>
+           <width>125</width>
+           <height>0</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>200</width>
-           <height>32</height>
+           <width>16777215</width>
+           <height>16777215</height>
           </size>
          </property>
          <property name="text">
@@ -478,87 +589,100 @@
          </property>
         </widget>
        </item>
+       <item row="1" column="1">
+        <widget class="QLabel" name="seed_label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Seed Search:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="3">
+        <widget class="QLabel" name="spacer_1">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>1</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QPushButton" name="query_seed_button">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Query Seed</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2" colspan="2">
+        <widget class="QLineEdit" name="seed_input">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
       </layout>
-     </widget>
-    </item>
-    <item row="2" column="1" colspan="2" alignment="Qt::AlignLeft">
-     <widget class="QLabel" name="label">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <family>Arial</family>
-        <pointsize>-1</pointsize>
-        <weight>75</weight>
-        <italic>false</italic>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">font: bold 30px 'Arial';</string>
-      </property>
-      <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Population Analysis&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="0">
-     <widget class="QLabel" name="label_2">
-      <property name="minimumSize">
-       <size>
-        <width>50</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="3">
-     <widget class="QLabel" name="label_5">
-      <property name="minimumSize">
-       <size>
-        <width>50</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="1">
-     <widget class="QTabWidget" name="tabWidget">
-      <property name="maximumSize">
-       <size>
-        <width>488</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Heatmap of shared repeats between all selected organisms. Diagonals show number of self-contained repeats. Axis labels correspond to the rows of the organism selection table.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <widget class="QWidget" name="tab_3">
-       <attribute name="title">
-        <string>Shared Seed Heatmap</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QWidget" name="colormap_figure" native="true"/>
-        </item>
-       </layout>
-      </widget>
      </widget>
     </item>
    </layout>
@@ -568,8 +692,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1138</width>
-     <height>24</height>
+     <width>1087</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>
