@@ -762,9 +762,11 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                 self.rename_window.resize(self.rename_window.sizeHint())
                 self.rename_window.centerUI()
                 self.rename_window.show()
+                self.rename_window.activateWindow()
             else:
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
                 self.goToPrompt.show()
+                self.goToPrompt.activateWindow()
         except Exception as e:
             logger.critical("Error in rename_files() in ncbi tool.")
             logger.critical(e)
@@ -857,6 +859,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.fill_annotation_dropdown()
             self.goToPrompt.centerUI()
             self.goToPrompt.show()
+            self.goToPrompt.activateWindow()
         except Exception as e:
             logger.critical("Error in submit_rename() in ncbi tool.")
             logger.critical(e)

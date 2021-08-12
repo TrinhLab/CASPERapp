@@ -152,13 +152,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             self.mainWindow.searches.clear()
             self.tableWidget.setColumnCount(0)
 
-            #center main window on current screen
-            frameGm = self.mainWindow.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.mainWindow.move(frameGm.topLeft())
-
             self.mainWindow.show()
             self.mainWindow.progressBar.setValue(0)
             self.hide()
@@ -222,14 +215,9 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             mainWindow.hide()
 
             #center on current screen
-            frameGm = self.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            self.move(frameGm.topLeft())
-
             self.centerUI()
             self.show()
+            self.activateWindow()
 
             return 0
         except Exception as e:
@@ -878,6 +866,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         try:
             self.newEndonuclease.centerUI()
             self.newEndonuclease.show()
+            self.newEndonuclease.activateWindow()
         except Exception as e:
             logger.critical("Error in launch_newEndonuclease() in main.")
             logger.critical(e)
@@ -911,6 +900,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.ncbi.centerUI()
 
             self.ncbi.show()
+            self.ncbi.activateWindow()
         except Exception as e:
             logger.critical("Error in launch_ncbi() in main.")
             logger.critical(e)

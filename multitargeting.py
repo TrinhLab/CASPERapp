@@ -231,6 +231,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             if (self.line_bool and self.bar_bool):
                 self.multitargeting_statistics.centerUI()
                 self.multitargeting_statistics.show()
+                self.multitargeting_statistics.activateWindow()
             else:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")

@@ -318,6 +318,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 GlobalSettings.mainWindow.ncbi.first_show = False
                 GlobalSettings.mainWindow.ncbi.centerUI()
             GlobalSettings.mainWindow.ncbi.show()
+            GlobalSettings.mainWindow.ncbi.activateWindow()
         except Exception as e:
             logger.critical("Error in open_ncbi_tool() in New Genome.")
             logger.critical(e)
@@ -633,6 +634,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 #prompt user if they want to analyze their new files
                 self.goToPrompt.centerUI()
                 self.goToPrompt.show()
+                self.goToPrompt.activateWindow()
         except Exception as e:
             logger.critical("Error in upon_process_finishing() in New Genome.")
             logger.critical(e)
@@ -746,13 +748,9 @@ class NewGenome(QtWidgets.QMainWindow):
                 GlobalSettings.MTWin.launch()
                 GlobalSettings.pop_Analysis.launch()
 
-                # center main on current screen
-                frameGm = GlobalSettings.mainWindow.frameGeometry()
-                screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-                centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-                frameGm.moveCenter(centerPoint)
-                GlobalSettings.mainWindow.move(frameGm.topLeft())
-
+                if GlobalSettings.mainWindow.first_show == True:
+                    GlobalSettings.mainWindow.first_show = False
+                    GlobalSettings.mainWindow.centerUI()
                 GlobalSettings.mainWindow.show()
                 event.accept()
         except Exception as e:

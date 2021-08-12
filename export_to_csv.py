@@ -120,6 +120,7 @@ class export_csv_window(QtWidgets.QMainWindow):
             self.num_columns = num_columns
             self.centerUI()
             self.show()
+            self.activateWindow()
         except Exception as e:
             logger.critical("Error in launch() in export to csv.")
             logger.critical(e)

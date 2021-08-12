@@ -644,15 +644,12 @@ class Results(QtWidgets.QMainWindow):
                 GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
                 self.seq_finder_cspr_file = ''
 
-            #center main on current screen
-            frameGm = GlobalSettings.mainWindow.frameGeometry()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            frameGm.moveCenter(centerPoint)
-            GlobalSettings.mainWindow.move(frameGm.topLeft())
-
             GlobalSettings.mainWindow.show()
             self.filter_options.cotarget_checkbox.setChecked(0)
+            self.filter_options.hide()
+            self.off_tar_win.hide()
+            GlobalSettings.mainWindow.CoTargeting.hide()
+
             self.hide()
         except Exception as e:
             logger.critical("Error in goBack() in results.")
@@ -664,6 +661,7 @@ class Results(QtWidgets.QMainWindow):
     def changeGeneViewerSettings(self):
         try:
             GlobalSettings.mainWindow.gene_viewer_settings.show()
+            GlobalSettings.mainWindow.gene_viewer_settings.activateWindow()
         except Exception as e:
             logger.critical("Error in changeGeneViewerSettings() in results.")
             logger.critical(e)
@@ -1064,6 +1062,7 @@ class Results(QtWidgets.QMainWindow):
                 self.off_tar_win.submitButton.clicked.connect(self.refresh_data)
             self.off_tar_win.centerUI()
             self.off_tar_win.show()
+            self.off_tar_win.activateWindow()
             f.close()
         except Exception as e:
             logger.critical("Error in Off_Target_Analysis() in results.")
@@ -1347,6 +1346,7 @@ class Results(QtWidgets.QMainWindow):
         try:
             self.filter_options.centerUI()
             self.filter_options.show()
+            self.filter_options.activateWindow()
         except Exception as e:
             logger.critical("Error in show_filter_options() in results.")
             logger.critical(e)

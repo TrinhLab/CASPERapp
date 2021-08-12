@@ -156,6 +156,7 @@ class CoTargeting(QtWidgets.QMainWindow):
             # now show
             self.centerUI()
             self.show()
+            self.activateWindow()
         except Exception as e:
             logger.critical("Error in launch() in CoTargeting.")
             logger.critical(e)
