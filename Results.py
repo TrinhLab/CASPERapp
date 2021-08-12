@@ -754,11 +754,12 @@ class Results(QtWidgets.QMainWindow):
                     # for each tuple item
                     for i in range(len(item)):
                         self.highlighted[item[i][1]] = False
-            self.displayGeneData()
 
-            # if the endo choice is greater than 1, call the combine function
+            # if the endo choice is greater than 1, call the combine
             if len(self.endo) > 1:
                 self.combine_coTargets(genename)
+
+            self.displayGeneData()
         except Exception as e:
             logger.critical("Error in get_targets() in results.")
             logger.critical(e)
@@ -780,7 +781,7 @@ class Results(QtWidgets.QMainWindow):
                 if self.curgene.split(":")[0] in entry:
                     self.curgene = entry
 
-            subset_display = set()
+            subset_display = []
             # set the start and end numbers, as well as set the geneViewer text, if the displayGeneViewer is checked
             if self.displayGeneViewer.isChecked():
                 self.lineEditStart.setText(str(self.geneDict[self.curgene][1]))
@@ -801,9 +802,9 @@ class Results(QtWidgets.QMainWindow):
                         # Removing all non 5' G sequences:
                         if self.filter_options.fivegseqCheckBox.isChecked():
                             if item[i][1].startswith("G"):
-                                subset_display.add(item[i])
+                                subset_display.append(item[i])
                         else:
-                            subset_display.add(item[i])
+                            subset_display.append(item[i])
 
             self.targetTable.setRowCount(len(subset_display))
 
@@ -975,7 +976,6 @@ class Results(QtWidgets.QMainWindow):
             search_trms = []
             checkBox = self.sender()
             index = self.targetTable.indexAt(checkBox.pos())
-            # print(index.column(), index.row(), checkBox.isChecked())
             seq = self.targetTable.item(index.row(),2).text()
             self.highlighted[str(seq)] = checkBox.isChecked()
 

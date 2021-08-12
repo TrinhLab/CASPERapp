@@ -920,6 +920,26 @@ class CMainWindow(QtWidgets.QMainWindow):
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
     def collect_table_data_nonkegg(self):
         try:
+            self.Results.annotation_path = self.annotation_parser.annotationFileName  ### Set annotation path
+            try:
+                self.Results.endonucleaseBox.currentIndexChanged.disconnect()
+            except Exception as e:
+                pass
+            # set Results endo combo box
+            self.Results.endonucleaseBox.clear()
+
+            # set GeneViewer to appropriate annotation file
+
+            # set the results window endoChoice box menu
+            # set the mainWindow's endoChoice first, and then loop through and set the rest of them
+            self.Results.endonucleaseBox.addItem(self.endoChoice.currentText())
+            for item in self.organisms_to_endos[str(self.orgChoice.currentText())]:
+                if item != self.Results.endonucleaseBox.currentText():
+                    self.Results.endonucleaseBox.addItem(item)
+
+            self.Results.endonucleaseBox.currentIndexChanged.connect(self.Results.changeEndonuclease)
+            self.Results.get_endo_data()
+
             # start out the same as the other collect_table_data
             self.checked_info.clear()
             self.check_ntseq_info.clear()
@@ -953,6 +973,9 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.progressBar.setValue(95)
             self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
                                        self.checked_info, self.check_ntseq_info, "")
+
+            self.Results.load_gene_viewer()
+
             self.progressBar.setValue(100)
             self.pushButton_ViewTargets.setEnabled(True)
             self.GenerateLibrary.setEnabled(True)
@@ -1334,29 +1357,6 @@ class CMainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def view_results(self):
         try:
-            self.Results.annotation_path = self.annotation_parser.annotationFileName ### Set annotation path
-            try:
-                self.Results.endonucleaseBox.currentIndexChanged.disconnect()
-            except Exception as e:
-                pass
-            # set Results endo combo box
-            self.Results.endonucleaseBox.clear()
-
-            # set GeneViewer to appropriate annotation file
-
-            # set the results window endoChoice box menu
-            # set the mainWindow's endoChoice first, and then loop through and set the rest of them
-            self.Results.endonucleaseBox.addItem(self.endoChoice.currentText())
-            for item in self.organisms_to_endos[str(self.orgChoice.currentText())]:
-                if item != self.Results.endonucleaseBox.currentText():
-                    self.Results.endonucleaseBox.addItem(item)
-
-            self.Results.mwfg.moveCenter(self.Results.cp)  ##Center window
-            self.Results.move(self.Results.mwfg.topLeft())  ##Center window
-            self.Results.endonucleaseBox.currentIndexChanged.connect(self.Results.changeEndonuclease)
-            self.Results.load_gene_viewer()
-            self.Results.get_endo_data()
-
             #center results window on current screen
             if self.Results.first_show == True:
                 self.Results.first_show = False
