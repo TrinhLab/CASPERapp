@@ -54,7 +54,7 @@
         <property name="minimumSize">
          <size>
           <width>125</width>
-          <height>0</height>
+          <height>25</height>
          </size>
         </property>
         <property name="text">
@@ -82,12 +82,24 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
           </widget>
          </item>
          <item row="3" column="0" colspan="2">
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
             <widget class="QPushButton" name="Analyze_Button">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>25</height>
+              </size>
+             </property>
              <property name="text">
               <string>Analyze</string>
              </property>
@@ -138,6 +150,12 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
            </property>
           </widget>
          </item>
@@ -190,6 +208,12 @@
         <layout class="QGridLayout" name="gridLayout_7">
          <item row="1" column="0">
           <widget class="QPushButton" name="statistics_overview">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="text">
             <string>Statistics Overview</string>
            </property>
@@ -269,7 +293,7 @@
         <property name="minimumSize">
          <size>
           <width>175</width>
-          <height>0</height>
+          <height>25</height>
          </size>
         </property>
         <property name="text">

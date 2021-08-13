@@ -61,6 +61,11 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
             fontSize = 10
@@ -75,8 +80,8 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             self.tableWidget.resizeColumnsToContents()
 
             # window scaling
-            scaledWidth = 900
-            scaledHeight = 600
+            scaledWidth = int((width * 900) / 1920)
+            scaledHeight = int((height * 600) / 1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -341,6 +346,11 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
+            screen = self.screen()
+            dpi = screen.physicalDotsPerInch()
+            width = screen.geometry().width()
+            height = screen.geometry().height()
+
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
             fontSize = 10
@@ -353,8 +363,8 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.label_8.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
             #window resize and center
-            scaledWidth = 1150
-            scaledHeight = 650
+            scaledWidth = int((width * 1150) / 1920)
+            scaledHeight = int((height * 650) / 1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1450,8 +1460,8 @@ class StartupWindow(QtWidgets.QMainWindow):
             self.logo.setPixmap(pixmapOriginal)
 
             #scale and center UI
-            scaledWidth = 850
-            scaledHeight = 550
+            scaledWidth = int((width * 850) / 1920)
+            scaledHeight = int((height * 550) / 1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()

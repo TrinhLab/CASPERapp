@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import GlobalSettings
+import matplotlib
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
 from matplotlib.ticker import MaxNLocator
@@ -133,7 +134,7 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
-            self.dpi = dpi
+            self.dpi = min(200, dpi)
             width = screen.geometry().width()
             height = screen.geometry().height()
 
@@ -1015,7 +1016,7 @@ class loading_window(QtWidgets.QMainWindow):
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         try:
-            fig = Figure(figsize=(width, height), dpi=dpi)
+            fig = Figure(figsize=(width, height), dpi=dpi, tight_layout=True)
             self.axes = fig.add_subplot(111)
             self.axes.clear()
             super(MplCanvas, self).__init__(fig)
