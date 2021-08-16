@@ -140,7 +140,7 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = 10
+            fontSize = 12
             self.fontSize = fontSize
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
@@ -156,9 +156,20 @@ class Multitargeting(QtWidgets.QMainWindow):
             #resize columns in table
             self.table.resizeColumnsToContents()
 
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
+
             # window scaling
-            scaledWidth = int((width * 1100) / 1920)
-            scaledHeight = int((height * 850) / 1080)
+            scaledWidth = int((width * 1400) / 1920)
+            scaledHeight = int((height * 900) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -774,7 +785,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             ###Clear out old widgets in layout
             for i in reversed(range(self.seed_bar.count())):
                 self.seed_bar.itemAt(i).widget().setParent(None)
-            self.seed_canvas = MplCanvas(self, width=1, height=2, dpi=self.dpi) ###Initialize new Canvas
+            self.seed_canvas = MplCanvas(self, width=5, height=3, dpi=self.dpi) ###Initialize new Canvas
             self.seed_bar.addWidget(self.seed_canvas) ### Add canvas to global line layout
             self.repeats_vs_chromo.setLayout(self.seed_bar) ### Add global line layout to repeats vs. seeds line plot widget
             y = []
@@ -819,7 +830,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             ###Clear out old widgets in layout
             for i in reversed(range(self.global_bar.count())):
                 self.global_bar.itemAt(i).widget().setParent(None)
-            self.bar_canvas = MplCanvas(self, width=1, height=2, dpi=self.dpi) ###Initialize new Canvas
+            self.bar_canvas = MplCanvas(self, width=5, height=3, dpi=self.dpi) ###Initialize new Canvas
             self.global_bar.addWidget(self.bar_canvas) ### Add canvas to global line layout
             self.seeds_vs_repeats_bar.setLayout(self.global_bar) ### Add global line layout to repeats vs. seeds line plot widget
 
@@ -857,7 +868,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             ###Clear out old widgets in layout
             for i in reversed(range(self.global_line.count())):
                 self.global_line.itemAt(i).widget().setParent(None)
-            self.line_canvas = MplCanvas(self, width=1, height=2, dpi=self.dpi) ###Initialize new Canvas
+            self.line_canvas = MplCanvas(self, width=5, height=3, dpi=self.dpi) ###Initialize new Canvas
             self.global_line.addWidget(self.line_canvas) ### Add canvas to global line layout
             self.repeats_vs_seeds_line.setLayout(self.global_line) ### Add global line layout to repeats vs. seeds line plot widget
 
@@ -1016,7 +1027,7 @@ class loading_window(QtWidgets.QMainWindow):
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         try:
-            fig = Figure(figsize=(width, height), dpi=dpi, tight_layout=True)
+            fig = Figure( dpi=100, tight_layout=True)
             self.axes = fig.add_subplot(111)
             self.axes.clear()
             super(MplCanvas, self).__init__(fig)

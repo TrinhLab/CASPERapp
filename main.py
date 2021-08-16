@@ -353,7 +353,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = 10
+            fontSize = 12
             self.fontSize = fontSize
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
@@ -362,9 +362,20 @@ class CMainWindow(QtWidgets.QMainWindow):
             fontSize = 30
             self.label_8.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
+
             #window resize and center
             scaledWidth = int((width * 1150) / 1920)
             scaledHeight = int((height * 650) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -372,6 +383,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             x = x - (math.ceil(scaledWidth / 2))
             y = y - (math.ceil(scaledHeight / 2))
             self.setGeometry(x, y, scaledWidth, scaledHeight)
+
 
             self.repaint()
             QtWidgets.QApplication.processEvents()
@@ -1246,10 +1258,10 @@ class CMainWindow(QtWidgets.QMainWindow):
         try:
             os.chdir(os.getcwd())
             if GlobalSettings.MTWin.first_show == True:
-                GlobalSettings.MTWin.centerUI()
+                GlobalSettings.MTWin.show()
                 GlobalSettings.MTWin.first_show = False
-            GlobalSettings.MTWin.show()
-            print(GlobalSettings.MTWin.geometry())
+            else:
+                GlobalSettings.MTWin.show()
             GlobalSettings.mainWindow.hide()
 
         except Exception as e:
@@ -1451,7 +1463,7 @@ class StartupWindow(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi 1920x1080
-            fontSize = 10
+            fontSize = 14
             self.fontSize = fontSize
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
 
@@ -1772,9 +1784,10 @@ class StartupWindow(QtWidgets.QMainWindow):
 
                     #show main window
                     if GlobalSettings.mainWindow.first_show == True:
-                        GlobalSettings.mainWindow.centerUI()
+                        GlobalSettings.mainWindow.show()
                         GlobalSettings.mainWindow.first_show = False
-                    GlobalSettings.mainWindow.show()
+                    else:
+                        GlobalSettings.mainWindow.show()
                     self.close()
 
                 #no cspr file found
