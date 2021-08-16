@@ -103,17 +103,11 @@ class Results(QtWidgets.QMainWindow):
             QGroupBox#guide_viewer{border: 2px solid rgb(111,181,110);
                             border-radius: 9px;
                             margin-top: 10px;
-                            font: bold;}"""
+                            font: bold 14pt 'Arial';}"""
 
             self.guide_viewer.setStyleSheet(groupbox_style)
             self.guide_analysis.setStyleSheet(groupbox_style.replace("guide_viewer", "guide_analysis"))
             self.gene_viewer.setStyleSheet(groupbox_style.replace("guide_viewer", "gene_viewer"))
-
-            #set pixel width for scroll bars
-            self.targetTable.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.targetTable.horizontalScrollBar().setStyleSheet("height: 16px;")
-            self.geneViewer.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.geneViewer.horizontalScrollBar().setStyleSheet("height: 16px;")
 
             self.get_endo_data()
 
@@ -139,34 +133,29 @@ class Results(QtWidgets.QMainWindow):
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
-
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton, QLineEdit, QComboBox { height: " + str(scaledHeight) + "px }")
-
-            #scroll bar scaling
-            scrollbarWidth = int((width * 15) / 1920)
-            scrollbarHeight = int((height * 15) / 1080)
-            self.targetTable.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
-            self.targetTable.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
-            self.geneViewer.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
-            self.geneViewer.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
             # CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 30
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
-            #resize table
-            self.targetTable.resizeColumnsToContents()
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
             # 1920x1080 => 850x750
             scaledWidth = int((width * 1250) / 1920)
             scaledHeight = int((height * 750) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -245,7 +234,7 @@ class Results(QtWidgets.QMainWindow):
             select_items = self.targetTable.selectedItems()
             if len(select_items) <= 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Nothing Selected")
                 msgBox.setText("No targets were highlighted. Please highlight the targets you want to be exported to a CSV File!")
@@ -266,7 +255,7 @@ class Results(QtWidgets.QMainWindow):
             # make sure the gene viewer is on
             if not self.displayGeneViewer.isChecked():
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Gene Viewer Error")
                 msgBox.setText("Gene Viewer display is off! Please turn the Gene Viewer on in order to highlight the sequences selected")
@@ -283,7 +272,7 @@ class Results(QtWidgets.QMainWindow):
             # make sure that the difference between indicies is not too large
             if abs(tempTuple[1] - tempTuple[2]) > 50000:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Sequence Too Long")
                 msgBox.setText("The sequence is too long! Please choose indicies that will make the sequence less than 50,000!")
@@ -353,7 +342,7 @@ class Results(QtWidgets.QMainWindow):
             # make sure gene viewer is enabled
             if not self.displayGeneViewer.isChecked():
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Gene Viewer Error")
                 msgBox.setText("Gene Viewer display is off! Please turn the Gene Viewer on in order to highlight the sequences selected")
@@ -374,7 +363,7 @@ class Results(QtWidgets.QMainWindow):
             selectedList = self.targetTable.selectedItems()
             if len(selectedList) <= 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Nothing Selected")
                 msgBox.setText("No targets were highlighted. Please highlight the targets you want to be highlighted in the gene viewer!")
@@ -401,7 +390,7 @@ class Results(QtWidgets.QMainWindow):
                         movementIndex = self.endo_data[self.endonucleaseBox.currentText()][0]
                     except:
                         msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                         msgBox.setWindowTitle("Endo data not found.")
                         msgBox.setText(
@@ -496,7 +485,7 @@ class Results(QtWidgets.QMainWindow):
             # if any of the sequences return 0 matches, show the user which ones were not found
             if len(noMatchString) >= 5:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Warning")
                 msgBox.setText(
@@ -535,7 +524,7 @@ class Results(QtWidgets.QMainWindow):
             endo_list = list()
             if self.endonucleaseBox.count() <= 1:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Not Enough Endonucleases")
                 msgBox.setText(
@@ -568,7 +557,7 @@ class Results(QtWidgets.QMainWindow):
             # make sure the user actually selects a new endonuclease
             if self.endo == endoChoice:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Select a different Endonuclease")
                 msgBox.setText(
@@ -647,7 +636,10 @@ class Results(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.show()
             self.filter_options.cotarget_checkbox.setChecked(0)
             self.filter_options.hide()
-            self.off_tar_win.hide()
+            try:
+                self.off_tar_win.hide()
+            except:
+                pass
             GlobalSettings.mainWindow.CoTargeting.hide()
 
             self.hide()
@@ -1030,7 +1022,7 @@ class Results(QtWidgets.QMainWindow):
 
             if len(indexes) == 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("No Rows Selected")
                 msgBox.setText(
@@ -1079,7 +1071,7 @@ class Results(QtWidgets.QMainWindow):
             # if the user hits submit without running thr program, do nothing
             if filename == '':
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("File Not Found")
                 msgBox.setText(
@@ -1104,7 +1096,7 @@ class Results(QtWidgets.QMainWindow):
                 out_file = open(filename, "r")
             except:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Unable to Open File")
                 msgBox.setText(
@@ -1163,7 +1155,7 @@ class Results(QtWidgets.QMainWindow):
                 #make sure OT output file had lines
                 if line_cnt < 1:
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                     msgBox.setWindowTitle("File Empty")
                     msgBox.setText(
@@ -1189,7 +1181,7 @@ class Results(QtWidgets.QMainWindow):
             index = self.targetTable.indexAt(button.pos())
             msg = QtWidgets.QMessageBox()
             msg.setWindowTitle("Details")
-            msg.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+            msg.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
             msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             key = str(self.targetTable.item(index.row(),2).text())
@@ -1393,22 +1385,28 @@ class Filter_Options(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
-
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton, QLineEdit, QComboBox, QSlider { height: " + str(scaledHeight) + "px }")
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
             # CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 20) // (92)))))
-            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 20
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
+
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
             # 1920x1080 => 850x750
             scaledWidth = int((width * 350) / 1920)
             scaledHeight = int((height * 250) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
 
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()

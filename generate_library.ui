@@ -16,251 +16,27 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="1" column="1">
-     <layout class="QGridLayout" name="gridLayout" rowstretch="1,1,1,1,1" columnstretch="1,1">
+     <layout class="QGridLayout" name="gridLayout" rowstretch="1,0,0,0,0" columnstretch="1,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetDefaultConstraint</enum>
       </property>
-      <item row="3" column="0">
-       <widget class="QGroupBox" name="Step2">
+      <item row="4" column="1" alignment="Qt::AlignRight">
+       <widget class="QPushButton" name="submit_button">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="title">
-         <string>Step 2: Quality Filtering</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_9" rowstretch="0,0,0,0" columnstretch="0,0">
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_8">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The maximum acceptable off-target score for guides in library. Range: 0-0.5, &lt;span style=&quot; font-weight:600;&quot;&gt;lower is better&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Maximum off-target score:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLineEdit" name="maxOFF_comboBox">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="placeholderText">
-            <string>Range: 0 - 0.5</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_6">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Selecting this option performs off-target analysis within the organism. Range is from 0 to 0.5, &lt;span style=&quot; font-weight:600;&quot;&gt;lower is better&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Find off-targets:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QProgressBar" name="progressBar">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="value">
-            <number>0</number>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_9">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Off-targeting progress:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="minON_comboBox">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_7">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The minimum acceptable on-target score for guides in library. Range: 20-70, &lt;span style=&quot; font-weight:600;&quot;&gt;higher is better&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Minimum off-target score:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QCheckBox" name="find_off_Checkbox">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="2">
-       <widget class="QLabel" name="label">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+        <property name="minimumSize">
+         <size>
+          <width>125</width>
+          <height>0</height>
+         </size>
         </property>
         <property name="text">
-         <string>Generate Library</string>
+         <string>Submit</string>
         </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QGroupBox" name="Step3">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="title">
-         <string>Step 3: Targeting Guidelines</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_8" rowstretch="0,0,0">
-         <property name="sizeConstraint">
-          <enum>QLayout::SetDefaultConstraint</enum>
-         </property>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_11">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This specifies the 5' characters of the guides. &lt;span style=&quot; font-weight:600;&quot;&gt;For example&lt;/span&gt;, to optimize gRNA expression under some promoters, 5' G residues are needed. Typing &amp;quot;G&amp;quot; in the box returns only guides starting with G. Input must be &amp;quot;ACGT&amp;quot; alphabet. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>5' end specificity:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_10">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This is the minimum distance in nt there must be between each guide in the library.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Space between guides:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_12">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If CASPER is unable to find the selected nubmer of guides per gene given the selected criteria, it will loosen its criteria to achieve the selected number. Asterisks are used to denote guides with modified parameters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Modify parameters if no target found:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="space_line_edit">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>15</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="fiveprimeseq">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="placeholderText">
-            <string>Ex: G</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QCheckBox" name="modifyParamscheckBox">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </widget>
       </item>
       <item row="3" column="1">
@@ -274,50 +50,8 @@
         <property name="title">
          <string>Step 4: Output Location</string>
         </property>
-        <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,0">
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="output_path">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_14">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This is the directory that CASPER will write the library CSV to.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Output path:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_13">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Name of generated CSV file.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Output file name:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
+        <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,0,0,0">
+         <item row="2" column="2">
           <widget class="QPushButton" name="BrowseButton">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -333,7 +67,55 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="1" colspan="2">
+         <item row="3" column="0" colspan="3">
+          <spacer name="verticalSpacer_9">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>10</width>
+             <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_14">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This is the directory that CASPER will write the library CSV to.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Output path:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_13">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Name of generated CSV file.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Output file name:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" colspan="2">
           <widget class="QLineEdit" name="filename_input">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -343,52 +125,8 @@
            </property>
           </widget>
          </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="Line" name="line">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QGroupBox" name="Step1">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="title">
-         <string>Step 1: Library Size and Location</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_10">
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_3">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Percentage of gene to pull guides from. Default percentage is 100, meaning guides will be pulled from the entire gene, starting from the beginning.&lt;span style=&quot; font-weight:600;&quot;&gt; For example&lt;/span&gt;, Start = 50, End = 100 would pull guides from the second half of the gene, starting at 50.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Targeting range:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QLineEdit" name="end_target_range">
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="output_path">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -397,70 +135,21 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="2">
-          <widget class="QLabel" name="label_5">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+         <item row="0" column="0" colspan="3">
+          <spacer name="verticalSpacer_10">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
            </property>
-           <property name="text">
-            <string>to</string>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
            </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>10</width>
+             <height>10</height>
+            </size>
            </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This is the number of guide RNAs that will be generated for each of the genes selected in Find Targets.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Number of guides per gene:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="start_target_range">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1" colspan="3">
-          <widget class="QComboBox" name="numGenescomboBox">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0" colspan="4">
-          <widget class="QLabel" name="label_4">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>(Start = 0, End = 100), pulls from the beginning</string>
-           </property>
-          </widget>
+          </spacer>
          </item>
         </layout>
        </widget>
@@ -487,23 +176,462 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1" alignment="Qt::AlignRight">
-       <widget class="QPushButton" name="submit_button">
+      <item row="1" column="0" colspan="2">
+       <widget class="Line" name="line">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="minimumSize">
-         <size>
-          <width>125</width>
-          <height>0</height>
-         </size>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QGroupBox" name="Step3">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="title">
+         <string>Step 3: Targeting Guidelines</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_8" rowstretch="0,0,0,0,0">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetDefaultConstraint</enum>
+         </property>
+         <item row="3" column="1">
+          <widget class="QCheckBox" name="modifyParamscheckBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_10">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This is the minimum distance in nt there must be between each guide in the library.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Space between guides:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="fiveprimeseq">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="placeholderText">
+            <string>Ex: G</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="space_line_edit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>15</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="2">
+          <spacer name="verticalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>10</width>
+             <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_11">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This specifies the 5' characters of the guides. &lt;span style=&quot; font-weight:600;&quot;&gt;For example&lt;/span&gt;, to optimize gRNA expression under some promoters, 5' G residues are needed. Typing &amp;quot;G&amp;quot; in the box returns only guides starting with G. Input must be &amp;quot;ACGT&amp;quot; alphabet. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>5' end specificity:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_12">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If CASPER is unable to find the selected nubmer of guides per gene given the selected criteria, it will loosen its criteria to achieve the selected number. Asterisks are used to denote guides with modified parameters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Modify parameters if no target found:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0" colspan="2">
+          <spacer name="verticalSpacer_8">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>10</width>
+             <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="text">
-         <string>Submit</string>
+         <string>Generate Library</string>
         </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QGroupBox" name="Step2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="title">
+         <string>Step 2: Quality Filtering</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_9" rowstretch="0,0,0,0,0,0" columnstretch="0,0">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Selecting this option performs off-target analysis within the organism. Range is from 0 to 0.5, &lt;span style=&quot; font-weight:600;&quot;&gt;lower is better&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Find off-targets:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="2">
+          <spacer name="verticalSpacer_5">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>10</width>
+             <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="4" column="1">
+          <widget class="QProgressBar" name="progressBar">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="value">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QCheckBox" name="find_off_Checkbox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="minON_comboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The minimum acceptable on-target score for guides in library. Range: 20-70, &lt;span style=&quot; font-weight:600;&quot;&gt;higher is better&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Minimum off-target score:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="maxOFF_comboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="placeholderText">
+            <string>Range: 0 - 0.5</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Off-targeting progress:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The maximum acceptable off-target score for guides in library. Range: 0-0.5, &lt;span style=&quot; font-weight:600;&quot;&gt;lower is better&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Maximum off-target score:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0" colspan="2">
+          <spacer name="verticalSpacer_6">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>10</width>
+             <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QGroupBox" name="Step1">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="title">
+         <string>Step 1: Library Size and Location</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_10">
+         <item row="1" column="1" colspan="3">
+          <widget class="QComboBox" name="numGenescomboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Percentage of gene to pull guides from. Default percentage is 100, meaning guides will be pulled from the entire gene, starting from the beginning.&lt;span style=&quot; font-weight:600;&quot;&gt; For example&lt;/span&gt;, Start = 50, End = 100 would pull guides from the second half of the gene, starting at 50.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Targeting range:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This is the number of guide RNAs that will be generated for each of the genes selected in Find Targets.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Number of guides per gene:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0" colspan="4">
+          <widget class="QLabel" name="label_4">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>(Start = 0, End = 100), pulls from the beginning</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="start_target_range">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLabel" name="label_5">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>to</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
+          <widget class="QLineEdit" name="end_target_range">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="4">
+          <spacer name="verticalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>10</width>
+             <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="4" column="0" colspan="4">
+          <spacer name="verticalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>10</width>
+             <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>

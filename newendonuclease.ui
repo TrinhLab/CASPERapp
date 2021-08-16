@@ -6,9 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>480</width>
-    <height>615</height>
+    <width>497</width>
+    <height>700</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>12</pointsize>
+   </font>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>

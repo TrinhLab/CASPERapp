@@ -52,20 +52,25 @@ class export_csv_window(QtWidgets.QMainWindow):
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton, QLineEdit { height: " + str(scaledHeight) + "px }")
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
             # 1920x1080 => 1150x650
             scaledWidth = int((width * 650) / 1920)
             scaledHeight = int((height * 200) / 1080)
+            
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -171,7 +176,7 @@ class export_csv_window(QtWidgets.QMainWindow):
             # catch the permission exception
             except PermissionError:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("File Cannot Open")
                 msgBox.setText("This file cannot be opened. Please make sure that the file is not opened elsewhere and try again.")

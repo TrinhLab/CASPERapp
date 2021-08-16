@@ -32,7 +32,7 @@ class genLibrary(QtWidgets.QMainWindow):
                             padding: 0 5px 0 5px;}
             QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                             border-radius: 9px;
-                            font: bold;
+                            font: bold 14pt 'Arial';
                             margin-top: 10px;}"""
             self.Step1.setStyleSheet(groupbox_style)
             self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2"))
@@ -87,24 +87,29 @@ class genLibrary(QtWidgets.QMainWindow):
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
-
-            # button, line edit, progressbar, and combobox scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton, QLineEdit, QProgressBar, QComboBox { height: " + str(scaledHeight) + "px }")
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
             #scale title
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.label.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 30
+            self.label.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
             # 1920x1080 => 800x650
             scaledWidth = int((width * 950) / 1920)
             scaledHeight = int((height * 500) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -315,9 +320,15 @@ class genLibrary(QtWidgets.QMainWindow):
                     #self.process.kill()
                     if did_work != -1:
                         self.cancel_function()
-                        QtWidgets.QMessageBox.information(self, "Library Generated!",
-                                           "CASPER has finished generating your library!",
-                                           QtWidgets.QMessageBox.Ok)
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Information)
+                        msgBox.setWindowTitle("Library Generated!")
+                        msgBox.setText(
+                            "CASPER has finished generating your library!")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
                         os.remove(GlobalSettings.CSPR_DB + '/off_input.txt')
                         os.remove(GlobalSettings.CSPR_DB + '/temp_off.txt')
 
@@ -428,15 +439,29 @@ class genLibrary(QtWidgets.QMainWindow):
             elif self.space_line_edit.text().isdigit():
                 spaceValue = int(self.space_line_edit.text())
             elif not self.space_line_edit.text().isdigit():
-                QtWidgets.QMessageBox.question(self, "Error", "Please enter integers only for space between guides.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText(
+                    "Please enter integers only for space between guides.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
             # if space value is more than 200, default to 200
             if spaceValue > 200:
                 spaceValue = 200
             elif spaceValue < 0:
-                QtWidgets.QMessageBox.question(self, "Error", "Please enter a space-value that is 0 or greater.",
-                                                QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText(
+                    "Please enter a space-value that is 0 or greater.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
             if self.find_off_Checkbox.isChecked():
@@ -448,22 +473,40 @@ class genLibrary(QtWidgets.QMainWindow):
             if self.fiveprimeseq.text() != '' and self.fiveprimeseq.text().isalpha():
                 fiveseq = self.fiveprimeseq.text()
             elif self.fiveprimeseq.text() != '' and not self.fiveprimeseq.text().isalpha():
-                QtWidgets.QMessageBox.question(self, "Error", "Please make sure only the letters A, T, G, or C are added into 5' End specificity box.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText(
+                    "Please make sure only the letters A, T, G, or C are added into 5' End specificity box.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
 
             # get the targeting range data, and error check it here
             if not self.start_target_range.text().isdigit() or not self.end_target_range.text().isdigit():
-                QtWidgets.QMessageBox.question(self, "Error",
-                                               "Error: Please make sure that the start and end target ranges are numbers only."
-                                               " Please make sure that start is 0 or greater, and end is 100 or less. ",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText(
+                    "Error: Please make sure that the start and end target ranges are numbers only. Please make sure that start is 0 or greater, and end is 100 or less. ")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
             elif int(self.start_target_range.text()) >= int(self.end_target_range.text()):
-                QtWidgets.QMessageBox.question(self, "Error",
-                                               "Please make sure that the start number is always less than the end number",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Error")
+                msgBox.setText(
+                    "Please make sure that the start number is always less than the end number")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return
 
 
@@ -471,15 +514,28 @@ class genLibrary(QtWidgets.QMainWindow):
             if self.find_off_Checkbox.isChecked():
                 # make sure its a digit
                 if self.maxOFF_comboBox.text() == '' or not self.maxOFF_comboBox.text().isdigit() and '.' not in self.maxOFF_comboBox.text():
-                    QtWidgets.QMessageBox.question(self, "Error", "Please enter only numbers for Maximum Off-Target Score. It cannot be left blank",
-                                                   QtWidgets.QMessageBox.Ok)
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Error")
+                    msgBox.setText(
+                        "Please enter only numbers for Maximum Off-Target Score. It cannot be left blank")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
                     return
                 else:
                     # make sure it between 0 and .5
                     if not 0.0 < float(self.maxOFF_comboBox.text()) <= .5:
-                        QtWidgets.QMessageBox.question(self, "Error",
-                                                       "Please enter a max off-target score between 0 and 0.5!",
-                                                       QtWidgets.QMessageBox.Ok)
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("Error")
+                        msgBox.setText(
+                            "Please enter a max off-target score between 0 and 0.5!")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
                         return
                     # compress the data, and then run off-targeting
                     self.compress_file_off()
@@ -490,9 +546,15 @@ class genLibrary(QtWidgets.QMainWindow):
 
                 if did_work != -1:
                     self.cancel_function()
-                    QtWidgets.QMessageBox.information(self, "Library Generated!",
-                                       "CASPER has finished generating your library!",
-                                       QtWidgets.QMessageBox.Ok)
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Library Generated!")
+                    msgBox.setText(
+                        "CASPER has finished generating your library!")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
         except Exception as e:
             logger.critical("Error in submit_data() in generate library.")
             logger.critical(e)
@@ -504,13 +566,17 @@ class genLibrary(QtWidgets.QMainWindow):
     def cancel_function(self):
         try:
             if self.off_target_running:
-                error = QtWidgets.QMessageBox.question(self, "Off-Targeting is running",
-                                                "Off-Targetting is running. Closing this window will cancel that process, and return to the main window. .\n\n"
-                                                "Do you wish to continue?",
-                                                QtWidgets.QMessageBox.Yes |
-                                                QtWidgets.QMessageBox.No,
-                                                QtWidgets.QMessageBox.No)
-                if (error == QtWidgets.QMessageBox.No):
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
+                msgBox.setWindowTitle("Off-Targeting is running")
+                msgBox.setText(
+                    "Off-Targetting is running. Closing this window will cancel that process, and return to the main window. .\n Do you wish to continue?")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.No)
+                msgBox.exec()
+
+                if (msgBox.result() == QtWidgets.QMessageBox.No):
                         return -2
                 else:
                     self.off_target_running = False
@@ -601,9 +667,15 @@ class genLibrary(QtWidgets.QMainWindow):
                     endNum = endNum / 100
                     checkStartandEndBool = True
                 else:
-                    QtWidgets.QMessageBox.question(self, "Invalid Targeting Range:",
-                                               "Please select a targeting range between 0 and 100.",
-                                               QtWidgets.QMessageBox.Ok)
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Invalid Targeting Range:")
+                    msgBox.setText(
+                        "Please select a targeting range between 0 and 100.")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
                     return -1
 
             for gene in self.gen_lib_dict:
@@ -730,9 +802,15 @@ class genLibrary(QtWidgets.QMainWindow):
 
                 f.close()
             except PermissionError:
-                QtWidgets.QMessageBox.question(self, "File Cannot Open",
-                                               "This file cannot be opened. Please make sure that the file is not opened elsewhere and try again.",
-                                               QtWidgets.QMessageBox.Ok)
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("File Cannot Open")
+                msgBox.setText(
+                    "This file cannot be opened. Please make sure that the file is not opened elsewhere and try again.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
                 return -1
             except Exception as e:
                 print(e)

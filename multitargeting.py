@@ -134,27 +134,19 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
-            self.dpi = min(200, dpi)
+            self.dpi = dpi
             width = screen.geometry().width()
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
             fontSize = 12
             self.fontSize = fontSize
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
             self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
 
-            #button and qcombobox scaling
-            # scaledHeight = int((height * 25) / 1080)
-            # self.setStyleSheet("QPushButton, QComboBox { height: " + str(scaledHeight) + "px }")
-
             #CASPER header scaling
             fontSize = 30
             self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
-
-            #resize columns in table
-            self.table.resizeColumnsToContents()
 
             self.adjustSize()
 
@@ -216,7 +208,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             select_items = self.table.selectedItems()
             if len(select_items) <= 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Nothing Selected")
                 msgBox.setText("No targets were highlighted. Please highlight the targets you want to be exported to a CSV File!")
@@ -239,7 +231,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 self.multitargeting_statistics.activateWindow()
             else:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("No analysis run.")
                 msgBox.setText('Multitargeting Analysis must be performed before viewing statistics.\n\nSelect an organism and endonuclease and click "Analyze" then try again.')
@@ -707,7 +699,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 return True
             else:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Seed Error")
                 msgBox.setText("No such seed exists in the repeats section of this organism.")
@@ -977,12 +969,23 @@ class loading_window(QtWidgets.QMainWindow):
 
             # font scaling
             # 14px is used for 92 dpi
-            fontSize = 10
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+            fontSize = 12
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
+
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # scale/center window
             scaledWidth = int((width * 450) / 1920)
             scaledHeight = int((height * 125) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1027,7 +1030,7 @@ class loading_window(QtWidgets.QMainWindow):
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         try:
-            fig = Figure( dpi=100, tight_layout=True)
+            fig = Figure( dpi=dpi, tight_layout=True)
             self.axes = fig.add_subplot(111)
             self.axes.clear()
             super(MplCanvas, self).__init__(fig)
@@ -1068,7 +1071,7 @@ class Multitargeting_Statistics(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = 10
+            fontSize = 12
             self.fontSize = fontSize
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
@@ -1076,9 +1079,20 @@ class Multitargeting_Statistics(QtWidgets.QMainWindow):
             fontSize = 20
             self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
+
             # window scaling
             scaledWidth = int((width * 275) / 1920)
             scaledHeight = int((height * 185) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1152,7 +1166,7 @@ class sql_query_settings(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = 10
+            fontSize = 12
             self.fontSize = fontSize
             self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
@@ -1160,9 +1174,20 @@ class sql_query_settings(QtWidgets.QMainWindow):
             fontSize = 20
             self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
+
             # window scaling
             scaledWidth = int((width * 375) / 1920)
             scaledHeight = int((height * 140) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
