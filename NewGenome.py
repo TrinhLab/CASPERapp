@@ -33,7 +33,7 @@ class goToPrompt(QtWidgets.QMainWindow):
                             padding: 0 5px 0 5px;}
             QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
                             border-radius: 9px;
-                            font: bold;
+                            font: bold 14pt 'Arial';
                             margin-top: 10px;}"""
             self.groupBox.setStyleSheet(groupbox_style)
             self.scaleUI()
@@ -59,17 +59,25 @@ class goToPrompt(QtWidgets.QMainWindow):
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px; } QWidget { font: " + str(fontSize) + "px 'Arial'; }")
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
             # 1920x1080 => 550x200
             scaledWidth = int((width * 575) / 1920)
             scaledHeight = int((height * 175) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -133,7 +141,7 @@ class NewGenome(QtWidgets.QMainWindow):
                             padding: 0 5px 0 5px;}
             QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                             border-radius: 9px;
-                            font: bold;
+                            font: bold 14pt 'Arial';
                             margin-top: 10px;}"""
 
             self.Step1.setStyleSheet(groupbox_style)
@@ -232,42 +240,30 @@ class NewGenome(QtWidgets.QMainWindow):
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
-            self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
-
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton, QProgressBar, QComboBox, QLineEdit { height: " + str(scaledHeight) + "px }")
-
-            #scroll bar scaling
-            scrollbarWidth = int((width * 15) / 1920)
-            scrollbarHeight = int((height * 15) / 1080)
-            self.job_Table.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
-            self.job_Table.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
-            self.output_browser.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
-            self.output_browser.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
+            self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
             # CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 30
+            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
-            # resize columns in table
-            self.job_Table.resizeColumnsToContents()
+            self.adjustSize()
 
-            #spacers
-            spacerSize =  int((height * 1) / 1080)
-            spacerSize = spacerSize ** 4
-            self.spacer_1.setStyleSheet("font: " + str(spacerSize) + "pt;")
-            self.spacer_2.setStyleSheet("font: " + str(spacerSize) + "pt;")
-            self.spacer_3.setStyleSheet("font: " + str(spacerSize) + "pt;")
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
             # 1920x1080 => 850x750
             scaledWidth = int((width * 850) / 1920)
             scaledHeight = int((height * 750) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -348,7 +344,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
                 if not myFile[0].endswith(".fa") and not myFile[0].endswith(".fna") and not myFile[0].endswith(".gbff") and not myFile[0].endswith(".fasta"):
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                     msgBox.setWindowTitle("File Selection Error")
                     msgBox.setText("You have selected an incorrect type of file. Please choose a FASTA/FNA file.")
@@ -371,12 +367,12 @@ class NewGenome(QtWidgets.QMainWindow):
         try:
             warning = ""
             if len(self.orgName.text()) == 0:
-                warning = warning + "\nYou need to include the organism's name."
+                warning = warning + "You need to include the organism's name."
             if len(self.file) == 0:
-                warning = warning + "\nYou need to select a file."
+                warning = warning + "You need to select a file."
             if len(warning) != 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Required Information")
                 msgBox.setText(warning)
@@ -392,7 +388,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 warning = warning + "\nYou must include an organism code."
             if len(warning) != 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                 msgBox.setWindowTitle("Missing Information")
                 msgBox.setText(warning + "\n\nDo you wish to continue without including this information?")
@@ -605,7 +601,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.process.start(program)
             else:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("No Jobs To Run")
                 msgBox.setText("No jobs are in the queue to run. Please add a job before running.")
@@ -708,7 +704,7 @@ class NewGenome(QtWidgets.QMainWindow):
             if noCSPRFiles == True:
                 if self.exit == False:
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                     msgBox.setWindowTitle("No CSPR file generated")
                     msgBox.setText("No CSPR file has been generated, thus the main program cannot run. Please create a CSPR file."
@@ -772,7 +768,7 @@ class NewGenome(QtWidgets.QMainWindow):
             if noCSPRFiles == True:
 
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                 msgBox.setWindowTitle("No CSPR file generated")
                 msgBox.setText(
@@ -835,7 +831,7 @@ class NewGenome(QtWidgets.QMainWindow):
             if noCSPRFiles == True:
 
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                 msgBox.setWindowTitle("No CSPR file generated")
                 msgBox.setText(
@@ -900,7 +896,7 @@ class NewGenome(QtWidgets.QMainWindow):
             if noCSPRFiles == True:
 
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                 msgBox.setWindowTitle("No CSPR file generated")
                 msgBox.setText(

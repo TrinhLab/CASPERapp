@@ -215,7 +215,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                                     padding: 0 5px 0 5px;}
                     QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                                     border-radius: 9px;
-                                    font: bold;
+                                    font: bold 14pt 'Arial';
                                     margin-top: 10px;}"""
             self.Step1.setStyleSheet(groupbox_style)
             self.Step2.setStyleSheet(groupbox_style.replace("Step1","Step2"))
@@ -252,32 +252,29 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
-
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton, QProgressBar, QLineEdit { height: " + str(scaledHeight) + "px }")
-
-            #scroll bar scaling
-            scrollbarWidth = int((width * 15) / 1920)
-            scrollbarHeight = int((height * 15) / 1080)
-            self.ncbi_table.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
-            self.ncbi_table.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
             # CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 30
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
+            
+            self.adjustSize()
 
-            #resize table
-            self.ncbi_table.resizeColumnsToContents()
-
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
+            
             # window scaling
             # 1920x1080 => 850x750
             scaledWidth = int((width * 1000) / 1920)
             scaledHeight = int((height * 750) / 1080)
+            
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+            
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -576,7 +573,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             #make sure rows are present in table
             if self.df.shape[0] == 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("No Query Results")
                 msgBox.setText("Please run an NCBI query to fill the table with results to choose from!")
@@ -589,7 +586,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             indexes = self.ncbi_table.selectionModel().selectedRows()
             if len(indexes) == 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("No Rows Selected")
                 msgBox.setText("Please select rows from the table!")
@@ -601,7 +598,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             #make sure file type is selected
             if self.gbff_checkbox.isChecked() == False and self.fna_checkbox.isChecked() == False:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("No File Type Selected")
                 msgBox.setText("No file type selected. Please select the file types you want to download!")
@@ -696,7 +693,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                 self.rename_files(files)
             else:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("No Files Downloaded")
                 msgBox.setText("No files were downloaded from the selected NCBI files. Please make sure the selected files are available in the database selected.")
@@ -739,7 +736,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
     def rename_files(self, files):
         try:
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
             msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
             msgBox.setWindowTitle("Rename Files")
             msgBox.setText("Would you like to rename the downloaded files?")
@@ -759,7 +756,6 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                 self.rename_window.rename_table.resizeColumnsToContents()
                 header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
                 header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-                self.rename_window.resize(self.rename_window.sizeHint())
                 self.rename_window.centerUI()
                 self.rename_window.show()
                 self.rename_window.activateWindow()
@@ -804,7 +800,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                                 os.rename(GlobalSettings.CSPR_DB + "\\GBFF\\" + orig, GlobalSettings.CSPR_DB + "\\GBFF\\" + new)
                             else:
                                 msgBox = QtWidgets.QMessageBox()
-                                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                                 msgBox.setWindowTitle("Renaming Error")
                                 msgBox.setText("The filename: " + str(new) + " already exists. Please use a different name." )
@@ -816,7 +812,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                                 os.rename(GlobalSettings.CSPR_DB + "\\FNA\\" + orig, GlobalSettings.CSPR_DB + "\\FNA\\" + new)
                             else:
                                 msgBox = QtWidgets.QMessageBox()
-                                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                                 msgBox.setWindowTitle("Renaming Error")
                                 msgBox.setText("The filename: " + str(new) + " already exists. Please use a different name." )
@@ -832,7 +828,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                                 os.rename(GlobalSettings.CSPR_DB + "/GBFF/" + orig, GlobalSettings.CSPR_DB + "/GBFF/" + new)
                             else:
                                 msgBox = QtWidgets.QMessageBox()
-                                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                                 msgBox.setWindowTitle("Renaming Error")
                                 msgBox.setText(
@@ -845,7 +841,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                                 os.rename(GlobalSettings.CSPR_DB + "/FNA/" + orig, GlobalSettings.CSPR_DB + "/FNA/" + new)
                             else:
                                 msgBox = QtWidgets.QMessageBox()
-                                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                                 msgBox.setWindowTitle("Renaming Error")
                                 msgBox.setText(
@@ -901,7 +897,7 @@ class goToPrompt(QtWidgets.QMainWindow):
                             padding: 0 5px 0 5px;}
             QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
                             border-radius: 9px;
-                            font: bold;
+                            font: bold 14pt 'Arial';
                             margin-top: 10px;}"""
             self.groupBox.setStyleSheet(groupbox_style)
 
@@ -924,18 +920,24 @@ class goToPrompt(QtWidgets.QMainWindow):
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px; } QWidget { font: " + str(
-                fontSize) + "px 'Arial'; }")
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
             # 1920x1080 => 550x200
             scaledWidth = int((width * 575) / 1920)
             scaledHeight = int((height * 225) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -990,10 +992,6 @@ class rename_window(QtWidgets.QMainWindow):
             self.rename_table.setColumnCount(2)
             self.rename_table.setHorizontalHeaderLabels(['Original Filename', 'New Filename'])
 
-            #set pixel width for scroll bars
-            self.rename_table.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.rename_table.horizontalScrollBar().setStyleSheet("height: 16px;")
-
             self.scaleUI()
         except Exception as e:
             logger.critical("Error initializing rename_window class in ncbi tool.")
@@ -1013,18 +1011,24 @@ class rename_window(QtWidgets.QMainWindow):
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px; } QWidget { font: " + str(
-                fontSize) + "px 'Arial'; }")
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
             # 1920x1080 => 550x200
             scaledWidth = int((width * 575) / 1920)
             scaledHeight = int((height * 300) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1096,17 +1100,23 @@ class loading_window(QtWidgets.QMainWindow):
             height = screen.geometry().height()
 
             # font scaling
-            # 14px is used for 92 dpi
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+            fontSize = 12
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
-            # progress bar scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QProgressBar { height: " + str(scaledHeight) + "px }")
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # scale/center window
             scaledWidth = int((width * 450) / 1920)
             scaledHeight = int((height * 125) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()

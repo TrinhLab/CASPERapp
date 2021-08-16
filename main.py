@@ -48,10 +48,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidget.setAutoScroll(False)
 
-        #setting pixel width for scroll bars
-        self.tableWidget.verticalScrollBar().setStyleSheet("width: 14px;")
-        self.tableWidget.horizontalScrollBar().setStyleSheet("height: 14px;")
-
         #scale UI
         self.scaleUI()
 
@@ -68,29 +64,28 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
-            self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
-
-            #button, scroll bar scaling
-            scaledHeight = int((height * 25) / 1080)
-            scrollbarWidth = int((width * 15) / 1920)
-            scrollbarHeight = int((height * 15) / 1080)
-            self.setStyleSheet('QPushButton {height: ' + str(scaledHeight) + 'px;}')
-            self.tableWidget.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
-            self.tableWidget.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
+            fontSize = 12
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
+            self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
 
             #CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 30
+            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
-            #resize columns in table
-            self.tableWidget.resizeColumnsToContents()
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
-            # 1920x1080 => 1150x650
             scaledWidth = int((width * 900) / 1920)
             scaledHeight = int((height * 600) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -293,7 +288,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                         border-radius: 9px;
                         margin-top: 10px;
-                        font: bold;}
+                        font: bold 14pt 'Arial';}
                         """
 
         self.Step1.setStyleSheet(groupbox_style)
@@ -360,31 +355,31 @@ class CMainWindow(QtWidgets.QMainWindow):
             width = screen.geometry().width()
             height = screen.geometry().height()
 
-            print(width)
-            print(height)
-
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
-            self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
-
-            #push button, radio button, combo box scaling
-            #scaledWidth = int((width * 1150) / 1920)
-            scaledHeight = int((height * 25) / 1080)
-            scrollbarWidth = int((width * 15) / 1920)
-            scrollbarHeight = int((height * 15) / 1080)
-            self.setStyleSheet('QPushButton, QProgressBar, QComboBox {height: ' + str(scaledHeight) + 'px;}' + ' QScrollBar::vertical { width: ' + str(scrollbarWidth) + 'px; }' + ' QScrollBar::horizontal { height: ' + str(scrollbarHeight) + 'px; }')
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
+            self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
 
             #CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 30
+            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
+
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             #window resize and center
-            #1920x1080 => 1150x650
-            scaledWidth = int((width * 1150)/1920)
-            scaledHeight = int((height * 650)/1080)
+            scaledWidth = int((width * 1150) / 1920)
+            scaledHeight = int((height * 650) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -436,7 +431,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             inputstring = str(self.geneEntryField.toPlainText())
             if (inputstring.startswith("Example Inputs:") or inputstring == ""):
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Error")
                 msgBox.setText("No gene has been entered.  Please enter a gene.")
@@ -457,7 +452,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                         found_matches_bool = False
                 elif self.radioButton_Position.isChecked() or self.radioButton_Sequence.isChecked():
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                     msgBox.setWindowTitle("Error")
                     msgBox.setText("Generate Library can only work with gene names (Locus ID).")
@@ -503,7 +498,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     # warn the user if the number is greater than 50
                     if tempSum > 50:
                         msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                         msgBox.setWindowTitle("Many Matches Found")
                         msgBox.setText("More than 50 matches have been found. Continuing could cause a slow down...\n\n Do you wish to continue?")
@@ -533,7 +528,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             # Error check: make sure the user actually inputs something
             if (inputstring.startswith("Example Inputs:") or inputstring == ""):
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Error")
                 msgBox.setText(
@@ -583,7 +578,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             # if the parser retuns the 'wrong file type' error
             if fileType == -1:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Error:")
                 msgBox.setText(
@@ -609,7 +604,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             if len(own_cspr_parser.karystatsList) != self.annotation_parser.max_chrom:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Warning:")
                 msgBox.setText(
@@ -642,7 +637,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             # if the search returns nothing, throw an error
             if len(self.searches[searchValues[0]]) <= 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("No Matches Found")
                 msgBox.setText(
@@ -674,7 +669,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             #print("run results")
             if(str(self.annotation_files.currentText()).find('.gbff') == -1):
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Genomebrowser Error")
                 msgBox.setText(
@@ -698,7 +693,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 # make sure an annotation file has been selected
                 if self.annotation_files.currentText() == "":
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                     msgBox.setWindowTitle("No Annotation")
                     msgBox.setText(
@@ -729,7 +724,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     # make sure the right amount of arguments were passed
                     if len(searchIndicies) != 3:
                         msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                         msgBox.setWindowTitle("Position Error: Invalid Input")
                         msgBox.setText(
@@ -743,7 +738,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     # make sure user inputs digits
                     if not searchIndicies[0].isdigit() or not searchIndicies[1].isdigit() or not searchIndicies[2].isdigit():
                         msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                         msgBox.setWindowTitle("Position Error: Invalid Input")
                         msgBox.setText(
@@ -756,7 +751,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     # make sure start is less than end
                     elif int(searchIndicies[1]) >= int(searchIndicies[2]):
                         msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                         msgBox.setWindowTitle("Position Error: Start Must Be Less Than End")
                         msgBox.setText(
@@ -786,7 +781,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 # check to make sure that the use gave a long enough sequence
                 if len(inputstring) < 100:
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                     msgBox.setWindowTitle("Error")
                     msgBox.setText(
@@ -800,7 +795,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 # give a warning if the length of the sequence is long
                 if len(inputstring) > 30000:
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                     msgBox.setWindowTitle("Large Sequence Detected")
                     msgBox.setText(
@@ -820,7 +815,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                         continue
                     if letter not in checkString:
                         msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                         msgBox.setWindowTitle("Sequence Error")
                         msgBox.setText(
@@ -890,7 +885,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     def launch_ncbi(self):
         try:
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
             msgBox.setIcon(QtWidgets.QMessageBox.Icon.Information)
             msgBox.setWindowTitle("Note:")
             msgBox.setText(
@@ -1106,7 +1101,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     def testexe(self):
         try:
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
             msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
             msgBox.setWindowTitle("Extract!")
             msgBox.setText(
@@ -1214,7 +1209,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             if os.path.isdir(mydir) == False:
                 #check if directory is a valid directory
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Not a directory")
                 msgBox.setText(
@@ -1233,7 +1228,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     break
             if (found == False):
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Directory is invalid!")
                 msgBox.setText(
@@ -1266,9 +1261,10 @@ class CMainWindow(QtWidgets.QMainWindow):
         try:
             os.chdir(os.getcwd())
             if GlobalSettings.MTWin.first_show == True:
-                GlobalSettings.MTWin.centerUI()
+                GlobalSettings.MTWin.show()
                 GlobalSettings.MTWin.first_show = False
-            GlobalSettings.MTWin.show()
+            else:
+                GlobalSettings.MTWin.show()
             GlobalSettings.mainWindow.hide()
 
         except Exception as e:
@@ -1297,7 +1293,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             info = "Annotation files are used for searching for spacers on a gene/locus basis and can be selected here using either " \
                    "NCBI databases or a local file."
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
             msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msgBox.setWindowTitle("Annotation Information")
             msgBox.setText(
@@ -1470,22 +1466,17 @@ class StartupWindow(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
 
             #set logo image
             pixmapOriginal = QtGui.QPixmap(GlobalSettings.appdir + "CASPER-logo.jpg")
             self.logo.setPixmap(pixmapOriginal)
 
-            #scale buttons and line edit
-            scaledHeight = int((height * 25) // 1080)
-            self.setStyleSheet("QPushButton, QLineEdit {height: " + str(scaledHeight) + "px}")
-
             #scale and center UI
-            scaledWidth = int((width * 850) // 1920)
-            scaledHeight = int((height * 550) // 1080)
-
+            scaledWidth = int((width * 850) / 1920)
+            scaledHeight = int((height * 550) / 1080)
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1539,7 +1530,7 @@ class StartupWindow(QtWidgets.QMainWindow):
             #check if selected path is a directory in the system
             if (os.path.isdir(newDirectory) == False):
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Not a directory")
                 msgBox.setText(
@@ -1702,7 +1693,7 @@ class StartupWindow(QtWidgets.QMainWindow):
                 self.close()
             else:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Not a directory")
                 msgBox.setText(
@@ -1796,15 +1787,16 @@ class StartupWindow(QtWidgets.QMainWindow):
 
                     #show main window
                     if GlobalSettings.mainWindow.first_show == True:
-                        GlobalSettings.mainWindow.centerUI()
+                        GlobalSettings.mainWindow.show()
                         GlobalSettings.mainWindow.first_show = False
-                    GlobalSettings.mainWindow.show()
+                    else:
+                        GlobalSettings.mainWindow.show()
                     self.close()
 
                 #no cspr file found
                 else:
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                     msgBox.setWindowTitle("Directory is invalid!")
                     msgBox.setText(
@@ -1816,7 +1808,7 @@ class StartupWindow(QtWidgets.QMainWindow):
             #not a directory
             else:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Not a directory")
                 msgBox.setText(
@@ -1856,8 +1848,8 @@ def main():
         else:
             GlobalSettings.appdir += '/'
 
-    # QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
-    # QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+    #QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
+    #QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
 
     app = QtWidgets.QApplication(sys.argv)
     app.setOrganizationName("TrinhLab-UTK")

@@ -42,7 +42,7 @@ class OffTarget(QtWidgets.QMainWindow):
                             padding: 0 5px 0 5px;}
             QGroupBox#Step1{border: 2px solid rgb(111,181,110);
                             border-radius: 9px;
-                            font: bold;
+                            font: bold 14pt 'Arial';
                             margin-top: 10px;}"""
 
             self.Step1.setStyleSheet(groupbox_style)
@@ -70,23 +70,29 @@ class OffTarget(QtWidgets.QMainWindow):
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
-
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton, QLineEdit, QComboBox, QProgressBar, QDoubleSpinBox  { height: " + str(scaledHeight) + "px }")
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
             # CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 20) // (92)))))
-            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 20
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
+
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
             # 1920x1080 => 850x750
             scaledWidth = int((width * 400) / 1920)
             scaledHeight = int((height * 450) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -346,7 +352,7 @@ class OffTarget(QtWidgets.QMainWindow):
 
             else: #error message about file already being created
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Error")
                 msgBox.setText("Output file already exists. Please choose a new output file name.")

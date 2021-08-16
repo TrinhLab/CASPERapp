@@ -6,9 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>307</width>
-    <height>121</height>
+    <width>507</width>
+    <height>205</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>12</pointsize>
+   </font>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
@@ -64,6 +69,12 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="maximumSize">
              <size>
               <width>16777215</width>
@@ -73,6 +84,7 @@
             <property name="font">
              <font>
               <family>Arial</family>
+              <pointsize>14</pointsize>
              </font>
             </property>
             <property name="text">
@@ -88,6 +100,12 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="maximumSize">
              <size>
               <width>16777215</width>
@@ -97,6 +115,7 @@
             <property name="font">
              <font>
               <family>Arial</family>
+              <pointsize>14</pointsize>
              </font>
             </property>
             <property name="text">
@@ -129,6 +148,7 @@
             <property name="font">
              <font>
               <family>Arial</family>
+              <pointsize>14</pointsize>
              </font>
             </property>
             <property name="text">
@@ -144,6 +164,12 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="maximumSize">
              <size>
               <width>16777215</width>
@@ -153,6 +179,7 @@
             <property name="font">
              <font>
               <family>Arial</family>
+              <pointsize>14</pointsize>
              </font>
             </property>
            </widget>
@@ -165,6 +192,12 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="maximumSize">
              <size>
               <width>16777215</width>
@@ -174,6 +207,7 @@
             <property name="font">
              <font>
               <family>Arial</family>
+              <pointsize>14</pointsize>
              </font>
             </property>
             <property name="text">

@@ -44,7 +44,7 @@ class NewEndonuclease(QtWidgets.QMainWindow):
                             padding: 0 5px 0 5px;}
             QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
                             border-radius: 9px;
-                            font: bold;
+                            font: bold 14pt 'Arial';
                             margin-top: 10px;}"""
 
             self.groupBox.setStyleSheet(groupbox_style)
@@ -72,23 +72,28 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
-
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton, QComboBox, QLineEdit { height: " + str(scaledHeight) + "px }")
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
             #title scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 20) // (92)))))
-            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 20
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
+
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
-            # 1920x1080 => 480x615
             scaledWidth = int((width * 480) / 1920)
             scaledHeight = int((height * 615) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -179,7 +184,7 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             for letter in pam:
                 if (letter not in validPAM):
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                     msgBox.setWindowTitle("Invalid PAM")
                     msgBox.setText("Invalid characters in PAM Sequence.")
@@ -190,7 +195,7 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             for arg in argument_list:
                 if ';' in arg:
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                     msgBox.setWindowTitle("Invalid Semicolon")
                     msgBox.setText("Invalid character used: ';'")
@@ -200,7 +205,7 @@ class NewEndonuclease(QtWidgets.QMainWindow):
                     return True
                 elif arg == "":
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                     msgBox.setWindowTitle("Empty Field")
                     msgBox.setText("Please fill in all fields.")
@@ -216,7 +221,7 @@ class NewEndonuclease(QtWidgets.QMainWindow):
                 endo = GlobalSettings.mainWindow.organisms_to_endos[key]
                 if abbr in endo:
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                     msgBox.setWindowTitle("Duplicate endo name.")
                     msgBox.setText("The given abbreviation already exists.  Please choose a unique identifier.")

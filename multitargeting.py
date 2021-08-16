@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import GlobalSettings
+import matplotlib
 from Algorithms import SeqTranslate
 from CSPRparser import CSPRparser
 from matplotlib.ticker import MaxNLocator
@@ -21,7 +22,7 @@ class Multitargeting(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(Multitargeting, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'multitargetingwindow.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'mt.ui', self)
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.multitargeting_statistics = Multitargeting_Statistics()
 
@@ -54,7 +55,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.table.horizontalHeader().setSectionsClickable(True)
             self.table.horizontalHeader().sectionClicked.connect(self.table_sorting)
             self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-            self.table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+            #self.table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
             self.table.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
             self.table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
             self.table.resizeColumnsToContents()
@@ -113,14 +114,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.sql_settings = sql_query_settings()
             self.sql_settings.row_count.textChanged.connect(self.sql_row_count_value_changed)
 
-            #setting pixel widths for scroll bars
-            self.table.verticalScrollBar().setStyleSheet("width: 14px;")
-            self.table.horizontalScrollBar().setStyleSheet("height: 14px;")
-            self.graphicsView_2.verticalScrollBar().setStyleSheet("width: 10px;")
-            self.graphicsView_2.horizontalScrollBar().setStyleSheet("height: 10px;")
-
             #resize event
-            self.resized.connect(self.chromosomeViewerResize)
+            #self.resized.connect(self.chromosomeViewerResize)
 
             #scale UI
             self.first_show = True
@@ -139,32 +134,34 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             screen = self.screen()
             dpi = screen.physicalDotsPerInch()
+            self.dpi = dpi
             width = screen.geometry().width()
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
-            self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';" )
-
-            #button and qcombobox scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton, QComboBox { height: " + str(scaledHeight) + "px }")
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
+            self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
 
             #CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 30
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
-            #resize columns in table
-            self.table.resizeColumnsToContents()
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
-            # 1920x1080 => 1150x650
-            scaledWidth = int((width * 1215)/1920)
-            scaledHeight = int((height * 915)/1080)
+            scaledWidth = int((width * 1400) / 1920)
+            scaledHeight = int((height * 900) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -211,7 +208,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             select_items = self.table.selectedItems()
             if len(select_items) <= 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Nothing Selected")
                 msgBox.setText("No targets were highlighted. Please highlight the targets you want to be exported to a CSV File!")
@@ -234,7 +231,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 self.multitargeting_statistics.activateWindow()
             else:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("No analysis run.")
                 msgBox.setText('Multitargeting Analysis must be performed before viewing statistics.\n\nSelect an organism and endonuclease and click "Analyze" then try again.')
@@ -702,7 +699,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 return True
             else:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Seed Error")
                 msgBox.setText("No such seed exists in the repeats section of this organism.")
@@ -780,7 +777,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             ###Clear out old widgets in layout
             for i in reversed(range(self.seed_bar.count())):
                 self.seed_bar.itemAt(i).widget().setParent(None)
-            self.seed_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
+            self.seed_canvas = MplCanvas(self, width=5, height=3, dpi=self.dpi) ###Initialize new Canvas
             self.seed_bar.addWidget(self.seed_canvas) ### Add canvas to global line layout
             self.repeats_vs_chromo.setLayout(self.seed_bar) ### Add global line layout to repeats vs. seeds line plot widget
             y = []
@@ -825,7 +822,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             ###Clear out old widgets in layout
             for i in reversed(range(self.global_bar.count())):
                 self.global_bar.itemAt(i).widget().setParent(None)
-            self.bar_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
+            self.bar_canvas = MplCanvas(self, width=5, height=3, dpi=self.dpi) ###Initialize new Canvas
             self.global_bar.addWidget(self.bar_canvas) ### Add canvas to global line layout
             self.seeds_vs_repeats_bar.setLayout(self.global_bar) ### Add global line layout to repeats vs. seeds line plot widget
 
@@ -863,7 +860,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             ###Clear out old widgets in layout
             for i in reversed(range(self.global_line.count())):
                 self.global_line.itemAt(i).widget().setParent(None)
-            self.line_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
+            self.line_canvas = MplCanvas(self, width=5, height=3, dpi=self.dpi) ###Initialize new Canvas
             self.global_line.addWidget(self.line_canvas) ### Add canvas to global line layout
             self.repeats_vs_seeds_line.setLayout(self.global_line) ### Add global line layout to repeats vs. seeds line plot widget
 
@@ -972,16 +969,23 @@ class loading_window(QtWidgets.QMainWindow):
 
             # font scaling
             # 14px is used for 92 dpi
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+            fontSize = 12
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
-            # progress bar scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QProgressBar { height: " + str(scaledHeight) + "px }")
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # scale/center window
             scaledWidth = int((width * 450) / 1920)
             scaledHeight = int((height * 125) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1026,18 +1030,7 @@ class loading_window(QtWidgets.QMainWindow):
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         try:
-            screen = GlobalSettings.MTWin.screen()
-            dpi = screen.physicalDotsPerInch()
-            #width = screen.geometry().width()
-            #height = screen.geometry().height()
-
-            #scaledWidth = int((width * 5) / 1920)
-            #scaledHeight = int((height * 4) / 1080)
-
-            fig = Figure(figsize=(width, height), dpi=dpi,tight_layout=True)
-
-            #fig = Figure(figsize=(scaledWidth, scaledHeight), dpi=dpi,tight_layout=True)
-
+            fig = Figure( dpi=dpi, tight_layout=True)
             self.axes = fig.add_subplot(111)
             self.axes.clear()
             super(MplCanvas, self).__init__(fig)
@@ -1078,22 +1071,28 @@ class Multitargeting_Statistics(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
-
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QLineEdit { height: " + str(scaledHeight) + "px }")
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
             # CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 20) // (92)))))
-            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 20
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
+
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
-            # 1920x1080 => 425x200
             scaledWidth = int((width * 275) / 1920)
             scaledHeight = int((height * 185) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1167,22 +1166,28 @@ class sql_query_settings(QtWidgets.QMainWindow):
 
             # font scaling
             # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
-
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QLineEdit { height: " + str(scaledHeight) + "px }")
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
             # CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 20) // (92)))))
-            self.title.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 20
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
+
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
-            # 1920x1080 => 425x200
             scaledWidth = int((width * 375) / 1920)
             scaledHeight = int((height * 140) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()

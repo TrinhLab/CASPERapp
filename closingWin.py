@@ -34,10 +34,6 @@ class closingWindow(QtWidgets.QMainWindow):
             self.files_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
             self.files_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
 
-            #setting pixel width for scroll bars
-            self.files_table.verticalScrollBar().setStyleSheet("width: 16px;")
-            self.files_table.horizontalScrollBar().setStyleSheet("height: 16px;")
-
             #scale UI
             self.scaleUI()
 
@@ -58,21 +54,26 @@ class closingWindow(QtWidgets.QMainWindow):
             width = screen.geometry().width()
             height = screen.geometry().height()
 
-            # font, button, and scroll bar scaling
-            # 16px is used for 92 dpi / 1920x1080
-            scaledHeight = int((height * 25) / 1080)
-            scrollbarWidth = int((width * 15) / 1920)
-            scrollbarHeight = int((height * 15) / 1080)
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px } * {font: " + str(fontSize) + "px 'Arial';}" + ' QScrollBar::vertical { width: ' + str(scrollbarWidth) + 'px; }' + ' QScrollBar::horizontal { height: ' + str(scrollbarHeight) + 'px; }')
+            # font scaling
+            fontSize = 12
+            self.fontSize = fontSize
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
-            # resize columns in table
-            self.files_table.resizeColumnsToContents()
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
             # 1920x1080 => 1150x650
             scaledWidth = int((width * 400) / 1920)
             scaledHeight = int((height * 300) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()

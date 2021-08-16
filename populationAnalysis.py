@@ -26,7 +26,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(Pop_Analysis, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'populationanalysis.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'pop.ui', self)
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.goBackButton.clicked.connect(self.go_back)
             self.analyze_button.clicked.connect(self.pre_analyze)
@@ -52,7 +52,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                             padding: 0 5px 0 15px;}
             QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
                             border-radius: 9px;
-                            font: bold;
+                            font: bold 14pt 'Arial';
                             margin-top: 10px;}"""
             self.groupBox.setStyleSheet(groupbox_style)
             self.groupBox_2.setStyleSheet(groupbox_style.replace("groupBox","groupBox_2"))
@@ -62,11 +62,11 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.org_Table.setShowGrid(False)
             self.org_Table.setHorizontalHeaderLabels(["Organism"])
             self.org_Table.horizontalHeader().setSectionsClickable(True)
-            self.org_Table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            #self.org_Table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             self.org_Table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
             self.org_Table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
             self.org_Table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-            self.org_Table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+            #self.org_Table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
 
             #top-right table
             self.table2.setColumnCount(9)
@@ -75,10 +75,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.table2.horizontalHeader().setSectionsClickable(True)
             self.table2.horizontalHeader().sectionClicked.connect(self.table2_sorting)
             self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-            self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+            #self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
             self.table2.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
             self.table2.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-            self.table2.resizeColumnsToContents()
+            #self.table2.resizeColumnsToContents()
 
             # Finder table
             self.loc_finder_table.setColumnCount(5)
@@ -86,12 +86,12 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.loc_finder_table.setHorizontalHeaderLabels(["Seed ID", "Sequence", "Organism", "Scaffold", "Location"])
             self.loc_finder_table.horizontalHeader().setSectionsClickable(True)
             self.loc_finder_table.horizontalHeader().sectionClicked.connect(self.loc_table_sorter)
-            self.loc_finder_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            #self.loc_finder_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             self.loc_finder_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-            self.loc_finder_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+            #self.loc_finder_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
     #        self.loc_finder_table.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
     #        self.loc_finder_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-            self.loc_finder_table.resizeColumnsToContents()
+            #self.loc_finder_table.resizeColumnsToContents()
 
             #custom seed search
             self.query_seed_button.clicked.connect(self.custom_seed_search)
@@ -132,71 +132,37 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             screen = QtWidgets.QApplication.screens()[screen]
             dpi = screen.physicalDotsPerInch()
+            self.dpi = dpi
             width = screen.geometry().width()
             height = screen.geometry().height()
 
             # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
+            fontSize = 12
             self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
-            self.menuBar().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
-
-            # button scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QPushButton { height: " + str(scaledHeight) + "px }")
-
-            #scroll bar scaling
-            scrollbarWidth = int((width * 15) / 1920)
-            scrollbarHeight = int((height * 15) / 1080)
-            self.org_Table.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
-            self.org_Table.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
-            self.table2.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
-            self.table2.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
-            self.loc_finder_table.horizontalScrollBar().setStyleSheet("height: " + str(scrollbarHeight) + "px;")
-            self.loc_finder_table.verticalScrollBar().setStyleSheet("width: " + str(scrollbarWidth) + "px;")
-
-            #scaling group boxes
-            minGroupBoxWidth = int((width * 400) // 1920)
-            maxGroupBoxWidth = int((width * 400) // 1920)
-            minGroupBoxHeight = int((height * 250) // 1080)
-            maxGroupBoxHeight = int((height * 500) // 1080)
-            self.groupBox.setMinimumWidth(minGroupBoxWidth)
-            self.groupBox.setMaximumWidth(maxGroupBoxWidth)
-            self.groupBox.setMinimumHeight(minGroupBoxHeight)
-            self.groupBox.setMaximumHeight(maxGroupBoxHeight)
-            self.tabWidget.setMinimumWidth(minGroupBoxWidth)
-            self.tabWidget.setMaximumWidth(maxGroupBoxWidth)
-            self.tabWidget.setMinimumHeight(minGroupBoxHeight)
-            self.tabWidget.setMaximumHeight(maxGroupBoxHeight)
-
-            #scaling tables
-            minTable2Height = int((height * 200) // 1080)
-            maxTable2Height = int((height * 600) // 1080)
-            minLocTableHeight = int((height * 200) // 1080)
-            maxLocTableHeight = int((height * 200) // 1080)
-            self.table2.setMinimumHeight(minTable2Height)
-            self.table2.setMaximumHeight(maxTable2Height)
-            self.loc_finder_table.setMinimumHeight(minLocTableHeight)
-            self.loc_finder_table.setMaximumHeight(maxLocTableHeight)
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
+            self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
             # CASPER header scaling
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 30) // (92)))))
-            self.label.setStyleSheet("font: bold " + str(fontSize) + "px 'Arial';")
+            fontSize = 30
+            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
-            # resize columns in table
-            self.table2.resizeColumnsToContents()
-            self.loc_finder_table.resizeColumnsToContents()
+            self.groupBox.setMaximumWidth(width * 0.3)
 
-            # spacers
-            spacerSize = int((height * 1) / 1080)
-            self.spacer_1.setStyleSheet("font: " + str(spacerSize) + "pt;")
-            self.spacer_2.setStyleSheet("font: " + str(spacerSize) + "pt;")
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # window scaling
             # 1920x1080 => 1150x650
             scaledWidth = int((width * 1150) / 1920)
             scaledHeight = int((height * 650) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -204,7 +170,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             x = x - (math.ceil(scaledWidth / 2))
             y = y - (math.ceil(scaledHeight / 2))
             self.setGeometry(x, y, scaledWidth, scaledHeight)
-
+            print(self.geometry())
             self.repaint()
             QtWidgets.QApplication.processEvents()
 
@@ -245,7 +211,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             select_items = self.table2.selectedItems()
             if len(select_items) <= 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Nothing Selected")
                 msgBox.setText("No targets were highlighted. Please highlight the targets you want to be exported to a CSV File!")
@@ -274,7 +240,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             # error check
             if len(selected_indexes) == 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Error")
                 msgBox.setText("Please select CSPR file(s) for analysis.")
@@ -621,7 +587,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             if len(self.seeds) == 0:
                 self.loading_window.hide()
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Error")
                 msgBox.setText("No analysis has been run to be able to search for a specific seed.")
@@ -666,7 +632,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 if none_data == True:
                     self.loading_window.hide()
                     msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                     msgBox.setWindowTitle("Seed Error")
                     msgBox.setText(seed + " : No such seed exists in the repeats section of any organism selected.")
@@ -887,7 +853,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             for i in reversed(range(self.colormap_layout.count())): ### Clear out old widges in layout
                 self.colormap_layout.itemAt(i).widget().setParent(None)
 
-            self.colormap_canvas = MplCanvas(self, width=5, height=4, dpi=100) ###Initialize new Canvas
+            self.colormap_canvas = MplCanvas(self, width=5, height=3, dpi=self.dpi) ###Initialize new Canvas
             self.colormap_layout.addWidget(self.colormap_canvas) ### Add canvas to colormap layout
             self.colormap_figure.setLayout(self.colormap_layout) ### Add colormap layout to colormap plot widget
 
@@ -963,7 +929,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             #error checking
             if len(self.table2.selectedItems()) == 0:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "px 'Arial'")
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Error")
                 msgBox.setText("Please select at least 1 seed to find locations of.")
@@ -1131,17 +1097,23 @@ class loading_window(QtWidgets.QMainWindow):
             height = screen.geometry().height()
 
             # font scaling
-            # 14px is used for 92 dpi
-            fontSize = max(12, int(math.ceil(((math.ceil(dpi) * 14) // (92)))))
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "px 'Arial';")
+            fontSize = 12
+            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
 
-            # progress bar scaling
-            scaledHeight = int((height * 25) / 1080)
-            self.setStyleSheet("QProgressBar { height: " + str(scaledHeight) + "px }")
+            self.adjustSize()
+
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
 
             # scale/center window
             scaledWidth = int((width * 450) / 1920)
             scaledHeight = int((height * 125) / 1080)
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -1188,8 +1160,6 @@ class loading_window(QtWidgets.QMainWindow):
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=400, height=250, dpi=100):
         try:
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            dpi = QtWidgets.QApplication.screens()[screen].physicalDotsPerInch()
             fig = Figure(dpi=dpi, tight_layout=True)
             self.axes = fig.add_subplot(111)
             self.axes.clear()
