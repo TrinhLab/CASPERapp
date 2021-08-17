@@ -22,6 +22,7 @@ OutputBaseFilename=CASPERsetup
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+ArchitecturesInstallIn64BitMode=x64
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -48,7 +49,7 @@ Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\_ssl.pyd"; DestDir: "{ap
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\_testcapi.pyd"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\_tkinter.pyd"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\_win32sysloader.pyd"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Annotation Details.ui"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\annotation_details.ui"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\api-ms-win-core-console-l1-1-0.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\api-ms-win-core-datetime-l1-1-0.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\api-ms-win-core-debug-l1-1-0.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -96,8 +97,8 @@ Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\CASPERapp.exe.manifest";
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Casperimg.icns"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\CASPERinfo"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\CASPER-logo.jpg"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\closingWindow.ui"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\co_targeting.ui"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\closing_window.ui"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\cotargeting.ui"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Codonimg.icns"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\d3dcompiler_47.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\export_to_csv_window.ui"; DestDir: "{app}"; Flags: ignoreversion
@@ -132,7 +133,7 @@ Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\libmvndst.ESZZP47EV6RKCF
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\libnnls.IXEEHJUCGHJL42YZEM6UIEMROJWXHMLJ.gfortran-win_amd64.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\libopenblas.PYQHXLVVQ7VESDPUVUADXEVJOBGHJPAY.gfortran-win_amd64.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\libopenblas.WCDJNK7YVMPZQ2ME2ZZHJJRJ3JIKNDB7.gfortran-win_amd64.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\library_prompt.ui"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\generate_library.ui"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\libslsqp_op.RGGN6ZOFD2K47X7YRNDYCM7JFP4AGLER.gfortran-win_amd64.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\libspecfun.LQCTHMCYNULEOOGKIO6AGREE6D6V37RU.gfortran-win_amd64.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\libssl-1_1-x64.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -145,18 +146,17 @@ Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\mainart.jpg"; DestDir: "
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\mfc140u.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\MSVCP140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\multitargeting_statistics.ui"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\multitargetingwindow.ui"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\multitargeting_stats.ui"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\myicon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\name_form.ui"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\ncbi.ui"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\NCBI_navigation_page.ui"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\ncbi_nav_page.ui"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\newendonuclease.ui"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\NewGenome.ui"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\newgenomenavigatepage.ui"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\OffTargetAnalysis.ui"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\newgenomenavigationpage.ui"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\off_target.ui"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\opengl32sw.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\populationanalysis.ui"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\pop.ui"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\pvectorc.cp36-win_amd64.pyd"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\pyexpat.pyd"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\python3.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -164,7 +164,6 @@ Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\python36.dll"; DestDir: 
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\pythoncom36.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\pywintypes36.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5Bluetooth.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5Charts.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5Core.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5DBus.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5Designer.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -174,7 +173,6 @@ Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5Location.dll"; DestDi
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5Multimedia.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5MultimediaWidgets.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5Network.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5NetworkAuth.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5Nfc.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5OpenGL.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5Positioning.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -210,11 +208,11 @@ Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5Widgets.dll"; DestDir
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5WinExtras.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5Xml.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\Qt5XmlPatterns.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\rename_window.ui"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\resultsWindow.ui"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\ncbi_rename_window.ui"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\results.ui"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\select.pyd"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\settings_icon.png"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\sql_settings_form.ui"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\multitargeting_sql_settings.ui"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\sqlite3.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\ssleay32.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Tfry\Desktop\CASPERapp\dist\CASPERapp\startupCASPER.ui"; DestDir: "{app}"; Flags: ignoreversion
