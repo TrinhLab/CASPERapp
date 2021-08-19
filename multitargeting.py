@@ -13,14 +13,19 @@ from collections import Counter
 import statistics
 import traceback
 import math
+import numpy as np
+from matplotlib.widgets import Slider
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+import matplotlib.pyplot as plt
 
 #global logger
 logger = GlobalSettings.logger
 
 class Multitargeting(QtWidgets.QMainWindow):
-    resized = QtCore.pyqtSignal()
     def __init__(self):
         try:
+            self.count = 0
             super(Multitargeting, self).__init__()
             uic.loadUi(GlobalSettings.appdir + 'mt.ui', self)
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
@@ -55,7 +60,6 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.table.horizontalHeader().setSectionsClickable(True)
             self.table.horizontalHeader().sectionClicked.connect(self.table_sorting)
             self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-            #self.table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
             self.table.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
             self.table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
             self.table.resizeColumnsToContents()
@@ -67,6 +71,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.global_line.setContentsMargins(0,0,0,0)
             self.global_bar.setContentsMargins(0,0,0,0)
             self.seed_bar.setContentsMargins(0,0,0,0)
+            self.chrom_viewer_layout = QtWidgets.QVBoxLayout()
+            self.chrom_viewer_layout.setContentsMargins(0,0,0,0)
 
             self.data = ""
             self.shortHand = ""
@@ -100,10 +106,9 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             ##################################
             self.scene = QtWidgets.QGraphicsScene()
-            self.graphicsView.setScene(self.scene)
             self.scene2 = QtWidgets.QGraphicsScene()
             self.graphicsView_2.setScene(self.scene2)
-            self.graphicsView.viewport().installEventFilter(self)
+            self.scrollArea.viewport().installEventFilter(self)
             self.graphicsView_2.viewport().installEventFilter(self)
 
             self.loading_window = loading_window()
@@ -113,9 +118,6 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.sql_query_settings.clicked.connect(self.update_sql_query_settings)
             self.sql_settings = sql_query_settings()
             self.sql_settings.row_count.textChanged.connect(self.sql_row_count_value_changed)
-
-            #resize event
-            #self.resized.connect(self.chromosomeViewerResize)
 
             #scale UI
             self.first_show = True
@@ -152,6 +154,9 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             currentWidth = self.size().width()
             currentHeight = self.size().height()
+
+            #make sure chromosome viewer doesnt get too small
+            self.groupBox_2.setMinimumHeight(0.3 * height)
 
             # window scaling
             scaledWidth = int((width * 1400) / 1920)
@@ -199,10 +204,6 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.repaint()
         QtWidgets.QApplication.processEvents()
 
-    def resizeEvent(self, event):
-        self.resized.emit()
-        return super(Multitargeting, self).resizeEvent(event)
-
     def export_to_csv(self):
         try:
             select_items = self.table.selectedItems()
@@ -245,55 +246,45 @@ class Multitargeting(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    #even filter to update chromosome viewer text when user hovers over a red line in the viewer
-    def eventFilter(self, source, event):
+    #event handler to show details of targets in chromosome viewer while hovering over canvases
+    def chromosome_event_handler(self, event):
         try:
-            # print(event.type())
-            # print(source)
-            if (event.type() == QtCore.QEvent.MouseMove and source is self.graphicsView.viewport()):
-                coord = self.graphicsView.mapToScene(event.pos())
-                for i in self.bar_coords:
-                    x = i[1]
-                    y1 = i[2]
-                    y2 = i[3]
-                    dups = 0
-                    if ((coord.x() == x or coord.x() == x + 1 or coord.x() == x - 1) and (
-                            coord.y() >= y1 and coord.y() <= y2)):
+            #get current moust location
+            x = event.xdata
+            y = event.y
 
-                        listtemp = []
-                        for a in self.bar_coords:
-                            if (x == a[1] and y1 == a[2] and y2 == a[3]):
-                                listtemp.append(a)
-                                dups += 1
-                        self.scene2 = QtWidgets.QGraphicsScene()
+            #get event data relative to the canvas (chromosome) the viewer is hovering at
+            curr_chromosome = self.canvas_chromosome_map[event.canvas]
+            chromosome_seed_data = self.event_data[curr_chromosome]
 
-                        self.graphicsView_2.setScene(self.scene2)
-                        output = str()
-                        i = 1
-                        for item in listtemp:
-                            ind = item[0]
-                            temp = self.event_data[ind]
-                            if len(listtemp) > 1 and i < len(listtemp):
-                                output += 'Location: ' + str(temp[0]) + ' | Seq: ' + str(temp[1]) + ' | PAM: ' + str(
-                                    temp[2]) + ' | SCR: ' + str(temp[3]) + ' | DIRA: ' + str(temp[4]) + '\n'
-                            else:
-                                output += 'Location: ' + str(temp[0]) + ' | Seq: ' + str(temp[1]) + ' | PAM: ' + str(
-                                    temp[2]) + ' | SCR: ' + str(temp[3]) + ' | DIRA: ' + str(temp[4])
-                            i += 1
-                        text = self.scene2.addText(output)
-                        font = QtGui.QFont()
-                        font.setPixelSize(self.fontSize)
-                        text.setFont(font)
+            #get targets within small range of the mouse location
+            local_targets = []
+            for entry in chromosome_seed_data:
+                try:
+                    if x >= entry[0] - 0.001 and x <= entry[0] + 0.001:
+                        local_targets.append(entry)
+                except:
+                    pass
 
-            return Qt.QWidget.eventFilter(self, source, event)
+            #make sure targets are found before overwriting the viewers details
+            if local_targets != []:
+                #prep the viewer to show the target details
+                self.scene2 = QtWidgets.QGraphicsScene()
+                self.graphicsView_2.setScene(self.scene2)
+                output = str()
+                for target in local_targets:
+                    output += f"Location: {target[1]} | Seq: {target[2]} | PAM: {target[3]} | SCR: {target[4]} | DIRA: {target[5]}\n"
+
+                text = self.scene2.addText(output)
+                font = QtGui.QFont()
+                font.setPointSize(self.fontSize-2)
+                text.setFont(font)
+
         except Exception as e:
-            logger.critical("Error in eventFilter() in multi-targeting.")
+            logger.critical("Error in event_data() in multi-targeting.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
-
-    def chromosomeViewerResize(self):
-        print('resize')
 
     def launch(self):
         try:
@@ -426,6 +417,9 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.multitargeting_statistics.mode_rep.setText(str(round(float(self.mode),1)))
             self.multitargeting_statistics.nbr_seq.setText(str(round(float(self.repeat_count),1)))
             self.loading_window.hide()
+            self.repaint()
+            QtWidgets.QApplication.processEvents()
+
         except Exception as e:
             logger.critical("Error in make_graphs() in multi-targeting.")
             logger.critical(e)
@@ -611,10 +605,10 @@ class Multitargeting(QtWidgets.QMainWindow):
     #fill in chromo bar visualization
     def fill_Chromo_Text(self, seed):
         try:
-            chromo_pos = {}
+            #global dictionary to map canvases to chromosomes
+            self.canvas_chromosome_map = {}
+
             # get kstats
-            conn = sqlite3.connect(self.db_file)
-            c = conn.cursor()
             kstats = []
             with gzip.open(self.cspr_file, "r") as f:
                 for line in f:
@@ -627,74 +621,86 @@ class Multitargeting(QtWidgets.QMainWindow):
                         kstats = kstats[:-1]
                         break
 
-            data = c.execute("SELECT chromosome, location FROM repeats WHERE seed = ? ", (seed,)).fetchone()
+            #get chromosomes/locations of repeats for current seed
+            conn = sqlite3.connect(self.db_file)
+            c = conn.cursor()
+            data = c.execute("SELECT chromosome, location, pam, score, five, three FROM repeats WHERE seed = ? ", (seed,)).fetchone()
             c.close()
 
+            #make sure there is data on current seed
             if data != None:
 
-                #get scaled pointsize for visuals
-                screen = self.screen()
-                dpi = screen.physicalDotsPerInch()
-                pointSize = max(10, int(math.ceil(((math.ceil(dpi) * 10) // (92)))))
-
-                # sort data on chromosome
+                # build out dictionary (seed_data) mapping chromosome numbers to list of repeat locations
+                # normalize the location values based on kstat value of chromosome
+                seed_data = {}
+                self.event_data = {}
                 data = list(data)
                 chromo = data[0].split(',')
                 pos = data[1].split(',')
-                seed_data = {}
+                pam = data[2].split(',')
+                score = data[3].split(',')
+                five = data[4].split(',')
+                three = data[5].split(',')
+                #get x-cordinates for graphs and event data
                 for i in range(len(chromo)):
+                    curr_chromo = int(chromo[i])
+                    if int(pos[i]) >= 0:
+                        dir = "+"
+                    else:
+                        dir = "-"
+                    normalized_location = abs(float(pos[i]) / float(kstats[curr_chromo - 1]))
                     if int(chromo[i]) in seed_data.keys():
-                        seed_data[int(chromo[i])].append(abs(int(pos[i])))
+                        seed_data[int(chromo[i])].append(normalized_location)
+                        self.event_data[int(chromo[i])].append([normalized_location, pos[i], five[i] + seed + three[i], pam[i], score[i], dir])
                     else:
-                        seed_data[int(chromo[i])] = [abs(int(pos[i]))]
+                        seed_data[int(chromo[i])] = [normalized_location]
+                        self.event_data[int(chromo[i])] = [[normalized_location, pos[i], five[i] + seed + three[i] ,pam[i], score[i], dir]]
 
-                self.event_data = {}
-                for chromo in sorted(seed_data.keys()):
-                    c = int(chromo)
-                    for p in sorted(seed_data[chromo]):
-                        k = int(kstats[c - 1])
-                        new_pos = int((p / k) * 350)
-                        if c in chromo_pos.keys():
-                            chromo_pos[c].append(new_pos)
-                        else:
-                            chromo_pos[c] = [new_pos]
-                i = 0
-                self.scene = QtWidgets.QGraphicsScene()
-                self.graphicsView.setScene(self.scene)
-                self.bar_coords.clear()  # clear bar_coords list before creating visual
-                ind = 0
-                for chromo in chromo_pos.keys():
-                    pen_blk = QtGui.QPen(QtCore.Qt.black)
-                    pen_red = QtGui.QPen(QtCore.Qt.red)
-                    pen_blk.setWidth(3)
-                    pen_red.setWidth(3)
-                    if i == 0:
-                        text = self.scene.addText(str(chromo))
-                        text.setPos(0, 0)
-                        font = QtGui.QFont()
-                        font.setBold(True)
-                        font.setPointSize(pointSize)
-                        text.setFont(font)
-                        self.scene.addRect(40, (i * 25), 375, 25, pen_blk)
-                    else:
-                        text = self.scene.addText(str(chromo))
-                        font = QtGui.QFont()
-                        font.setBold(True)
-                        font.setPointSize(pointSize)
-                        text.setFont(font)
-                        text.setPos(0, i * 25 + 10 * i)
-                        self.scene.addRect(40, (i * 25) + 10 * i, 375, 25, pen_blk)
-                    for scaled_pos in chromo_pos[chromo]:
-                        line = self.scene.addLine(scaled_pos + 40, (i * 25) + 3 + 10 * i, scaled_pos + 40, (i * 25) + 22 + 10 * i, pen_red)
-                        temp = []  # used for storing coordinates and saving them in self.bar_coords[]
-                        temp.append(ind)  # index value
-                        temp.append(scaled_pos + 40)  # x value
-                        temp.append((i * 25) + 3 + 10 * i)  # y1
-                        temp.append((i * 25) + 22 + 10 * i)  # y2
-                        self.bar_coords.append(temp)  # push x, y1, and y2 to this list
-                        ind += 1
-                    i = i + 1
-                self.generate_event_data(seed)
+                # graph the locations for each chromosome
+                # Clear out old widgets in layout
+                for i in reversed(range(self.chrom_viewer_layout.count())):
+                    self.chrom_viewer_layout.itemAt(i).widget().setParent(None)
+
+                top_widget = QtWidgets.QWidget()
+                top_layout = QtWidgets.QVBoxLayout()
+
+                chromo_keys = sorted(list(seed_data.keys()))
+
+                screen = self.screen()
+                height = screen.geometry().height()
+                groupbox_height = int((height * 100) / 1080)
+
+                for i in range(len(chromo_keys)):
+                    curr_chromo = chromo_keys[i]
+                    group_box = QtWidgets.QGroupBox()
+
+                    group_box.setTitle(f"Chromosome {curr_chromo}")
+                    group_box.setMinimumHeight(groupbox_height)
+                    group_box.setMaximumHeight(groupbox_height)
+                    layout = QtWidgets.QVBoxLayout(group_box)
+
+                    canvas = MplCanvas()
+                    canvas.axes.eventplot(seed_data[curr_chromo])
+                    canvas.mpl_connect("motion_notify_event", self.chromosome_event_handler)
+
+                    # surrounding border
+                    canvas.axes.hlines(1.5, -0.01, 1.01, colors="Black", linewidth=1.5)
+                    canvas.axes.hlines(0.5, -0.01, 1.01, colors="Black", linewidth=1.5)
+                    canvas.axes.vlines(-0.01, 0.5, 1.5, colors="Black", linewidth=1.5)
+                    canvas.axes.vlines(1.01, 0.5, 1.5, colors="Black", linewidth=1.5)
+                    canvas.axes.set_ylim(0.45, 1.55)
+                    canvas.axes.set_xlim(-0.05, 1.05)
+
+                    canvas.axes.axis('off')
+                    canvas.draw()
+
+                    self.canvas_chromosome_map[canvas] = curr_chromo
+
+                    layout.addWidget(canvas)
+                    top_layout.addWidget(group_box)
+
+                top_widget.setLayout(top_layout)
+                self.scrollArea.setWidget(top_widget)
 
                 return True
             else:
@@ -709,64 +715,6 @@ class Multitargeting(QtWidgets.QMainWindow):
                 return False
         except Exception as e:
             logger.critical("Error in fill_Chromo_text() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            exit(-1)
-
-    # get data for chromosome viewer to display
-    def generate_event_data(self, seed):
-        try:
-            conn = sqlite3.connect(self.db_file)
-            c = conn.cursor()
-            data = list(c.execute("SELECT * FROM repeats WHERE seed = ? ", (seed,)).fetchone())
-            c.close()
-            chromo = data[1].split(',')
-            loc = data[2].split(',')
-            three = data[3].split(',')
-            five = data[4].split(',')
-            pam = data[5].split(',')
-            score = data[6].split(',')
-
-            if len(three) < len(five):
-                for i in range(len(five) - len(three)):
-                    three.append('')
-            elif len(five) < len(three):
-                for i in range(len(three) - len(five)):
-                    five.append('')
-
-            seed_data = {}
-
-            self.event_data = {}
-
-            #get a dictionary of all the data to sort on chromo and location
-            for i in range(len(chromo)):
-                if int(chromo[i]) in seed_data.keys():
-                    seed_data[int(chromo[i])].append([int(loc[i]), pam[i], score[i], three[i], five[i]])
-                else:
-                    seed_data[int(chromo[i])] = [[int(loc[i]), pam[i], score[i], three[i], five[i]]]
-            i = 0
-
-            #loop through each chromo sorted
-            for chromo in sorted(seed_data.keys()):
-                #sort 2D dict for each chromo based on location values
-                for obj in sorted(seed_data[chromo], key=lambda x: abs(x[0])):
-                    location = obj[0]
-                    pam = obj[1]
-                    score = obj[2]
-                    three = obj[3]
-                    five = obj[4]
-
-                    if location < 0:
-                        dira = '-'
-                    else:
-                        dira = '+'
-
-                    seq = five + seed + three
-
-                    self.event_data[i] = [str(abs(location)), seq, pam, score, dira]
-                    i += 1
-        except Exception as e:
-            logger.critical("Error in generate_event_data() in multi-targeting.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -1030,10 +978,24 @@ class loading_window(QtWidgets.QMainWindow):
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         try:
-            fig = Figure( dpi=dpi, tight_layout=True)
+            # Create Figure instance
+            #fig = Figure(figsize=(width, height), dpi=dpi)
+
+            fig = Figure(dpi=dpi, tight_layout=True)
             self.axes = fig.add_subplot(111)
             self.axes.clear()
             super(MplCanvas, self).__init__(fig)
+
+            # Create axes
+            "this is the one need to be changed and be dynamic for any number of subplots"
+            #self.axes = fig.add_subplot(111)
+
+            # Display the figure
+            # FigureCanvasQTAgg.__init__(self, fig)
+            # self.setParent(parent)
+            # FigureCanvasQTAgg.setSizePolicy(self, QtWidgets.QSizePolicy.Expanding,
+            #                                 QtWidgets.QSizePolicy.Expanding)
+            # FigureCanvasQTAgg.updateGeometry(self)
         except Exception as e:
             logger.critical("Error initializing MplCanvas class in multi-targeting.")
             logger.critical(e)

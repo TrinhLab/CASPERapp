@@ -1908,6 +1908,9 @@ def main():
     startup.centerUI()
     startup.show()
 
+    #GlobalSettings.MTWin.centerUI()
+    #GlobalSettings.MTWin.show()
+
     sys.exit(app.exec_())
 
 
