@@ -458,6 +458,9 @@ class NewGenome(QtWidgets.QMainWindow):
             except:
                 pass
 
+            #clear out the endo box
+            self.comboBoxEndo.clear()
+
             f = open(GlobalSettings.appdir + "CASPERinfo")
             while True:
                 line = f.readline()
