@@ -134,7 +134,7 @@ class CoTargeting(QtWidgets.QMainWindow):
             # only get the endo choices that were original
             for item in endo_choices:
                 checkList = item.split(",")
-                if len(checkList) == 1:
+                if len(checkList) == 1 and "|" not in item: #Prevent cotarget endos from being added back in
                     setTableList.append(item)
 
             # go through and set each table item, but also set the row count

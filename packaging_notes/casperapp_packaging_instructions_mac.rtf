@@ -6,7 +6,7 @@
 {\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}.}{\leveltext\leveltemplateid1\'02\'00.;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{hyphen\}}{\leveltext\leveltemplateid2\'01\uc0\u8259 ;}{\levelnumbers;}\fi-360\li1440\lin1440 }{\listname ;}\listid1}
 {\list\listtemplateid2\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid101\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid2}}
 {\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}}
-\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\margl1440\margr1440\vieww13440\viewh7240\viewkind0
 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\qc\partightenfactor0
 
 \f0\fs24 \cf0 CASPERapp Packaging on Mac\
@@ -32,11 +32,10 @@ pip3 install https://github.com/pyinstaller/pyinstaller/archive/develop.tar.gz
 \ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}Add shortcut to Applications folder (right click on folder and click \'93Make Alias\'94)\
 {\listtext	\uc0\u8259 	}Add CASPERapp.app\
 \pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural\partightenfactor0
-\ls1\ilvl0\cf0 {\listtext	5.	}Package CASPERapp.app into .dmg file\
+\ls1\ilvl0\cf0 {\listtext	5.	}Package CASPERapp.app into .pkg file\
 \pard\tx940\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li1440\fi-1440\pardirnatural\partightenfactor0
-\ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}Open Disk Utility\
-{\listtext	\uc0\u8259 	}Navigate to File -> New Image -> Image from Folder\
-{\listtext	\uc0\u8259 	}Click Create/Submit\
+\ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}sudo pkgbuild --install-location /Applications --component <path to CASPERapp.app> <output path for CASPER_setup.pkg file>\
+{\listtext	\uc0\u8259 	}Ex. \'94sudo pkgbuild --install-location /Applications --component /Users/ddooley/Desktop/CASPERapp_Mac_v1.0/CASPERapp.app /Users/ddooley/Desktop/CASPERapp_Mac_v1.0/CASPER_setup2.pkg\'94\
 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
 \cf0 \
 Notes: \

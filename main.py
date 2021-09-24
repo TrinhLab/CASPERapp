@@ -564,30 +564,30 @@ class CMainWindow(QtWidgets.QMainWindow):
     # so far the gff files seems to all be different. Need to think about how we want to parse it
     def run_results_own_ncbi_file(self, inputstring, fileName, openAnnoWindow=True):
         try:
-            #print("run ncbi results")
-            self.annotation_parser = Annotation_Parser()
+            # #print("run ncbi results")
+            # self.annotation_parser = Annotation_Parser()
 
-            #get complete path of file
-            for file in glob.glob(GlobalSettings.CSPR_DB + "/**/*.gbff", recursive=True):
-                if file.find(fileName) != -1:
-                    self.annotation_parser.annotationFileName = file
-                    break
+            # #get complete path of file
+            # for file in glob.glob(GlobalSettings.CSPR_DB + "/**/*.gbff", recursive=True):
+            #     if file.find(fileName) != -1:
+            #         self.annotation_parser.annotationFileName = file
+            #         break
 
-            fileType = self.annotation_parser.find_which_file_version()
+            # fileType = self.annotation_parser.find_which_file_version()
 
-            # if the parser retuns the 'wrong file type' error
-            if fileType == -1:
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Error:")
-                msgBox.setText(
-                    "We cannot parse the file type given. Please make sure to choose a GBFF, GFF, or Feature Table file.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
+            # # if the parser retuns the 'wrong file type' error
+            # if fileType == -1:
+            #     msgBox = QtWidgets.QMessageBox()
+            #     msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            #     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            #     msgBox.setWindowTitle("Error:")
+            #     msgBox.setText(
+            #         "We cannot parse the file type given. Please make sure to choose a GBFF, GFF, or Feature Table file.")
+            #     msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+            #     msgBox.exec()
 
-                self.progressBar.setValue(0)
-                return
+            #     self.progressBar.setValue(0)
+            #     return
 
             self.progressBar.setValue(60)
 
@@ -666,25 +666,53 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def run_results(self, inputtype, inputstring, openAnnoWindow=True):
         try:
-            #print("run results")
-            if(str(self.annotation_files.currentText()).find('.gbff') == -1):
+            fileName = self.annotation_files.currentText()
+            self.annotation_parser = Annotation_Parser()
+            #get complete path of file
+            for file in glob.glob(GlobalSettings.CSPR_DB + "/**/*.gbff", recursive=True):
+                if file.find(fileName) != -1:
+                    self.annotation_parser.annotationFileName = file
+                    break
+            fileType = self.annotation_parser.find_which_file_version()
+
+            # if the parser retuns the 'wrong file type' error
+            if fileType == -1:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Genomebrowser Error")
+                msgBox.setWindowTitle("Error:")
                 msgBox.setText(
-                    "Filetype must be GBFF.")
+                    "We cannot parse the file type given. Please make sure to choose a GBFF file.")
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
 
                 self.progressBar.setValue(0)
                 return
 
+            self.Results.annotation_path = self.annotation_parser.annotationFileName  ### Set annotation path
+            #print("run results")
 
             progvalue = 15
             self.searches = {}
             self.gene_list = {}
             self.progressBar.setValue(progvalue)
+
+            try:
+                self.Results.endonucleaseBox.currentIndexChanged.disconnect()
+            except Exception as e:
+                pass
+            # set Results endo combo box
+            self.Results.endonucleaseBox.clear()
+
+            # set the results window endoChoice box menu
+            # set the mainWindow's endoChoice first, and then loop through and set the rest of them
+            self.Results.endonucleaseBox.addItem(self.endoChoice.currentText())
+            for item in self.organisms_to_endos[str(self.orgChoice.currentText())]:
+                if item != self.Results.endonucleaseBox.currentText():
+                    self.Results.endonucleaseBox.addItem(item)
+
+            self.Results.endonucleaseBox.currentIndexChanged.connect(self.Results.changeEndonuclease)
+            self.Results.get_endo_data()
 
     #        self.Results.change_start_end_button.setEnabled(False)
             self.Results.displayGeneViewer.setChecked(0)
@@ -720,9 +748,9 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.check_ntseq_info.clear()
 
                 for item in searchInput:
-                    searchIndicies = item.split(',')
+                    searchIndices = item.split(',')
                     # make sure the right amount of arguments were passed
-                    if len(searchIndicies) != 3:
+                    if len(searchIndices) != 3:
                         msgBox = QtWidgets.QMessageBox()
                         msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -736,7 +764,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                         return
 
                     # make sure user inputs digits
-                    if not searchIndicies[0].isdigit() or not searchIndicies[1].isdigit() or not searchIndicies[2].isdigit():
+                    if not searchIndices[0].isdigit() or not searchIndices[1].isdigit() or not searchIndices[2].isdigit():
                         msgBox = QtWidgets.QMessageBox()
                         msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -749,7 +777,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                         self.progressBar.setValue(0)
                         return
                     # make sure start is less than end
-                    elif int(searchIndicies[1]) >= int(searchIndicies[2]):
+                    elif int(searchIndices[1]) >= int(searchIndices[2]):
                         msgBox = QtWidgets.QMessageBox()
                         msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -762,11 +790,12 @@ class CMainWindow(QtWidgets.QMainWindow):
                         self.progressBar.setValue(0)
                         return
                     # append the data into the checked_info
-                    tempString = 'chrom: ' + str(searchIndicies[0]) + ' start: ' + str(searchIndicies[1]) + ' end: ' + str(searchIndicies[2])
-                    self.checked_info[tempString] = (int(searchIndicies[0]), int(searchIndicies[1]), int(searchIndicies[2]))
+                    tempString = 'chrom: ' + str(searchIndices[0]) + ',start: ' + str(searchIndices[1]) + ',end: ' + str(searchIndices[2])
+                    self.checked_info[tempString] = (int(searchIndices[0]), int(searchIndices[1]), int(searchIndices[2]))
 
                 self.progressBar.setValue(50)
-                self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, "")
+                self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, "",inputtype)
+                self.Results.load_gene_viewer()
                 self.progressBar.setValue(100)
                 self.pushButton_ViewTargets.setEnabled(True)
                 self.GenerateLibrary.setEnabled(True)
@@ -908,25 +937,25 @@ class CMainWindow(QtWidgets.QMainWindow):
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
     def collect_table_data_nonkegg(self):
         try:
-            self.Results.annotation_path = self.annotation_parser.annotationFileName  ### Set annotation path
-            try:
-                self.Results.endonucleaseBox.currentIndexChanged.disconnect()
-            except Exception as e:
-                pass
-            # set Results endo combo box
-            self.Results.endonucleaseBox.clear()
+            # self.Results.annotation_path = self.annotation_parser.annotationFileName  ### Set annotation path
+            # try:
+            #     self.Results.endonucleaseBox.currentIndexChanged.disconnect()
+            # except Exception as e:
+            #     pass
+            # # set Results endo combo box
+            # self.Results.endonucleaseBox.clear()
 
-            # set GeneViewer to appropriate annotation file
+            # # set GeneViewer to appropriate annotation file
 
-            # set the results window endoChoice box menu
-            # set the mainWindow's endoChoice first, and then loop through and set the rest of them
-            self.Results.endonucleaseBox.addItem(self.endoChoice.currentText())
-            for item in self.organisms_to_endos[str(self.orgChoice.currentText())]:
-                if item != self.Results.endonucleaseBox.currentText():
-                    self.Results.endonucleaseBox.addItem(item)
+            # # set the results window endoChoice box menu
+            # # set the mainWindow's endoChoice first, and then loop through and set the rest of them
+            # self.Results.endonucleaseBox.addItem(self.endoChoice.currentText())
+            # for item in self.organisms_to_endos[str(self.orgChoice.currentText())]:
+            #     if item != self.Results.endonucleaseBox.currentText():
+            #         self.Results.endonucleaseBox.addItem(item)
 
-            self.Results.endonucleaseBox.currentIndexChanged.connect(self.Results.changeEndonuclease)
-            self.Results.get_endo_data()
+            # self.Results.endonucleaseBox.currentIndexChanged.connect(self.Results.changeEndonuclease)
+            # self.Results.get_endo_data()
 
             # start out the same as the other collect_table_data
             self.checked_info.clear()
@@ -960,8 +989,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             # now call transfer data
             self.progressBar.setValue(95)
             self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
-                                       self.checked_info, self.check_ntseq_info, "")
-
+                                       self.checked_info, self.check_ntseq_info, "",inputtype="gene")
             self.Results.load_gene_viewer()
 
             self.progressBar.setValue(100)
@@ -1541,7 +1569,6 @@ class StartupWindow(QtWidgets.QMainWindow):
                 return
 
             #make sure directory contains correct filepath format based on OS
-            print(platform.system())
             if platform.system() == "Windows":
                 newDirectory = newDirectory.replace("/","\\")
 
