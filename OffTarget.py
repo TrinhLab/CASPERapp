@@ -317,28 +317,20 @@ class OffTarget(QtWidgets.QMainWindow):
                 line = line[:len(line)-1]
                 if platform.system() == 'Windows':
                     for lines in filter(None, line.split(r'\r\n')):
-                        if(lines.find("Running Off Target Algorithm for") != -1 and self.perc == False):
-                            self.perc = True
-                        if(self.perc == True and self.bool_temp == False and lines.find("Running Off Target Algorithm for") == -1):
-                            lines = lines[32:]
-                            lines = lines.replace("%","")
-                            if(float(lines) <= 99.5):
-                                num = float(lines)
-                                self.progressBar.setValue(num)
-                            else:
-                                self.bool_temp = True
+                        if line.find("Parsing Input Arguments") != -1:
+                            self.progressBar.setValue(10)
+                        elif line.find("Loading data for algorithm") != -1:
+                            self.progressBar.setValue(25)
+                        elif line.find("Running OffTarget Analysis") != -1:
+                            self.progressBar.setValue(50)
                 else:
                     for lines in filter(None, line.split(r'\n')):
-                        if(lines.find("Running Off Target Algorithm for") != -1 and self.perc == False):
-                            self.perc = True
-                        if(self.perc == True and self.bool_temp == False and lines.find("Running Off Target Algorithm for") == -1):
-                            lines = lines[32:]
-                            lines = lines.replace("%","")
-                            if(float(lines) <= 99.5):
-                                num = float(lines)
-                                self.progressBar.setValue(num)
-                            else:
-                                self.bool_temp = True
+                        if lines.find("Parsing Input Arguments") != -1:
+                            self.progressBar.setValue(10)
+                        elif lines.find("Loading data for algorithm") != -1:
+                            self.progressBar.setValue(25)
+                        elif lines.find("Running OffTarget Analysis") != -1:
+                            self.progressBar.setValue(50)
 
 
             #connect QProcess to the dataReady func, and finished func, reset progressBar only if the outputfile name
@@ -346,7 +338,7 @@ class OffTarget(QtWidgets.QMainWindow):
             if(exists == False):
                 self.process.readyReadStandardOutput.connect(partial(dataReady))
                 self.process.readyReadStandardError.connect(partial(dataReady))
-                self.progressBar.setValue(0)
+                self.progressBar.setValue(1)
                 QtCore.QTimer.singleShot(100, partial(self.process.start, cmd))
                 self.process.finished.connect(finished)
 

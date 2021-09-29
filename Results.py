@@ -1268,7 +1268,6 @@ class Results(QtWidgets.QMainWindow):
             msg = QtWidgets.QMessageBox()
             msg.setWindowTitle("Details")
             msg.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             key = str(self.targetTable.item(index.row(),2).text())
             temp_str = ''
