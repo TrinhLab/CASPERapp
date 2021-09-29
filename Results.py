@@ -847,7 +847,7 @@ class Results(QtWidgets.QMainWindow):
                         details.clicked.connect(self.show_details)
                         self.targetTable.setCellWidget(index, 7, details)
                     index += 1
-
+                self.targetTable.resizeColumnsToContents()
             elif self.inputtype == "position":
                 self.curgene = str(self.comboBoxGene.currentText())  # Gets the current gene
                 # Creates the set object from the list of the current gene:
