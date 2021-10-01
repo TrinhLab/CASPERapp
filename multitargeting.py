@@ -294,7 +294,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
-    
+
     #button trigger for sql settings
     def update_sql_query_settings(self):
         try:
@@ -756,7 +756,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                         t.set_visible(False)
             self.seed_canvas.axes.set_xlabel('Chromosome', fontsize = 10)
             self.seed_canvas.axes.set_ylabel('Number of Repeats', fontsize=10)
-            self.line_canvas.axes.set_title('Repeats per Scaffold/Chromosome',fontsize=10)
+            self.line_canvas.axes.set_title('Repeats per ID Number',fontsize=10)
             self.line_canvas.axes.tick_params(axis='both', which='major', labelsize=8)
             self.line_canvas.draw()
         except Exception as e:

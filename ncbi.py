@@ -259,22 +259,22 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             # CASPER header scaling
             fontSize = 30
             self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
-            
+
             self.adjustSize()
 
             currentWidth = self.size().width()
             currentHeight = self.size().height()
-            
+
             # window scaling
             # 1920x1080 => 850x750
             scaledWidth = int((width * 1000) / 1920)
             scaledHeight = int((height * 750) / 1080)
-            
+
             if scaledHeight < currentHeight:
                 scaledHeight = currentHeight
             if scaledWidth < currentWidth:
                 scaledWidth = currentWidth
-            
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
@@ -777,7 +777,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
-        
+
     def submit_rename(self):
         try:
             #loop through columns and rename the files
@@ -886,7 +886,7 @@ class goToPrompt(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(goToPrompt, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'NCBI_nav_page.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'ncbi_nav_page.ui', self)
             self.setWindowTitle("Navigate")
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.label.setText("Successfully downloaded file(s) to the CASPERdb directory:\n" + GlobalSettings.CSPR_DB)
