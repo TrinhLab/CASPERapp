@@ -339,7 +339,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         self.org_Table.setRowCount(index + 1)
 
                         # open .cspr file and get genome name
-                        f = gzip.open(file, 'r')
+                        f = open(file, 'r')
                         line = f.readline()
                         f.close()
                         line = str(line)
@@ -826,17 +826,14 @@ class Pop_Analysis(QtWidgets.QMainWindow):
         try:
             self.org_names = {}
             for file in self.cspr_files:
-                with gzip.open(file, "r") as f:
+                with open(file, "r") as f:
                     line = f.readline()
                     buf = str(line)
-                    buf = buf.strip("'b")
-                    buf = buf[:len(buf) - 2]
+                    buf = buf.strip()
                     org_name = buf.replace("GENOME: ", "")
 
                     line = f.readline()
                     buf = str(line)
-                    buf = buf.strip("'b")
-                    buf = buf[:len(buf) - 2]
                     kstats = buf.replace("KARYSTATS: ", "")
                     kstats = kstats.split(",")
                     self.org_names[org_name] = len(kstats) - 1

@@ -41,15 +41,13 @@ class CSPRparser:
         return retDict
 
     def read_first_lines(self):
-        with gzip.open(self.fileName, 'r') as f:
+        with open(self.fileName, 'r') as f:
             i = 0
             for line in f:
                 if i > 2:
                     break
                 else:
                     line = str(line)
-                    line = line.strip("'b")
-                    line = line[:len(line) - 2]
                     if i == 0:
                         colonIndex = line.find(':') + 2
                         buffer1 = line[colonIndex:]
@@ -69,12 +67,10 @@ class CSPRparser:
 
     def get_chromesome_names(self):
         self.chromesomesSelectedList.clear()
-        with gzip.open(self.fileName,'r') as f:
+        with open(self.fileName,'r') as f:
             i = 0
             for line in f:
                 line = str(line)
-                line = line.strip("'b")
-                line = line[:len(line) - 4]
                 if line == 'REPEATS':
                     break
                 elif '>' in line:
@@ -90,11 +86,9 @@ class CSPRparser:
         i = 0
         retList = []
         header = False
-        with gzip.open(self.fileName, 'r') as f:
+        with open(self.fileName, 'r') as f:
             for line in f:
                 line = str(line)
-                line = line.strip("'b")
-                line = line[:len(line) - 2]
                 if i > 2:
                     if '>' in line and '(' + str(pos_tuple[0]) + ')' in line:
                         header = True

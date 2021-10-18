@@ -342,12 +342,11 @@ class Multitargeting(QtWidgets.QMainWindow):
                 if file.find('.cspr') != -1:
                     newname = file[0:-4]
                     endo = newname[newname.rfind("_") + 1:-1]
-                    hold = gzip.open(file, 'r')
+                    hold = open(file, 'r')
                     buf = (hold.readline())
                     hold.close()
                     buf = str(buf)
-                    buf = buf.strip("'b")
-                    buf = buf[:len(buf) - 2]
+                    buf = buf.strip()
                     species = buf.replace("GENOME: ", "")
 
                     if species in self.organisms_to_files:
@@ -610,11 +609,9 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             # get kstats
             kstats = []
-            with gzip.open(self.cspr_file, "r") as f:
+            with open(self.cspr_file, "r") as f:
                 for line in f:
                     buf = str(line)
-                    buf = buf.strip("'b")
-                    buf = buf[:len(buf) - 2]
                     if buf.find("KARYSTATS") != -1:
                         buf = buf.replace("KARYSTATS: ", "")
                         kstats = buf.split(',')

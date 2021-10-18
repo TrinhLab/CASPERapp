@@ -1173,11 +1173,10 @@ class CMainWindow(QtWidgets.QMainWindow):
                     found = True
                     newname = file[0:-4]
                     endo = newname[newname.rfind("_")+1:-1]
-                    hold = gzip.open(file, 'r')
+                    hold = open(file, 'r')
                     buf = (hold.readline())
                     buf = str(buf)
-                    buf = buf.strip("'b")
-                    buf = buf[:len(buf) - 2]
+                    buf = buf.strip()
                     species = buf.replace("GENOME: ",'')
 
                     if species in self.organisms_to_files:
