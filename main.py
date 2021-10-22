@@ -157,7 +157,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             exit(-1)
 
     # this function is very similar to the other fill_table, it just works with the other types of annotation files
-    def fill_table_nonKegg(self, mainWindow):
+    def fill_table_nonKegg(self, mainWindow,results_list):
         try:
             self.tableWidget.clearContents()
             self.mainWindow = mainWindow
@@ -168,42 +168,22 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             mainWindow.checkBoxes = []
             self.type = "nonkegg"
             index = 0
-            for searchValue in mainWindow.searches:
-                for definition in mainWindow.searches[searchValue]:
-                    for gene in mainWindow.searches[searchValue][definition]:
-                        if (gene[2] == 'gene' or gene[2] == 'tRNA' or gene[2] == 'rRNA'):
-                            self.tableWidget.setRowCount(index + 1)
-                            temp_list = definition.split(";")
-                            temp_len = len(temp_list)
-                            # set the checkbox
-                            #ckbox = QtWidgets.QCheckBox()
-                            #self.tableWidget.setCellWidget(index, 4, ckbox)
-
-                            # set the description part of the window as well as set the correct data for the checkbox
-                            defin_obj = QtWidgets.QTableWidgetItem(temp_list[-1])
-                            self.tableWidget.setItem(index, 3, defin_obj)
-                            mainWindow.checkBoxes.append([definition])
-                            mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(gene)
-                            mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(index)
-
-                            # set the Gene Name/Locus Tag in the window
-                            type_obj = QtWidgets.QTableWidgetItem(temp_list[temp_len-2])
-                            self.tableWidget.setItem(index, 1, type_obj)
-
-                            # set the gene id in the window
-                            gene_id_obj = QtWidgets.QTableWidgetItem(gene[0])
-                            self.tableWidget.setItem(index, 0, gene_id_obj)
-
-                            chrom_number = QtWidgets.QTableWidgetItem(str(gene[1]))
-                            self.tableWidget.setItem(index, 2, chrom_number)
-
-                            index += 1
-                        if index >= 1000:
-                            break
-                    if index >= 1000:
-                        break
+            for result in results_list:
+                self.tableWidget.setRowCount(index + 1)
+                chrom_number = QtWidgets.QTableWidgetItem(result[0])
+                record = QtWidgets.QTableWidgetItem(result[1])
+                self.tableWidget.setItem(index, 2, chrom_number)
+                self.tableWidget.setItem(index, 3, chrom_number)
+                index +=1
                 if index >= 1000:
                     break
+
+
+                            # set the description part of the window as well as set the correct data for the checkbox
+                            # defin_obj = QtWidgets.QTableWidgetItem(temp_list[-1])
+                            # mainWindow.checkBoxes.append([definition])
+                            # mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(gene)
+                            # mainWindow.checkBoxes[len(mainWindow.checkBoxes) - 1].append(index)
 
             index = 0
             self.tableWidget.resizeColumnsToContents()
@@ -267,6 +247,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         super(CMainWindow, self).__init__()
         uic.loadUi(GlobalSettings.appdir + 'CASPER_main.ui', self)
         self.dbpath = ""
+        self.inputstring = "" # This is the search string
         self.info_path = info_path
         self.TNumbers = {}  # the T numbers from a kegg search
         self.orgcodes = {}  # Stores the Kegg organism code by the format {full name : organism code}
@@ -523,10 +504,16 @@ class CMainWindow(QtWidgets.QMainWindow):
     # Function for collecting the settings from the input field and transferring them to run_results
     def gather_settings(self):
         try:
-            inputstring = str(self.geneEntryField.toPlainText())
+            ### If user searches multiple times for the same thing, this avoids re-searching the entire annotation file
+            checkstring = str(self.geneEntryField.toPlainText())
+            if checkstring == self.inputstring:
+                same_search = True
+            else:
+                self.inputstring = checkstring
+                same_search = False
 
             # Error check: make sure the user actually inputs something
-            if (inputstring.startswith("Example Inputs:") or inputstring == ""):
+            if (self.inputstring.startswith("Example Inputs:") or self.inputstring == ""):
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -538,17 +525,18 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             else:
                 # standardize the input
-                inputstring = inputstring.lower()
+                self.inputstring = self.inputstring.lower()
 
                 self.progressBar.setValue(10)
                 if self.radioButton_Gene.isChecked():
-                    ginput = inputstring.split(',')
-                    self.run_results("gene", ginput)
+                    ginput = [x.strip() for x in self.inputstring.split('\n')] # Split search based on newline character and remove deadspace
+                    self.run_results("gene", ginput, same_search)
                 elif self.radioButton_Position.isChecked():
-                    self.run_results("position", inputstring)
+                    pinput = [x.strip() for x in self.inputstring.split('\n')] # Split search based on newline character and remove deadspace
+                    self.run_results("position", pinput, same_search)
                 elif self.radioButton_Sequence.isChecked():
-                    sinput = inputstring
-                    self.run_results("sequence", sinput)
+                    sinput = self.inputstring
+                    self.run_results("sequence", sinput, same_search)
         except Exception as e:
             logger.critical("Error in gather_settings() in main.")
             logger.critical(e)
@@ -562,37 +550,13 @@ class CMainWindow(QtWidgets.QMainWindow):
     # this assumes that the parsers all store the data the same way, which gff and feature table do
     # please make sure the gbff parser stores the data in the same way
     # so far the gff files seems to all be different. Need to think about how we want to parse it
-    def run_results_own_ncbi_file(self, inputstring, fileName, openAnnoWindow=True):
+    def run_results_own_ncbi_file(self, inputstring, fileName, same_search, openAnnoWindow=True):
         try:
-            # #print("run ncbi results")
-            # self.annotation_parser = Annotation_Parser()
+            self.progressBar.setValue(35)
+            ### Now actually search for inputs in annotation file
+            results_list = self.annotation_parser.gbff_search(inputstring,same_search)
 
-            # #get complete path of file
-            # for file in glob.glob(GlobalSettings.CSPR_DB + "/**/*.gbff", recursive=True):
-            #     if file.find(fileName) != -1:
-            #         self.annotation_parser.annotationFileName = file
-            #         break
-
-            # fileType = self.annotation_parser.find_which_file_version()
-
-            # # if the parser retuns the 'wrong file type' error
-            # if fileType == -1:
-            #     msgBox = QtWidgets.QMessageBox()
-            #     msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            #     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            #     msgBox.setWindowTitle("Error:")
-            #     msgBox.setText(
-            #         "We cannot parse the file type given. Please make sure to choose a GBFF, GFF, or Feature Table file.")
-            #     msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-            #     msgBox.exec()
-
-            #     self.progressBar.setValue(0)
-            #     return
-
-            self.progressBar.setValue(60)
-
-            # this bit may not be needed here. Just a quick error check to make sure the chromosome numbers match
-
+            ### Quick error check to make sure the chromosome numbers match
             cspr_file = self.organisms_to_files[self.orgChoice.currentText()][self.endoChoice.currentText()][0]
             if platform.system() == 'Windows':
                 cspr_file = GlobalSettings.CSPR_DB + '\\' + cspr_file
@@ -612,30 +576,33 @@ class CMainWindow(QtWidgets.QMainWindow):
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
 
+            self.progressBar.setValue(60)
+
             # now go through and search for the actual locus tag, in the case the user input that
             searchValues = self.separate_line(inputstring[0])
             self.searches.clear()
 
             self.progressBar.setValue(75)
             # reset, and search the parallel dictionary now
-            self.searches = {}
-            for search in searchValues:
-                search = self.removeWhiteSpace(search)
-                if len(search) == 0:
-                    continue
+            # self.searches = {}
+            # for search in searchValues:
+            #     search = self.removeWhiteSpace(search)
+            #     if len(search) == 0:
+            #         continue
 
-                self.searches[search] = {}
-                for item in self.annotation_parser.para_dict:
-                    checkingItem = item.lower()  # lowercase now, to match the user's input
-                    if search in checkingItem:  # if what they are searching for is somewhere in that key
-                        if self.annotation_parser.para_dict[item][0] != '':
-                            for match in self.annotation_parser.reg_dict[self.annotation_parser.para_dict[item][0]]:
-                                if item not in self.searches[search]:
-                                    self.searches[search][item] = [match]
-                                elif item not in self.searches[search][item]:
-                                    self.searches[search][item].append(match)
+            #     self.searches[search] = {}
+            #     for item in self.annotation_parser.para_dict:
+            #         checkingItem = item.lower()  # lowercase now, to match the user's input
+            #         if search in checkingItem:  # if what they are searching for is somewhere in that key
+            #             if self.annotation_parser.para_dict[item][0] != '':
+            #                 for match in self.annotation_parser.reg_dict[self.annotation_parser.para_dict[item][0]]:
+            #                     if item not in self.searches[search]:
+            #                         self.searches[search][item] = [match]
+            #                     elif item not in self.searches[search][item]:
+            #                         self.searches[search][item].append(match)
             # if the search returns nothing, throw an error
-            if len(self.searches[searchValues[0]]) <= 0:
+            # if len(self.searches[searchValues[0]]) <= 0:
+            if len(results_list) <= 0:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -655,7 +622,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.progressBar.setValue(80)
             # check whether this function call is for Annotation Window, or for generate Lib
             if openAnnoWindow:
-                self.Annotation_Window.fill_table_nonKegg(self)
+                self.Annotation_Window.fill_table_nonKegg(self,results_list)
             else:
                 return True
         except Exception as e:
@@ -664,7 +631,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    def run_results(self, inputtype, inputstring, openAnnoWindow=True):
+    def run_results(self, inputtype, inputstring, same_search, openAnnoWindow=True):
         try:
             fileName = self.annotation_files.currentText()
             self.annotation_parser = Annotation_Parser()
@@ -688,6 +655,10 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 self.progressBar.setValue(0)
                 return
+
+
+
+
 
             self.Results.annotation_path = self.annotation_parser.annotationFileName  ### Set annotation path
             #print("run results")
@@ -732,7 +703,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     self.progressBar.setValue(0)
                     return
                 # this now just goes onto the other version of run_results
-                myBool = self.run_results_own_ncbi_file(inputstring, self.annotation_files.currentText(), openAnnoWindow=openAnnoWindow)
+                myBool = self.run_results_own_ncbi_file(inputstring, self.annotation_files.currentText(), same_search, openAnnoWindow=openAnnoWindow)
                 if not openAnnoWindow:
                     return myBool
                 else:
@@ -741,8 +712,6 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             # position code below
             if inputtype == "position":
-                inputstring = inputstring.replace(' ', '')
-                searchInput = inputstring.split('\n')
                 full_org = str(self.orgChoice.currentText())
                 self.checked_info.clear()
                 self.check_ntseq_info.clear()

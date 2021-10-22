@@ -34,11 +34,55 @@ class Annotation_Parser:
             #key: name + symbol (space in between each word)
             #value: locus_tag (indexes dict)
             self.para_dict = dict()
+            
+            #list of tuples containing (chromosome/scaffold # {int}, Feature matching search criteria {SeqRecord Object})
+            self.results_list = list()
+
         except Exception as e:
             logger.critical("Error initializing Annotation_Parser class.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
+
+    ### This function takes a list of lists and flattens it into a single list. Useful when dealing with a list of lists where the nested lists only have 1 entry.
+    def flatten_list(self,t):
+        return [item.lower() for sublist in t for item in sublist]
+    
+    ### The workhorse function of AnnotationParser, this searches the annotation file for the user's search and returns features matching the description.
+    def gbff_search(self, query, same_search):
+        index_number = 0
+        try:
+            if same_search: # If searching for the same thing, just return the results from last time
+                print("not searching, same list")
+                return self.results_list
+            else:
+                print("searching")
+                self.results_list.clear()
+                print(os.path.getsize(self.annotationFileName))
+                if os.path.getsize(self.annotationFileName) < 50000000:
+                    print("still searching")
+                    parser = SeqIO.parse(self.annotationFileName, 'genbank')
+                    for record in parser:
+                        print(record)
+                        index_number += 1
+                        for i, feature in enumerate(record.features):
+                            if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source":
+                                self.results_list.append(i,feature)
+                            else:
+                                continue
+                    self.max_chrom = index_number
+                    return self.results_list
+                else:
+                    return self.results_list
+
+        except Exception as e:
+            logger.critical("Error in gbff_parse() in annotation parser.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            exit(-1)
+    
+
+
 
     # this function parses GBFF files
     # it stores the data in 2 dictionaries, a parallel one and a regular one
@@ -365,13 +409,21 @@ class Annotation_Parser:
         try:
             if self.annotationFileName == "" :
                 print("Error: No annotation file given")
-                return
+                return -1
             if "gff" in self.annotationFileName:
+                ### gff file support currently deprecated
+                """
                 self.isGff = True
                 self.gff_parse()
+                """
+                print("Error: Wrong annotation file format")
+                return -1
+                
             elif "feature_table" in self.annotationFileName:
+                ### feature table file support currently deprecated
                 # now that we know it's a txt file and not a gff, check and see if we will be parsing by locus tag or
                 # product accession
+                """
                 fileStream = open(self.annotationFileName)
 
                 #skip all of the lines that start with #
@@ -388,8 +440,11 @@ class Annotation_Parser:
                 fileStream.close()
                 self.isTxt = True
                 self.txt_parse()
+                """
+                print("Error: Wrong annotation file format")
+                return -1
             elif "gbff" in self.annotationFileName:
-                self.gbff_parse()
+                return "gbff"
             # return -1 to throw the error window in main
             else:
                 return -1
