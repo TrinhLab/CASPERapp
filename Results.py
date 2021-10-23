@@ -270,6 +270,19 @@ class Results(QtWidgets.QMainWindow):
             prevTuple = self.geneDict[self.curgene]
             tempTuple = (self.geneDict[self.curgene][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()))
 
+            if int(self.lineEditStart.displayText()) < 0 or int(self.lineEditStart.displayText()) < 0:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Invalid location indices.")
+                msgBox.setText("Location indices cannot be negative! Please set values larger than 0.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
+                self.lineEditStart.setText(str(self.geneDict[self.curgene][1]))
+                self.lineEditEnd.setText(str(self.geneDict[self.curgene][2]))
+                return
+
             # make sure that the difference between indicies is not too large
             if abs(tempTuple[1] - tempTuple[2]) > 50000:
                 msgBox = QtWidgets.QMessageBox()
