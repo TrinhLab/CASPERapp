@@ -170,10 +170,10 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             index = 0
             for result in results_list:
                 self.tableWidget.setRowCount(index + 1)
-                chrom_number = QtWidgets.QTableWidgetItem(result[0])
-                record = QtWidgets.QTableWidgetItem(result[1])
+                chrom_number = QtWidgets.QTableWidgetItem(str(result[0]))
+                record = QtWidgets.QTableWidgetItem(result[1].type)
                 self.tableWidget.setItem(index, 2, chrom_number)
-                self.tableWidget.setItem(index, 3, chrom_number)
+                self.tableWidget.setItem(index, 3, record)
                 index +=1
                 if index >= 1000:
                     break
@@ -249,6 +249,8 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.dbpath = ""
         self.inputstring = "" # This is the search string
         self.info_path = info_path
+        self.anno_name = ""
+        self.org = ""
         self.TNumbers = {}  # the T numbers from a kegg search
         self.orgcodes = {}  # Stores the Kegg organism code by the format {full name : organism code}
         self.gene_list = {}  # list of genes (no ides what they pertain to
@@ -259,6 +261,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.annotation_parser = Annotation_Parser()
         self.link_list = list()  # the list of the downloadable links from the NCBI search
         self.organismDict = dict()  # the dictionary for the links to download. Key is the description of the organism, value is the ID that can be found in link_list
+        self.results_list = list()
         self.organismData = list()
         self.ncbi = ncbi.NCBI_search_tool()
 
@@ -505,11 +508,15 @@ class CMainWindow(QtWidgets.QMainWindow):
     def gather_settings(self):
         try:
             ### If user searches multiple times for the same thing, this avoids re-searching the entire annotation file
-            checkstring = str(self.geneEntryField.toPlainText())
-            if checkstring == self.inputstring:
+            check_org = self.orgChoice.currentText()
+            check_anno_name = self.endoChoice.currentText()
+            check_input = str(self.geneEntryField.toPlainText())
+            if check_input == self.inputstring and check_org == self.org and check_anno_name == self.anno_name:
                 same_search = True
             else:
-                self.inputstring = checkstring
+                self.org = check_org
+                self.anno_name = check_anno_name 
+                self.inputstring = check_input
                 same_search = False
 
             # Error check: make sure the user actually inputs something
@@ -554,7 +561,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         try:
             self.progressBar.setValue(35)
             ### Now actually search for inputs in annotation file
-            results_list = self.annotation_parser.gbff_search(inputstring,same_search)
+            self.results_list = self.annotation_parser.gbff_search(inputstring,same_search)
 
             ### Quick error check to make sure the chromosome numbers match
             cspr_file = self.organisms_to_files[self.orgChoice.currentText()][self.endoChoice.currentText()][0]
@@ -565,6 +572,8 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             own_cspr_parser = CSPRparser(cspr_file)
             own_cspr_parser.read_first_lines()
+            print(len(own_cspr_parser.karystatsList))
+            print(self.annotation_parser.max_chrom)
 
             if len(own_cspr_parser.karystatsList) != self.annotation_parser.max_chrom:
                 msgBox = QtWidgets.QMessageBox()
@@ -602,7 +611,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             #                         self.searches[search][item].append(match)
             # if the search returns nothing, throw an error
             # if len(self.searches[searchValues[0]]) <= 0:
-            if len(results_list) <= 0:
+            if len(self.results_list) <= 0:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -622,7 +631,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.progressBar.setValue(80)
             # check whether this function call is for Annotation Window, or for generate Lib
             if openAnnoWindow:
-                self.Annotation_Window.fill_table_nonKegg(self,results_list)
+                self.Annotation_Window.fill_table_nonKegg(self,self.results_list)
             else:
                 return True
         except Exception as e:
@@ -634,7 +643,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     def run_results(self, inputtype, inputstring, same_search, openAnnoWindow=True):
         try:
             fileName = self.annotation_files.currentText()
-            self.annotation_parser = Annotation_Parser()
+            # self.annotation_parser = Annotation_Parser()
             #get complete path of file
             for file in glob.glob(GlobalSettings.CSPR_DB + "/**/*.gbff", recursive=True):
                 if file.find(fileName) != -1:
@@ -655,10 +664,6 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 self.progressBar.setValue(0)
                 return
-
-
-
-
 
             self.Results.annotation_path = self.annotation_parser.annotationFileName  ### Set annotation path
             #print("run results")

@@ -16,6 +16,7 @@ logger = GlobalSettings.logger
 class Annotation_Parser:
     def __init__(self):
         try:
+            print("init called")
             #variables to use
             self.annotationFileName = "" #this is the variable that holds the filename itself
             self.txtLocusTag = False
@@ -35,7 +36,7 @@ class Annotation_Parser:
             #value: locus_tag (indexes dict)
             self.para_dict = dict()
             
-            #list of tuples containing (chromosome/scaffold # {int}, Feature matching search criteria {SeqRecord Object})
+            #list of tuples containing (chromosome/scaffold # {int}, Feature matching search criteria {SeqFeature Object})
             self.results_list = list()
 
         except Exception as e:
@@ -49,11 +50,12 @@ class Annotation_Parser:
         return [item.lower() for sublist in t for item in sublist]
     
     ### The workhorse function of AnnotationParser, this searches the annotation file for the user's search and returns features matching the description.
-    def gbff_search(self, query, same_search):
+    def gbff_search(self, queries, same_search):
         index_number = 0
         try:
             if same_search: # If searching for the same thing, just return the results from last time
                 print("not searching, same list")
+                print(self.results_list)
                 return self.results_list
             else:
                 print("searching")
@@ -62,16 +64,26 @@ class Annotation_Parser:
                 if os.path.getsize(self.annotationFileName) < 50000000:
                     print("still searching")
                     parser = SeqIO.parse(self.annotationFileName, 'genbank')
-                    for record in parser:
-                        print(record)
-                        index_number += 1
-                        for i, feature in enumerate(record.features):
-                            if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source":
-                                self.results_list.append(i,feature)
+                    for i, query in enumerate(queries):
+                        cnt = 0
+                        for record in parser:
+                            cnt +=1
+                            if i == 0:
+                                index_number += 1
+                                for j, feature in enumerate(record.features):
+                                    if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source":
+                                        self.results_list.append((cnt,feature))
+                                    else:
+                                        continue
+                                self.max_chrom = index_number
                             else:
-                                continue
-                    self.max_chrom = index_number
-                    return self.results_list
+                                for j, feature in enumerate(record.features):
+                                    if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source":
+                                        print(feature.type)
+                                        self.results_list.append((cnt,feature))
+                                    else:
+                                        continue
+                        return self.results_list
                 else:
                     return self.results_list
 
