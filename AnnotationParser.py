@@ -16,7 +16,6 @@ logger = GlobalSettings.logger
 class Annotation_Parser:
     def __init__(self):
         try:
-            print("init called")
             #variables to use
             self.annotationFileName = "" #this is the variable that holds the filename itself
             self.txtLocusTag = False
@@ -54,15 +53,10 @@ class Annotation_Parser:
         index_number = 0
         try:
             if same_search: # If searching for the same thing, just return the results from last time
-                print("not searching, same list")
-                print(self.results_list)
                 return self.results_list
             else:
-                print("searching")
                 self.results_list.clear()
-                print(os.path.getsize(self.annotationFileName))
                 if os.path.getsize(self.annotationFileName) < 50000000:
-                    print("still searching")
                     parser = SeqIO.parse(self.annotationFileName, 'genbank')
                     for i, query in enumerate(queries):
                         cnt = 0
@@ -71,15 +65,14 @@ class Annotation_Parser:
                             if i == 0:
                                 index_number += 1
                                 for j, feature in enumerate(record.features):
-                                    if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source":
+                                    if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source" and feature.type != "gene":
                                         self.results_list.append((cnt,feature))
                                     else:
                                         continue
                                 self.max_chrom = index_number
                             else:
                                 for j, feature in enumerate(record.features):
-                                    if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source":
-                                        print(feature.type)
+                                    if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source" and feature.type != "gene":
                                         self.results_list.append((cnt,feature))
                                     else:
                                         continue

@@ -38,8 +38,8 @@ class Results(QtWidgets.QMainWindow):
             self.endpos = 0
             self.directory = ""
             self.inputtype = ""
-            self.geneDict = dict() # dictionary passed into transfer_data
-            self.geneNTDict = dict() #dictionary passed into transfer_data, same key as geneDict, but hols the NTSEQ
+            self.featureDict = dict() # dictionary passed into transfer_data
+            self.featureNTDict = dict() #dictionary passed into transfer_data, same key as featureDict, but hols the NTSEQ
             self.switcher = [1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
 
             # Initialize Filter Options Object
@@ -267,8 +267,8 @@ class Results(QtWidgets.QMainWindow):
 
 
             # change the start and end values
-            prevTuple = self.geneDict[self.curgene]
-            tempTuple = (self.geneDict[self.curgene][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()))
+            prevTuple = self.featureDict[self.curgene]
+            tempTuple = (self.featureDict[self.curgene][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()))
 
             # make sure that the difference between indicies is not too large
             if abs(tempTuple[1] - tempTuple[2]) > 50000:
@@ -280,21 +280,21 @@ class Results(QtWidgets.QMainWindow):
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
 
-                self.lineEditStart.setText(str(self.geneDict[self.curgene][1]))
-                self.lineEditEnd.setText(str(self.geneDict[self.curgene][2]))
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
+                self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
                 return
 
             # if the user is using gbff
             if self.annotation_path.endswith(".gbff"):
-                self.geneDict[self.curgene] = tempTuple
-                sequence = self.gbff_sequence_finder(self.geneDict[self.curgene])
-                self.geneNTDict[self.curgene] = sequence
+                self.featureDict[self.curgene] = tempTuple
+                sequence = self.gbff_sequence_finder(self.featureDict[self.curgene])
+                self.featureNTDict[self.curgene] = sequence
             # if the user is using fna (deprecated)
             """
             elif self.annotation_path.endswith(".fna"):
-                self.geneDict[self.curgene] = tempTuple
-                sequence = GlobalSettings.mainWindow.gene_viewer_settings.fna_sequence_finder(self.geneDict[self.curgene])
-                self.geneNTDict[self.curgene] = sequence
+                self.featureDict[self.curgene] = tempTuple
+                sequence = GlobalSettings.mainWindow.gene_viewer_settings.fna_sequence_finder(self.featureDict[self.curgene])
+                self.featureNTDict[self.curgene] = sequence
             """
             # check and see if we need to add lowercase letters
             changeInStart = tempTuple[1] - prevTuple[1]
@@ -303,13 +303,13 @@ class Results(QtWidgets.QMainWindow):
             # check and see if the sequence is extended at all
             # if it is, make the extended part lower-case as opposed to upper case
             if changeInStart != 0 and changeInStart < 0:
-                tempString = self.geneNTDict[self.curgene][:abs(changeInStart)].lower()
-                tempString = tempString + self.geneNTDict[self.curgene][abs(changeInStart):]
-                self.geneNTDict[self.curgene] = tempString
+                tempString = self.featureNTDict[self.curgene][:abs(changeInStart)].lower()
+                tempString = tempString + self.featureNTDict[self.curgene][abs(changeInStart):]
+                self.featureNTDict[self.curgene] = tempString
             if changeInEnd != 0 and changeInEnd > 0:
-                tempString = self.geneNTDict[self.curgene][len(self.geneNTDict[self.curgene]) - abs(changeInEnd):].lower()
-                tempString = self.geneNTDict[self.curgene][:len(self.geneNTDict[self.curgene]) - abs(changeInEnd)] + tempString
-                self.geneNTDict[self.curgene] = tempString
+                tempString = self.featureNTDict[self.curgene][len(self.featureNTDict[self.curgene]) - abs(changeInEnd):].lower()
+                tempString = self.featureNTDict[self.curgene][:len(self.featureNTDict[self.curgene]) - abs(changeInEnd)] + tempString
+                self.featureNTDict[self.curgene] = tempString
 
             # update the gene viewer
             self.checkGeneViewer()
@@ -358,7 +358,7 @@ class Results(QtWidgets.QMainWindow):
             noMatchString = ""
 
             # reset the gene viewer text
-            self.geneViewer.setText(self.geneNTDict[self.curgene])
+            self.geneViewer.setText(self.featureNTDict[self.curgene])
 
             # check and make sure still is actually highlighted!
             selectedList = self.targetTable.selectedItems()
@@ -386,7 +386,7 @@ class Results(QtWidgets.QMainWindow):
 
 
                     # get the location
-                    location = int(locationString) - self.geneDict[self.curgene][1]
+                    location = int(locationString) - self.featureDict[self.curgene][1]
                     movementIndex = len(sequenceString) # This is the length of the gRNA
 
                     # get which way it's moving, and the real location. This is for checking edge cases
@@ -503,16 +503,16 @@ class Results(QtWidgets.QMainWindow):
     # if it is un-marked, it hides the data
     def checkGeneViewer(self):
         try:
-            if (self.displayGeneViewer.isChecked() and self.inputtype == "gene"):
-                    self.lineEditStart.setText(str(self.geneDict[self.curgene][1]))
-                    self.lineEditEnd.setText(str(self.geneDict[self.curgene][2]))
-                    self.geneViewer.setText(self.geneNTDict[self.curgene])
+            if (self.displayGeneViewer.isChecked() and self.inputtype == "feature"):
+                    self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
+                    self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
+                    self.geneViewer.setText(self.featureNTDict[self.curgene])
             elif (self.displayGeneViewer.isChecked() and self.inputtype == "position"):
                     start = self.curgene.split(",")[1].split(" ")[-1]
                     end = self.curgene.split(",")[2].split(" ")[-1]
                     self.lineEditStart.setText(str(start))
                     self.lineEditEnd.setText(str(end))
-                    self.geneViewer.setText(self.geneNTDict[self.curgene])
+                    self.geneViewer.setText(self.featureNTDict[self.curgene])
             elif not self.displayGeneViewer.isChecked():
                 self.lineEditStart.clear()
                 self.lineEditEnd.clear()
@@ -579,8 +579,8 @@ class Results(QtWidgets.QMainWindow):
             else:
                 self.filter_options.cotarget_checkbox.setEnabled(False)
                 self.filter_options.cotarget_checkbox.setChecked(0)
-            self.transfer_data(full_org, GlobalSettings.mainWindow.organisms_to_files[full_org], endoChoice, GlobalSettings.CSPR_DB, self.geneDict,
-                               self.geneNTDict, "",self.inputtype)
+            self.transfer_data(full_org, GlobalSettings.mainWindow.organisms_to_files[full_org], endoChoice, GlobalSettings.CSPR_DB, self.featureDict,
+                               self.featureNTDict, "",self.inputtype)
         except Exception as e:
             logger.critical("Error in changeEndonuclease() in results.")
             logger.critical(e)
@@ -589,7 +589,7 @@ class Results(QtWidgets.QMainWindow):
 
     # Function that is used to set up the results page.
     # it calls get_targets, which in turn calls display data
-    def transfer_data(self, org, org_files, endo, path, geneposdict, geneNTSeqDict, fasta,inputtype):
+    def transfer_data(self, org, org_files, endo, path, feature_dict, featureNTSeqDict, fasta,inputtype):
         try:
             # set all of the classes variables
             self.org = org
@@ -599,8 +599,8 @@ class Results(QtWidgets.QMainWindow):
             self.fasta_ref = fasta
             self.comboBoxGene.clear()
             self.AllData.clear()
-            self.geneDict = geneposdict
-            self.geneNTDict = geneNTSeqDict
+            self.featureDict =feature_dict 
+            self.featureNTDict = featureNTSeqDict 
             self.inputtype = inputtype
 
             self.highlighted.clear()
@@ -609,19 +609,16 @@ class Results(QtWidgets.QMainWindow):
             self.rows_and_seq_list.clear()
             self.OTA.clear()
 
-            for gene in geneposdict:
-                if self.inputtype == "gene":
+            for feature in feature_dict:
+                if self.inputtype == "feature":
                     detail_output1 = {}
                     rows_and_seq2 = {}
                     seq_and_avg3 = {}
-                    temp_split = gene.split(";")
-                    temp_len = len(temp_split)
-                    gene_name = temp_split[temp_len-2] + ": " + temp_split[-1]
                     self.detail_output_list.append(detail_output1)
                     self.seq_and_avg_list.append(seq_and_avg3)
                     self.rows_and_seq_list.append(rows_and_seq2)
-                    self.comboBoxGene.addItem(gene_name)
-                    self.get_targets(gene, geneposdict[gene])
+                    self.comboBoxGene.addItem(feature)
+                    self.get_targets(feature, feature_dict[feature])
                 if self.inputtype == "position":
                     detail_output1 = {}
                     rows_and_seq2 = {}
@@ -629,9 +626,8 @@ class Results(QtWidgets.QMainWindow):
                     self.detail_output_list.append(detail_output1)
                     self.seq_and_avg_list.append(seq_and_avg3)
                     self.rows_and_seq_list.append(rows_and_seq2)
-                    self.comboBoxGene.addItem(gene)
-                    self.get_targets(gene, geneposdict[gene])
-
+                    self.comboBoxGene.addItem(feature)
+                    self.get_targets(feature, feature_dict[feature])
             # Enable the combobox to be toggled now that the data is in AllData
             self.comboBoxGene.currentTextChanged.connect(self.displayGeneData)
             self.first_boot = True
@@ -714,7 +710,7 @@ class Results(QtWidgets.QMainWindow):
 
             self.endonucleaseBox.currentIndexChanged.connect(self.changeEndonuclease)
             # add it to the endoBox choices, and then call transfer_data
-            self.transfer_data(self.org, self.org_files, self.co_target_endo_list, GlobalSettings.CSPR_DB, self.geneDict, self.geneNTDict, "",self.inputtype)
+            self.transfer_data(self.org, self.org_files, self.co_target_endo_list, GlobalSettings.CSPR_DB, self.featureDict, self.featureNTDict, "",self.inputtype)
         except Exception as e:
             logger.critical("Error in populate_cotarget_table() in results.")
             logger.critical(e)
@@ -777,23 +773,18 @@ class Results(QtWidgets.QMainWindow):
     ###############################################################################################################
     def displayGeneData(self):
         try:
-            if self.inputtype == "gene":
+            if self.inputtype == "feature":
                 self.curgene = str(self.comboBoxGene.currentText())  # Gets the current gene
                 # Creates the set object from the list of the current gene:
                 if self.curgene=='' or len(self.AllData)<1:
                     return
 
-                # Loop through dictionary and link org dropdown to dictionary entry
-                for entry in self.AllData.keys():
-                    if self.curgene.split(":")[0] in entry:
-                        self.curgene = entry
-
                 subset_display = []
                 # set the start and end numbers, as well as set the geneViewer text, if the displayGeneViewer is checked
                 if self.displayGeneViewer.isChecked():
-                    self.lineEditStart.setText(str(self.geneDict[self.curgene][1]))
-                    self.lineEditEnd.setText(str(self.geneDict[self.curgene][2]))
-                    self.geneViewer.setText(self.geneNTDict[self.curgene])
+                    self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
+                    self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
+                    self.geneViewer.setText(self.featureNTDict[self.curgene])
 
                 # if this checkBox is checked, remove the single endo
                 if self.filter_options.cotarget_checkbox.isChecked():
@@ -862,7 +853,7 @@ class Results(QtWidgets.QMainWindow):
 
                     self.lineEditStart.setText(str(start))
                     self.lineEditEnd.setText(str(end))
-                    self.geneViewer.setText(self.geneNTDict[self.curgene])
+                    self.geneViewer.setText(self.featureNTDict[self.curgene])
 
                 # if this checkBox is checked, remove the single endo
                 if self.filter_options.cotarget_checkbox.isChecked():
@@ -1293,7 +1284,7 @@ class Results(QtWidgets.QMainWindow):
         try:
             #clear gene viewer highlights
             if self.displayGeneViewer.isChecked():
-                self.geneViewer.setText(self.geneNTDict[self.curgene])
+                self.geneViewer.setText(self.featureNTDict[self.curgene])
 
             #clear selected rows in table
             self.checkBoxSelectAll.setChecked(False)
@@ -1329,16 +1320,16 @@ class Results(QtWidgets.QMainWindow):
         try:
             sequence = ""
             # for each gene selected from the results window
-            for item in self.geneDict:
+            for item in self.featureDict:
             ### FNA support deprecated currently
                 """
                 if self.file_type == "fna":
-                    sequence = self.fna_sequence_finder(GlobalSettings.mainWindow.Results.geneDict[item])
-                    GlobalSettings.mainWindow.Results.geneNTDict[item] = sequence
+                    sequence = self.fna_sequence_finder(GlobalSettings.mainWindow.Results.featureDict[item])
+                    GlobalSettings.mainWindow.Results.featureNTDict[item] = sequence
                 """
                 if self.annotation_path.endswith(".gbff"):
-                    sequence = self.gbff_sequence_finder(self.geneDict[item])
-                    self.geneNTDict[item] = sequence
+                    sequence = self.gbff_sequence_finder(self.featureDict[item])
+                    self.featureNTDict[item] = sequence
             self.lineEditStart.setEnabled(True)
             self.lineEditEnd.setEnabled(True)
             self.change_start_end_button.setEnabled(True)
@@ -1400,15 +1391,15 @@ class Results(QtWidgets.QMainWindow):
 
             ###Get gene sequence and padding sequences (for visualizing gRNAs that appear at extreme ends of gene)
             if location_data[1] - 30 >= 0: ### Check to make sure there is enough 5' end of gene to pull the padding from, so indexing error isn't raised
-                five_prime_tail = str(pre_sequence[location_data[1]-31:location_data[1]-1])
+                five_prime_tail = str(pre_sequence[location_data[1]-30:location_data[1]])
             else:
                 five_prime_tail = ""
             if len(pre_sequence) > (location_data[2] + 30): ### Check to make sure there is enough 3' end of gene to pull the padding from, so indexing error isn't raised
-                three_prime_tail = str(pre_sequence[location_data[2]:location_data[2]+30])
+                three_prime_tail = str(pre_sequence[location_data[2]:location_data[2]+31])
             else:
                 three_prime_tail = ""
 
-            gene_sequence = str(pre_sequence[location_data[1]-1:location_data[2]])
+            gene_sequence = str(pre_sequence[location_data[1]:location_data[2]])
             ret_sequence = five_prime_tail.lower() + gene_sequence.upper() + three_prime_tail.lower()
             return ret_sequence
 
