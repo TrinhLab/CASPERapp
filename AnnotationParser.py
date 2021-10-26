@@ -56,28 +56,25 @@ class Annotation_Parser:
                 return self.results_list
             else:
                 self.results_list.clear()
-                if os.path.getsize(self.annotationFileName) < 50000000:
-                    parser = SeqIO.parse(self.annotationFileName, 'genbank')
-                    for i, query in enumerate(queries):
-                        cnt = 0
-                        for record in parser:
-                            cnt +=1
-                            if i == 0:
-                                index_number += 1
-                                for j, feature in enumerate(record.features):
-                                    if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source" and feature.type != "gene":
-                                        self.results_list.append((cnt,feature))
-                                    else:
-                                        continue
-                                self.max_chrom = index_number
-                            else:
-                                for j, feature in enumerate(record.features):
-                                    if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source" and feature.type != "gene":
-                                        self.results_list.append((cnt,feature))
-                                    else:
-                                        continue
-                        return self.results_list
-                else:
+                parser = SeqIO.parse(self.annotationFileName, 'genbank') # Initialize parser
+                for i, query in enumerate(queries):
+                    cnt = 0
+                    for record in parser: # Each record corresponds to a chromosome/scaffold in the FNA/FASTA file
+                        cnt +=1
+                        if i == 0:
+                            index_number += 1
+                            for j, feature in enumerate(record.features): # Each feature corresponds to a gene, tRNA, rep_origin, etc. in the given record (chromosome/scaffold)
+                                if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source" and feature.type != "gene": # If search matches the feature's qualifiers somewhere, save it
+                                    self.results_list.append((cnt,feature))
+                                else: # If search not in the feature's qualifiers, move to the next feature
+                                    continue
+                            self.max_chrom = index_number # Counts the number of chromosomes/scaffolds in the organism (only do this once, even if there are multiple queries)
+                        else:
+                            for j, feature in enumerate(record.features):
+                                if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source" and feature.type != "gene":
+                                    self.results_list.append((cnt,feature))
+                                else:
+                                    continue
                     return self.results_list
 
         except Exception as e:

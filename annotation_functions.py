@@ -38,3 +38,10 @@ def get_description(feature):
     else:
         return "N/A" 
 
+def get_strand(feature):
+    if feature.location.strand == 1:
+        return "+"
+    elif feature.location.strand == -1:
+        return "-"
+    else:
+        return

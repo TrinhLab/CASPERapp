@@ -195,6 +195,7 @@ class OffTarget(QtWidgets.QMainWindow):
             #fill in Max Mismatch dropdown
             mismatch_list = ['1','2','3','4','5','6','7','8','9','10']
             self.mismatchcomboBox.addItems(mismatch_list)
+            self.mismatchcomboBox.setCurrentIndex(3) ### Max number of mismatches is 4 by default
         except Exception as e:
             logger.critical("Error in fill_data_dropdown() in OffTarget.")
             logger.critical(e)
@@ -296,6 +297,7 @@ class OffTarget(QtWidgets.QMainWindow):
 
             #create command string
             cmd = exe_path + data_path + endo + cspr_path + db_path + self.output_path + CASPER_info_path + str(num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output + hsu
+            print(cmd)
             if platform.system() == 'Windows':
                 cmd = cmd.replace('/', '\\')
 

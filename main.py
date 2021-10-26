@@ -268,6 +268,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.gene_list = {}  # list of genes (no ides what they pertain to
         self.searches = {}
         self.checkBoxes = []
+        self.genlib_list = [] # This list stores selected SeqFeatures from annotation window
         self.checked_info = {}
         self.check_ntseq_info = {}  # the ntsequences that go along with the checked_info
         self.annotation_parser = Annotation_Parser()
@@ -438,11 +439,10 @@ class CMainWindow(QtWidgets.QMainWindow):
                 # standardize the input
                 inputstring = inputstring.lower()
                 found_matches_bool = True
-
                 # call the respective function
                 self.progressBar.setValue(10)
                 if self.radioButton_Gene.isChecked():
-                    if len(self.checked_info) > 0:
+                    if len(self.genlib_list) > 0:
                         found_matches_bool = True
                     else:
                         found_matches_bool = False
@@ -478,18 +478,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                     self.progressBar.setValue(100)
 
                     # calculate the total number of matches found
-                    #
-                    # print(self.checked_info)
-                    # print(self.searches['d'].keys())
-                    genes = self.checked_info.keys()
-                    self.newsearches = {}
-
-                    for gene in genes:
-                        for searches in self.searches.keys():
-                            if gene in self.searches[searches].keys():
-                                self.newsearches[gene] = self.searches[searches][gene]
-
-                    tempSum = len(self.checked_info)
+                    tempSum = len(self.genlib_list)
 
                     # warn the user if the number is greater than 50
                     if tempSum > 50:
@@ -507,7 +496,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                             self.progressBar.setValue(0)
                             return -2
 
-                    self.genLib.launch(self.newsearches,cspr_file, kegg_non)
+                    self.genLib.launch(self.genlib_list,cspr_file, kegg_non)
                 else:
                     self.progressBar.setValue(0)
         except Exception as e:
@@ -925,6 +914,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         try:
             # start out the same as the other collect_table_data
             self.checked_info.clear()
+            self.genlib_list.clear()
             self.check_ntseq_info.clear()
             full_org = str(self.orgChoice.currentText())
             holder = ()
@@ -937,8 +927,10 @@ class CMainWindow(QtWidgets.QMainWindow):
                 feature = item[1]
                 # If inidices of checkBoxes list and selected rows in table match...
                 if item[2] in selected_indices:
+                    print(item)
                     holder = (item[0],int(feature.location.start),int(feature.location.end)) # Tuple order: Feature chromosome/scaffold number, feature start, feature end
                     self.checked_info[get_name(feature)] = holder
+                    self.genlib_list.append((item[0],feature)) # Tuple order: Feature chromosome/scaffold number, SeqFeature object
                 else:
                     # If item was not selected in the table, go to the next item
                     continue
