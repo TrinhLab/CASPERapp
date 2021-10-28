@@ -509,10 +509,10 @@ class CMainWindow(QtWidgets.QMainWindow):
     def gather_settings(self):
         try:
             ### If user searches multiple times for the same thing, this avoids re-searching the entire annotation file
-            check_org = self.orgChoice.currentText()
-            check_endo = self.endoChoice.currentText()
-            check_anno_name = self.annotation_files.currentText()
-            check_input = str(self.geneEntryField.toPlainText())
+            check_org = self.orgChoice.currentText().lower()
+            check_endo = self.endoChoice.currentText().lower()
+            check_anno_name = self.annotation_files.currentText().lower()
+            check_input = str(self.geneEntryField.toPlainText()).lower()
             if (check_input == self.inputstring and check_org == self.org and check_anno_name == self.anno_name and check_endo == self.endo_name):
                 same_search = True
             else:
@@ -534,15 +534,15 @@ class CMainWindow(QtWidgets.QMainWindow):
                 msgBox.exec()
 
             else:
-                # standardize the input
-                self.inputstring = self.inputstring.lower()
 
                 self.progressBar.setValue(10)
                 if self.radioButton_Gene.isChecked():
                     ginput = [x.strip() for x in self.inputstring.split('\n')] # Split search based on newline character and remove deadspace
+                    print(ginput)
                     self.run_results("feature", ginput, same_search)
                 elif self.radioButton_Position.isChecked():
                     pinput = [x.strip() for x in self.inputstring.split('\n')] # Split search based on newline character and remove deadspace
+                    print(pinput)
                     self.run_results("position", pinput, same_search)
                 elif self.radioButton_Sequence.isChecked():
                     sinput = self.inputstring
@@ -722,7 +722,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.checked_info.clear()
                 self.check_ntseq_info.clear()
 
-                for item in searchInput:
+                for item in inputstring:
                     searchIndices = item.split(',')
                     # make sure the right amount of arguments were passed
                     if len(searchIndices) != 3:

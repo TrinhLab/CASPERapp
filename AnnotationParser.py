@@ -56,26 +56,24 @@ class Annotation_Parser:
                 return self.results_list
             else:
                 self.results_list.clear()
-                parser = SeqIO.parse(self.annotationFileName, 'genbank') # Initialize parser
                 for i, query in enumerate(queries):
-                    cnt = 0
-                    for record in parser: # Each record corresponds to a chromosome/scaffold in the FNA/FASTA file
-                        cnt +=1
+                    parser = SeqIO.parse(self.annotationFileName, 'genbank') # Initialize parser (iterator) for each query
+                    for j,record in enumerate(parser): # Each record corresponds to a chromosome/scaffold in the FNA/FASTA file
                         if i == 0:
                             index_number += 1
-                            for j, feature in enumerate(record.features): # Each feature corresponds to a gene, tRNA, rep_origin, etc. in the given record (chromosome/scaffold)
-                                if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source" and feature.type != "gene": # If search matches the feature's qualifiers somewhere, save it
-                                    self.results_list.append((cnt,feature))
+                            for feature in record.features: # Each feature corresponds to a gene, tRNA, rep_origin, etc. in the given record (chromosome/scaffold)
+                                if query.lower() in " ".join(self.flatten_list(feature.qualifiers.values())[:-1]) and feature.type != "source" and feature.type != "gene": # If search matches the feature's qualifiers somewhere, save it
+                                    self.results_list.append((j+1,feature))
                                 else: # If search not in the feature's qualifiers, move to the next feature
                                     continue
                             self.max_chrom = index_number # Counts the number of chromosomes/scaffolds in the organism (only do this once, even if there are multiple queries)
                         else:
-                            for j, feature in enumerate(record.features):
-                                if query.lower() in "".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source" and feature.type != "gene":
-                                    self.results_list.append((cnt,feature))
+                            for feature in record.features:
+                                if query.lower() in " ".join(self.flatten_list(feature.qualifiers.values())[:-1]) and feature.type != "source" and feature.type != "gene":
+                                    self.results_list.append((j+1,feature))
                                 else:
                                     continue
-                    return self.results_list
+                return self.results_list
 
         except Exception as e:
             logger.critical("Error in gbff_parse() in annotation parser.")
