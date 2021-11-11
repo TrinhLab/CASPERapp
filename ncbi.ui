@@ -210,10 +210,18 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="organism_line_edit"/>
+          <widget class="QLineEdit" name="organism_line_edit">
+           <property name="placeholderText">
+            <string>Ex. Escherchia coli</string>
+           </property>
+          </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QLineEdit" name="infra_name_line_edit"/>
+          <widget class="QLineEdit" name="infra_name_line_edit">
+           <property name="placeholderText">
+            <string>Ex. K-12</string>
+           </property>
+          </widget>
          </item>
          <item row="3" column="1">
           <widget class="QLineEdit" name="ret_max_line_edit">
