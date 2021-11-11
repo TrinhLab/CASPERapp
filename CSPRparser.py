@@ -88,7 +88,7 @@ class CSPRparser:
         header = False
         with open(self.fileName, 'r') as f:
             for line in f:
-                line = str(line)
+                line = str(line).strip()
                 if i > 2:
                     if '>' in line and '(' + str(pos_tuple[0]) + ')' in line:
                         header = True

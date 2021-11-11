@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>900</width>
-    <height>500</height>
+    <width>991</width>
+    <height>518</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -431,7 +431,7 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The minimum acceptable on-target score for guides in library. Range: 20-70, &lt;span style=&quot; font-weight:600;&quot;&gt;higher is better&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Minimum off-target score:</string>
+            <string>Minimum on-target score:</string>
            </property>
           </widget>
          </item>
@@ -571,6 +571,9 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="text">
+            <string>0</string>
+           </property>
           </widget>
          </item>
          <item row="2" column="2">
@@ -596,6 +599,9 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="text">
+            <string>100</string>
            </property>
           </widget>
          </item>

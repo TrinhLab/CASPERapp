@@ -7,6 +7,7 @@ import re
 import platform
 import traceback
 import math
+from annotation_functions import *
 
 #global logger
 logger = GlobalSettings.logger
@@ -583,7 +584,7 @@ class genLibrary(QtWidgets.QMainWindow):
                     self.process.kill()
 
             self.cspr_file = ''
-            self.anno_data = dict()
+            self.anno_data = list()
 
             self.filename_input.setText('')
             self.output_path.setText('')
@@ -639,13 +640,15 @@ class genLibrary(QtWidgets.QMainWindow):
     # builds it exactly as Brian built it in the files given
     def build_dict_non_kegg(self):
         try:
-            for gene in self.anno_data:
-                temp = gene.split(';')
-                gene_id = temp[0]
-                description = temp[-1]
-                gene_name = temp[len(temp)-2]
+            for tuple in self.anno_data:
+                chrom = tuple[0]
+                feature = tuple[1]
+                feature_id = get_id(feature)
+                feature_name = get_name(feature)
+                feature_desc = get_description(feature)
                 ### Order: chromosome number, gene start, gene end, dir of gene, gene description, gene name/locus tag
-                self.gen_lib_dict[gene_id] = [self.anno_data[gene][0][1], self.anno_data[gene][0][3], self.anno_data[gene][0][4], self.anno_data[gene][0][5],description,gene_name]
+                self.gen_lib_dict[feature_name] = [chrom,int(feature.location.start),int(feature.location.end),get_strand(feature),get_description(feature),get_name(feature)]
+            print(self.gen_lib_dict)
         except Exception as e:
             logger.critical("Error in build_dict_non_kegg() in generate library.")
             logger.critical(e)
@@ -752,6 +755,7 @@ class genLibrary(QtWidgets.QMainWindow):
                     prev_target = target_list[vec_index]
                     i += 1
                     vec_index += 1
+                print(self.Output)
 
             # if the user selects modify search parameters, go through and check to see if each one has the number of targets that the user wanted
             # if not, append from the deletedDict until they do
