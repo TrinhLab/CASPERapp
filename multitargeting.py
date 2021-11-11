@@ -167,6 +167,9 @@ class Multitargeting(QtWidgets.QMainWindow):
             if scaledWidth < currentWidth:
                 scaledWidth = currentWidth
 
+            #set min width of table
+            self.table.setMinimumWidth(0.5 * scaledWidth)
+
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
             x = centerPoint.x()
