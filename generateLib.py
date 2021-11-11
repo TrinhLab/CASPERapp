@@ -648,7 +648,6 @@ class genLibrary(QtWidgets.QMainWindow):
                 feature_desc = get_description(feature)
                 ### Order: chromosome number, gene start, gene end, dir of gene, gene description, gene name/locus tag
                 self.gen_lib_dict[feature_name] = [chrom,int(feature.location.start),int(feature.location.end),get_strand(feature),get_description(feature),get_name(feature)]
-            print(self.gen_lib_dict)
         except Exception as e:
             logger.critical("Error in build_dict_non_kegg() in generate library.")
             logger.critical(e)
@@ -755,7 +754,6 @@ class genLibrary(QtWidgets.QMainWindow):
                     prev_target = target_list[vec_index]
                     i += 1
                     vec_index += 1
-                print(self.Output)
 
             # if the user selects modify search parameters, go through and check to see if each one has the number of targets that the user wanted
             # if not, append from the deletedDict until they do

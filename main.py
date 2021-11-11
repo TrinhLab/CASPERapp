@@ -538,11 +538,9 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.progressBar.setValue(10)
                 if self.radioButton_Gene.isChecked():
                     ginput = [x.strip() for x in self.inputstring.split('\n')] # Split search based on newline character and remove deadspace
-                    print(ginput)
                     self.run_results("feature", ginput, same_search)
                 elif self.radioButton_Position.isChecked():
                     pinput = [x.strip() for x in self.inputstring.split('\n')] # Split search based on newline character and remove deadspace
-                    print(pinput)
                     self.run_results("position", pinput, same_search)
                 elif self.radioButton_Sequence.isChecked():
                     sinput = self.inputstring
@@ -927,7 +925,6 @@ class CMainWindow(QtWidgets.QMainWindow):
                 feature = item[1]
                 # If inidices of checkBoxes list and selected rows in table match...
                 if item[2] in selected_indices:
-                    print(item)
                     holder = (item[0],int(feature.location.start),int(feature.location.end)) # Tuple order: Feature chromosome/scaffold number, feature start, feature end
                     self.checked_info[get_name(feature)] = holder
                     self.genlib_list.append((item[0],feature)) # Tuple order: Feature chromosome/scaffold number, SeqFeature object
