@@ -10,7 +10,7 @@ Thank you for your interest in CASPER. Our packaged releases for Windows 10, Mac
 
 ### How to run CASPERapp using python3:
 1) Clone the repository using the command: ```git clone https://github.com/TrinhLab/CASPERapp```
-2) Ensure that you have Python3 installed on your computer (Python 3.6-3.8 recommended).
+2) Ensure that you have Python3 installed on your computer (Python 3.8 recommended).
 3) _Recommended: Create and enter virutal environment:_ ```virtualenv <env_name> && source <env_name>/bin/activate```
 4) Install dependecies with pip: ```pip install -r requirements.txt```
 5) Run CASPER!  Simply cd into the CASPERapp-master directory (wherever you put it) and run the command: ```python3 main.py```
