@@ -161,7 +161,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.comboBoxEndo.currentIndexChanged.connect(self.endo_settings)
 
             self.runButton.clicked.connect(self.run_jobs_wrapper)
-            self.clearButton.clicked.connect(self.clear_job_queue)
+            self.clearButton.clicked.connect(self.clear_all)
 
             self.JobsQueue = []  # holds Job classes.
             self.Endos = dict()
@@ -600,6 +600,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 else:
                     program = '"' + GlobalSettings.appdir + "SeqFinderFolder/Casper_Seq_Finder_Mac" + '" '
                 program += job_args
+                print(self.JobsQueue)
                 self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
                 self.process.start(program)
             else:
@@ -620,6 +621,7 @@ class NewGenome(QtWidgets.QMainWindow):
     #even handler for when jobs finish execution
     def upon_process_finishing(self):
         try:
+            print(self.indexes)
             row_index = self.indexes[0]
             name = self.job_Table.item(row_index, 1).text()
             item = QtWidgets.QTableWidgetItem(name)
@@ -641,7 +643,7 @@ class NewGenome(QtWidgets.QMainWindow):
             exit(-1)
 
     #clear the job table
-    def clear_job_queue(self):
+    def clear_all(self):
         try:
             self.process.kill()
             self.fin_index = 0
@@ -649,10 +651,16 @@ class NewGenome(QtWidgets.QMainWindow):
             self.job_Table.setRowCount(0)
             self.JobsQueue = []
             self.output_browser.clear()
+            self.output_browser.setText("Waiting for program initiation...")
+            self.orgName.clear()
+            self.strainName.clear()
+            self.orgCode.clear()
+            self.selectedFile.clear()
+            self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
             self.progressBar.setValue(0)
             self.first = False
         except Exception as e:
-            logger.critical("Error in clear_job_queue() in New Genome.")
+            logger.critical("Error in clear_all() in New Genome.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -726,17 +734,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
             else:
                 self.process.kill()
-                self.job_Table.clearContents()
-                self.job_Table.setRowCount(0)
-                self.orgName.clear()
-                self.strainName.clear()
-                self.orgCode.clear()
-                self.output_browser.clear()
-                self.output_browser.setText("Waiting for program initiation...")
-                self.selectedFile.clear()
-                self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
-                self.progressBar.setValue(0)
-                self.first = False
+                self.clear_all()
                 self.goToPrompt.hide()
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
                 if GlobalSettings.mainWindow.orgChoice.currentText() != '':
@@ -788,17 +786,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
             else:
                 self.process.kill()
-                self.job_Table.clearContents()
-                self.job_Table.setRowCount(0)
-                self.orgName.clear()
-                self.strainName.clear()
-                self.orgCode.clear()
-                self.output_browser.clear()
-                self.output_browser.setText("Waiting for program initiation...")
-                self.selectedFile.clear()
-                self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
-                self.progressBar.setValue(0)
-                self.first = False
+                self.clear_all()
                 self.goToPrompt.hide()
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
                 if GlobalSettings.mainWindow.orgChoice.currentText() != '':
@@ -852,17 +840,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
             else:
                 self.process.kill()
-                self.job_Table.clearContents()
-                self.job_Table.setRowCount(0)
-                self.orgName.clear()
-                self.strainName.clear()
-                self.orgCode.clear()
-                self.output_browser.clear()
-                self.output_browser.setText("Waiting for program initiation...")
-                self.selectedFile.clear()
-                self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
-                self.progressBar.setValue(0)
-                self.first = False
+                self.clear_all()
                 self.goToPrompt.hide()
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
                 if GlobalSettings.mainWindow.orgChoice.currentText() != '':
@@ -915,17 +893,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
             else:
                 self.process.kill()
-                self.job_Table.clearContents()
-                self.job_Table.setRowCount(0)
-                self.orgName.clear()
-                self.strainName.clear()
-                self.orgCode.clear()
-                self.output_browser.clear()
-                self.output_browser.setText("Waiting for program initiation...")
-                self.selectedFile.clear()
-                self.selectedFile.setPlaceholderText("Selected FASTA/FNA File")
-                self.progressBar.setValue(0)
-                self.first = False
+                self.clear_all()
                 self.goToPrompt.hide()
                 GlobalSettings.mainWindow.fill_annotation_dropdown()
                 if GlobalSettings.mainWindow.orgChoice.currentText() != '':
