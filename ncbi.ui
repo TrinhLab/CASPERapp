@@ -302,6 +302,9 @@
            <property name="text">
             <string>FASTA/FNA</string>
            </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item row="3" column="0">
@@ -355,6 +358,9 @@
           <widget class="QCheckBox" name="gbff_checkbox">
            <property name="text">
             <string>GBFF</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>

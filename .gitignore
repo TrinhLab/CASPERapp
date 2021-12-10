@@ -1,9 +1,10 @@
 .idea
 __pycache__
-CASPERinfo
 Casper_Seq_Finder.exe
 genomeBrowserTemplate.html
 temp_join.db
 .vscode/settings.json
 OffTargetFolder/temp.txt
 CASPER.log
+temp.txt
+CASPERinfo

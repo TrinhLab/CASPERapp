@@ -1143,6 +1143,9 @@ class Results(QtWidgets.QMainWindow):
                 self.off_tar_win = OffTarget.OffTarget()
                 self.off_tar_win.submitButton.clicked.connect(self.refresh_data)
             self.off_tar_win.centerUI()
+            ref_org = str(GlobalSettings.mainWindow.orgChoice.currentText()) ### Set default reference organism to the organism that is being targeted
+            index = self.off_tar_win.OrgcomboBox.findText(ref_org) ### Find organism in combo box list
+            self.off_tar_win.OrgcomboBox.setCurrentIndex(index) ### Set combo box to appropriate index
             self.off_tar_win.show()
             self.off_tar_win.activateWindow()
             f.close()

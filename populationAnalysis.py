@@ -62,7 +62,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.org_Table.setShowGrid(False)
             self.org_Table.setHorizontalHeaderLabels(["Organism"])
             self.org_Table.horizontalHeader().setSectionsClickable(True)
-            #self.org_Table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            self.org_Table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             self.org_Table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
             self.org_Table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
             self.org_Table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
@@ -75,10 +75,10 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.table2.horizontalHeader().setSectionsClickable(True)
             self.table2.horizontalHeader().sectionClicked.connect(self.table2_sorting)
             self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-            #self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+            self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
             self.table2.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
             self.table2.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-            #self.table2.resizeColumnsToContents()
+            self.table2.resizeColumnsToContents()
 
             # Finder table
             self.loc_finder_table.setColumnCount(5)
@@ -86,12 +86,12 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.loc_finder_table.setHorizontalHeaderLabels(["Seed ID", "Sequence", "Organism", "Scaffold", "Location"])
             self.loc_finder_table.horizontalHeader().setSectionsClickable(True)
             self.loc_finder_table.horizontalHeader().sectionClicked.connect(self.loc_table_sorter)
-            #self.loc_finder_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            self.loc_finder_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             self.loc_finder_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
             #self.loc_finder_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
     #        self.loc_finder_table.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
     #        self.loc_finder_table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-            #self.loc_finder_table.resizeColumnsToContents()
+            self.loc_finder_table.resizeColumnsToContents()
 
             #custom seed search
             self.query_seed_button.clicked.connect(self.custom_seed_search)
@@ -343,11 +343,8 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                         line = f.readline()
                         f.close()
                         line = str(line)
-                        line = line[:len(line) - 3]
-                        line = line[2:]
-                        colonIndex = line.find(':') + 2
-                        orgName = line[colonIndex:]
-
+                        line = line.split(":")[-1].strip()
+                        orgName = line
                         # add genome name to table
                         tabWidget = QtWidgets.QTableWidgetItem(orgName)
                         tabWidget.setTextAlignment(QtCore.Qt.AlignVCenter)

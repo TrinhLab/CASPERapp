@@ -164,6 +164,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.clearButton.clicked.connect(self.clear_all)
 
             self.JobsQueue = []  # holds Job classes.
+            self.check_strings = []
             self.Endos = dict()
             self.file = ""
 
@@ -313,6 +314,10 @@ class NewGenome(QtWidgets.QMainWindow):
             if GlobalSettings.mainWindow.ncbi.first_show == True:
                 GlobalSettings.mainWindow.ncbi.first_show = False
                 GlobalSettings.mainWindow.ncbi.centerUI()
+            if self.orgName.text() != "":
+                GlobalSettings.mainWindow.ncbi.organism_line_edit.setText(self.orgName.text())
+            if self.strainName.text() != "":
+                GlobalSettings.mainWindow.ncbi.infra_name_line_edit.setText(self.strainName.text())
             GlobalSettings.mainWindow.ncbi.show()
             GlobalSettings.mainWindow.ncbi.activateWindow()
         except Exception as e:
@@ -378,8 +383,6 @@ class NewGenome(QtWidgets.QMainWindow):
                 msgBox.setText(warning)
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
-
-
                 return
 
             if len(self.strainName.text()) == 0:
@@ -436,12 +439,24 @@ class NewGenome(QtWidgets.QMainWindow):
             args += " " + '"' + "notes" + '"'
             args += " " + '"DATA:' + self.Endos[self.comboBoxEndo.currentText()][6] + '"'
 
+            tmp = self.orgName.text()+ " " + self.strainName.text() + " " + self.Endos[self.comboBoxEndo.currentText()][0] + " " + self.orgCode.text()
+            if tmp in self.check_strings:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
+                msgBox.setWindowTitle("Duplicate Entry")
+                msgBox.setText("You have submitted a duplicate entry. Consider changing the organism code or strain name to differentiate closely related strains.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+                return
             name = self.orgCode.text() + "_" + str(self.Endos[self.comboBoxEndo.currentText()][0])
             rowPosition = self.job_Table.rowCount()
             self.job_Table.insertRow(rowPosition)
             item = QtWidgets.QTableWidgetItem(name)
             item.setTextAlignment(QtCore.Qt.AlignHCenter)
             self.job_Table.setItem(rowPosition, 0, item)
+            self.check_strings.append(tmp)
             self.JobsQueue.append(args)
         except Exception as e:
             logger.critical("Error in submit() in New Genome.")
@@ -600,7 +615,6 @@ class NewGenome(QtWidgets.QMainWindow):
                 else:
                     program = '"' + GlobalSettings.appdir + "SeqFinderFolder/Casper_Seq_Finder_Mac" + '" '
                 program += job_args
-                print(self.JobsQueue)
                 self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
                 self.process.start(program)
             else:
@@ -621,7 +635,6 @@ class NewGenome(QtWidgets.QMainWindow):
     #even handler for when jobs finish execution
     def upon_process_finishing(self):
         try:
-            print(self.indexes)
             row_index = self.indexes[0]
             name = self.job_Table.item(row_index, 1).text()
             item = QtWidgets.QTableWidgetItem(name)
@@ -650,6 +663,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.job_Table.clearContents()
             self.job_Table.setRowCount(0)
             self.JobsQueue = []
+            self.check_strings = []
             self.output_browser.clear()
             self.output_browser.setText("Waiting for program initiation...")
             self.orgName.clear()
