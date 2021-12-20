@@ -1,5 +1,7 @@
+import warnings
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, Qt
 from Bio.Seq import Seq
+from Bio import SeqIO
 from CSPRparser import CSPRparser
 import GlobalSettings
 import os
@@ -40,6 +42,7 @@ class Results(QtWidgets.QMainWindow):
             self.inputtype = ""
             self.featureDict = dict() # dictionary passed into transfer_data
             self.featureNTDict = dict() #dictionary passed into transfer_data, same key as featureDict, but hols the NTSEQ
+            self.chromDict = dict() # Initialize dictionary for storing chromosome lengths, same key as featureDict
             self.switcher = [1,1,1,1,1,1,1,1]  # for keeping track of where we are in the sorting clicking for each column
 
             # Initialize Filter Options Object
@@ -66,6 +69,7 @@ class Results(QtWidgets.QMainWindow):
             self.filter_options_button.clicked.connect(self.show_filter_options)
 
             self.change_start_end_button.clicked.connect(self.change_indices)
+            self.reset_location_button.clicked.connect(self.reset_location)
             self.export_button.clicked.connect(self.open_export_to_csv)
 
             #self.targetTable.itemSelectionChanged.connect(self.item_select)
@@ -87,7 +91,7 @@ class Results(QtWidgets.QMainWindow):
             #using this helps speed up updating the chart
             self.OTA = []
 
-            self.clear_gene_viewer_button.clicked.connect(self.clear_gene_viewer)
+            self.clear_highlighted_guides_button.clicked.connect(self.clear_highlighted_guides)
 
             self.detail_output_list = []
             self.rows_and_seq_list = []
@@ -253,7 +257,7 @@ class Results(QtWidgets.QMainWindow):
 
     def change_indices(self):
         try:
-            # make sure the gene viewer is on
+            ### Make sure the gene viewer is on
             if not self.displayGeneViewer.isChecked():
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
@@ -265,25 +269,39 @@ class Results(QtWidgets.QMainWindow):
 
                 return
 
-
-            # change the start and end values
+            ### Change the start and end values
             prevTuple = self.featureDict[self.curgene]
             tempTuple = (self.featureDict[self.curgene][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()))
 
-            if int(self.lineEditStart.displayText()) < 0 or int(self.lineEditStart.displayText()) < 0:
+            ### Make sure both indices are greater than 0
+            if tempTuple[1] <= 0 or tempTuple[2] <= 0:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Invalid location indices.")
-                msgBox.setText("Location indices cannot be negative! Please set values larger than 0.")
+                msgBox.setText("Location indices cannot be negative or zero! Please set values larger than 0.")
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
 
-                self.lineEditStart.setText(str(self.geneDict[self.curgene][1]))
-                self.lineEditEnd.setText(str(self.geneDict[self.curgene][2]))
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
+                self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
                 return
 
-            # make sure that the difference between indicies is not too large
+            ### Make sure start is less than stop
+            if tempTuple[1] >= tempTuple[2]:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Invalid location indices.")
+                msgBox.setText("Start location must be less than stop location.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
+                self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
+                return
+
+            ### Make sure that the difference between indicies is not too large
             if abs(tempTuple[1] - tempTuple[2]) > 50000:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
@@ -297,35 +315,26 @@ class Results(QtWidgets.QMainWindow):
                 self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
                 return
 
-            # if the user is using gbff
-            if self.annotation_path.endswith(".gbff"):
-                self.featureDict[self.curgene] = tempTuple
-                sequence = self.gbff_sequence_finder(self.featureDict[self.curgene])
-                self.featureNTDict[self.curgene] = sequence
-            # if the user is using fna (deprecated)
-            """
-            elif self.annotation_path.endswith(".fna"):
-                self.featureDict[self.curgene] = tempTuple
-                sequence = GlobalSettings.mainWindow.gene_viewer_settings.fna_sequence_finder(self.featureDict[self.curgene])
-                self.featureNTDict[self.curgene] = sequence
-            """
-            # check and see if we need to add lowercase letters
-            changeInStart = tempTuple[1] - prevTuple[1]
-            changeInEnd = tempTuple[2] - prevTuple[2]
+            ### Make sure search is within chromosome range 
+            if int(tempTuple[2]) > self.chromDict[self.curgene]:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Position Error: Region not in Chromosome")
+                msgBox.setText(
+                    "The stop location is greater than the chromosome's length.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
 
-            # check and see if the sequence is extended at all
-            # if it is, make the extended part lower-case as opposed to upper case
-            if changeInStart != 0 and changeInStart < 0:
-                tempString = self.featureNTDict[self.curgene][:abs(changeInStart)].lower()
-                tempString = tempString + self.featureNTDict[self.curgene][abs(changeInStart):]
-                self.featureNTDict[self.curgene] = tempString
-            if changeInEnd != 0 and changeInEnd > 0:
-                tempString = self.featureNTDict[self.curgene][len(self.featureNTDict[self.curgene]) - abs(changeInEnd):].lower()
-                tempString = self.featureNTDict[self.curgene][:len(self.featureNTDict[self.curgene]) - abs(changeInEnd)] + tempString
-                self.featureNTDict[self.curgene] = tempString
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
+                self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
+                return
+
+            sequence, chrom_len = self.sequence_finder(tempTuple) # Get the appropriate NT sequence
+            self.geneViewer.setText(sequence) # Set the gene viewer to display the sequence
 
             # update the gene viewer
-            self.checkGeneViewer()
+            # self.checkGeneViewer()
         except Exception as e:
             logger.critical("Error in change_indices() in results.")
             logger.critical(e)
@@ -347,6 +356,11 @@ class Results(QtWidgets.QMainWindow):
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
+    ### This function resets gene viewer to the appropriate sequence
+    def reset_location(self):
+        self.geneViewer.setText(self.featureNTDict[self.curgene])
+        self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
+        self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
 
     # hightlights the sequences found in the gene viewer
     # highlighting should stay the exact same with fasta and genbank files, as this function only edits what
@@ -368,10 +382,7 @@ class Results(QtWidgets.QMainWindow):
             # variables needed
             cursor = self.geneViewer.textCursor()
             format = QtGui.QTextCharFormat()
-            noMatchString = ""
-
-            # reset the gene viewer text
-            self.geneViewer.setText(self.featureNTDict[self.curgene])
+            failed_guides = []
 
             # check and make sure still is actually highlighted!
             selectedList = self.targetTable.selectedItems()
@@ -393,115 +404,41 @@ class Results(QtWidgets.QMainWindow):
                     strandString = self.targetTable.item(i, 3).text()
                     sequenceString = self.targetTable.item(i, 2).text()
                     printSequence = ""
-                    movementIndex = 0
+                    movementIndex = len(sequenceString)
                     left_right = ""
                     #print("Length of geneViewer: ", len(self.geneViewer.toPlainText()))
 
-
-                    # get the location
-                    location = int(locationString) - self.featureDict[self.curgene][1]
-                    movementIndex = len(sequenceString) # This is the length of the gRNA
-
-                    # get which way it's moving, and the real location. This is for checking edge cases
-                    endo = self.endonucleaseBox.currentText()
-                    try:
-                        direction = int(self.endo_data[endo][1]) # Try to get the endo direction from the endo_data dictionary
-                    except:
-                        # If co-targeting is used, endo will not be in endo_data, so get it based on Cas9 assumption
-                        if "Cas9" in endo or "Cas13" in endo:
-                            direction = 3
-                        elif "Cas12" in endo or "Cpf1" in endo:
-                            direction = 5
-
-                    if direction == 5:
-                        # if the strand is positive, it moves to the right, if the strand is negative, it moves to the left
-                        if strandString == "-":
-                            left_right = "-"
-                            location = (location - len(self.targetTable.item(i, 4).text())) + 1
-                        elif strandString == "+":
-                            location = (location + len(self.targetTable.item(i,4).text())) + 1
-                            left_right = "+"
-                    else:
-                        # if the strand is negative, it moves to the right if the strand is positive it moves to the left
-                        if strandString == "-":
-                            left_right = "+"
-                            #location = location + len(self.targetTable.item(i, 3).text())
-                        elif strandString == "+":
-                            left_right = "-"
-                            #location = location - len(self.targetTable.item(i, 3).text())
-
-                    # get the right color and the revcom
                     if strandString == "+":
                         format.setBackground(QtGui.QBrush(QtGui.QColor("green")))
-                    elif strandString == "-":
-                        format.setBackground(QtGui.QBrush(QtGui.QColor("red")))
-                        temp = Seq(sequenceString)
-                        sequenceString = temp.reverse_complement()
-                        sequenceString = sequenceString.__str__()
-
-                    testSequence = sequenceString.lower()
-                    testGeneViewer = self.geneViewer.toPlainText().lower()
-
-                    #print("Location is: ", location)
-                    #print("Length of geneome viewer: ", len(self.geneViewer.toPlainText()))
-
-                    # check to see if the sequence is in the gene viewer to behind with
-                    if testSequence in testGeneViewer:
-                        #print("In the if testSequence in testGeneViewer")
-                        indexInViewer = testGeneViewer.find(testSequence)
-                        cursor.setPosition(indexInViewer)
-                        for i in range(len(sequenceString)):
-                            cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
-                        cursor.mergeCharFormat(format)
-
-                    # below elif's are edge cases, in case the sequence is not fully in the gene viewer
-                    # if the start is too far to the left, but part of the sequence is in gene viewer
-                    # and it's being built right-to-left
-                    elif left_right == "-" and location - movementIndex < 0 and location > 0:
-                        #print("in the first elif")
-                        cursor.setPosition(0)
-                        for i in range(location + 1):
-                            cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
-                        cursor.mergeCharFormat(format)
-                    # being built left-to-right
-                    # if start is too far to the left, but start + total movement is in the geneviewer
-                    elif left_right == "+" and location < 0 and location + movementIndex > 0:
-                        #print("In the second elif")
-                        cursor.setPosition(0)
-                        for i in range(location + movementIndex):
-                            cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
-                        cursor.mergeCharFormat(format)
-                    # being build right-to-left
-                    # if the location is too far to the right, but location-movement is in the gene viewer
-                    elif left_right == "-" and location > len(self.geneViewer.toPlainText()) and location - movementIndex < len(self.geneViewer.toPlainText()):
-                        #print("In the third elif statement")
-                        cursor.setPosition((location - movementIndex) + 1)
-                        cursor.movePosition(QtGui.QTextCursor.End, 1)
-                        cursor.mergeCharFormat(format)
-                    # being built left-to-right
-                    # if the location + movement is too far to the right, but location is in the geneviewer
-                    elif left_right == "+" and location + movementIndex > len(self.geneViewer.toPlainText()) and location < len(self.geneViewer.toPlainText()):
-                        #print("In the fourth elif")
-                        cursor.setPosition(location)
-                        cursor.movePosition(QtGui.QTextCursor.End, 1)
-                        cursor.mergeCharFormat(format)
-
-                    # else, it is not able to be found
-                    else:
-                        if noMatchString == "":
-                            noMatchString = sequenceString
+                        index = self.geneViewer.toPlainText().upper().find(str(sequenceString))
+                        if index != -1: # If gRNA is found in GeneViewer
+                            cursor.setPosition(index)
+                            for i in range(movementIndex): # Actually highlight the gRNA now
+                                cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
+                            cursor.mergeCharFormat(format)
                         else:
-                            noMatchString = noMatchString + ";;" + sequenceString
-
+                            failed_guides.append(sequenceString)
+                            continue
+                    else: # gRNA is on negative strand
+                        format.setBackground(QtGui.QBrush(QtGui.QColor("red")))
+                        index = self.geneViewer.toPlainText().upper().find(str(Seq(sequenceString).reverse_complement()))
+                        if index != -1: # If gRNA is found in GeneViewer
+                            cursor.setPosition(index)
+                            for i in range(movementIndex): # Actually highlight the gRNA now
+                                cursor.movePosition(QtGui.QTextCursor.NextCharacter, 1)
+                            cursor.mergeCharFormat(format)
+                        else:
+                            failed_guides.append(sequenceString)
+                            continue
 
             # if any of the sequences return 0 matches, show the user which ones were not found
-            if len(noMatchString) >= 5:
+            if len(failed_guides) > 0:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Warning")
                 msgBox.setText(
-                    "The following sequence(s) were not found in the Gene Viewer text:\n\t" + noMatchString)
+                    "The following sequence(s) were not found in the Gene Viewer text:\n\t" + "\n".join(failed_guides))
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
 
@@ -1296,17 +1233,16 @@ class Results(QtWidgets.QMainWindow):
             exit(-1)
 
     #function to clear highlights in gene viewer and un-select any rows highlighted in main table
-    def clear_gene_viewer(self):
+    def clear_highlighted_guides(self):
         try:
-            #clear gene viewer highlights
-            if self.displayGeneViewer.isChecked():
-                self.geneViewer.setText(self.featureNTDict[self.curgene])
+            # Clear guides from gene viewer
+            self.change_indices()
 
-            #clear selected rows in table
+            # Clear selected rows in table
             self.checkBoxSelectAll.setChecked(False)
             self.targetTable.selectionModel().clearSelection()
         except Exception as e:
-            logger.critical("Error in clear_gene_viewer() in results.")
+            logger.critical("Error in clear_highlighted_guides() in results.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)
@@ -1337,15 +1273,9 @@ class Results(QtWidgets.QMainWindow):
             sequence = ""
             # for each gene selected from the results window
             for item in self.featureDict:
-            ### FNA support deprecated currently
-                """
-                if self.file_type == "fna":
-                    sequence = self.fna_sequence_finder(GlobalSettings.mainWindow.Results.featureDict[item])
-                    GlobalSettings.mainWindow.Results.featureNTDict[item] = sequence
-                """
-                if self.annotation_path.endswith(".gbff"):
-                    sequence = self.gbff_sequence_finder(self.featureDict[item])
-                    self.featureNTDict[item] = sequence
+                sequence, chrom_len = self.sequence_finder(self.featureDict[item])
+                self.featureNTDict[item] = sequence
+                self.chromDict[item] = chrom_len
             self.lineEditStart.setEnabled(True)
             self.lineEditEnd.setEnabled(True)
             self.change_start_end_button.setEnabled(True)
@@ -1357,70 +1287,35 @@ class Results(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    # this function gets the sequence out of the GBFF file
-    # may have indexing issues
-    def gbff_sequence_finder(self, location_data):
+    # This function takes the location data for a feature- or position-based search
+    # and returns the appropriate NT sequence from a GBFF file using Bio Python's SeqIO.parse() method
+    def sequence_finder(self, location_data):
         try:
             # start up the function
-            fileStream = open(self.annotation_path)
-            buffer = fileStream.readline()
-            index = 1
-            pre_sequence = ""
-
-            # get to the first chromosome's origin
-            while True:
-                if "ORIGIN" in buffer:
-                    buffer = fileStream.readline()
-                    break
-                buffer = fileStream.readline()
-
-            # skip all of the data until we are at the chromosome we care about
-            while index != location_data[0]:
-                if "ORIGIN" in buffer:
-                    index += 1
-                buffer = fileStream.readline()
-
-            # get the entire chromesome into a string
-            while "//" not in buffer:
-                if "LOCUS" in buffer or buffer == "":
-                    break
-                # replace digits with spaces (if i replace them with nothing the program will crash)
-                for i in range(len(buffer)):
-                    if buffer[i].isdigit():
-                        buffer = buffer.replace(buffer[i], " ")
-
-                # replace all of the spaces
-                buffer = buffer.replace(" ", "")
-
-                # append it to the stored version of the entire string
-                if pre_sequence == "":
-                    pre_sequence = buffer
-                else:
-                    pre_sequence = pre_sequence + buffer
-
-                buffer = fileStream.readline()
-
-            # take out the endlines and uppercase the string
-            pre_sequence = pre_sequence.replace("\n", "")
-            pre_sequence = pre_sequence.upper()
-            #print("Length of the pre-sequence: ", len(pre_sequence))
-
-            ###Get gene sequence and padding sequences (for visualizing gRNAs that appear at extreme ends of gene)
-            if location_data[1] - 30 >= 0: ### Check to make sure there is enough 5' end of gene to pull the padding from, so indexing error isn't raised
-                five_prime_tail = str(pre_sequence[location_data[1]-30:location_data[1]])
-            else:
-                five_prime_tail = ""
-            if len(pre_sequence) > (location_data[2] + 30): ### Check to make sure there is enough 3' end of gene to pull the padding from, so indexing error isn't raised
-                three_prime_tail = str(pre_sequence[location_data[2]:location_data[2]+31])
-            else:
-                three_prime_tail = ""
-
-            gene_sequence = str(pre_sequence[location_data[1]:location_data[2]])
-            ret_sequence = five_prime_tail.lower() + gene_sequence.upper() + three_prime_tail.lower()
-            return ret_sequence
+            chrom_index = location_data[0]-1 # This is the chromosome we need to pull sequence data from. (Python indexing, so chromosome 1 is index 0)
+            start = location_data[1]
+            end = location_data[2]
+            parser = SeqIO.parse(self.annotation_path,'genbank') # Initialize parser object for GBFF file
+            for i,record in enumerate(parser): # Loop through chromosomes 
+                if chrom_index == i: # If this is the correct chromosome
+                    chrom_seq = str(record.seq).strip()
+                    ### Get appropriate sequence and padding (for visualizing gRNAs that appear at extreme ends of region)
+                    if (start - 30) >= 0: # Check to make sure there is enough 5' end of gene to pull the padding from, so indexing error isn't raised
+                        five_prime_tail = chrom_seq[(start-30):start]
+                    else:
+                        five_prime_tail = ""
+                    if len(chrom_seq) >= (end + 30): # Check to make sure there is enough 3' end of gene to pull the padding from, so indexing error isn't raised
+                        three_prime_tail = chrom_seq[end:end+30]
+                    else:
+                        three_prime_tail = ""
+                    my_seq = chrom_seq[start:end] # Get the sequence from the specified location
+                    ret_sequence = five_prime_tail.lower() + my_seq.upper() + three_prime_tail.lower() # Add padding to the sequence
+                    return ret_sequence, len(chrom_seq)
+                else: # If this is not the right chromosome, go to the next one
+                    continue
 
         except Exception as e:
-            logger.critical("Error in gbff_sequence_finder() in results.")
+            logger.critical("Error in sequence_finder() in results.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             exit(-1)

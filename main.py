@@ -1,6 +1,7 @@
 import sys
 import os
 import io
+from Bio import SeqIO
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from CoTargeting import CoTargeting
 from closingWin import closingWindow
@@ -720,9 +721,9 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.checked_info.clear()
                 self.check_ntseq_info.clear()
 
-                for item in inputstring:
-                    searchIndices = item.split(',')
-                    # make sure the right amount of arguments were passed
+                for item in inputstring: # Loop through each search
+                    searchIndices = [x.strip() for x in item.split(',')] # Parse input query
+                    ### Make sure the right amount of arguments were passed
                     if len(searchIndices) != 3:
                         msgBox = QtWidgets.QMessageBox()
                         msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
@@ -736,7 +737,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                         self.progressBar.setValue(0)
                         return
 
-                    # make sure user inputs digits
+                    ### Make sure user inputs digits
                     if not searchIndices[0].isdigit() or not searchIndices[1].isdigit() or not searchIndices[2].isdigit():
                         msgBox = QtWidgets.QMessageBox()
                         msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
@@ -749,7 +750,8 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                         self.progressBar.setValue(0)
                         return
-                    # make sure start is less than end
+
+                    ### Make sure start is less than end
                     elif int(searchIndices[1]) >= int(searchIndices[2]):
                         msgBox = QtWidgets.QMessageBox()
                         msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
@@ -762,6 +764,43 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                         self.progressBar.setValue(0)
                         return
+
+                    ### Make sure range isn't too large
+                    elif abs(int(searchIndices[2])-int(searchIndices[1])) > 50000:
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("Position Error: Range Too Large")
+                        msgBox.setText(
+                            "The search range must be less than 100,000 nt.")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
+                        self.progressBar.setValue(0)
+                        return
+
+                    ### Get length of the chromosome
+                    for i, chrom in enumerate(SeqIO.parse(self.annotation_parser.annotationFileName,"genbank")):
+                        if i == (int(searchIndices[0])-1):
+                            chrom_len = len(chrom.seq)
+                        else:
+                            continue                      
+                    
+                    ### Make sure search is within chromosome range 
+                    if int(searchIndices[2]) > chrom_len:
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("Position Error: Region not in Chromosome")
+                        msgBox.setText(
+                            "The stop location is greater than the chromosome's length.")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
+                        self.progressBar.setValue(0)
+                     
+
+
                     # append the data into the checked_info
                     tempString = 'chrom: ' + str(searchIndices[0]) + ',start: ' + str(searchIndices[1]) + ',end: ' + str(searchIndices[2])
                     self.checked_info[tempString] = (int(searchIndices[0]), int(searchIndices[1]), int(searchIndices[2]))

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1266</width>
-    <height>639</height>
+    <width>1381</width>
+    <height>743</height>
    </rect>
   </property>
   <property name="font">
@@ -195,28 +195,6 @@
            </property>
           </widget>
          </item>
-         <item row="9" column="1" alignment="Qt::AlignLeft">
-          <widget class="QPushButton" name="filter_options_button">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>125</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Additional options for filtering the Guide Viewer Table.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Filter Options</string>
-           </property>
-          </widget>
-         </item>
          <item row="5" column="1">
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
@@ -282,6 +260,28 @@
            </property>
           </widget>
          </item>
+         <item row="9" column="1" alignment="Qt::AlignLeft">
+          <widget class="QPushButton" name="filter_options_button">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>125</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Additional options for filtering the Guide Viewer Table.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Filter Options</string>
+           </property>
+          </widget>
+         </item>
          <item row="10" column="0" colspan="3">
           <widget class="QTableWidget" name="targetTable"/>
          </item>
@@ -339,8 +339,8 @@
          <string>Gene Viewer</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_6">
-         <item row="3" column="3">
-          <widget class="QLineEdit" name="lineEditEnd">
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="lineEditStart">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -349,13 +349,29 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
-          <widget class="QLineEdit" name="lineEditStart">
+         <item row="3" column="2">
+          <widget class="QLabel" name="endLabel">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Stop</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="startlabel">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Start</string>
            </property>
           </widget>
          </item>
@@ -382,7 +398,7 @@
           </widget>
          </item>
          <item row="1" column="3">
-          <widget class="QPushButton" name="clear_gene_viewer_button">
+          <widget class="QPushButton" name="clear_highlighted_guides_button">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -403,29 +419,23 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="startlabel">
+         <item row="3" column="3">
+          <widget class="QLineEdit" name="lineEditEnd">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Start</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="2">
-          <widget class="QLabel" name="endLabel">
+         <item row="5" column="0" colspan="5">
+          <widget class="QTextEdit" name="geneViewer">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="text">
-            <string>End</string>
            </property>
           </widget>
          </item>
@@ -452,15 +462,21 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="0" colspan="5">
-          <widget class="QTextEdit" name="geneViewer">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+         <item row="7" column="0" colspan="5">
+          <spacer name="verticalSpacer_8">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
            </property>
-          </widget>
+           <property name="sizeType">
+            <enum>QSizePolicy::Preferred</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>10</height>
+            </size>
+           </property>
+          </spacer>
          </item>
          <item row="3" column="4">
           <widget class="QPushButton" name="change_start_end_button">
@@ -478,21 +494,12 @@
            </property>
           </widget>
          </item>
-         <item row="6" column="0" colspan="5">
-          <spacer name="verticalSpacer_8">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+         <item row="6" column="4">
+          <widget class="QPushButton" name="reset_location_button">
+           <property name="text">
+            <string>Reset Location</string>
            </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>10</height>
-            </size>
-           </property>
-          </spacer>
+          </widget>
          </item>
         </layout>
        </widget>
