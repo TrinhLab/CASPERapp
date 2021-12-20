@@ -116,6 +116,11 @@ class Results(QtWidgets.QMainWindow):
 
             self.get_endo_data()
 
+            ### Make line edits only accept integers
+            self.lineEditStart.setValidator(QtGui.QIntValidator())
+            self.lineEditEnd.setValidator(QtGui.QIntValidator())
+
+
             #scale UI
             self.first_show = True
             self.scaleUI()
@@ -271,10 +276,10 @@ class Results(QtWidgets.QMainWindow):
 
             ### Change the start and end values
             prevTuple = self.featureDict[self.curgene]
-            tempTuple = (self.featureDict[self.curgene][0], int(self.lineEditStart.displayText()), int(self.lineEditEnd.displayText()))
+            tempTuple = (self.featureDict[self.curgene][0], int(self.lineEditStart.displayText())-1, int(self.lineEditEnd.displayText()))
 
             ### Make sure both indices are greater than 0
-            if tempTuple[1] <= 0 or tempTuple[2] <= 0:
+            if tempTuple[1]+1 <= 0 or tempTuple[2] <= 0:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -283,8 +288,9 @@ class Results(QtWidgets.QMainWindow):
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
 
-                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1))
                 self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
+                self.reset_location()
                 return
 
             ### Make sure start is less than stop
@@ -297,8 +303,9 @@ class Results(QtWidgets.QMainWindow):
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
 
-                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1))
                 self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
+                self.reset_location()
                 return
 
             ### Make sure that the difference between indicies is not too large
@@ -311,8 +318,9 @@ class Results(QtWidgets.QMainWindow):
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
 
-                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1))
                 self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
+                self.reset_location()
                 return
 
             ### Make sure search is within chromosome range 
@@ -326,15 +334,13 @@ class Results(QtWidgets.QMainWindow):
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
 
-                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1))
                 self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
+                self.reset_location()
                 return
 
             sequence, chrom_len = self.sequence_finder(tempTuple) # Get the appropriate NT sequence
             self.geneViewer.setText(sequence) # Set the gene viewer to display the sequence
-
-            # update the gene viewer
-            # self.checkGeneViewer()
         except Exception as e:
             logger.critical("Error in change_indices() in results.")
             logger.critical(e)
@@ -359,7 +365,7 @@ class Results(QtWidgets.QMainWindow):
     ### This function resets gene viewer to the appropriate sequence
     def reset_location(self):
         self.geneViewer.setText(self.featureNTDict[self.curgene])
-        self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
+        self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1))
         self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
 
     # hightlights the sequences found in the gene viewer
@@ -453,16 +459,10 @@ class Results(QtWidgets.QMainWindow):
     # if it is un-marked, it hides the data
     def checkGeneViewer(self):
         try:
-            if (self.displayGeneViewer.isChecked() and self.inputtype == "feature"):
-                    self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
-                    self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
-                    self.geneViewer.setText(self.featureNTDict[self.curgene])
-            elif (self.displayGeneViewer.isChecked() and self.inputtype == "position"):
-                    start = self.curgene.split(",")[1].split(" ")[-1]
-                    end = self.curgene.split(",")[2].split(" ")[-1]
-                    self.lineEditStart.setText(str(start))
-                    self.lineEditEnd.setText(str(end))
-                    self.geneViewer.setText(self.featureNTDict[self.curgene])
+            if self.displayGeneViewer.isChecked():
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1))
+                self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
+                self.geneViewer.setText(self.featureNTDict[self.curgene])
             elif not self.displayGeneViewer.isChecked():
                 self.lineEditStart.clear()
                 self.lineEditEnd.clear()
@@ -723,142 +723,71 @@ class Results(QtWidgets.QMainWindow):
     ###############################################################################################################
     def displayGeneData(self):
         try:
-            if self.inputtype == "feature":
-                self.curgene = str(self.comboBoxGene.currentText())  # Gets the current gene
-                # Creates the set object from the list of the current gene:
-                if self.curgene=='' or len(self.AllData)<1:
-                    return
+            self.curgene = str(self.comboBoxGene.currentText())  # Gets the current gene
+            # Creates the set object from the list of the current gene:
+            if self.curgene=='' or len(self.AllData)<1:
+                return
 
-                subset_display = []
-                # set the start and end numbers, as well as set the geneViewer text, if the displayGeneViewer is checked
-                if self.displayGeneViewer.isChecked():
-                    self.lineEditStart.setText(str(self.featureDict[self.curgene][1]))
-                    self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
-                    self.geneViewer.setText(self.featureNTDict[self.curgene])
+            subset_display = []
+            # set the start and end numbers, as well as set the geneViewer text, if the displayGeneViewer is checked
+            if self.displayGeneViewer.isChecked():
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1)) # Add 1 to account for Python indexing convention
+                self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
+                self.geneViewer.setText(self.featureNTDict[self.curgene])
 
-                # if this checkBox is checked, remove the single endo
-                if self.filter_options.cotarget_checkbox.isChecked():
-                    gene = self.curgene
-                    self.remove_single_endo(gene)
+            # if this checkBox is checked, remove the single endo
+            if self.filter_options.cotarget_checkbox.isChecked():
+                gene = self.curgene
+                self.remove_single_endo(gene)
 
-                # Removing all sequences below minimum score and creating the set:
-                # for each list item
-                for item in self.AllData[self.curgene]:
-                    # for each tuple item
-                    for i in range(len(item)):
-                        if int(item[i][3]) > int(self.filter_options.minScoreLine.text()):
-                            # Removing all non 5' G sequences:
-                            if self.filter_options.fivegseqCheckBox.isChecked():
-                                if item[i][1].startswith("G"):
-                                    subset_display.append(item[i])
-                            else:
+            # Removing all sequences below minimum score and creating the set:
+            # for each list item
+            for item in self.AllData[self.curgene]:
+                # for each tuple item
+                for i in range(len(item)):
+                    if int(item[i][3]) > int(self.filter_options.minScoreLine.text()):
+                        # Removing all non 5' G sequences:
+                        if self.filter_options.fivegseqCheckBox.isChecked():
+                            if item[i][1].startswith("G"):
                                 subset_display.append(item[i])
+                        else:
+                            subset_display.append(item[i])
 
-                self.targetTable.setRowCount(len(subset_display))
+            self.targetTable.setRowCount(len(subset_display))
 
-                index = 0
-                #changed the number items to use setData so that sorting will work correctly
-                #because before the numbers were interpretted as strings and not numbers
-                for item in subset_display:
-                    num = int(item[0])
-                    loc = QtWidgets.QTableWidgetItem()
-                    loc.setData(QtCore.Qt.EditRole, abs(num))
-                    seq = QtWidgets.QTableWidgetItem(item[1])
-                    strand = QtWidgets.QTableWidgetItem(str(item[4]))
-                    PAM = QtWidgets.QTableWidgetItem(item[2])
-                    num1 = int(item[3])
-                    endonuclease = QtWidgets.QTableWidgetItem(item[5])
-                    score = QtWidgets.QTableWidgetItem()
-                    score.setData(QtCore.Qt.EditRole, num1)
-                    self.targetTable.setItem(index, 0, loc)
-                    self.targetTable.setItem(index, 1, endonuclease)
-                    self.targetTable.setItem(index, 2, seq)
-                    self.targetTable.setItem(index, 3, strand)
-                    self.targetTable.setItem(index, 4, PAM)
-                    self.targetTable.setItem(index, 5, score)
-                    self.targetTable.setItem(index, 6, QtWidgets.QTableWidgetItem("--.--"))
-                    self.targetTable.removeCellWidget(index, 7)
-                    if (item[1] in self.seq_and_avg_list[self.comboBoxGene.currentIndex()].keys()):
-                        OT = QtWidgets.QTableWidgetItem()
-                        OT.setData(QtCore.Qt.EditRole, self.seq_and_avg_list[self.comboBoxGene.currentIndex()][item[1]])
-                        self.targetTable.setItem(index, 6, OT)
-                    if (item[1] in self.detail_output_list[self.comboBoxGene.currentIndex()].keys()):
-                        details = QtWidgets.QPushButton()
-                        details.setText("Details")
-                        details.clicked.connect(self.show_details)
-                        self.targetTable.setCellWidget(index, 7, details)
-                    index += 1
-                self.targetTable.resizeColumnsToContents()
-            elif self.inputtype == "position":
-                self.curgene = str(self.comboBoxGene.currentText())  # Gets the current gene
-                # Creates the set object from the list of the current gene:
-                if self.curgene=='' or len(self.AllData)<1:
-                    return
-
-                subset_display = []
-                # set the start and end numbers, as well as set the geneViewer text, if the displayGeneViewer is checked
-                if self.displayGeneViewer.isChecked():
-                    start = self.curgene.split(",")[1].split(" ")[-1]
-                    end = self.curgene.split(",")[2].split(" ")[-1]
-
-                    self.lineEditStart.setText(str(start))
-                    self.lineEditEnd.setText(str(end))
-                    self.geneViewer.setText(self.featureNTDict[self.curgene])
-
-                # if this checkBox is checked, remove the single endo
-                if self.filter_options.cotarget_checkbox.isChecked():
-                    gene = self.curgene
-                    self.remove_single_endo(gene)
-
-                # Removing all sequences below minimum score and creating the set:
-                # for each list item
-                for item in self.AllData[self.curgene]:
-                    # for each tuple item
-                    for i in range(len(item)):
-                        if int(item[i][3]) > int(self.filter_options.minScoreLine.text()):
-                            # Removing all non 5' G sequences:
-                            if self.filter_options.fivegseqCheckBox.isChecked():
-                                if item[i][1].startswith("G"):
-                                    subset_display.append(item[i])
-                            else:
-                                subset_display.append(item[i])
-
-                self.targetTable.setRowCount(len(subset_display))
-
-                index = 0
-                #changed the number items to use setData so that sorting will work correctly
-                #because before the numbers were interpretted as strings and not numbers
-                for item in subset_display:
-                    num = int(item[0])
-                    loc = QtWidgets.QTableWidgetItem()
-                    loc.setData(QtCore.Qt.EditRole, abs(num))
-                    seq = QtWidgets.QTableWidgetItem(item[1])
-                    strand = QtWidgets.QTableWidgetItem(str(item[4]))
-                    PAM = QtWidgets.QTableWidgetItem(item[2])
-                    num1 = int(item[3])
-                    endonuclease = QtWidgets.QTableWidgetItem(item[5])
-                    score = QtWidgets.QTableWidgetItem()
-                    score.setData(QtCore.Qt.EditRole, num1)
-                    self.targetTable.setItem(index, 0, loc)
-                    self.targetTable.setItem(index, 1, endonuclease)
-                    self.targetTable.setItem(index, 2, seq)
-                    self.targetTable.setItem(index, 3, strand)
-                    self.targetTable.setItem(index, 4, PAM)
-                    self.targetTable.setItem(index, 5, score)
-                    self.targetTable.setItem(index, 6, QtWidgets.QTableWidgetItem("--.--"))
-                    self.targetTable.removeCellWidget(index, 7)
-                    if (item[1] in self.seq_and_avg_list[self.comboBoxGene.currentIndex()].keys()):
-                        OT = QtWidgets.QTableWidgetItem()
-                        OT.setData(QtCore.Qt.EditRole, self.seq_and_avg_list[self.comboBoxGene.currentIndex()][item[1]])
-                        self.targetTable.setItem(index, 6, OT)
-                    if (item[1] in self.detail_output_list[self.comboBoxGene.currentIndex()].keys()):
-                        details = QtWidgets.QPushButton()
-                        details.setText("Details")
-                        details.clicked.connect(self.show_details)
-                        self.targetTable.setCellWidget(index, 7, details)
-                    index += 1
-
-                self.targetTable.resizeColumnsToContents()
+            index = 0
+            #changed the number items to use setData so that sorting will work correctly
+            #because before the numbers were interpretted as strings and not numbers
+            for item in subset_display:
+                num = int(item[0])
+                loc = QtWidgets.QTableWidgetItem()
+                loc.setData(QtCore.Qt.EditRole, abs(num))
+                seq = QtWidgets.QTableWidgetItem(item[1])
+                strand = QtWidgets.QTableWidgetItem(str(item[4]))
+                PAM = QtWidgets.QTableWidgetItem(item[2])
+                num1 = int(item[3])
+                endonuclease = QtWidgets.QTableWidgetItem(item[5])
+                score = QtWidgets.QTableWidgetItem()
+                score.setData(QtCore.Qt.EditRole, num1)
+                self.targetTable.setItem(index, 0, loc)
+                self.targetTable.setItem(index, 1, endonuclease)
+                self.targetTable.setItem(index, 2, seq)
+                self.targetTable.setItem(index, 3, strand)
+                self.targetTable.setItem(index, 4, PAM)
+                self.targetTable.setItem(index, 5, score)
+                self.targetTable.setItem(index, 6, QtWidgets.QTableWidgetItem("--.--"))
+                self.targetTable.removeCellWidget(index, 7)
+                if (item[1] in self.seq_and_avg_list[self.comboBoxGene.currentIndex()].keys()):
+                    OT = QtWidgets.QTableWidgetItem()
+                    OT.setData(QtCore.Qt.EditRole, self.seq_and_avg_list[self.comboBoxGene.currentIndex()][item[1]])
+                    self.targetTable.setItem(index, 6, OT)
+                if (item[1] in self.detail_output_list[self.comboBoxGene.currentIndex()].keys()):
+                    details = QtWidgets.QPushButton()
+                    details.setText("Details")
+                    details.clicked.connect(self.show_details)
+                    self.targetTable.setCellWidget(index, 7, details)
+                index += 1
+            self.targetTable.resizeColumnsToContents()
         except Exception as e:
             logger.critical("Error in displayGeneData() in results.")
             logger.critical(e)
@@ -1291,10 +1220,11 @@ class Results(QtWidgets.QMainWindow):
     # and returns the appropriate NT sequence from a GBFF file using Bio Python's SeqIO.parse() method
     def sequence_finder(self, location_data):
         try:
-            # start up the function
+            ### Start up the function
             chrom_index = location_data[0]-1 # This is the chromosome we need to pull sequence data from. (Python indexing, so chromosome 1 is index 0)
             start = location_data[1]
             end = location_data[2]
+            ### Pull the sequence information from the GBFF file
             parser = SeqIO.parse(self.annotation_path,'genbank') # Initialize parser object for GBFF file
             for i,record in enumerate(parser): # Loop through chromosomes 
                 if chrom_index == i: # If this is the correct chromosome

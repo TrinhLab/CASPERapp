@@ -803,7 +803,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                     # append the data into the checked_info
                     tempString = 'chrom: ' + str(searchIndices[0]) + ',start: ' + str(searchIndices[1]) + ',end: ' + str(searchIndices[2])
-                    self.checked_info[tempString] = (int(searchIndices[0]), int(searchIndices[1]), int(searchIndices[2]))
+                    self.checked_info[tempString] = (int(searchIndices[0]), int(searchIndices[1])-1, int(searchIndices[2]))
 
                 self.progressBar.setValue(50)
                 self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, "",inputtype)
