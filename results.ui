@@ -59,10 +59,10 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Determine guides with synergistic PAMs (Ex. saCas9 and spCas9 compatible guides). &lt;span style=&quot; font-weight:600;&quot;&gt;Note:&lt;/span&gt; to analyze an organism for cotargeting guides, separate CSPR files must be generated for each additional endonuclease.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Determine guides with synergistic PAMs (Ex. saCas9 and spCas9 compatible guides). &lt;span style=&quot; font-weight:600;&quot;&gt;Note:&lt;/span&gt; to analyze an organism for co-targeting guides, separate CSPR files must be generated for each additional endonuclease. Co-targeting endonucleases must have the same PAM directionality, same total gRNA length, and overlapping PAM sequences to be compatible.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Cotargeting</string>
+            <string>Co-Targeting</string>
            </property>
           </widget>
          </item>

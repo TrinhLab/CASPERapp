@@ -77,7 +77,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="title">
         <property name="text">
-         <string>Co-targeting</string>
+         <string>Co-Targeting</string>
         </property>
        </widget>
       </item>
