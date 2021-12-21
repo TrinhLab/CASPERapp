@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>352</width>
-    <height>270</height>
+    <height>297</height>
    </rect>
   </property>
   <property name="font">
@@ -105,7 +105,7 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Cotargeting must already have been run to use this option. Filters out guides that don't have multi-endonuclease targeting capabilities.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>View Cotargets Only</string>
+            <string>View Co-Targets Only</string>
            </property>
           </widget>
          </item>

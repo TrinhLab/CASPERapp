@@ -130,7 +130,6 @@ class CoTargeting(QtWidgets.QMainWindow):
         try:
             self.orgName.setText(orgName)
             setTableList = list()
-
             # only get the endo choices that were original
             for item in endo_choices:
                 checkList = item.split(",")
@@ -188,7 +187,7 @@ class CoTargeting(QtWidgets.QMainWindow):
                             break
                         line_tokened = line.split(";")
                         endo = line_tokened[0]
-                        self.Endos[endo] = [line_tokened[2], line_tokened[3], line_tokened[4]]
+                        self.Endos[endo] = ([line_tokened[2], line_tokened[3], line_tokened[4]],line_tokened[5])
                     break
             f.close()
 
@@ -215,7 +214,11 @@ class CoTargeting(QtWidgets.QMainWindow):
             #invalid_flag = False
             for endo1 in ret_endo_list:
                 for endo2 in ret_endo_list:
-                    if self.Endos[endo1][0] != self.Endos[endo2][0] or self.Endos[endo1][1] != self.Endos[endo2][1] or self.Endos[endo1][2] != self.Endos[endo2][2]:
+                    if endo1 == endo2:
+                        continue
+                    endo1_len = sum([int(x) for x in self.Endos[endo1][0]])
+                    endo2_len = sum([int(x) for x in self.Endos[endo2][0]])
+                    if endo1_len != endo2_len or self.Endos[endo1][1] != self.Endos[endo2][1]: # If endonucleases don't have the same length gRNA or don't have the same directionality, throw an error
                         msgBox = QtWidgets.QMessageBox()
                         msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)

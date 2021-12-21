@@ -632,7 +632,7 @@ class Results(QtWidgets.QMainWindow):
             except:
                 pass
 
-            # make a string of the combinitation, separated by commas's
+            # make a string of the combination, separated by commas's
             endoBoxString = ""
             for i in range(len(self.co_target_endo_list)):
                 if endoBoxString == "":
@@ -640,7 +640,7 @@ class Results(QtWidgets.QMainWindow):
                 else:
                     endoBoxString = endoBoxString + '|' + self.co_target_endo_list[i]
 
-            # put the new endoChoice at the beginning. THis is the only way i could find to do it
+            # put the new endoChoice at the beginning. This is the only way i could find to do it
             # get a list of all endo choices, and put the newest at the front
             endoBoxList = list()
             endoBoxList.append(endoBoxString)
@@ -826,8 +826,10 @@ class Results(QtWidgets.QMainWindow):
     # parameter genename:  the key to which part in the dictionary to look at
     def combine_coTargets(self, genename):
         try:
-            deletingDict = dict()
+            cotarget_data = list()
+            delete_list = list()
             endoList = list()
+            endo_lengths = list()
 
             #get endo data
             self.Endos = {}
@@ -845,72 +847,48 @@ class Results(QtWidgets.QMainWindow):
                     break
             f.close()
 
-            # get the endo list data
-            for i in range(len(self.AllData[genename])):
-                # if one of them is empty, just return because co-targeting is useless for that one
-                if len(self.AllData[genename][i]) == 0:
+            ### Get the endo list data
+            for endo_data in self.AllData[genename]: # Loop through each endonuclease
+                ### If there is no data for an endo, just return because co-targeting is useless for that one
+                if len(endo_data) == 0:
                     return
-                endoList.append(self.AllData[genename][i][0][5])
+                if len(endoList) == 0: # If nothing has been added to the endo list yet
+                    endoList.append(endo_data[0][5]) # Add endo name to list
+                    endo_lengths.append(len(endo_data[0][2])) # Add endo length to list
+                elif len(endo_data[0][2]) > endo_lengths[-1]: # Put the endo with the longest PAM first in the list
+                    endoList.insert(0,endo_data[0][5])
+                    endo_lengths.insert(0,endo_data[0][5])
+                else:
+                    endoList.append(endo_data[0][5]) # Add endo name to end of list
+                    endo_lengths.append(len(endo_data[0][2])) # Add endo length to end of list
+            cotarget_endo = "|".join(endoList)
 
-            # for each endoNuclease in the genename block
-            for i in range(len(self.AllData[genename])):
-                endoData1 = endoList[i]
-                # for each target in that gene
-                for j in range(len(self.AllData[genename][i])):
-                    # get first locations endo
-                    locationData1 = self.AllData[genename][i][j][0]
-                    sequenceData1 = self.AllData[genename][i][j][1]
-                    pamData1 = self.AllData[genename][i][j][2]
-                    scoreData1 = self.AllData[genename][i][j][3]
-                    strandData1 = self.AllData[genename][i][j][4]
-
-                    # for each endoNuclease in the genename block
-                    for k in range(len(self.AllData[genename])):
-                        # if k == i then we are on the same endo target list, so break out because there can't be any combinations
-                        if k == i:
-                            break
-                        endoData2 = endoList[k]
-                        # for each target in that gene
-                        for l in range(len(self.AllData[genename][k])):
-                            locationData2 = self.AllData[genename][k][l][0]
-                            strandData2 = self.AllData[genename][k][l][4]
-                            pamData2 = self.AllData[genename][k][l][2]
-
-                            # check which PAM is longer, and store the longer one. Otherwise, just store the first one
-                            if len(pamData1) > len(pamData2):
-                                storePam = pamData1
-                            elif len(pamData1) < len(pamData2):
-                                storePam = pamData2
+            ### Get Co-Targets!
+            for i, endo_data in enumerate(self.AllData[genename]): # For each endo in the genename block
+                if i == 0: # If first endonuclease checked, just append data to lists
+                    for target_tuple in endo_data: # For each target 
+                        cotarget_data.append(target_tuple) # Store tuple information in list
+                else:
+                    continue
+            for i, endo_data in enumerate(self.AllData[genename]): # For each endo in the genename block
+                if i == 0: # If first endonuclease checked, just continue
+                   continue
+                else: # If not first endo, check and see if any sequences are cotargets
+                    for j,cotarget in enumerate(cotarget_data): # For each potential cotarget
+                        tmp_list = [x for x in endo_data if cotarget[1] == x[1]] # Check if cotarget is also in this endo's targets
+                        if len(tmp_list) > 0: # If cotarget was found
+                            new_tuple = tmp_list[0] # cotarget tuple
+                            if len(new_tuple[2]) > len(cotarget_data[j][2]): # If PAM is longer for this endo...
+                                cotarget_data[j] = (new_tuple[0],new_tuple[1],new_tuple[2],new_tuple[3],new_tuple[4],cotarget_endo) # Overwrite existing entry with the one containing longest PAM
                             else:
-                                storePam = pamData1
+                                cotarget_data[j] = (cotarget[0],cotarget[1],cotarget[2],cotarget[3],cotarget[4],cotarget_endo) # Overwrite existing entry to have the right endonuclease
+                        else: # If not cotarget
+                            delete_list.append(j)
 
-                            # get the directions
-                            # dir1 = self.S.endo_info[endoData1][3]
-                            # dir2 = self.S.endo_info[endoData2][3]
-                            dir1 = self.Endos[endoData1]
-                            dir2 = self.Endos[endoData2]
+            ### Delete ones from cotarget_data that failed (can't do this in the above loop for some reason)
+            final_targets = [x for i,x in enumerate(cotarget_data) if i not in delete_list]
+            self.AllData[genename].append(final_targets)
 
-                            # check if can be combined
-                            if locationData1 == locationData2 and endoData1 != endoData2 and endoData2 not in endoData1:
-                                if dir1 == dir2 and strandData1 == strandData2:
-                                    storeEndo = self.AllData[genename][i][j][5]
-                                    if endoData2 not in storeEndo:
-                                        storeEndo = storeEndo + "|" + endoData2
-                                    # combine the endo data
-                                        self.AllData[genename][i][j] = (locationData1, sequenceData1, storePam, scoreData1, strandData1, storeEndo)
-
-                                    # store which ones to delete
-                                    if k not in deletingDict:
-                                        deletingDict[k] = list()
-                                    deletingDict[k].append(l)
-
-
-            # delete the ones that need to be deleted
-            for item in deletingDict:
-                # go in the reverse of that list. This is to keep the program from crashing.
-                # it is easier than building a new list honestly
-                for index in reversed(deletingDict[item]):
-                    self.AllData[genename][item].pop(index)
         except Exception as e:
             logger.critical("Error in combine_coTargets() in results.")
             logger.critical(e)
