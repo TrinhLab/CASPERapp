@@ -321,11 +321,16 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.actionCasper2.triggered.connect(self.open_casper2_web_page)
         self.actionNCBI_BLAST.triggered.connect(self.open_ncbi_blast_web_page)
 
-
-        self.geneEntryField.setPlainText("Example Inputs: \n\n"
-                                         "Feature (ID, Locus Tag, or Name): 854068/YOL086C/ADH1 for S. cerevisiae alcohol dehydrogenase 1\n\n"
-                                         "Position: chromosome,start,stop\n\n"
-                                         "*Note: multiple entries must be separated by new lines*")
+        self.geneEntryField.setPlaceholderText("Example Inputs: \n\n"
+                                         "Option 1: Feature (ID, Locus Tag, or Name)\n"
+                                         "Example: 854068/YOL086C/ADH1 for S. cerevisiae alcohol dehydrogenase 1\n\n"
+                                         "Option 2: Position (chromosome,start,stop)\n"
+                                         "Example: 1,1,1000 for targeting chromosome 1, base pairs 1 to 1000\n\n"
+                                         "*Note: to multiplex, separate multiple queries by new lines*\n"
+                                         "Example:\n"
+                                         "1,1,1000\n"
+                                         "5,1,500\n"
+                                         "etc.")
         # show functionalities on window
         self.newGenome = NewGenome(info_path)
         self.newEndonuclease = NewEndonuclease()
