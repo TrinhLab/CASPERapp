@@ -969,7 +969,6 @@
      <string>Web Links</string>
     </property>
     <addaction name="actionNCBI"/>
-    <addaction name="actionCasper2"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">

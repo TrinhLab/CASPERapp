@@ -318,7 +318,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.actionMultitargeting.triggered.connect(self.changeto_multitargeting)
         self.actionPopulation_Analysis.triggered.connect(self.changeto_population_Analysis)
         self.actionNCBI.triggered.connect(self.open_ncbi_web_page)
-        self.actionCasper2.triggered.connect(self.open_casper2_web_page)
+        # self.actionCasper2.triggered.connect(self.open_casper2_web_page)
         self.actionNCBI_BLAST.triggered.connect(self.open_ncbi_blast_web_page)
 
         self.geneEntryField.setPlaceholderText("Example Inputs: \n\n"
@@ -1342,14 +1342,14 @@ class CMainWindow(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    def open_casper2_web_page(self):
-        try:
-            webbrowser.open('http://casper2.org/', new=2)
-        except Exception as e:
-            logger.critical("Error in open_casper2_web_page() in main.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            exit(-1)
+    # def open_casper2_web_page(self):
+    #     try:
+    #         webbrowser.open('http://casper2.org/', new=2)
+    #     except Exception as e:
+    #         logger.critical("Error in open_casper2_web_page() in main.")
+    #         logger.critical(e)
+    #         logger.critical(traceback.format_exc())
+    #         exit(-1)
 
     def visit_repo_func(self):
         try:
