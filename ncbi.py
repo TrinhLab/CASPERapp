@@ -374,7 +374,8 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             handle = Entrez.esearch(db="assembly", retmax=retmax, term=term)
             content = handle.readlines()
             content = "".join(str(content))
-            bs_content = BeautifulSoup(content, "lxml")
+            #bs_content = BeautifulSoup(content, "lxml")
+            bs_content = BeautifulSoup(content, "html.parser")
 
             self.loading_window.loading_bar.setValue(20)
             QtCore.QCoreApplication.processEvents()
@@ -392,7 +393,8 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             content = handle.readlines()
             handle.close()
             content = "".join(str(content))
-            bs_content = BeautifulSoup(content, 'lxml')
+            #bs_content = BeautifulSoup(content, 'lxml')
+            bs_content = BeautifulSoup(content, "html.parser")
 
             self.loading_window.loading_bar.setValue(55)
             QtCore.QCoreApplication.processEvents()
@@ -413,7 +415,8 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             strains = []
             for i in range(len(genbank_ids)):
                 temp_str = str(temp_strains[i])
-                temp_str = BeautifulSoup(temp_str, 'lxml')
+                #temp_str = BeautifulSoup(temp_str, 'lxml')
+                temp_str = BeautifulSoup(temp_str, 'html.parser')
                 temp_str = temp_str.find('sub_value')
                 if temp_str != None:
                     strains.append(temp_str.text)
