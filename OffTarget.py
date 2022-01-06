@@ -350,7 +350,6 @@ class OffTarget(QtWidgets.QMainWindow):
 
             #create command string
             cmd = exe_path + data_path + endo + cspr_path + db_path + self.output_path + CASPER_info_path + str(num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output + hsu
-            print(cmd)
             if platform.system() == 'Windows':
                 cmd = cmd.replace('/', '\\')
 

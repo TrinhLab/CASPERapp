@@ -196,6 +196,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
     def fill_table_nonKegg(self, mainWindow,results_list):
         try:
             self.tableWidget.clearContents()
+            self.mainWindow = mainWindow
             self.tableWidget.setColumnCount(5)
             self.mainWindow.progressBar.setValue(85)
             self.tableWidget.setHorizontalHeaderLabels(["Feature Type","Chromosome/Scaffold #","Feature ID/Locus Tag","Feature Name","Feature Description"])
@@ -603,6 +604,7 @@ class CMainWindow(QtWidgets.QMainWindow):
     def gather_settings(self):
         try:
             ### If user searches multiple times for the same thing, this avoids re-searching the entire annotation file
+            check_org = self.orgChoice.currentText().lower()
             check_endo = self.endoChoice.currentText().lower()
             check_anno_name = self.annotation_files.currentText().lower()
             check_input = str(self.geneEntryField.toPlainText()).lower()
@@ -627,9 +629,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 msgBox.exec()
 
             else:
-
                 self.progressBar.setValue(10)
-                selll
                 if self.radioButton_Gene.isChecked():
                     ginput = [x.strip() for x in self.inputstring.split('\n')] # Split search based on newline character and remove deadspace
                     self.run_results("feature", ginput, same_search)
