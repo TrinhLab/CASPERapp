@@ -58,6 +58,15 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             logger.critical("Error initializing NewEndonuclease class.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #scale UI based on current screen
@@ -109,6 +118,15 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             logger.critical("Error in scaleUI() in new endo.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #center UI on current screen
@@ -134,6 +152,15 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             logger.critical("Error in centerUI() in new endo.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #helper function for writing new endo information to CASPERinfo - used by submit()
@@ -151,6 +178,15 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             logger.critical("Error in writeNewEndonuclease() in New Endonuclease.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #submit new endo to CASPERinfo file
@@ -246,6 +282,15 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             logger.critical("Error in submit() in New Endonuclease.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #cancel and close window
@@ -257,6 +302,15 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             logger.critical("Error in cancel() in New Endonuclease.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     # This function clears all of the line edits
@@ -273,6 +327,15 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             logger.critical("Error in clear_all() in New Endonuclease.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     # This function parses CASPERinfo to return the names (in lists) of all on-target and off-target scoring data
@@ -314,4 +377,13 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             logger.critical("Error in get_on_off_data() in New Endonuclease.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)

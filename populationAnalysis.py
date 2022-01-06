@@ -121,6 +121,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error initializing population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #scale the UI based on current screen
@@ -177,6 +186,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in scaleUI() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #center UI on current screen
@@ -202,6 +220,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in centerUI() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #export shared seed table to csv function
@@ -223,6 +250,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in export_to_csv() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     # this function calls the popParser function and fills all the tables
@@ -260,6 +296,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in pre_analyze() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #wrapper for calling get_data()
@@ -270,6 +315,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in launch() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #responsible for calling all loading/analysis functions for loading the shared seeds table and generating the heatmap based on selected organisms
@@ -280,6 +334,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in get_data() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     # this function opens CASPERinfo and builds the dropdown menu of selectable endonucleases
@@ -321,6 +384,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in fillEndo() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #event handler for updating the organism options based on the endo selected
@@ -368,6 +440,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in change_endo() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #fills shared seed table with data from analysis
@@ -551,6 +632,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in fill_data() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #function to allow user to search for a specific seed amongst the organisms analyzed
@@ -752,6 +842,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in custom_seed_search() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #db_files is an array of database files for the organisms that will be looked at for shared seeds
@@ -816,6 +915,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in get_shared_seeds() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #get the names of organism in current directory
@@ -838,6 +946,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in get_org_names() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #plot the heatmap graph
@@ -914,6 +1031,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in plot_3D_graph() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #find the locations of selected seeds to load into the location table
@@ -988,6 +1114,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in find_locations() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     # this function clears the loc_finder_table
@@ -999,6 +1134,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in clear_loc_table() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     # sorting function for table2 - shared seeds table: IE the table in top-right
@@ -1013,6 +1157,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in table2_sorting() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     # sorting for location table: IE table in bottom right
@@ -1027,6 +1180,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in loc_table_sorter() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #clears the table showcasing shared seeds
@@ -1037,6 +1199,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in clear() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #return to main function
@@ -1048,6 +1219,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in go_back() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     # this function calls the close window class. Allows the user to choose what files they want to keep/delete
@@ -1059,6 +1239,15 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             logger.critical("Error in closeEvent() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
 
@@ -1076,6 +1265,15 @@ class loading_window(QtWidgets.QMainWindow):
             logger.critical("Error initializing loading_window class in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #scale UI based on current screen
@@ -1121,6 +1319,15 @@ class loading_window(QtWidgets.QMainWindow):
             logger.critical("Error in scaleUI() in loading_window() class in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
     #center UI on current screen
@@ -1146,6 +1353,15 @@ class loading_window(QtWidgets.QMainWindow):
             logger.critical("Error in centerUI() in loading_window() class in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)
 
 
@@ -1161,4 +1377,13 @@ class MplCanvas(FigureCanvasQTAgg):
             logger.critical("Error initializing MplCanvas class in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
             exit(-1)

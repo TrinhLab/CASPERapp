@@ -45,6 +45,14 @@ class CoTargeting(QtWidgets.QMainWindow):
             logger.critical("Error initializing CoTargeting class.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
             exit(-1)
 
     #scale UI based on current screen
@@ -96,6 +104,14 @@ class CoTargeting(QtWidgets.QMainWindow):
             logger.critical("Error in scaleUI() in cotargeting in results.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
             exit(-1)
 
     #center UI on current screen
@@ -121,6 +137,14 @@ class CoTargeting(QtWidgets.QMainWindow):
             logger.critical("Error in centerUI() in cotargeting in results.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
             exit(-1)
 
     # launches the window
@@ -153,6 +177,14 @@ class CoTargeting(QtWidgets.QMainWindow):
             logger.critical("Error in launch() in CoTargeting.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+        msgBox = QtWidgets.QMessageBox()
+        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+        msgBox.setWindowTitle("Fatal Error")
+        msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+        msgBox.exec()
+
             exit(-1)
 
     # this is the cancel function
@@ -167,6 +199,14 @@ class CoTargeting(QtWidgets.QMainWindow):
             logger.critical("Error in cancel_function() in CoTargeting.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
             exit(-1)
 
     # this is the submission function.
@@ -237,5 +277,13 @@ class CoTargeting(QtWidgets.QMainWindow):
             logger.critical("Error in submission_function() in CoTargeting.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
             exit(-1)
 

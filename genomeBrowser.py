@@ -33,6 +33,13 @@ class genomebrowser(QtWidgets.QWidget):
 			logger.critical("Error initializing genomebrowser class.")
 			logger.critical(e)
 			logger.critical(traceback.format_exc())
+			msgBox = QtWidgets.QMessageBox()
+			msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+			msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+			msgBox.setWindowTitle("Fatal Error")
+			msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+			msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+			msgBox.exec()
 			exit(-1)
 
 	def splitStringNCBI(self, longString):
@@ -62,6 +69,14 @@ class genomebrowser(QtWidgets.QWidget):
 			logger.critical("Error in ncbiAPI() in genomebrowser.")
 			logger.critical(e)
 			logger.critical(traceback.format_exc())
+			msgBox = QtWidgets.QMessageBox()
+			msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+			msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+			msgBox.setWindowTitle("Fatal Error")
+			msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+			msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+			msgBox.exec()
+
 			exit(-1)
 
 	def createHtml(self, genomeList):
@@ -123,6 +138,14 @@ class genomebrowser(QtWidgets.QWidget):
 			logger.critical("Error in createHtml() in genomebrowser.")
 			logger.critical(e)
 			logger.critical(traceback.format_exc())
+			msgBox = QtWidgets.QMessageBox()
+			msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+			msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+			msgBox.setWindowTitle("Fatal Error")
+			msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+			msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+			msgBox.exec()
+
 			exit(-1)
 
 	def createGraph(self, p):
@@ -162,4 +185,12 @@ class genomebrowser(QtWidgets.QWidget):
 			logger.critical("Error in createGraph() in genomebrowser.")
 			logger.critical(e)
 			logger.critical(traceback.format_exc())
+			msgBox = QtWidgets.QMessageBox()
+			msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+			msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+			msgBox.setWindowTitle("Fatal Error")
+			msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+			msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+			msgBox.exec()
+
 			exit(-1)
