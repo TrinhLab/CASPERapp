@@ -83,6 +83,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.statistics_overview.clicked.connect(self.show_statistics)
             self.export_button.clicked.connect(self.export_to_csv)
             self.selectAll.stateChanged.connect(self.select_all)
+            self.selectAll.setEnabled(False)
 
             # go back to main button
             self.back_button.clicked.connect(self.go_back)
@@ -508,6 +509,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.fill_table()
             self.table.selectRow(0) # Set the index to first row by default so
             # all graphs are generated
+            self.selectAll.setEnabled(True) # Enable select all checkbox only
+            # after analysis has been performed
             self.loading_window.loading_bar.setValue(100)
             self.multitargeting_statistics.avg_rep.setText(str(round(float(self.average),1)))
             self.multitargeting_statistics.med_rep.setText(str(round(float(self.median),1)))
