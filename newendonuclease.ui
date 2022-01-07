@@ -110,7 +110,7 @@
                <item row="1" column="3">
                 <widget class="QLineEdit" name="abbreviation">
                  <property name="placeholderText">
-                  <string>Ex. spCas9</string>
+                  <string>Ex. spCas9 (&quot;_&quot; not allowed)</string>
                  </property>
                 </widget>
                </item>
@@ -155,7 +155,7 @@
                   </sizepolicy>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Abbreviated name of new endonuclease, must be unique from existing endonucleases in order for CASPER to recognize it. Ex. spCas9&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Abbreviated name of new endonuclease, must be unique from existing endonucleases in order for CASPER to recognize it. Ex. spCas9 (&lt;span style=&quot; font-weight:600;&quot;&gt;Note: &lt;/span&gt;underscores are not allowed)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Abbreviation:  </string>

@@ -337,6 +337,9 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
 
             #loading label
             self.loading_window = loading_window()
+            
+
+            self.genbank_checkbox.toggled.connect(self.genbank_warning)
 
             #scale UI
             self.first_show = True
@@ -353,9 +356,16 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
             msgBox.exec()
-
-
             exit(-1)
+    
+    def genbank_warning(self):
+        msgBox = QtWidgets.QMessageBox()
+        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+        msgBox.setWindowTitle("Warning!")
+        msgBox.setText("Warning!\n\nThe GenBank collection may contain poorly or partially annotated GBFF files. We highly recommend using the RefSeq collection if it is available.")
+        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+        msgBox.exec()
 
     #scale UI based on current screen
     def scaleUI(self):
