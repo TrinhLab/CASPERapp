@@ -82,10 +82,10 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.Analyze_Button.clicked.connect(self.make_graphs)
             self.statistics_overview.clicked.connect(self.show_statistics)
             self.export_button.clicked.connect(self.export_to_csv)
+            self.selectAll.stateChanged.connect(self.select_all)
 
             # go back to main button
             self.back_button.clicked.connect(self.go_back)
-
 
             # Statistics storage variables
             self.max_repeats = 1
@@ -135,6 +135,28 @@ class Multitargeting(QtWidgets.QMainWindow):
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
             msgBox.exec()
             exit(-1)
+
+    def select_all(self):
+        try:
+            if self.selectAll.isChecked():
+                self.table.selectAll()
+            else:
+                self.table.clearSelection()
+        except Exception as e:
+            logger.critical("Error in selectAll() in multitargeting.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+
+            exit(-1)
+
 
     def scaleUI(self):
         try:
@@ -484,6 +506,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.bar_seeds_vs_repeats()
             self.loading_window.loading_bar.setValue(50)
             self.fill_table()
+            self.table.selectRow(0) # Set the index to first row by default so
+            # all graphs are generated
             self.loading_window.loading_bar.setValue(100)
             self.multitargeting_statistics.avg_rep.setText(str(round(float(self.average),1)))
             self.multitargeting_statistics.med_rep.setText(str(round(float(self.median),1)))
