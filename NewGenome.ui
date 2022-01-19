@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>811</width>
-    <height>752</height>
+    <height>857</height>
    </rect>
   </property>
   <property name="font">
@@ -1020,7 +1020,7 @@ and references for the organism you are importing here.</string>
      <x>0</x>
      <y>0</y>
      <width>811</width>
-     <height>27</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -1030,6 +1030,13 @@ and references for the organism you are importing here.</string>
     <addaction name="visit_repo"/>
     <addaction name="go_ncbi"/>
    </widget>
+   <widget class="QMenu" name="menuGenome">
+    <property name="title">
+     <string>Genome</string>
+    </property>
+    <addaction name="actionUpload_New_Endonuclease"/>
+   </widget>
+   <addaction name="menuGenome"/>
    <addaction name="menu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -1041,6 +1048,11 @@ and references for the organism you are importing here.</string>
   <action name="go_ncbi">
    <property name="text">
     <string>Go to NCBI</string>
+   </property>
+  </action>
+  <action name="actionUpload_New_Endonuclease">
+   <property name="text">
+    <string>Define New Endonuclease</string>
    </property>
   </action>
  </widget>

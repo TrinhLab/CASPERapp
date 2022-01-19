@@ -1,7 +1,10 @@
+from ast import Global
 import sys
 import os
 import io
 from Bio import SeqIO
+from Bio.SeqRecord import SeqRecord
+from Bio.Seq import Seq
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from CoTargeting import CoTargeting
 from closingWin import closingWindow
@@ -44,14 +47,39 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.type = ""
         self.mwfg = self.frameGeometry()  ##Center window
         self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
+        self.switcher_table = [1, 1, 1, 1, 1, 1, 1, 1]
         self.tableWidget.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
         self.tableWidget.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
         self.tableWidget.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidget.setAutoScroll(False)
+        self.tableWidget.horizontalHeader().sectionClicked.connect(self.table_sorting)
 
         #scale UI
         self.scaleUI()
+
+    def table_sorting(self,logicalIndex):
+        try:
+            self.switcher_table[logicalIndex] *= -1
+            if self.switcher_table[logicalIndex] == -1:
+                self.tableWidget.sortItems(logicalIndex, QtCore.Qt.DescendingOrder)
+            else:
+                self.tableWidget.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
+        except Exception as e:
+            logger.critical("Error in table_sorting() in Annotation Window.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(GlobalSettings.mainWindow.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+            exit(-1)
+
+
 
     #scale UI based on current screen
     def scaleUI(self):
@@ -387,6 +415,8 @@ class CMainWindow(QtWidgets.QMainWindow):
                                          "Example: 854068/YOL086C/ADH1 for S. cerevisiae alcohol dehydrogenase 1\n\n"
                                          "Option 2: Position (chromosome,start,stop)\n"
                                          "Example: 1,1,1000 for targeting chromosome 1, base pairs 1 to 1000\n\n"
+                                         "Option 3: Sequence (must be within the selected organism)\n"
+                                         "Example: Any nucleotide sequence between 100 and 10,000 base pairs.\n\n"
                                          "*Note: to multiplex, separate multiple queries by new lines*\n"
                                          "Example:\n"
                                          "1,1,1000\n"
@@ -665,13 +695,13 @@ class CMainWindow(QtWidgets.QMainWindow):
     # it will call other versions of collect_table_data and fill_table that work with these file types
     # this function should work with the any type of annotation file, besides kegg.
     # this assumes that the parsers all store the data the same way, which gff and feature table do
-    # please make sure the gbff parser stores the data in the same way
+    # please make sure the genbank parser stores the data in the same way
     # so far the gff files seems to all be different. Need to think about how we want to parse it
     def run_results_own_ncbi_file(self, inputstring, fileName, same_search, openAnnoWindow=True):
         try:
             self.progressBar.setValue(35)
             ### Now actually search for inputs in annotation file
-            self.results_list = self.annotation_parser.gbff_search(inputstring,same_search)
+            self.results_list = self.annotation_parser.genbank_search(inputstring,same_search)
 
             ### Quick error check to make sure the chromosome numbers match
             cspr_file = self.organisms_to_files[self.orgChoice.currentText()][self.endoChoice.currentText()][0]
@@ -761,7 +791,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             fileName = self.annotation_files.currentText()
             # self.annotation_parser = Annotation_Parser()
             #get complete path of file
-            for file in glob.glob(GlobalSettings.CSPR_DB + "/**/*.gbff", recursive=True):
+            for file in glob.glob(GlobalSettings.CSPR_DB + "/**/*.gb*", recursive=True):
                 if file.find(fileName) != -1:
                     self.annotation_parser.annotationFileName = file
                     break
@@ -774,7 +804,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("Error:")
                 msgBox.setText(
-                    "We cannot parse the file type given. Please make sure to choose a GBFF file.")
+                    "We cannot parse the file type given. Please make sure to choose a GenBank file.")
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
 
@@ -931,9 +961,25 @@ class CMainWindow(QtWidgets.QMainWindow):
             # sequence code below
             if inputtype == "sequence":
                 checkString = 'AGTCN'
+                full_org = str(self.orgChoice.currentText())
                 self.checked_info.clear()
                 self.progressBar.setValue(10)
-                inputstring = inputstring.upper()
+                inputstring = inputstring.replace('\n','').upper().strip()
+
+                # make sure all the chars are one of A, G, T, C, or N
+                for letter in inputstring:
+                    if letter not in checkString:
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("Sequence Error")
+                        msgBox.setText(
+                            "The sequence must consist of A, G, T, C, or N. No other characters are allowed.")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
+                        self.progressBar.setValue(0)
+                        return
 
                 # check to make sure that the use gave a long enough sequence
                 if len(inputstring) < 100:
@@ -950,50 +996,53 @@ class CMainWindow(QtWidgets.QMainWindow):
                     return
 
                 # give a warning if the length of the sequence is long
-                if len(inputstring) > 30000:
+                if len(inputstring) > 10000:
                     msgBox = QtWidgets.QMessageBox()
                     msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                     msgBox.setWindowTitle("Large Sequence Detected")
                     msgBox.setText(
-                        "The sequence given is a large one and could slow down the process.\n\nDo you wish to continue?")
+                        "The sequence given is too large one.\n\nPlease input a sequence less than 10kb in length.")
                     msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
-                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.No)
                     msgBox.exec()
 
-                    if (msgBox.result() == QtWidgets.QMessageBox.No):
-                        self.progressBar.setValue(0)
-                        return
+                    self.progressBar.setValue(0)
+                    return
 
-                # make sure all the chars are one of A, G, T, C, or N
-                for letter in inputstring:
-                    # skip the end line character
-                    if letter == '\n':
-                        continue
-                    if letter not in checkString:
-                        msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                        msgBox.setWindowTitle("Sequence Error")
-                        msgBox.setText(
-                            "The sequence must consist of A, G, T, C, or N. No other characters are allowed.")
-                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                        msgBox.exec()
-
-                        self.progressBar.setValue(0)
-                        return
                 self.progressBar.setValue(30)
 
-                # build the CSPR file, and go into results
-                fna_file_path = GlobalSettings.CSPR_DB + '/temp.fna'
-                self.checked_info['Sequence Finder'] = (1, 0, len(inputstring))
-                self.check_ntseq_info['Sequence Finder'] = inputstring.replace('\n', '')
-                outFile = open(fna_file_path, 'w')
-                outFile.write('>temp org here\n')
-                outFile.write(inputstring)
-                outFile.write('\n\n')
-                outFile.close()
-                self.progressBar.setValue(55)
+                # Check the GBFF file for the sequence
+                my_check = self.annotation_parser.get_sequence_info(inputstring)
+                self.progressBar.setValue(55) # Update progress bar
+
+                if type(my_check) == bool: # This means the sequence was not found
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
+                    msgBox.setWindowTitle("Sequence Not Found")
+                    msgBox.setText(
+                        "The sequence entered was not found.\n\nPlease input a sequence that is in the selected organism.")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Yes)
+                    msgBox.exec()
+                    self.progressBar.setValue(0)
+                    return
+
+                else: # This means the sequence was found
+                    # append the data into the checked_info
+                    tempString = 'chrom: ' + str(my_check[0]) + ',start: ' + str(my_check[1]) + ',end: ' + str(my_check[2])
+                    self.checked_info[tempString] = (int(my_check[0]), int(my_check[1])-1, int(my_check[2]))
+
+                self.progressBar.setValue(75) # Update progress bar
+
+                self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, "",inputtype)
+                self.Results.load_gene_viewer()
+                self.progressBar.setValue(100)
+                self.pushButton_ViewTargets.setEnabled(True)
+                self.GenerateLibrary.setEnabled(True)
+
+
+
+
         except Exception as e:
             logger.critical("Error in run_results() in main.")
             logger.critical(e)
@@ -1224,9 +1273,9 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def fill_annotation_dropdown(self):
         try:
-            #recursive search for all .gbff in casper db folder
+            #recursive search for all GenBank files in casper db folder
             self.annotation_files.clear()
-            annotation_files = glob.glob(GlobalSettings.CSPR_DB + "/**/*.gbff", recursive=True)
+            annotation_files = glob.glob(GlobalSettings.CSPR_DB + "/**/*.gb*", recursive=True)
             if platform.system() == "Windows":
                 for i in range(len(annotation_files)):
                     annotation_files[i] = annotation_files[i].replace("/","\\")
@@ -2170,7 +2219,7 @@ class StartupWindow(QtWidgets.QMainWindow):
 
                             exit(-1)
 
-                    #fill in organism/endo/GBFF dropdown information for main, mulit-targeting, and populatin analysis
+                    ### fill in organism/endo/annotation dropdown information for main, mulit-targeting, and populatin analysis
                     try:
                         GlobalSettings.mainWindow.getData()
                         GlobalSettings.mainWindow.fill_annotation_dropdown()
@@ -2320,7 +2369,7 @@ def main():
         logger.critical(e)
         logger.critical(traceback.format_exc())
         msgBox = QtWidgets.QMessageBox()
-        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+        msgBox.setStyleSheet("font: " + str(startup.fontSize) + "pt 'Arial'")
         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
         msgBox.setWindowTitle("Fatal Error")
         msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
@@ -2338,7 +2387,7 @@ def main():
         logger.critical(e)
         logger.critical(traceback.format_exc())
         msgBox = QtWidgets.QMessageBox()
-        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+        msgBox.setStyleSheet("font: " + str(GlobalSettings.mainWindow.fontSize) + "pt 'Arial'")
         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
         msgBox.setWindowTitle("Fatal Error")
         msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
@@ -2356,7 +2405,7 @@ def main():
         logger.critical(e)
         logger.critical(traceback.format_exc())
         msgBox = QtWidgets.QMessageBox()
-        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+        msgBox.setStyleSheet("font: " + str(GlobalSettings.MTWin.fontSize) + "pt 'Arial'")
         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
         msgBox.setWindowTitle("Fatal Error")
         msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
@@ -2374,7 +2423,7 @@ def main():
         logger.critical(e)
         logger.critical(traceback.format_exc())
         msgBox = QtWidgets.QMessageBox()
-        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+        msgBox.setStyleSheet("font: " + str(GlobalSettings.pop_Analysis.fontSize) + "pt 'Arial'")
         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
         msgBox.setWindowTitle("Fatal Error")
         msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")

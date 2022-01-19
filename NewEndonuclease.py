@@ -34,9 +34,22 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             self.submit_button.clicked.connect(self.submit)
             self.cancel_button.clicked.connect(self.cancel)
 
-            self.seed_length.setValidator(QIntValidator(0,100,self.seed_length))
-            self.five_length.setValidator(QIntValidator(0,100,self.five_length))
-            self.three_length.setValidator(QIntValidator(0,100,self.three_length))
+
+            ### Set up validators for input fields:
+            reg_ex1 = QtCore.QRegExp("[^/\\\\_]+") # No slashes or underscores
+            reg_ex2 = QtCore.QRegExp("[^/\\\\_\\s]+") # No slashes, underscores, or spaces
+            reg_ex3 = QtCore.QRegExp("[acdefghiklmnpqrstvwyACDEFGHIKLMNPQRSTVWY\S]+") # Only approved PAM characters and no spaces
+            input_validator1 = QtGui.QRegExpValidator(reg_ex1, self)
+            input_validator2 = QtGui.QRegExpValidator(reg_ex2, self)
+            input_validator3 = QtGui.QRegExpValidator(reg_ex3, self)
+            self.organism_name.setValidator(input_validator1)
+            self.abbreviation.setValidator(input_validator2)
+            self.pam_sequence.setValidator(input_validator3)
+
+
+            self.seed_length.setValidator(QIntValidator(0,30,self.seed_length))
+            self.five_length.setValidator(QIntValidator(0,20,self.five_length))
+            self.three_length.setValidator(QIntValidator(0,20,self.three_length))
 
             groupbox_style = """
             QGroupBox:title{subcontrol-origin: margin;
@@ -199,7 +212,7 @@ class NewEndonuclease(QtWidgets.QMainWindow):
             seed_len = str(self.seed_length.text())
             five_len = str(self.five_length.text())
             three_len = str(self.three_length.text())
-            pam = str(self.pam_sequence.text())
+            pam = str(self.pam_sequence.text()).upper()
             ### Check for multiple PAMs and format if present
             if len(pam.split(','))>0:
                 pam = [x.strip() for x in pam.split(',')]
@@ -276,6 +289,10 @@ class NewEndonuclease(QtWidgets.QMainWindow):
                     myString += str(arg) + ";"
 
             self.writeNewEndonuclease(myString)
+
+            ### Refresh endonuclease dropdown in New Genome
+            GlobalSettings.mainWindow.newGenome.fillEndo()
+
             self.clear_all()
             self.close()
         except Exception as e:

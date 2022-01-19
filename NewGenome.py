@@ -1,3 +1,4 @@
+from ast import Global
 import os
 from PyQt5 import QtWidgets, uic, QtGui, QtCore, Qt
 import GlobalSettings
@@ -229,7 +230,7 @@ class NewGenome(QtWidgets.QMainWindow):
 
             self.comboBoxEndo.currentIndexChanged.connect(self.changeEndos)
 
-            #ncbi tool
+            ### NCBI tool
             self.NCBI_File_Search.clicked.connect(self.open_ncbi_tool)
 
             self.seed_length.setEnabled(False)
@@ -237,7 +238,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.three_length.setEnabled(False)
             self.repeats_box.setEnabled(False)
 
-            #user prompt class
+            ### User prompt class
             self.goToPrompt = goToPrompt()
             self.goToPrompt.goToMain.clicked.connect(self.continue_to_main)
             self.goToPrompt.goToMT.clicked.connect(self.continue_to_MT)
@@ -245,7 +246,19 @@ class NewGenome(QtWidgets.QMainWindow):
 
             self.orgName.setFocus()
 
-            #scale UI
+            ### Connect New endonuclease to New Genome
+            self.actionUpload_New_Endonuclease.triggered.connect(self.launch_newEndonuclease)
+
+            ### Set up validators for input fields:
+            reg_ex1 = QtCore.QRegExp("[^/\\\\_]+") # No slashes or underscores
+            reg_ex2 = QtCore.QRegExp("\\S+")
+            input_validator1 = QtGui.QRegExpValidator(reg_ex1, self)
+            input_validator2 = QtGui.QRegExpValidator(reg_ex2, self)
+            self.orgName.setValidator(input_validator1)
+            self.strainName.setValidator(input_validator1)
+            self.orgCode.setValidator(input_validator2)
+
+            ### Scale UI
             self.scaleUI()
             self.first_show = True
 
@@ -262,6 +275,25 @@ class NewGenome(QtWidgets.QMainWindow):
             msgBox.exec()
 
 
+            exit(-1)
+
+    def launch_newEndonuclease(self):
+        try:
+            GlobalSettings.mainWindow.getData()
+            GlobalSettings.mainWindow.newEndonuclease.centerUI()
+            GlobalSettings.mainWindow.newEndonuclease.show()
+            GlobalSettings.mainWindow.newEndonuclease.activateWindow()
+        except Exception as e:
+            logger.critical("Error in launch_newEndonuclease() in New Genome.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
             exit(-1)
 
     #scale the UI
@@ -418,7 +450,7 @@ class NewGenome(QtWidgets.QMainWindow):
             myFile = QtWidgets.QFileDialog.getOpenFileName(filed, "Choose a File")
             if (myFile[0] != ""):
 
-                if not myFile[0].endswith(".fa") and not myFile[0].endswith(".fna") and not myFile[0].endswith(".gbff") and not myFile[0].endswith(".fasta"):
+                if not myFile[0].endswith(".fa") and not myFile[0].endswith(".fna") and not myFile[0].endswith(".gb*") and not myFile[0].endswith(".fasta"):
                     msgBox = QtWidgets.QMessageBox()
                     msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)

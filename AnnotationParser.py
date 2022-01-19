@@ -4,6 +4,7 @@
 # OUTPUTS: the outputs are data structures that store the parsed data
 ################################################################################
 
+from PyQt5 import QtWidgets
 import gffutils
 import GlobalSettings
 import os
@@ -43,7 +44,7 @@ class Annotation_Parser:
             logger.critical(e)
             logger.critical(traceback.format_exc())
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setStyleSheet("font: " + str(GlobalSettings.mainWindow.fontSize) + "pt 'Arial'")
             msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msgBox.setWindowTitle("Fatal Error")
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
@@ -55,9 +56,38 @@ class Annotation_Parser:
     ### This function takes a list of lists and flattens it into a single list. Useful when dealing with a list of lists where the nested lists only have 1 entry.
     def flatten_list(self,t):
         return [item.lower() for sublist in t for item in sublist]
+
+    def get_sequence_info(self, query):
+        try:
+            self.results_list.clear()
+            parser = SeqIO.parse(self.annotationFileName, 'genbank') # Initialize parser (iterator) for each query
+            for j,record in enumerate(parser): # Each record corresponds to a chromosome/scaffold in the FNA/FASTA file
+                tmp = str(record.seq).find(query)
+                if tmp != -1: # If match is found
+                    return (j+1,tmp+1,tmp+len(query)) # Chromosome number, start index, stop index
+                else:
+                    continue # Move to the next chromosome
+            return False
+        
+        except Exception as e:
+            logger.critical("Error in get_sequence_info() in annotation parser.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(GlobalSettings.mainWindow.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+            exit(-1)
     
+
+
+ 
     ### The workhorse function of AnnotationParser, this searches the annotation file for the user's search and returns features matching the description.
-    def gbff_search(self, queries, same_search):
+    def genbank_search(self, queries, same_search):
         index_number = 0
         try:
             if same_search: # If searching for the same thing, just return the results from last time
@@ -70,25 +100,37 @@ class Annotation_Parser:
                         if i == 0:
                             index_number += 1
                             for feature in record.features: # Each feature corresponds to a gene, tRNA, rep_origin, etc. in the given record (chromosome/scaffold)
-                                if query.lower() in " ".join(self.flatten_list(feature.qualifiers.values())[:-1]) and feature.type != "source" and feature.type != "gene": # If search matches the feature's qualifiers somewhere, save it
-                                    self.results_list.append((j+1,feature))
-                                else: # If search not in the feature's qualifiers, move to the next feature
-                                    continue
+                                if "translation" in feature.qualifiers:
+                                    if query.lower() in " ".join(self.flatten_list(feature.qualifiers.values())[:-1]) and feature.type != "source" and feature.type != "gene": # If search matches the feature's qualifiers somewhere, save it
+                                        self.results_list.append((j+1,feature))
+                                    else: # If search not in the feature's qualifiers, move to the next feature
+                                        continue
+                                else:
+                                    if query.lower() in " ".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source" and feature.type != "gene": # If search matches the feature's qualifiers somewhere, save it
+                                        self.results_list.append((j+1,feature))
+                                    else: # If search not in the feature's qualifiers, move to the next feature
+                                        continue
                             self.max_chrom = index_number # Counts the number of chromosomes/scaffolds in the organism (only do this once, even if there are multiple queries)
                         else:
                             for feature in record.features:
-                                if query.lower() in " ".join(self.flatten_list(feature.qualifiers.values())[:-1]) and feature.type != "source" and feature.type != "gene":
-                                    self.results_list.append((j+1,feature))
+                                if "translation" in feature.qualifiers:
+                                    if query.lower() in " ".join(self.flatten_list(feature.qualifiers.values())[:-1]) and feature.type != "source" and feature.type != "gene": # If search matches the feature's qualifiers somewhere, save it
+                                        self.results_list.append((j+1,feature))
+                                    else: # If search not in the feature's qualifiers, move to the next feature
+                                        continue
                                 else:
-                                    continue
+                                    if query.lower() in " ".join(self.flatten_list(feature.qualifiers.values())) and feature.type != "source" and feature.type != "gene": # If search matches the feature's qualifiers somewhere, save it
+                                        self.results_list.append((j+1,feature))
+                                    else: # If search not in the feature's qualifiers, move to the next feature
+                                        continue
                 return self.results_list
 
         except Exception as e:
-            logger.critical("Error in gbff_parse() in annotation parser.")
+            logger.critical("Error in genbank_search() in annotation parser.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setStyleSheet("font: " + str(GlobalSettings.mainWindow.fontSize) + "pt 'Arial'")
             msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msgBox.setWindowTitle("Fatal Error")
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
@@ -99,128 +141,6 @@ class Annotation_Parser:
     
 
 
-
-    # this function parses GBFF files
-    # it stores the data in 2 dictionaries, a parallel one and a regular one
-    # ONLY TO BE USED WITH GBFF FILES, NOTHING ELSE
-    # testing: has been tested by Josh, and seems to work. Needs further testing by Brian
-    def gbff_parse(self):
-        try:
-            # variables used
-            self.reg_dict.clear()
-            self.para_dict.clear()
-            prevFirstIndex = ""
-            indexNumber = 0
-            strandChar = ""
-            currentGeneID = ""
-            para_dict_key_string = ""
-            values = list()
-
-            # get all of the record or sections
-            gb_record = SeqIO.parse(self.annotationFileName, 'genbank')
-
-            # for each section
-            for record in gb_record:
-                indexNumber += 1
-                # for each feature in that section
-                for feature in record.features:
-                    # only change the locus_tag and update the para_dict if the feature is a gene
-                    if feature.type == "gene":
-                        # once the locus tag changes, append it to the para_dict
-                        if para_dict_key_string != "":
-                            if para_dict_key_string not in self.para_dict:
-                                self.para_dict[para_dict_key_string] = list()
-                                self.para_dict[para_dict_key_string].append(currentGeneID)
-                            else:
-                                if currentGeneID not in self.para_dict[para_dict_key_string]:
-                                    self.para_dict[para_dict_key_string].append(currentGeneID)
-                            para_dict_key_string = ""
-                        try:
-                            currentGeneID = feature.qualifiers['db_xref'][0].split(":")[-1]
-                        except:
-                            currentGeneID = feature.qualifiers['locus_tag'][0]
-
-                        # check to see if the strand is + or -
-                        if feature.location.strand == -1:
-                            strandChar = '-'
-                        else:
-                            strandChar = '+'
-
-                        # update that one's values
-                        values = [currentGeneID, indexNumber, feature.type, int(feature.location.start) + 1,
-                                  int(feature.location.end), strandChar]
-
-                        # insert
-                        if currentGeneID not in self.reg_dict:
-                            self.reg_dict[currentGeneID] = list()
-                            self.reg_dict[currentGeneID].append(values)
-                        else:
-                            self.reg_dict[currentGeneID].append(values)
-
-                    # if it's not a gene, skip rep_orgin, telomere, and source, etc.
-                    elif feature.type != "misc_binding" and feature.type != "regulatory" and feature.type != "rep_origin" and feature.type != "telomere" and feature.type != "source" and feature.type != 'assembly_gap' and feature.type != 'repeat_region':
-                        # get the data for the normal dictionary and store it
-                        if feature.location.strand == -1:
-                            strandChar = '-'
-                        else:
-                            strandChar = '+'
-                        values = [currentGeneID, indexNumber, feature.type, int(feature.location.start) + 2,
-                                  int(feature.location.end), strandChar]
-                        # make sure it isn't a duplicate
-                        if values not in self.reg_dict[currentGeneID]:
-                            self.reg_dict[currentGeneID].append(values)
-                        # now get the para_dict's data
-
-                        # check for the Gene ID section and append if there
-                        if 'db_xref' in feature.qualifiers:
-                            if para_dict_key_string == "":
-                                para_dict_key_string = feature.qualifiers['db_xref'][-1].split(":")[-1]
-                            else:
-                                para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['db_xref'][-1].split(":")[-1]
-
-                                            # check for the protein ID section and append if there
-                        if 'protein_id' in feature.qualifiers:
-                            if para_dict_key_string == "":
-                                para_dict_key_string = feature.qualifiers['protein_id'][0]
-                            else:
-                                para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['protein_id'][0]
-
-                        # check for the Locus_Tag section and append if there
-                        if 'locus_tag' in feature.qualifiers:
-                            if para_dict_key_string == "":
-                                para_dict_key_string = feature.qualifiers['locus_tag'][0]
-                            else:
-                                para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['locus_tag'][0]
-
-                        # check for the protein ID section and append if there
-                        if 'gene' in feature.qualifiers:
-                            if para_dict_key_string == "":
-                                para_dict_key_string = feature.qualifiers['gene'][0]
-                            else:
-                                para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['gene'][0]
-
-                        # check for the product section and append if there
-                        if 'product' in feature.qualifiers:
-                            if para_dict_key_string == "":
-                                para_dict_key_string = feature.qualifiers['product'][0]
-                            else:
-                                para_dict_key_string = para_dict_key_string + ";" + feature.qualifiers['product'][0]
-
-            # not sure if this number is correct, yet
-            self.max_chrom = indexNumber
-        except Exception as e:
-            logger.critical("Error in gbff_parse() in annotation parser.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
 
     # This function parses gff files and stores them in a dictionary
     # It also creates a parallel dictionary to use in searching
@@ -332,7 +252,7 @@ class Annotation_Parser:
             logger.critical(e)
             logger.critical(traceback.format_exc())
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setStyleSheet("font: " + str(GlobalSettings.mainWindow.fontSize) + "pt 'Arial'")
             msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msgBox.setWindowTitle("Fatal Error")
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
@@ -433,7 +353,7 @@ class Annotation_Parser:
             logger.critical(e)
             logger.critical(traceback.format_exc())
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setStyleSheet("font: " + str(GlobalSettings.mainWindow.fontSize) + "pt 'Arial'")
             msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msgBox.setWindowTitle("Fatal Error")
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
@@ -483,7 +403,7 @@ class Annotation_Parser:
                 """
                 print("Error: Wrong annotation file format")
                 return -1
-            elif "gbff" in self.annotationFileName:
+            elif "gbff" or "gbk" in self.annotationFileName:
                 return "gbff"
             # return -1 to throw the error window in main
             else:
@@ -493,7 +413,7 @@ class Annotation_Parser:
             logger.critical(e)
             logger.critical(traceback.format_exc())
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setStyleSheet("font: " + str(GlobalSettings.mainWindow.fontSize) + "pt 'Arial'")
             msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msgBox.setWindowTitle("Fatal Error")
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")

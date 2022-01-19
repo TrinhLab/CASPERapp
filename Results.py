@@ -677,6 +677,17 @@ class Results(QtWidgets.QMainWindow):
                     self.rows_and_seq_list.append(rows_and_seq2)
                     self.comboBoxGene.addItem(feature)
                     self.get_targets(feature, feature_dict[feature])
+                if self.inputtype == "sequence":
+                    detail_output1 = {}
+                    rows_and_seq2 = {}
+                    seq_and_avg3 = {}
+                    self.detail_output_list.append(detail_output1)
+                    self.seq_and_avg_list.append(seq_and_avg3)
+                    self.rows_and_seq_list.append(rows_and_seq2)
+                    self.comboBoxGene.addItem(feature)
+                    self.get_targets(feature, feature_dict[feature])
+
+
             # Enable the combobox to be toggled now that the data is in AllData
             self.comboBoxGene.currentTextChanged.connect(self.displayGeneData)
             self.first_boot = True
@@ -1465,15 +1476,15 @@ class Results(QtWidgets.QMainWindow):
             exit(-1)
 
     # This function takes the location data for a feature- or position-based search
-    # and returns the appropriate NT sequence from a GBFF file using Bio Python's SeqIO.parse() method
+    # and returns the appropriate NT sequence from a GenBank formatted annotation file using BioPython's SeqIO.parse() method
     def sequence_finder(self, location_data):
         try:
             ### Start up the function
             chrom_index = location_data[0]-1 # This is the chromosome we need to pull sequence data from. (Python indexing, so chromosome 1 is index 0)
             start = location_data[1]
             end = location_data[2]
-            ### Pull the sequence information from the GBFF file
-            parser = SeqIO.parse(self.annotation_path,'genbank') # Initialize parser object for GBFF file
+            ### Pull the sequence information from the GenBank file
+            parser = SeqIO.parse(self.annotation_path,'genbank') # Initialize parser object for GenBank file
             for i,record in enumerate(parser): # Loop through chromosomes 
                 if chrom_index == i: # If this is the correct chromosome
                     chrom_seq = str(record.seq).strip()

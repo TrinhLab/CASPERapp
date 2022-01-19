@@ -363,7 +363,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
         msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Warning)
         msgBox.setWindowTitle("Warning!")
-        msgBox.setText("Warning!\n\nThe GenBank collection may contain poorly or partially annotated GBFF files. We highly recommend using the RefSeq collection if it is available.")
+        msgBox.setText("Warning!\n\nThe GenBank collection may contain poorly or partially annotated annotation files. We highly recommend using the RefSeq collection if it is available.")
         msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
         msgBox.exec()
 
@@ -848,7 +848,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
 
                     for file in dir_files:
                         if self.gbff_checkbox.isChecked():
-                            if file.find('genomic.gbff') != -1:
+                            if file.find('genomic.gb*') != -1:
                                 # check OS for output path
                                 if platform.system() == "Windows":
                                     output_file = GlobalSettings.CSPR_DB + "\\GBFF\\" + file
@@ -1032,7 +1032,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                 orig = str(self.rename_window.rename_table.item(row, 0).text())
                 new = str(self.rename_window.rename_table.cellWidget(row, 1).text())
                 if new != "":
-                    if orig.find(".gbff")!= -1:
+                    if orig.find(".gb*")!= -1:
                         if new.find(".") != -1:
                             new = new[:new.find(".")]
                         new = new + ".gbff"
@@ -1042,7 +1042,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                         new = new + ".fna"
 
                     if platform.system() == "Windows":
-                        if new.find(".gbff") != -1:
+                        if new.find(".gb*") != -1:
                             if os.path.isfile(GlobalSettings.CSPR_DB + "\\GBFF\\" + new) == False:
                                 os.rename(GlobalSettings.CSPR_DB + "\\GBFF\\" + orig, GlobalSettings.CSPR_DB + "\\GBFF\\" + new)
                             else:
@@ -1070,7 +1070,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                     else:
                         #unix cannot have spaces in paths
                         new = new.replace(" ","")
-                        if new.find(".gbff") != -1:
+                        if new.find(".gb*") != -1:
                             if os.path.isfile(GlobalSettings.CSPR_DB + "/GBFF/" + new) == False:
                                 os.rename(GlobalSettings.CSPR_DB + "/GBFF/" + orig, GlobalSettings.CSPR_DB + "/GBFF/" + new)
                             else:

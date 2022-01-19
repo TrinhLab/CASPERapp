@@ -157,20 +157,20 @@ class genomebrowser(QtWidgets.QWidget):
 				return
 
 			fileToSearch = GlobalSettings.mainWindow.annotation_files.currentText()
-			for file in glob.glob(GlobalSettings.CSPR_DB + "/**/*.gbff", recursive=True):
+			for file in glob.glob(GlobalSettings.CSPR_DB + "/**/*.gb*", recursive=True):
 				if file.find(fileToSearch) != -1:
 					fileToSearch = file
 					break
 
-			if(str(fileToSearch).find(".gbff") == -1):
-				QtWidgets.QMessageBox.information(p, "Genomebrowser Error", "Filetype must be GBFF.", QtWidgets.QMessageBox.Ok)
+			if(str(fileToSearch).find(".gb*") == -1):
+				QtWidgets.QMessageBox.information(p, "Genomebrowser Error", "Filetype must be GenBank format.", QtWidgets.QMessageBox.Ok)
 				return
 
 
 			try:
 				genomeList = self.ncbiAPI(fileToSearch)
 			except:
-				QtWidgets.QMessageBox.question(p, "GBFF_FileNotFound", "GBFF file is not in selected directory", QtWidgets.QMessageBox.Ok)
+				QtWidgets.QMessageBox.question(p, "GenBank_FileNotFound", "GenBank file is not in selected directory", QtWidgets.QMessageBox.Ok)
 				return
 
 			self.createHtml(genomeList)
