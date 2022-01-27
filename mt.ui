@@ -474,7 +474,7 @@
          </size>
         </property>
         <property name="text">
-         <string>Export Selected gRNA's</string>
+         <string>Export Selected gRNAs</string>
         </property>
        </widget>
       </item>

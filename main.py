@@ -730,25 +730,6 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.searches.clear()
 
             self.progressBar.setValue(75)
-            # reset, and search the parallel dictionary now
-            # self.searches = {}
-            # for search in searchValues:
-            #     search = self.removeWhiteSpace(search)
-            #     if len(search) == 0:
-            #         continue
-
-            #     self.searches[search] = {}
-            #     for item in self.annotation_parser.para_dict:
-            #         checkingItem = item.lower()  # lowercase now, to match the user's input
-            #         if search in checkingItem:  # if what they are searching for is somewhere in that key
-            #             if self.annotation_parser.para_dict[item][0] != '':
-            #                 for match in self.annotation_parser.reg_dict[self.annotation_parser.para_dict[item][0]]:
-            #                     if item not in self.searches[search]:
-            #                         self.searches[search][item] = [match]
-            #                     elif item not in self.searches[search][item]:
-            #                         self.searches[search][item].append(match)
-            # if the search returns nothing, throw an error
-            # if len(self.searches[searchValues[0]]) <= 0:
             if len(self.results_list) <= 0:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
@@ -795,22 +776,6 @@ class CMainWindow(QtWidgets.QMainWindow):
                 if file.find(fileName) != -1:
                     self.annotation_parser.annotationFileName = file
                     break
-            fileType = self.annotation_parser.find_which_file_version()
-
-            # if the parser retuns the 'wrong file type' error
-            if fileType == -1:
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Error:")
-                msgBox.setText(
-                    "We cannot parse the file type given. Please make sure to choose a GenBank file.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
-                self.progressBar.setValue(0)
-                return
-
             self.Results.annotation_path = self.annotation_parser.annotationFileName  ### Set annotation path
             #print("run results")
 
@@ -840,14 +805,29 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.Results.displayGeneViewer.setChecked(0)
 
             if inputtype == "feature":
+
+                fileType = self.annotation_parser.find_which_file_version()
+
+                # if the parser retuns the 'wrong file type' error
+                if fileType == -1:
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Error:")
+                    msgBox.setText("Feature search requires a GenBank formatted annotation file. Please select a file from the dropdown menu or search by position")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
+                    self.progressBar.setValue(0)
+                    return
+
                 # make sure an annotation file has been selected
-                if self.annotation_files.currentText() == "":
+                if self.annotation_files.currentText() == "None":
                     msgBox = QtWidgets.QMessageBox()
                     msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                     msgBox.setWindowTitle("No Annotation")
-                    msgBox.setText(
-                        "Please select an annotation from NCBI or provide you own annotation file")
+                    msgBox.setText("Search by feature requires a GenBank annotation file. Please select one from the dropdown menu or search by position.")
                     msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                     msgBox.exec()
 
@@ -918,41 +898,19 @@ class CMainWindow(QtWidgets.QMainWindow):
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                         msgBox.setWindowTitle("Position Error: Range Too Large")
                         msgBox.setText(
-                            "The search range must be less than 100,000 nt.")
+                            "The search range must be less than 50,000 nt.")
                         msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                         msgBox.exec()
 
                         self.progressBar.setValue(0)
                         return
 
-                    ### Get length of the chromosome
-                    for i, chrom in enumerate(SeqIO.parse(self.annotation_parser.annotationFileName,"genbank")):
-                        if i == (int(searchIndices[0])-1):
-                            chrom_len = len(chrom.seq)
-                        else:
-                            continue                      
-                    
-                    ### Make sure search is within chromosome range 
-                    if int(searchIndices[2]) > chrom_len:
-                        msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                        msgBox.setWindowTitle("Position Error: Region not in Chromosome")
-                        msgBox.setText(
-                            "The stop location is greater than the chromosome's length.")
-                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                        msgBox.exec()
-
-                        self.progressBar.setValue(0)
-                     
-
-
                     # append the data into the checked_info
                     tempString = 'chrom: ' + str(searchIndices[0]) + ',start: ' + str(searchIndices[1]) + ',end: ' + str(searchIndices[2])
                     self.checked_info[tempString] = (int(searchIndices[0]), int(searchIndices[1])-1, int(searchIndices[2]))
 
                 self.progressBar.setValue(50)
-                self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, "",inputtype)
+                self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info,inputtype)
                 self.Results.load_gene_viewer()
                 self.progressBar.setValue(100)
                 self.pushButton_ViewTargets.setEnabled(True)
@@ -960,6 +918,32 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             # sequence code below
             if inputtype == "sequence":
+                fileType = self.annotation_parser.find_which_file_version()
+                # if the parser retuns the 'wrong file type' error
+                if fileType == -1:
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Error:")
+                    msgBox.setText("Search by sequence requires a GenBank annotation file. Please select one from the dropdown menu or search by position.")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
+                    self.progressBar.setValue(0)
+                    return
+                if self.annotation_files.currentText() == "None":
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msgBox.setWindowTitle("Error:")
+                    msgBox.setText("Search by sequence requires a GenBank annotation file. Please select one from the dropdown menu or search by position.")
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+
+                    self.progressBar.setValue(0)
+                    return
+
+
                 checkString = 'AGTCN'
                 full_org = str(self.orgChoice.currentText())
                 self.checked_info.clear()
@@ -1034,7 +1018,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 self.progressBar.setValue(75) # Update progress bar
 
-                self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, "",inputtype)
+                self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(), self.checked_info, self.check_ntseq_info, inputtype)
                 self.Results.load_gene_viewer()
                 self.progressBar.setValue(100)
                 self.pushButton_ViewTargets.setEnabled(True)
@@ -1179,7 +1163,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             # now call transfer data
             self.progressBar.setValue(95)
             self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
-                                       self.checked_info, self.check_ntseq_info, "",inputtype="feature")
+                                       self.checked_info, self.check_ntseq_info,inputtype="feature")
             self.Results.load_gene_viewer()
 
             self.progressBar.setValue(100)
@@ -1287,6 +1271,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             annotation_files.sort(key=str.lower)
             self.annotation_files.addItems(annotation_files)
+            self.annotation_files.addItems(["None"])
         except Exception as e:
             logger.critical("Error in fill_annotation_dropdown() in main.")
             logger.critical(e)

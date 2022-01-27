@@ -160,7 +160,7 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Export selected guides to a CSV file.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Export Selected gRNA's</string>
+         <string>Export Selected gRNAs</string>
         </property>
        </widget>
       </item>

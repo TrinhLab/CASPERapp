@@ -367,8 +367,7 @@ class Annotation_Parser:
     # Then it calls the respective parser functions used
     def find_which_file_version(self):
         try:
-            if self.annotationFileName == "" :
-                print("Error: No annotation file given")
+            if self.annotationFileName == "" or GlobalSettings.mainWindow.annotation_files.currentText() == "None":
                 return -1
             if "gff" in self.annotationFileName:
                 ### gff file support currently deprecated

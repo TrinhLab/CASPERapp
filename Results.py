@@ -427,9 +427,34 @@ class Results(QtWidgets.QMainWindow):
             exit(-1)
     ### This function resets gene viewer to the appropriate sequence
     def reset_location(self):
-        self.geneViewer.setText(self.featureNTDict[self.curgene])
-        self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1))
-        self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
+        try:
+            if self.displayGeneViewer.isChecked():
+                self.geneViewer.setText(self.featureNTDict[self.curgene])
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1))
+                self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
+            else:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Gene Viewer Error")
+                msgBox.setText("Gene Viewer display is off! Please turn the Gene Viewer on in order to reset the locations")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+        except Exception as e:
+            logger.critical("Error in reset_location() in results.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+            exit(-1)
+
+
+
 
     # hightlights the sequences found in the gene viewer
     # highlighting should stay the exact same with fasta and genbank files, as this function only edits what
@@ -638,14 +663,13 @@ class Results(QtWidgets.QMainWindow):
 
     # Function that is used to set up the results page.
     # it calls get_targets, which in turn calls display data
-    def transfer_data(self, org, org_files, endo, path, feature_dict, featureNTSeqDict, fasta,inputtype):
+    def transfer_data(self, org, org_files, endo, path, feature_dict, featureNTSeqDict, inputtype):
         try:
             # set all of the classes variables
             self.org = org
             self.org_files = org_files
             self.endo = endo
             self.directory = path
-            self.fasta_ref = fasta
             self.comboBoxGene.clear()
             self.AllData.clear()
             self.featureDict =feature_dict
@@ -1449,17 +1473,22 @@ class Results(QtWidgets.QMainWindow):
     # It will go based on the lengths stored in the comboGeneBox dictionary
     def load_gene_viewer(self):
         try:
-            sequence = ""
-            # for each gene selected from the results window
-            for item in self.featureDict:
-                sequence, chrom_len = self.sequence_finder(self.featureDict[item])
-                self.featureNTDict[item] = sequence
-                self.chromDict[item] = chrom_len
-            self.lineEditStart.setEnabled(True)
-            self.lineEditEnd.setEnabled(True)
-            self.change_start_end_button.setEnabled(True)
-            self.displayGeneViewer.setChecked(0)
-            self.checkGeneViewer()
+            if GlobalSettings.mainWindow.annotation_files.currentText() != "None":
+                sequence = ""
+                # for each gene selected from the results window
+                for item in self.featureDict:
+                    sequence, chrom_len = self.sequence_finder(self.featureDict[item])
+                    self.featureNTDict[item] = sequence
+                    self.chromDict[item] = chrom_len
+                self.lineEditStart.setEnabled(True)
+                self.lineEditEnd.setEnabled(True)
+                self.change_start_end_button.setEnabled(True)
+                self.displayGeneViewer.setEnabled(True)
+                self.displayGeneViewer.setChecked(0)
+                self.checkGeneViewer()
+            else:
+                self.displayGeneViewer.setEnabled(False) # Disable Gene Viewer if no annotation file has been selected
+                return
         except Exception as e:
             logger.critical("Error in load_gene_viewer() in results.")
             logger.critical(e)
@@ -1483,25 +1512,28 @@ class Results(QtWidgets.QMainWindow):
             chrom_index = location_data[0]-1 # This is the chromosome we need to pull sequence data from. (Python indexing, so chromosome 1 is index 0)
             start = location_data[1]
             end = location_data[2]
-            ### Pull the sequence information from the GenBank file
-            parser = SeqIO.parse(self.annotation_path,'genbank') # Initialize parser object for GenBank file
-            for i,record in enumerate(parser): # Loop through chromosomes 
-                if chrom_index == i: # If this is the correct chromosome
-                    chrom_seq = str(record.seq).strip()
-                    ### Get appropriate sequence and padding (for visualizing gRNAs that appear at extreme ends of region)
-                    if (start - 30) >= 0: # Check to make sure there is enough 5' end of gene to pull the padding from, so indexing error isn't raised
-                        five_prime_tail = chrom_seq[(start-30):start]
-                    else:
-                        five_prime_tail = ""
-                    if len(chrom_seq) >= (end + 30): # Check to make sure there is enough 3' end of gene to pull the padding from, so indexing error isn't raised
-                        three_prime_tail = chrom_seq[end:end+30]
-                    else:
-                        three_prime_tail = ""
-                    my_seq = chrom_seq[start:end] # Get the sequence from the specified location
-                    ret_sequence = five_prime_tail.lower() + my_seq.upper() + three_prime_tail.lower() # Add padding to the sequence
-                    return ret_sequence, len(chrom_seq)
-                else: # If this is not the right chromosome, go to the next one
-                    continue
+            ### Pull the sequence information from the GenBank file if present
+            if self.annotation_path != "":
+                parser = SeqIO.parse(self.annotation_path,'genbank') # Initialize parser object for GenBank file
+                for i,record in enumerate(parser): # Loop through chromosomes 
+                    if chrom_index == i: # If this is the correct chromosome
+                        chrom_seq = str(record.seq).strip()
+                        ### Get appropriate sequence and padding (for visualizing gRNAs that appear at extreme ends of region)
+                        if (start - 30) >= 0: # Check to make sure there is enough 5' end of gene to pull the padding from, so indexing error isn't raised
+                            five_prime_tail = chrom_seq[(start-30):start]
+                        else:
+                            five_prime_tail = ""
+                        if len(chrom_seq) >= (end + 30): # Check to make sure there is enough 3' end of gene to pull the padding from, so indexing error isn't raised
+                            three_prime_tail = chrom_seq[end:end+30]
+                        else:
+                            three_prime_tail = ""
+                        my_seq = chrom_seq[start:end] # Get the sequence from the specified location
+                        ret_sequence = five_prime_tail.lower() + my_seq.upper() + three_prime_tail.lower() # Add padding to the sequence
+                        return ret_sequence, len(chrom_seq)
+                    else: # If this is not the right chromosome, go to the next one
+                        continue
+            else:
+                return
 
         except Exception as e:
             logger.critical("Error in sequence_finder() in results.")

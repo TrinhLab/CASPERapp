@@ -772,6 +772,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 else:
                     program = '"' + GlobalSettings.appdir + "SeqFinderFolder/Casper_Seq_Finder_Mac" + '" '
                 program += job_args
+                print(program)
                 self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
                 self.process.start(program)
             else:
