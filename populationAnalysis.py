@@ -245,7 +245,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 msgBox.exec()
 
                 return
-            GlobalSettings.mainWindow.export_csv_window.launch(select_items,9)
+            GlobalSettings.mainWindow.export_csv_window.launch(select_items,"pa")
         except Exception as e:
             logger.critical("Error in export_to_csv() in population analysis.")
             logger.critical(e)

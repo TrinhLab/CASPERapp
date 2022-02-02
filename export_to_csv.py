@@ -28,6 +28,7 @@ class export_csv_window(QtWidgets.QMainWindow):
             # variables
             self.location = self.fileLocation_line_edit.text()
             self.selected_table_items = []
+            self.window = ""
             self.num_columns = []
 
             self.setWindowTitle("Export to CSV")
@@ -139,14 +140,14 @@ class export_csv_window(QtWidgets.QMainWindow):
 
     # launch function. Called in Results.
     # parameter expect: a list of the items selected from the window.
-    def launch(self, select_items, num_columns):
+    def launch(self, select_items, window):
         try:
             if platform.system() == "Windows":
                 self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "\\")
             else:
                 self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
             self.selected_table_items = select_items
-            self.num_columns = num_columns
+            self.window = window
             self.centerUI()
             self.show()
             self.activateWindow()
@@ -184,19 +185,28 @@ class export_csv_window(QtWidgets.QMainWindow):
             # try to do it
             try:
                 #write the table headers
-                if self.num_columns == 8: ###Change headers for multitargeting table export
+                if self.window == "mt": ###Change headers for multitargeting table export
                     output_data = open(full_path, 'w')
                     output_data.write('Seed,Total Repeats,Avg. Repeats/Scaffold,Consensus Sequence,% Consensus,Score,PAM,Strand\n')
-                elif self.num_columns == 9:
+                elif self.window == "pa":
                     output_data = open(full_path, 'w')
                     output_data.write('Seed,% Coverage,Total Repeats,Avg. Repeats/Scaffold,Consensus Sequence,% Consensus,Score,PAM,Strand\n')
                 else: ###Change headers for view results export
                     output_data = open(full_path, 'w')
-                    output_data.write('Location,Endonuclease,Sequence,Strand,PAM,Score,Off_Target\n')
+                    if GlobalSettings.mainWindow.radioButton_Gene.isChecked():
+                        tmp = GlobalSettings.mainWindow.Results.curgene.split(":")
+                        if len(tmp) > 1: # If locus tag exists for gene
+                            output_data.write('Location,Endonuclease,Sequence,Strand,PAM,Score,Off_Target,Locus_Tag,Gene_Name\n')
+                        else: # If locus tag does not exist for gene
+                            output_data.write('Location,Endonuclease,Sequence,Strand,PAM,Score,Off_Target,Gene_Name\n')
+                    else: # If user searched by sequence or position
+                        tmp = []
+                        output_data.write('Location,Endonuclease,Sequence,Strand,PAM,Score,Off_Target\n')
 
                 # loop through and write the other data
                 i = 0
                 for item in self.selected_table_items:
+                    print(item.text())
                     if i == self.num_columns-1:
                         output_data.write(item.text())
                         output_data.write('\n')

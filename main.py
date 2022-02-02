@@ -177,7 +177,8 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
     def submit(self):
         try:
             self.mainWindow.collect_table_data_nonkegg()
-            self.mainWindow.show()
+            self.mainWindow.show() # Open main window back up
+            self.hide() # Close annotation window upon Submit
         except Exception as e:
             logger.critical("Error in submit() in AnnotationsWindow.")
             logger.critical(e)
@@ -1025,8 +1026,6 @@ class CMainWindow(QtWidgets.QMainWindow):
                 self.GenerateLibrary.setEnabled(True)
 
 
-
-
         except Exception as e:
             logger.critical("Error in run_results() in main.")
             logger.critical(e)
@@ -1154,7 +1153,14 @@ class CMainWindow(QtWidgets.QMainWindow):
                 # If inidices of checkBoxes list and selected rows in table match...
                 if item[2] in selected_indices:
                     holder = (item[0],int(feature.location.start),int(feature.location.end)) # Tuple order: Feature chromosome/scaffold number, feature start, feature end
-                    self.checked_info[get_name(feature)] = holder
+                    print(feature.qualifiers)
+                    ### If locus tag available, combine with gene name to create dict key
+                    if 'locus_tag' in feature.qualifiers:
+                        tag = feature.qualifiers['locus_tag'][0]
+                        key = tag + ": " + get_name(feature)
+                    else:
+                        key = get_name(feature)
+                    self.checked_info[key] = holder
                     self.genlib_list.append((item[0],feature)) # Tuple order: Feature chromosome/scaffold number, SeqFeature object
                 else:
                     # If item was not selected in the table, go to the next item
