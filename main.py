@@ -1153,7 +1153,6 @@ class CMainWindow(QtWidgets.QMainWindow):
                 # If inidices of checkBoxes list and selected rows in table match...
                 if item[2] in selected_indices:
                     holder = (item[0],int(feature.location.start),int(feature.location.end)) # Tuple order: Feature chromosome/scaffold number, feature start, feature end
-                    print(feature.qualifiers)
                     ### If locus tag available, combine with gene name to create dict key
                     if 'locus_tag' in feature.qualifiers:
                         tag = feature.qualifiers['locus_tag'][0]
