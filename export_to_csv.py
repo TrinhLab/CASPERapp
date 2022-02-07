@@ -217,7 +217,6 @@ class export_csv_window(QtWidgets.QMainWindow):
 
                 # loop through and write the other data
                 num_cols = len(header_string.split(",")) # Calculate the number of columns based on the header_string above
-                print(num_cols)
                 if self.window == "vt" and self.locus_tag: #If the user is exporting data from VT and locus tag exists for current gene
                     tmp = GlobalSettings.mainWindow.Results.comboBoxGene.currentText().split(":") # Get the locus tag
                     locus_tag = str(tmp[0].strip())
