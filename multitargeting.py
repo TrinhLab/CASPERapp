@@ -258,7 +258,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 msgBox.exec()
 
                 return
-            GlobalSettings.mainWindow.export_csv_window.launch(select_items,8)
+            GlobalSettings.mainWindow.export_csv_window.launch(select_items,"mt")
         except Exception as e:
             logger.critical("Error in export_to_csv() in multi-targeting.")
             logger.critical(e)

@@ -289,7 +289,7 @@ class Results(QtWidgets.QMainWindow):
 
                 return
             # now launch the window
-            GlobalSettings.mainWindow.export_csv_window.launch(select_items, 7)
+            GlobalSettings.mainWindow.export_csv_window.launch(select_items,"vt")
         except Exception as e:
             logger.critical("Error in open_export_to_csv() in results.")
             logger.critical(e)

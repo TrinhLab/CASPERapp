@@ -140,7 +140,6 @@ class genomebrowser(QtWidgets.QWidget):
 			logger.critical(traceback.format_exc())
 			msgBox = QtWidgets.QMessageBox()
 			msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-			msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
 			msgBox.setWindowTitle("Fatal Error")
 			msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
 			msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)

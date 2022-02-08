@@ -28,7 +28,10 @@ class export_csv_window(QtWidgets.QMainWindow):
             # variables
             self.location = self.fileLocation_line_edit.text()
             self.selected_table_items = []
+            self.window = ""
             self.num_columns = []
+            self.locus_tag = False
+            self.gene_name = False
 
             self.setWindowTitle("Export to CSV")
             self.scaleUI()
@@ -139,14 +142,14 @@ class export_csv_window(QtWidgets.QMainWindow):
 
     # launch function. Called in Results.
     # parameter expect: a list of the items selected from the window.
-    def launch(self, select_items, num_columns):
+    def launch(self, select_items, window):
         try:
             if platform.system() == "Windows":
                 self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "\\")
             else:
                 self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
             self.selected_table_items = select_items
-            self.num_columns = num_columns
+            self.window = window
             self.centerUI()
             self.show()
             self.activateWindow()
@@ -184,27 +187,83 @@ class export_csv_window(QtWidgets.QMainWindow):
             # try to do it
             try:
                 #write the table headers
-                if self.num_columns == 8: ###Change headers for multitargeting table export
+                if self.window == "mt": ###Change headers for multitargeting table export
                     output_data = open(full_path, 'w')
-                    output_data.write('Seed,Total Repeats,Avg. Repeats/Scaffold,Consensus Sequence,% Consensus,Score,PAM,Strand\n')
-                elif self.num_columns == 9:
+                    header_string = 'Seed,Total Repeats,Avg. Repeats/Scaffold,Consensus Sequence,% Consensus,Score,PAM,Strand\n'
+                    output_data.write(header_string)
+                elif self.window == "pa":
                     output_data = open(full_path, 'w')
-                    output_data.write('Seed,% Coverage,Total Repeats,Avg. Repeats/Scaffold,Consensus Sequence,% Consensus,Score,PAM,Strand\n')
+                    header_string = 'Seed,% Coverage,Total Repeats,Avg. Repeats/Scaffold,Consensus Sequence,% Consensus,Score,PAM,Strand\n'
+                    output_data.write(header_string)
                 else: ###Change headers for view results export
                     output_data = open(full_path, 'w')
-                    output_data.write('Location,Endonuclease,Sequence,Strand,PAM,Score,Off_Target\n')
+                    if GlobalSettings.mainWindow.radioButton_Gene.isChecked(): # If the user chose to search via Feature
+                        tmp = GlobalSettings.mainWindow.Results.comboBoxGene.currentText().split(":") # Check to see if the locus tag was found for the current gene
+                        if len(tmp) > 1: # If locus tag exists for gene, include in output
+                            header_string = 'Location,Endonuclease,Sequence,Strand,PAM,Score,Off_Target,Locus_Tag,Gene_Name\n'
+                            output_data.write(header_string)
+                            self.locus_tag = True
+                            self.gene_name = False
+                        else: # If locus tag does not exist for gene, only include the gene name
+                            header_string = 'Location,Endonuclease,Sequence,Strand,PAM,Score,Off_Target,Gene_Name\n'
+                            output_data.write(header_string)
+                            self.gene_name = True
+                            self.locus_tag = False
+                    else: # If user searched by sequence or position, don't include locus tag or gene name
+                        header_string = 'Location,Endonuclease,Sequence,Strand,PAM,Score,Off_Target\n'
+                        output_data.write(header_string)
+                        self.gene_name = False
+                        self.locus_tag = False
 
                 # loop through and write the other data
-                i = 0
-                for item in self.selected_table_items:
-                    if i == self.num_columns-1:
-                        output_data.write(item.text())
-                        output_data.write('\n')
-                        i = 0
-                    else:
-                        output_data.write(item.text())
-                        output_data.write(',')
-                        i += 1
+                num_cols = len(header_string.split(",")) # Calculate the number of columns based on the header_string above
+                if self.window == "vt" and self.locus_tag: #If the user is exporting data from VT and locus tag exists for current gene
+                    tmp = GlobalSettings.mainWindow.Results.comboBoxGene.currentText().split(":") # Get the locus tag
+                    locus_tag = str(tmp[0].strip())
+                    gene_name = str(tmp[-1].strip())
+                    # Get the gene name
+                    i = 0 # Initialize iterator
+                    for item in self.selected_table_items: # Loop through all the items in the View Targets table
+                            if i == num_cols-3:
+                                output_data.write(item.text())
+                                output_data.write(',')
+                                output_data.write(locus_tag)
+                                output_data.write(',')
+                                output_data.write(gene_name)
+                                output_data.write('\n')
+                                i = 0 # If reached the end of the row, reset the iterator
+                            else:
+                                output_data.write(item.text())
+                                output_data.write(',')
+                                i += 1
+
+                elif self.window == "vt" and self.gene_name: #If the user is exporting data from VT and locus tag doesn't exist for current gene
+                    gene_name = str(GlobalSettings.mainWindow.Results.comboBoxGene.currentText().strip()) # Get the locus tag
+                    print(gene_name)
+                    i = 0 # Initialize iterator
+                    for item in self.selected_table_items: # Loop through all the items in the View Targets table
+                            if i == num_cols-2:
+                                output_data.write(item.text())
+                                output_data.write(',')
+                                output_data.write(gene_name)
+                                output_data.write('\n')
+                                i = 0
+                            else:
+                                output_data.write(item.text())
+                                output_data.write(',')
+                                i += 1
+
+                else: #If the user is exporting data from MT, PA, or View Targets but is not using Feature search
+                    i = 0 # Initialize iterator
+                    for item in self.selected_table_items: # Loop through all the items in the View Targets table
+                            if i == num_cols-1:
+                                output_data.write(item.text())
+                                output_data.write('\n')
+                                i = 0
+                            else:
+                                output_data.write(item.text())
+                                output_data.write(',')
+                                i += 1
             # catch the permission exception
             except PermissionError:
                 msgBox = QtWidgets.QMessageBox()
