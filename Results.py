@@ -645,7 +645,7 @@ class Results(QtWidgets.QMainWindow):
                 self.filter_options.cotarget_checkbox.setEnabled(False)
                 self.filter_options.cotarget_checkbox.setChecked(0)
             self.transfer_data(full_org, GlobalSettings.mainWindow.organisms_to_files[full_org], endoChoice, GlobalSettings.CSPR_DB, self.featureDict,
-                               self.featureNTDict, "",self.inputtype)
+                               self.featureNTDict, self.inputtype)
         except Exception as e:
             logger.critical("Error in changeEndonuclease() in results.")
             logger.critical(e)
