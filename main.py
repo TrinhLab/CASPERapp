@@ -382,6 +382,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.Step1.setStyleSheet(groupbox_style)
         self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2"))
         self.Step3.setStyleSheet(groupbox_style.replace("Step1", "Step3"))
+        self.CASPER_Navigation.setStyleSheet(groupbox_style.replace("Step1", "CASPER_Navigation").replace("solid","dashed").replace("rgb(111,181,110)","rgb(88,89,91)"))
 
         self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
         self.pushButton_FindTargets.clicked.connect(self.gather_settings)
@@ -390,27 +391,29 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.GenerateLibrary.setEnabled(False)
         self.radioButton_Gene.clicked.connect(self.toggle_annotation)
         self.radioButton_Position.clicked.connect(self.toggle_annotation)
-
-        self.actionUpload_New_Genome.triggered.connect(self.launch_newGenome)
-        self.actionUpload_New_Endonuclease.triggered.connect(self.launch_newEndonuclease)
-        self.actionOpen_Genome_Browser.triggered.connect(self.launch_newGenomeBrowser)
-
+    
+        """ Connect functions to buttons """ 
+        self.newGenome_button.clicked.connect(self.launch_newGenome) # Connect launch function to New Genome
+        self.newEndo_button.clicked.connect(self.launch_newEndonuclease) # Connect launch function to New Endonuclease
+        self.multitargeting_button.clicked.connect(self.changeto_multitargeting) # Connect launch function to Multitargeting
+        self.populationAnalysis_button.clicked.connect(self.changeto_population_Analysis) # Connect launch function to PA
         self.GenerateLibrary.clicked.connect(self.prep_genlib)
+
+        """ Connect functions to actions (toolbar) """ 
+        self.actionOpen_Genome_Browser.triggered.connect(self.launch_newGenomeBrowser)
         self.actionExit.triggered.connect(self.close_app)
         self.visit_repo.triggered.connect(self.visit_repo_func)
-        self.progressBar.setMinimum(0)
-        self.progressBar.setMaximum(100)
-        self.progressBar.reset()
-        self.Annotation_Window = AnnotationsWindow(info_path)
-
-
         self.actionChange_Directory.triggered.connect(self.change_directory)
-        self.actionMultitargeting.triggered.connect(self.changeto_multitargeting)
-        self.actionPopulation_Analysis.triggered.connect(self.changeto_population_Analysis)
         self.actionNCBI.triggered.connect(self.open_ncbi_web_page)
         # self.actionCasper2.triggered.connect(self.open_casper2_web_page)
         self.actionNCBI_BLAST.triggered.connect(self.open_ncbi_blast_web_page)
 
+
+
+        self.progressBar.setMinimum(0)
+        self.progressBar.setMaximum(100)
+        self.progressBar.reset()
+        self.Annotation_Window = AnnotationsWindow(info_path)
         self.geneEntryField.setPlaceholderText("Example Inputs: \n\n"
                                          "Option 1: Feature (ID, Locus Tag, or Name)\n"
                                          "Example: 854068/YOL086C/ADH1 for S. cerevisiae alcohol dehydrogenase 1\n\n"
@@ -423,6 +426,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                                          "1,1,1000\n"
                                          "5,1,500\n"
                                          "etc.")
+
         # show functionalities on window
         self.newGenome = NewGenome(info_path)
         self.newEndonuclease = NewEndonuclease()
