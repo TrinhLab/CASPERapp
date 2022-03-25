@@ -5,24 +5,17 @@ block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['/Users/ddooley/bioinformatics_packages/individual_packages/CASPERapp'],
+             pathex=['/Users/ddooley/bioinformatics_packages/individual_packages/crispr_tools/CASPERapp'],
              datas=[
 				('OffTargetFolder', 'OffTargetFolder'),
 				('SeqFinderFolder', 'SeqFinderFolder'),
 				('*.ui','.'),
 				('CASPERinfo', '.'),
 				('CASPER-logo.jpg', '.'),
+				('CASPER_icon.icns', '.'),
 				('genomeBrowserTemplate.html', '.')
 			 ],
-             hiddenimports=[
-				'repeats_vs_seeds_line',
-				'seeds_vs_repeats_bar',
-				'repeats_vs_chromo',
-				'pop_analysis_3dgraph',
-				'pop_analysis_repeats_graph',
-				'pop_analysis_venn_diagram',
-				'pkg_resources.py2_warn'
-			],
+             hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
              excludes=[
@@ -55,6 +48,6 @@ coll = COLLECT(exe,
                upx_exclude=[],
                name='CASPERapp')
 
-app = BUNDLE(coll, icon='cas9image.icns',
+app = BUNDLE(coll, icon='CASPER_icon.icns',
              name='CASPERapp.app',
              bundle_identifier=None)
