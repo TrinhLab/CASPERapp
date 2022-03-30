@@ -294,6 +294,95 @@ class PandasModel(QtCore.QAbstractTableModel):
 
             exit(-1)
 
+## Taken from StackOverflow: https://stackoverflow.com/questions/57607072/update-pyqt-progress-from-another-thread-running-ftp-download
+class DownloadThread(QtCore.QThread):
+    download_finished = QtCore.pyqtSignal(object)
+    download_started = QtCore.pyqtSignal(object)
+    data_progress = QtCore.pyqtSignal(object)
+    data_size = QtCore.pyqtSignal(object)
+    def __init__(self,parent,url):
+        try:
+            QtCore.QThread.__init__(self,parent)
+            self.url = url # Initialize URL
+            self.ftp = FTP('ftp.ncbi.nlm.nih.gov') # Initialize FTP object
+            self.ftp.login()
+        except Exception as e:
+            logger.critical("Error initializing Thread class in ncbi tool.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidge/ts.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+            exit(-1)
+
+    def run(self):
+        try:
+            self.ftp.cwd(self.url) # Change to appropriate directory
+            dir_files = self.ftp.nlst() # Get list of files in directory
+            for file in dir_files: # Loop through every file in the directory
+                if GlobalSettings.mainWindow.ncbi.gbff_checkbox.isChecked(): # If a GBFF is supposed to be downloaded
+                    if file.find('genomic.gbff') != -1: # If a GBFF exists in this directory
+                        GlobalSettings.mainWindow.ncbi.progressBar.setValue(0) # Set progress bar to 0 before each download
+
+                        # check OS for output path
+                        if platform.system() == "Windows":
+                            output_file = GlobalSettings.CSPR_DB + "\\GBFF\\" + file
+                        else:
+                            output_file = GlobalSettings.CSPR_DB + "/GBFF/" + file
+                        
+                        self.ftp.voidcmd('TYPE I')
+                        totalsize = self.ftp.size(file) # Get size of file that is being downloaded
+                        # The first signal sets the maximum for the progress bar
+                        self.data_size.emit(str(totalsize)) # Emit size of file
+                        self.download_started.emit('Status: Downloading ' + str(file) + '...') # Emit that the file download is starting
+                        with open(output_file, 'wb') as self.f:
+                            self.ftp.retrbinary(f"RETR {file}", self.file_write) # Download the file, emitting progress as we go
+
+                        self.download_finished.emit(('Status: Download Complete!',output_file)) # Once download is finished, emit signal
+
+                if GlobalSettings.mainWindow.ncbi.fna_checkbox.isChecked(): # If a FNA is supposed to be downloaded
+                    if file.find('genomic.fna') != -1 and file.find('_cds_') == -1 and file.find('_rna_') == -1: # If a FNA exists in this directory
+                        GlobalSettings.mainWindow.ncbi.progressBar.setValue(0) # Set progress bar to 0 before each download
+
+                        # check OS for output path
+                        if platform.system() == "Windows":
+                            output_file = GlobalSettings.CSPR_DB + "\\FNA\\" + file
+                        else:
+                            output_file = GlobalSettings.CSPR_DB + "/FNA/" + file
+
+                        self.ftp.voidcmd('TYPE I')
+                        totalsize = self.ftp.size(file) # Get size of file that is being downloaded
+                        # The first signal sets the maximum for the progress bar
+                        self.data_size.emit(str(totalsize)) # Emit size of file
+                        self.download_started.emit('Status: Downloading ' + str(file) + '...') # Emit that file download is starting
+                        with open(output_file, 'wb') as self.f:
+                            self.ftp.retrbinary(f"RETR {file}", self.file_write) # Download the file
+
+                        self.download_finished.emit(('Status: Download Complete!',output_file)) # Once download is finished, emit signal
+
+            self.ftp.quit() # Stop the FTP connection once everything has been downloaded
+        except Exception as e:
+                logger.critical("Error downloading file within DownloadThread class.")
+                logger.critical(e)
+                logger.critical(traceback.format_exc())
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Fatal Error")
+                msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+                msgBox.exec()
+                exit(-1)
+
+    def file_write(self, data):
+        self.f.write(data) # Write the downloaded data to a file 
+        # The other signals increase a progress
+        self.data_progress.emit(str(len(data))) # Emit a signal updating progress
+
 
 #ncbi
 class NCBI_search_tool(QtWidgets.QMainWindow):
@@ -315,7 +404,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             self.progressBar.setValue(0)
             self.rename_window = rename_window()
             self.rename_window.submit_button.clicked.connect(self.submit_rename)
-            self.rename_window.go_back.clicked.connect(self.go_back)
+            self.rename_window.go_back.clicked.connect(self.rename_go_back)
             self.df = pd.DataFrame()
             groupbox_style = """
                     QGroupBox:title{subcontrol-origin: margin;
@@ -816,6 +905,27 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
 
             exit(-1)
 
+    ## Taken from StackOverflow: https://stackoverflow.com/questions/57607072/update-pyqt-progress-from-another-thread-running-ftp-download
+    def on_progress_ready(self, data):
+        # The first signal sets the maximum, the other signals increase a progress
+        if self.progress_initialized:
+            self.progressBar.setValue(self.progressBar.value() + int(data))
+        else:
+            self.progressBar.setMaximum(int(data))
+            self.progress_initialized = True
+
+    def on_data_ready(self, data):
+        self.progressLabel.setText(str(data))
+        self.progress_initialized = True
+
+    def on_data_done(self, data):
+        self.progressLabel.setText(str(data[0]))
+        self.progressBar.setValue(100)
+        self.files.append(data[1])
+        self.progress_initialized = False
+
+
+    ## Taken from StackOverflow: https://stackoverflow.com/questions/57607072/update-pyqt-progress-from-another-thread-running-ftp-download
     def download_files(self):
         try:
             indexes = self.ncbi_table.selectionModel().selectedRows()
@@ -823,17 +933,12 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                 return
             if self.genbank_checkbox.isChecked() == False and self.refseq_checkbox.isChecked() == False:
                 return
-            self.progressBar.setValue(5)
-            QtWidgets.QApplication.processEvents()
-            ftp = FTP('ftp.ncbi.nlm.nih.gov')
-            ftp.login()
-            increment = 50 / len(indexes)
-            progress_val = 0
-            files = []
-            for index in indexes:
-                NewIndex = self.ncbi_table.model().index(index.row(), 0)
-                id = self.ncbi_table.model().data(NewIndex)
-                dirs = []
+            self.files = []
+            self.threads = []
+            for index in indexes: # For selected row(s) in table
+                NewIndex = self.ncbi_table.model().index(index.row(), 0) # Get index of selected row
+                id = self.ncbi_table.model().data(NewIndex) # Get ID from selected row
+                dirs = [] # Initialize list to hold links to ftp directories
                 if self.genbank_checkbox.isChecked():
                     genbank_ftp = self.genbank_ftp_dict[int(id)]
                     dirs.append(genbank_ftp)
@@ -841,67 +946,52 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                     refseq_ftp = self.refseq_ftp_dict[int(id)]
                     dirs.append(refseq_ftp)
 
-                for dir in dirs:
-                    link = str(dir).replace('ftp://ftp.ncbi.nlm.nih.gov', '')
-                    ftp.cwd(link)
-                    dir_files = ftp.nlst()
+                for dir in dirs: # Loop through the ftp links
+                    url = str(dir).replace('ftp://ftp.ncbi.nlm.nih.gov', '') # Create new link
+                    downloader = DownloadThread(parent=self,url=url)
+                    downloader.download_started.connect(self.on_data_ready) # Connect signal to function
+                    downloader.download_finished.connect(self.on_data_done) # Connect signal to function
+                    downloader.data_progress.connect(self.on_progress_ready) # Connect signal to function
+                    downloader.data_size.connect(self.on_size_signal) # Connect signal to function
+#                    downloader.finished.connect(downloader.deleteLater) # Once the thread is finished, delete it
+                    self.threads.append(downloader) # Append thread to thread list
+                    self.progress_initialized = False # Set progress bool to false when just starting
+                    downloader.start()
 
-                    for file in dir_files:
-                        if self.gbff_checkbox.isChecked():
-                            if file.find('genomic.gbff') != -1:
-                                # check OS for output path
-                                if platform.system() == "Windows":
-                                    output_file = GlobalSettings.CSPR_DB + "\\GBFF\\" + file
-                                else:
-                                    output_file = GlobalSettings.CSPR_DB + "/GBFF/" + file
 
-                                with open(output_file, 'wb') as f:
-                                    ftp.retrbinary(f"RETR {file}", f.write)
-                                files.append(output_file)
-
-                        if self.fna_checkbox.isChecked():
-                            if file.find('genomic.fna') != -1 and file.find('_cds_') == -1 and file.find('_rna_') == -1:
-                                # check OS for output path
-                                if platform.system() == "Windows":
-                                    output_file = GlobalSettings.CSPR_DB + "\\FNA\\" + file
-                                else:
-                                    output_file = GlobalSettings.CSPR_DB + "/FNA/" + file
-
-                                with open(output_file, 'wb') as f:
-                                    ftp.retrbinary(f"RETR {file}", f.write)
-                                files.append(output_file)
-
-                progress_val += increment
-                self.progressBar.setValue(progress_val)
-
-            QtWidgets.QApplication.processEvents()
-            for file in files:
-                self.decompress_file(file)
-                progress_val += increment
-                self.progressBar.setValue(progress_val)
-
+            while len([t for t in self.threads if t.isRunning()]) > 0:
+#                time.sleep(0.1)
+                print("waiting")
+                QtWidgets.QApplication.processEvents()
+            print("done")
             self.progressBar.setValue(100)
+
+#            for file in self.files:
+#                self.decompress_file(file)
+#                progress_val += increment
+#                self.progressBar.setValue(progress_val)
+
             QtWidgets.QApplication.processEvents()
 
-            for i in range(len(files)):
-                files[i] = files[i].replace('.gz', '')
-                if platform.system() == 'Windows':
-                    files[i] = files[i][files[i].rfind("\\")+1:]
-                else:
-                    files[i] = files[i][files[i].rfind("/") + 1:]
-
-
-            if len(files) > 0:
-                self.rename_files(files)
-            else:
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("No Files Downloaded")
-                msgBox.setText("No files were downloaded from the selected NCBI files. Please make sure the selected files are available in the database selected.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-                return
+#            for i in range(len(self.files)):
+#                self.files[i] = self.files[i].replace('.gz', '')
+#                if platform.system() == 'Windows':
+#                    self.files[i] = self.files[i][self.files[i].rfind("\\")+1:]
+#                else:
+#                    self.files[i] = self.files[i][self.files[i].rfind("/") + 1:]
+#
+#
+#            if len(self.files) > 0:
+#                self.rename_files(self.files)
+#            else:
+#                msgBox = QtWidgets.QMessageBox()
+#                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+#                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+#                msgBox.setWindowTitle("No Files Downloaded")
+#                msgBox.setText("No files were downloaded from the selected NCBI files. Please make sure the selected files are available in the database selected.")
+#                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+#                msgBox.exec()
+#                return
 
         except Exception as e:
             logger.critical("Error in download_files() in ncbi tool.")
@@ -1021,8 +1111,6 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
             msgBox.exec()
-
-
             exit(-1)
 
     def submit_rename(self):
@@ -1512,3 +1600,6 @@ class loading_window(QtWidgets.QMainWindow):
 
 
             exit(-1)
+
+
+
