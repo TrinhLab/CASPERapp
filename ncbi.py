@@ -747,7 +747,6 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             self.comboBox.setCurrentIndex(logicalIndex)
             self.comboBox.blockSignals(True)
             valuesUnique = self.model._df.iloc[:, logicalIndex].unique()
-            #print(valuesUnique)
             if logicalIndex == 0:
                 valuesUnique = ['Sort: 0-9', 'Sort: 9-0']
             elif logicalIndex == 2:
@@ -968,8 +967,6 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
     ## Taken from StackOverflow: https://stackoverflow.com/questions/57607072/update-pyqt-progress-from-another-thread-running-ftp-download
     def download_files(self):
         try:
-            self.progressBar.setValue(0) # Reset progressbar to 0
-            self.progressLabel.setText("Download(s) Started...") # Reset progressbar to 0
             self.labels = {} # Key is the ID, value is the QLabel
             self.progressbars = {} # Key is the ID, value is the QProgressBar
             self.threads = {} # Key is the ID, value is the QThread
@@ -980,7 +977,9 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                 return
             if self.genbank_checkbox.isChecked() == False and self.refseq_checkbox.isChecked() == False:
                 return
-            self.files = []
+            self.progressBar.setValue(0) # Set progressbar to 0
+            self.progressLabel.setText("Download(s) Started...") # Update progresslabel
+            self.files = [] # Initialize list to hold downloaded files
             for index in indices: # For selected row(s) in table
                 NewIndex = self.ncbi_table.model().index(index.row(), 0) # Get index of selected row
                 id = self.ncbi_table.model().data(NewIndex) # Get ID from selected row
@@ -1004,6 +1003,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                         self.threads[url] = downloader # Add thread to dictionary using the url as a key
                         downloader.start()
                     else:
+                        self.progressLabel.setText("") # Reset label to be blank
                         msgBox = QtWidgets.QMessageBox()
                         msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -1086,9 +1086,15 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
     # decompress file function
     def decompress_file(self, filename):
         try:
-            with gzip.open(str(filename), 'rb') as f_in:
+            block_size = 65536
+            with gzip.open(filename, 'rb') as f_in:
                 with open(str(filename).replace('.gz', ''), 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
+                    while True:
+                        block = f_in.read(block_size)
+                        if not block:
+                            break
+                        else:
+                            f_out.write(block)
             os.remove(str(filename))
         except Exception as e:
             logger.critical("Error in decompress_file() in ncbi tool.")
