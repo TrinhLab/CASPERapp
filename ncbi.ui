@@ -349,7 +349,7 @@
          <item row="1" column="2">
           <widget class="QRadioButton" name="refseq_checkbox">
            <property name="text">
-            <string>Ref Seq</string>
+            <string>RefSeq</string>
            </property>
            <property name="checked">
             <bool>true</bool>

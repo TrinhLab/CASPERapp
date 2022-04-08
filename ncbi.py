@@ -347,6 +347,7 @@ class DownloadThread(QtCore.QThread):
                         self.file_started.emit((self.url,'Downloading GBFF: ' + str(round(totalsize/1e6,2)) + 'MB...',str(totalsize))) # Emit that the file download is starting and size of file
                         with open(output_file, 'wb') as self.f:
                             self.ftp.retrbinary(f"RETR {file}", self.file_write) # Download the file, emitting progress as we go
+                        self.decompress_file(output_file) # Decompress the file
                         self.file_finished.emit((self.url,'GBFF Downloaded!',output_file)) # Once download is finished, emit signal
 
                 if GlobalSettings.mainWindow.ncbi.fna_checkbox.isChecked(): # If a FNA is supposed to be downloaded
@@ -365,8 +366,8 @@ class DownloadThread(QtCore.QThread):
                         with open(output_file, 'wb') as self.f:
                             self.ftp.retrbinary(f"RETR {file}", self.file_write) # Download the file
 
+                        self.decompress_file(output_file) # Decompress the file
                         self.file_finished.emit((self.url,'FNA Downloaded!',output_file)) # Once download is finished, emit signal
-            
             self.finished.emit(self.url)
             self.ftp.quit() # Stop the FTP connection once everything has been downloaded
         except Exception as e:
@@ -387,6 +388,31 @@ class DownloadThread(QtCore.QThread):
         # The other signals increase a progress
         self.data_progress.emit((self.url,str(len(data)))) # Emit a signal updating progress
 
+    # decompress file function
+    def decompress_file(self, filename):
+        try:
+            block_size = 65536
+            with gzip.open(filename, 'rb') as f_in:
+                with open(str(filename).replace('.gz', ''), 'wb') as f_out:
+                    while True:
+                        block = f_in.read(block_size)
+                        if not block:
+                            break
+                        else:
+                            f_out.write(block)
+            os.remove(str(filename))
+        except Exception as e:
+            logger.critical("Error in decompress_file() in ncbi tool.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+            exit(-1)
 
 #ncbi
 class NCBI_search_tool(QtWidgets.QMainWindow):
@@ -647,6 +673,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             bs_content = BeautifulSoup(content, "html.parser")
 
             self.loading_window.loading_bar.setValue(55)
+
             QtCore.QCoreApplication.processEvents()
 
             #Prep Data for Table
@@ -678,6 +705,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
 
             #Get ftp links
             genbank_links = bs_content.find_all('ftppath_genbank')
+            refseq_links = bs_content.find_all('ftppath_refseq')
             refseq_links = bs_content.find_all('ftppath_refseq')
             genbank_links = [i.text for i in genbank_links]
             refseq_links = [i.text for i in refseq_links]
@@ -883,6 +911,21 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
 
                 return
 
+
+            threadCount = QtCore.QThreadPool.globalInstance().maxThreadCount() # Get thread count
+            if len(indices) > threadCount:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Too Many Selections!")
+                msgBox.setText("You only have " + str(threadCount) + " threads avaiable to download with.\n\nPlease select " + str(threadCount) + " or fewer rows.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+
+                msgBox.exec()
+
+                return
+
+
             #make sure file type is selected
             if self.gbff_checkbox.isChecked() == False and self.fna_checkbox.isChecked() == False:
                 msgBox = QtWidgets.QMessageBox()
@@ -963,6 +1006,9 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
         self.labels.clear()
         self.progressbars.clear()
         self.threads.clear()
+    def clear_layout(self):
+        for i in reversed(range(self.formLayout.count())): 
+            self.formLayout.itemAt(i).widget().deleteLater()
 
     ## Taken from StackOverflow: https://stackoverflow.com/questions/57607072/update-pyqt-progress-from-another-thread-running-ftp-download
     def download_files(self):
@@ -985,11 +1031,37 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                 id = self.ncbi_table.model().data(NewIndex) # Get ID from selected row
                 dirs = [] # Initialize list to hold links to ftp directories
                 if self.genbank_checkbox.isChecked():
-                    genbank_ftp = self.genbank_ftp_dict[int(id)]
-                    dirs.append(genbank_ftp)
+                    if int(id) in self.genbank_ftp_dict and self.genbank_ftp_dict[int(id)] != "":
+                        genbank_ftp = self.genbank_ftp_dict[int(id)]
+                        dirs.append(genbank_ftp)
+                    else:
+                        self.clean_bars()
+                        self.clear_layout()
+                        self.progressLabel.setText("") # Reset label to be blank
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("No GenBank ID Found")
+                        msgBox.setText("No GenBank ID was found for one of the selections. Please make sure the selected files are available in the GenBank database.")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+                        return
                 else:
-                    refseq_ftp = self.refseq_ftp_dict[int(id)]
-                    dirs.append(refseq_ftp)
+                    if int(id) in self.refseq_ftp_dict and self.refseq_ftp_dict[int(id)] != "":
+                        refseq_ftp = self.refseq_ftp_dict[int(id)]
+                        dirs.append(refseq_ftp)
+                    else:
+                        self.clean_bars()
+                        self.clear_layout()
+                        self.progressLabel.setText("") # Reset label to be blank
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("No RefSeq ID Found")
+                        msgBox.setText("No RefSeq ID was found for one of the selections. Please make sure the selected files are available in the RefSeq database.")
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+                        return
 
                 for dir in dirs: # Loop through the ftp links
                     url = str(dir).replace('ftp://ftp.ncbi.nlm.nih.gov', '') # Create new link
@@ -1003,16 +1075,16 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                         self.threads[url] = downloader # Add thread to dictionary using the url as a key
                         downloader.start()
                     else:
+                        self.clean_bars() # Clear out all the bars since the download failed
                         self.progressLabel.setText("") # Reset label to be blank
                         msgBox = QtWidgets.QMessageBox()
                         msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                         msgBox.setWindowTitle("No Files Found")
-                        msgBox.setText("No files were found for this entry within the selected databse. Please make sure the selected files are available in the database selected.")
+                        msgBox.setText("No files were found for this entry within the selected database. Please make sure the selected files are available in the database selected.")
                         msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                         msgBox.exec()
                         return
-
 
             """ Make sure all threads are done before checking to see if files were downloaded """
             while len([self.threads[t] for t in self.threads if self.threads[t].isRunning()]) > 0:
@@ -1020,9 +1092,6 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                 QtWidgets.QApplication.processEvents()
             self.progressBar.setValue(self.progressBar.maximum()) # Set progressBar to maximum
             self.progressLabel.setText("Download(s) Complete!") # Set progressBar to maximum
-
-            for file in self.files:
-                self.decompress_file(file)
 
             self.clean_bars() # Clear out all the bars now that downloading is done
 
@@ -1036,7 +1105,8 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             if len(self.files) > 0:
                 self.rename_files(self.files)
             else:
-                self.clean_bars() # Clear out all the bars now that downloading is done
+                self.clear_layout()
+                self.clean_bars() # Clear out all the bars since the download failed
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -1070,34 +1140,6 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                 self.ncbi_table.clearSelection()
         except Exception as e:
             logger.critical("Error in select_all() in ncbi tool.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
-    # decompress file function
-    def decompress_file(self, filename):
-        try:
-            block_size = 65536
-            with gzip.open(filename, 'rb') as f_in:
-                with open(str(filename).replace('.gz', ''), 'wb') as f_out:
-                    while True:
-                        block = f_in.read(block_size)
-                        if not block:
-                            break
-                        else:
-                            f_out.write(block)
-            os.remove(str(filename))
-        except Exception as e:
-            logger.critical("Error in decompress_file() in ncbi tool.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             msgBox = QtWidgets.QMessageBox()
