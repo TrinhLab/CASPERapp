@@ -306,9 +306,10 @@ class DownloadThread(QtCore.QThread):
     file_started = QtCore.pyqtSignal(object) # This signal emits when the file starts downloading 
     file_finished = QtCore.pyqtSignal(object) # This signal emits the name of the file downloaded
 
-    def __init__(self,parent,url):
+    def __init__(self,parent,url,id):
         try:
             QtCore.QThread.__init__(self,parent)
+            self.id = id # Initialize ID
             self.url = url # Initialize URL
             self.ftp = FTP('ftp.ncbi.nlm.nih.gov') # Initialize FTP object
             self.ftp.login()
@@ -327,49 +328,52 @@ class DownloadThread(QtCore.QThread):
 
     def run(self):
         try:
-            self.started.emit(self.url)
-            self.ftp.cwd(self.url) # Change to appropriate directory
-            dir_files = self.ftp.nlst() # Get list of files in directory
-            for file in dir_files: # Loop through every file in the directory
-                if GlobalSettings.mainWindow.ncbi.gbff_checkbox.isChecked(): # If a GBFF is supposed to be downloaded
-                    if file.find('genomic.gbff') != -1: # If a GBFF exists in this directory
-                        GlobalSettings.mainWindow.ncbi.progressBar.setValue(0) # Set progress bar to 0 before each download
+            ### Start by making sure the url is valid
+            if self.url == "":
+                self.finished.emit((self.id, False))
+                return
+            else:
+                self.started.emit(self.id)
+                self.ftp.cwd(self.url) # Change to appropriate directory
+                dir_files = self.ftp.nlst() # Get list of files in directory
+                for file in dir_files: # Loop through every file in the directory
+                    if GlobalSettings.mainWindow.ncbi.gbff_checkbox.isChecked(): # If a GBFF is supposed to be downloaded
+                        if file.find('genomic.gbff') != -1: # If a GBFF exists in this directory
 
-                        # check OS for output path
-                        if platform.system() == "Windows":
-                            output_file = GlobalSettings.CSPR_DB + "\\GBFF\\" + file
-                        else:
-                            output_file = GlobalSettings.CSPR_DB + "/GBFF/" + file
-                        
-                        self.ftp.voidcmd('TYPE I')
-                        totalsize = self.ftp.size(file) # Get size of file that is being downloaded
-                        # The first signal sets the maximum for the progress bar
-                        self.file_started.emit((self.url,'Downloading GBFF: ' + str(round(totalsize/1e6,2)) + 'MB...',str(totalsize))) # Emit that the file download is starting and size of file
-                        with open(output_file, 'wb') as self.f:
-                            self.ftp.retrbinary(f"RETR {file}", self.file_write) # Download the file, emitting progress as we go
-                        self.decompress_file(output_file) # Decompress the file
-                        self.file_finished.emit((self.url,'GBFF Downloaded!',output_file)) # Once download is finished, emit signal
+                            # check OS for output path
+                            if platform.system() == "Windows":
+                                output_file = GlobalSettings.CSPR_DB + "\\GBFF\\" + file
+                            else:
+                                output_file = GlobalSettings.CSPR_DB + "/GBFF/" + file
+                            
+                            self.ftp.voidcmd('TYPE I')
+                            totalsize = self.ftp.size(file) # Get size of file that is being downloaded
+                            # The first signal sets the maximum for the progress bar
+                            self.file_started.emit((self.id,'Downloading GBFF: ' + str(round(totalsize/1e6,2)) + 'MB...',str(totalsize))) # Emit that the file download is starting and size of file
+                            with open(output_file, 'wb') as self.f:
+                                self.ftp.retrbinary(f"RETR {file}", self.file_write) # Download the file, emitting progress as we go
+                            self.decompress_file(output_file) # Decompress the file
+                            self.file_finished.emit((self.id,'GBFF Downloaded!',output_file)) # Once download is finished, emit signal
 
-                if GlobalSettings.mainWindow.ncbi.fna_checkbox.isChecked(): # If a FNA is supposed to be downloaded
-                    if file.find('genomic.fna') != -1 and file.find('_cds_') == -1 and file.find('_rna_') == -1: # If a FNA exists in this directory
-                        GlobalSettings.mainWindow.ncbi.progressBar.setValue(0) # Set progress bar to 0 before each download
+                    if GlobalSettings.mainWindow.ncbi.fna_checkbox.isChecked(): # If a FNA is supposed to be downloaded
+                        if file.find('genomic.fna') != -1 and file.find('_cds_') == -1 and file.find('_rna_') == -1: # If a FNA exists in this directory
 
-                        # check OS for output path
-                        if platform.system() == "Windows":
-                            output_file = GlobalSettings.CSPR_DB + "\\FNA\\" + file
-                        else:
-                            output_file = GlobalSettings.CSPR_DB + "/FNA/" + file
+                            # check OS for output path
+                            if platform.system() == "Windows":
+                                output_file = GlobalSettings.CSPR_DB + "\\FNA\\" + file
+                            else:
+                                output_file = GlobalSettings.CSPR_DB + "/FNA/" + file
 
-                        self.ftp.voidcmd('TYPE I')
-                        totalsize = self.ftp.size(file) # Get size of file that is being downloaded
-                        self.file_started.emit((self.url,'Downloading FNA: ' + str(round(totalsize/1e6,2)) + 'MB...',str(totalsize))) # Emit that file download is starting
-                        with open(output_file, 'wb') as self.f:
-                            self.ftp.retrbinary(f"RETR {file}", self.file_write) # Download the file
+                            self.ftp.voidcmd('TYPE I')
+                            totalsize = self.ftp.size(file) # Get size of file that is being downloaded
+                            self.file_started.emit((self.id,'Downloading FNA: ' + str(round(totalsize/1e6,2)) + 'MB...',str(totalsize))) # Emit that file download is starting
+                            with open(output_file, 'wb') as self.f:
+                                self.ftp.retrbinary(f"RETR {file}", self.file_write) # Download the file
 
-                        self.decompress_file(output_file) # Decompress the file
-                        self.file_finished.emit((self.url,'FNA Downloaded!',output_file)) # Once download is finished, emit signal
-            self.finished.emit(self.url)
-            self.ftp.quit() # Stop the FTP connection once everything has been downloaded
+                            self.decompress_file(output_file) # Decompress the file
+                            self.file_finished.emit((self.id,'FNA Downloaded!',output_file)) # Once download is finished, emit signal
+                self.finished.emit((self.id,True))
+                self.ftp.quit() # Stop the FTP connection once everything has been downloaded
         except Exception as e:
                 logger.critical("Error downloading file within DownloadThread class.")
                 logger.critical(e)
@@ -386,7 +390,7 @@ class DownloadThread(QtCore.QThread):
     def file_write(self, data):
         self.f.write(data) # Write the downloaded data to a file 
         # The other signals increase a progress
-        self.data_progress.emit((self.url,str(len(data)))) # Emit a signal updating progress
+        self.data_progress.emit((self.id,str(len(data)))) # Emit a signal updating progress
 
     # decompress file function
     def decompress_file(self, filename):
@@ -966,10 +970,24 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
 
     ### When a thread is finished, update its label and progressbar for the last time
     def on_thread_finish(self,data):
-        self.progressbars[data].setValue(self.progressbars[data].maximum()) #Make sure progress bar is full
-        self.labels[data].setText("Download(s) Complete!") #Make sure progress bar is full
-        self.progressBar.setValue(self.progressBar.value()+1) # Increment overall progress bar when a thread finishes
-        QtWidgets.QApplication.processEvents() # Allow the progress bar to update
+        id = data[0]
+        my_bool = data[1]
+        if my_bool: # If thread finished succesfully
+            self.progressbars[id].setValue(self.progressbars[id].maximum()) #Make sure progress bar is full
+            self.labels[id].setText("Download(s) Complete!") #Make sure progress bar is full
+            self.progressBar.setValue(self.progressBar.value()+1) # Increment overall progress bar when a thread finishes
+            QtWidgets.QApplication.processEvents() # Allow the progress bar to update
+        else:
+            self.progressBar.setMaximum(self.progressBar.maximum()-1) # Subtract 1 from progress bar to reflect failed thread.
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Link Failed!")
+            msgBox.setText("Failed to find a valid link for ID: " + str(id) + ". Please make sure this ID is available in the selected database.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+            msgBox.exec()
+            return
+
 
     ### When a file download starts, update the label and progress bar
     def on_file_start(self, data):
@@ -1023,7 +1041,6 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                 return
             if self.genbank_checkbox.isChecked() == False and self.refseq_checkbox.isChecked() == False:
                 return
-            self.progressBar.setValue(0) # Set progressbar to 0
             self.progressLabel.setText("Download(s) Started...") # Update progresslabel
             self.files = [] # Initialize list to hold downloaded files
             for index in indices: # For selected row(s) in table
@@ -1031,61 +1048,21 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                 id = self.ncbi_table.model().data(NewIndex) # Get ID from selected row
                 dirs = [] # Initialize list to hold links to ftp directories
                 if self.genbank_checkbox.isChecked():
-                    if int(id) in self.genbank_ftp_dict and self.genbank_ftp_dict[int(id)] != "":
-                        genbank_ftp = self.genbank_ftp_dict[int(id)]
-                        dirs.append(genbank_ftp)
-                    else:
-                        self.clean_bars()
-                        self.clear_layout()
-                        self.progressLabel.setText("") # Reset label to be blank
-                        msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                        msgBox.setWindowTitle("No GenBank ID Found")
-                        msgBox.setText("No GenBank ID was found for one of the selections. Please make sure the selected files are available in the GenBank database.")
-                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                        msgBox.exec()
-                        return
+                    genbank_ftp = self.genbank_ftp_dict[int(id)]
+                    dirs.append(genbank_ftp)
                 else:
-                    if int(id) in self.refseq_ftp_dict and self.refseq_ftp_dict[int(id)] != "":
-                        refseq_ftp = self.refseq_ftp_dict[int(id)]
-                        dirs.append(refseq_ftp)
-                    else:
-                        self.clean_bars()
-                        self.clear_layout()
-                        self.progressLabel.setText("") # Reset label to be blank
-                        msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                        msgBox.setWindowTitle("No RefSeq ID Found")
-                        msgBox.setText("No RefSeq ID was found for one of the selections. Please make sure the selected files are available in the RefSeq database.")
-                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                        msgBox.exec()
-                        return
-
+                    refseq_ftp = self.refseq_ftp_dict[int(id)]
+                    dirs.append(refseq_ftp)
                 for dir in dirs: # Loop through the ftp links
                     url = str(dir).replace('ftp://ftp.ncbi.nlm.nih.gov', '') # Create new link
-                    if url != "":
-                        downloader = DownloadThread(parent=self,url=url)
-                        downloader.started.connect(self.on_thread_start) # Connect signal to function
-                        downloader.finished.connect(self.on_thread_finish) # Connect signal to function
-                        downloader.file_started.connect(self.on_file_start)
-                        downloader.file_finished.connect(self.on_file_finish)
-                        downloader.data_progress.connect(self.on_progress_ready) # Connect signal to function
-                        self.threads[url] = downloader # Add thread to dictionary using the url as a key
-                        downloader.start()
-                    else:
-                        self.clean_bars() # Clear out all the bars since the download failed
-                        self.progressLabel.setText("") # Reset label to be blank
-                        msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                        msgBox.setWindowTitle("No Files Found")
-                        msgBox.setText("No files were found for this entry within the selected database. Please make sure the selected files are available in the database selected.")
-                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                        msgBox.exec()
-                        return
-
+                    downloader = DownloadThread(parent=self,url=url,id=id) # Create a thread for the download
+                    downloader.started.connect(self.on_thread_start) # Connect signal to function
+                    downloader.finished.connect(self.on_thread_finish) # Connect signal to function
+                    downloader.file_started.connect(self.on_file_start)
+                    downloader.file_finished.connect(self.on_file_finish)
+                    downloader.data_progress.connect(self.on_progress_ready) # Connect signal to function
+                    self.threads[url] = downloader # Add thread to dictionary using the url as a key
+                    downloader.start()
             """ Make sure all threads are done before checking to see if files were downloaded """
             while len([self.threads[t] for t in self.threads if self.threads[t].isRunning()]) > 0:
                 time.sleep(0.1)
