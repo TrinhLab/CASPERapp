@@ -297,6 +297,22 @@
          <string>Step 3: Download Files</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_5">
+         <item row="7" column="0" colspan="3">
+          <spacer name="verticalSpacer_8">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>10</width>
+             <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
          <item row="2" column="2">
           <widget class="QCheckBox" name="fna_checkbox">
            <property name="text">
@@ -320,20 +336,6 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="1" colspan="2">
-          <widget class="QProgressBar" name="progressBar">
-           <property name="value">
-            <number>24</number>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QRadioButton" name="genbank_checkbox">
-           <property name="text">
-            <string>GenBank</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="0">
           <widget class="QLabel" name="label_7">
            <property name="toolTip">
@@ -347,7 +349,7 @@
          <item row="1" column="2">
           <widget class="QRadioButton" name="refseq_checkbox">
            <property name="text">
-            <string>Ref Seq</string>
+            <string>RefSeq</string>
            </property>
            <property name="checked">
             <bool>true</bool>
@@ -364,13 +366,10 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_6">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;These are the databases that files are downloaded from. Refseq is considered the gold standard for annotations and assemblies. It is HIGHLY recommended to use Refseq if available for the genome of interest.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
+         <item row="1" column="1">
+          <widget class="QRadioButton" name="genbank_checkbox">
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;*&lt;/span&gt; Collections:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>GenBank</string>
            </property>
           </widget>
          </item>
@@ -390,21 +389,36 @@
            </property>
           </spacer>
          </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;These are the databases that files are downloaded from. Refseq is considered the gold standard for annotations and assemblies. It is HIGHLY recommended to use Refseq if available for the genome of interest.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;*&lt;/span&gt; Collections:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1" colspan="2">
+          <widget class="QLabel" name="progressLabel">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
          <item row="4" column="0" colspan="3">
-          <spacer name="verticalSpacer_8">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+          <widget class="QProgressBar" name="progressBar">
+           <property name="value">
+            <number>24</number>
            </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
+          </widget>
+         </item>
+         <item row="6" column="0" colspan="3">
+          <layout class="QFormLayout" name="formLayout">
+           <property name="fieldGrowthPolicy">
+            <enum>QFormLayout::ExpandingFieldsGrow</enum>
            </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>10</width>
-             <height>10</height>
-            </size>
-           </property>
-          </spacer>
+          </layout>
          </item>
         </layout>
        </widget>
@@ -460,6 +474,21 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <tabstops>
+  <tabstop>organism_line_edit</tabstop>
+  <tabstop>infra_name_line_edit</tabstop>
+  <tabstop>ret_max_line_edit</tabstop>
+  <tabstop>yes_box</tabstop>
+  <tabstop>search_button</tabstop>
+  <tabstop>all_rows</tabstop>
+  <tabstop>ncbi_table</tabstop>
+  <tabstop>genbank_checkbox</tabstop>
+  <tabstop>refseq_checkbox</tabstop>
+  <tabstop>gbff_checkbox</tabstop>
+  <tabstop>fna_checkbox</tabstop>
+  <tabstop>download_button</tabstop>
+  <tabstop>back_button</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
