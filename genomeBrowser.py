@@ -150,7 +150,9 @@ class genomebrowser(QtWidgets.QWidget):
 	def createGraph(self, p):
 		try:
 			selectedGenome = p.annotation_files.currentText()
+			print(selectedGenome)
 			gciVariable = self.splitStringLocal(selectedGenome)
+			print(gciVariable)
 
 			if(gciVariable == None):
 				return
@@ -161,7 +163,7 @@ class genomebrowser(QtWidgets.QWidget):
 					fileToSearch = file
 					break
 
-			if(str(fileToSearch).find(".gb*") == -1):
+			if(str(fileToSearch).find(".gb") == -1):
 				QtWidgets.QMessageBox.information(p, "Genomebrowser Error", "Filetype must be GenBank format.", QtWidgets.QMessageBox.Ok)
 				return
 
@@ -182,6 +184,7 @@ class genomebrowser(QtWidgets.QWidget):
 			webbrowser.open(file_path, new=2)
 		except Exception as e:
 			logger.critical("Error in createGraph() in genomebrowser.")
+
 			logger.critical(e)
 			logger.critical(traceback.format_exc())
 			msgBox = QtWidgets.QMessageBox()

@@ -449,8 +449,7 @@ class NewGenome(QtWidgets.QMainWindow):
             filed = QtWidgets.QFileDialog()
             myFile = QtWidgets.QFileDialog.getOpenFileName(filed, "Choose a File")
             if (myFile[0] != ""):
-
-                if not myFile[0].endswith(".fa") and not myFile[0].endswith(".fna") and not myFile[0].endswith(".gb*") and not myFile[0].endswith(".fasta"):
+                if not myFile[0].endswith(".fa") and not myFile[0].endswith(".fna") and not myFile[0].endswith(".fasta"):
                     msgBox = QtWidgets.QMessageBox()
                     msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
