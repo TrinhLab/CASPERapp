@@ -1,6 +1,6 @@
 import GlobalSettings
 import os
-from PyQt5 import QtWidgets, Qt, uic, QtCore
+from PyQt5 import QtWidgets, Qt, uic, QtCore, QtGui
 import platform
 import traceback
 import math
@@ -24,6 +24,24 @@ class export_csv_window(QtWidgets.QMainWindow):
             self.browse_button.clicked.connect(self.browseForFolder)
             self.cancel_button.clicked.connect(self.cancel_function)
             self.export_button.clicked.connect(self.export_function)
+
+            # Set up validators for input fields:
+            reg_ex = QtCore.QRegExp("[^,]+") # No commas
+            input_validator = QtGui.QRegExpValidator(reg_ex, self)
+            self.leading_seq.setValidator(input_validator)
+            self.trailing_seq.setValidator(input_validator)
+            
+            # GroupBox styling
+            groupbox_style = """
+            QGroupBox:title{subcontrol-origin: margin;
+                            left: 10px;
+                            padding: 0 5px 0 5px;}
+            QGroupBox#gRNA_Options{border: 2px solid rgb(111,181,110);
+                            border-radius: 9px;
+                            margin-top: 10px;
+                            font: bold 14pt 'Arial';}
+                            """
+            self.gRNA_Options.setStyleSheet(groupbox_style)
 
             # variables
             self.location = self.fileLocation_line_edit.text()
@@ -189,28 +207,28 @@ class export_csv_window(QtWidgets.QMainWindow):
                 #write the table headers
                 if self.window == "mt": ###Change headers for multitargeting table export
                     output_data = open(full_path, 'w')
-                    header_string = 'Seed,Total Repeats,Avg. Repeats/Scaffold,Consensus Sequence,% Consensus,Score,PAM,Strand\n'
+                    header_string = 'Seed,Total Repeats,Avg. Repeats/Scaffold,Consensus Sequence,% Consensus,Full Sequence,Score,PAM,Strand\n'
                     output_data.write(header_string)
                 elif self.window == "pa":
                     output_data = open(full_path, 'w')
-                    header_string = 'Seed,% Coverage,Total Repeats,Avg. Repeats/Scaffold,Consensus Sequence,% Consensus,Score,PAM,Strand\n'
+                    header_string = 'Seed,% Coverage,Total Repeats,Avg. Repeats/Scaffold,Consensus Sequence,% Consensus,Full Sequence,Score,PAM,Strand\n'
                     output_data.write(header_string)
                 else: ###Change headers for view results export
                     output_data = open(full_path, 'w')
                     if GlobalSettings.mainWindow.radioButton_Gene.isChecked(): # If the user chose to search via Feature
                         tmp = GlobalSettings.mainWindow.Results.comboBoxGene.currentText().split(":") # Check to see if the locus tag was found for the current gene
                         if len(tmp) > 1: # If locus tag exists for gene, include in output
-                            header_string = 'Location,Endonuclease,Sequence,Strand,PAM,Score,Off_Target,Locus_Tag,Gene_Name\n'
+                            header_string = 'Location,Endonuclease,Sequence,Full Sequence,Strand,PAM,Score,Off_Target,Locus_Tag,Gene_Name\n'
                             output_data.write(header_string)
                             self.locus_tag = True
                             self.gene_name = False
                         else: # If locus tag does not exist for gene, only include the gene name
-                            header_string = 'Location,Endonuclease,Sequence,Strand,PAM,Score,Off_Target,Gene_Name\n'
+                            header_string = 'Location,Endonuclease,Sequence,Full Sequence,Strand,PAM,Score,Off_Target,Gene_Name\n'
                             output_data.write(header_string)
                             self.gene_name = True
                             self.locus_tag = False
                     else: # If user searched by sequence or position, don't include locus tag or gene name
-                        header_string = 'Location,Endonuclease,Sequence,Strand,PAM,Score,Off_Target\n'
+                        header_string = 'Location,Endonuclease,Sequence,Full Sequence,Strand,PAM,Score,Off_Target\n'
                         output_data.write(header_string)
                         self.gene_name = False
                         self.locus_tag = False
@@ -224,46 +242,108 @@ class export_csv_window(QtWidgets.QMainWindow):
                     # Get the gene name
                     i = 0 # Initialize iterator
                     for item in self.selected_table_items: # Loop through all the items in the View Targets table
-                            if i == num_cols-3:
-                                output_data.write(item.text())
-                                output_data.write(',')
-                                output_data.write(locus_tag)
-                                output_data.write(',')
-                                output_data.write(gene_name)
-                                output_data.write('\n')
-                                i = 0 # If reached the end of the row, reset the iterator
-                            else:
-                                output_data.write(item.text())
-                                output_data.write(',')
-                                i += 1
+                        if i == num_cols-3:
+                            output_data.write(item.text()) #Off-target score
+                            output_data.write(',')
+                            output_data.write(locus_tag) #Locus tag
+                            output_data.write(',')
+                            output_data.write(gene_name) #Gene name
+                            output_data.write('\n')
+                            i = 0 # If reached the end of the row, reset the iterator
+                        elif i == 2:
+                            output_data.write(item.text()) #gRNA only
+                            output_data.write(',')
+                            output_data.write(self.leading_seq.text().strip() + item.text() + self.trailing_seq.text().strip()) #5' Leader + gRNA + 3' Trailer
+                            output_data.write(',')
+                            i += 2 # The plus 2 makes up for the extra column that is not in the table's items
+                        else:
+                            output_data.write(item.text())
+                            output_data.write(',')
+                            i += 1
 
                 elif self.window == "vt" and self.gene_name: #If the user is exporting data from VT and locus tag doesn't exist for current gene
                     gene_name = str(GlobalSettings.mainWindow.Results.comboBoxGene.currentText().strip()) # Get the locus tag
-                    print(gene_name)
                     i = 0 # Initialize iterator
                     for item in self.selected_table_items: # Loop through all the items in the View Targets table
-                            if i == num_cols-2:
-                                output_data.write(item.text())
-                                output_data.write(',')
-                                output_data.write(gene_name)
-                                output_data.write('\n')
-                                i = 0
-                            else:
-                                output_data.write(item.text())
-                                output_data.write(',')
-                                i += 1
+                        if i == num_cols-2:
+                            output_data.write(item.text())
+                            output_data.write(',')
+                            output_data.write(gene_name)
+                            output_data.write('\n')
+                            i = 0
+                        elif i == 2:
+                            output_data.write(item.text()) #gRNA only
+                            output_data.write(',')
+                            output_data.write(self.leading_seq.text().strip() + item.text() + self.trailing_seq.text().strip()) #5' Leader + gRNA + 3' Trailer
+                            output_data.write(',')
+                            i += 2 # The plus 2 makes up for the extra column that is not in the table's items
+                        else:
+                            output_data.write(item.text())
+                            output_data.write(',')
+                            i += 1
+                elif self.window == "mt": #If the user is exporting data from multitargeting
+                    i = 0 # Initialize iterator
+                    for item in self.selected_table_items: # Loop through all the items in the View Targets table
+                        if i == num_cols-1:
+                            output_data.write(item.text())
+                            output_data.write('\n')
+                            i = 0
+                        elif i == 3:
+                            gRNA = item.text()
+                            output_data.write(gRNA)
+                            output_data.write(',')
+                            i += 1
+                        elif i == 4:
+                            output_data.write(item.text()) #gRNA only
+                            output_data.write(',')
+                            output_data.write(self.leading_seq.text().strip() + gRNA + self.trailing_seq.text().strip()) #5' Leader + gRNA + 3' Trailer
+                            output_data.write(',')
+                            i += 2 # The plus 2 makes up for the extra column that is not in the table's items
+                        else:
+                            output_data.write(item.text())
+                            output_data.write(',')
+                            i += 1
 
-                else: #If the user is exporting data from MT, PA, or View Targets but is not using Feature search
+                elif self.window == "pa": #If the user is exporting data from Population Analysis
                     i = 0 # Initialize iterator
                     for item in self.selected_table_items: # Loop through all the items in the View Targets table
-                            if i == num_cols-1:
-                                output_data.write(item.text())
-                                output_data.write('\n')
-                                i = 0
-                            else:
-                                output_data.write(item.text())
-                                output_data.write(',')
-                                i += 1
+                        if i == num_cols-1:
+                            output_data.write(item.text())
+                            output_data.write('\n')
+                            i = 0
+                        elif i == 4:
+                            gRNA = item.text()
+                            output_data.write(gRNA)
+                            output_data.write(',')
+                            i += 1
+                        elif i == 5:
+                            output_data.write(item.text()) #gRNA only
+                            output_data.write(',')
+                            output_data.write(self.leading_seq.text().strip() + gRNA + self.trailing_seq.text().strip()) #5' Leader + gRNA + 3' Trailer
+                            output_data.write(',')
+                            i += 2 # The plus 2 makes up for the extra column that is not in the table's items
+                        else:
+                            output_data.write(item.text())
+                            output_data.write(',')
+                            i += 1
+
+                else: #If the user is exporting data from View Targets but is not using Feature search
+                    i = 0 # Initialize iterator
+                    for item in self.selected_table_items: # Loop through all the items in the View Targets table
+                        if i == num_cols-1:
+                            output_data.write(item.text())
+                            output_data.write('\n')
+                            i = 0
+                        elif i == 2:
+                            output_data.write(item.text()) #gRNA only
+                            output_data.write(',')
+                            output_data.write(self.leading_seq.text().strip() + item.text() + self.trailing_seq.text().strip()) #5' Leader + gRNA + 3' Trailer
+                            output_data.write(',')
+                            i += 2 # The plus 2 makes up for the extra column that is not in the table's items
+                        else:
+                            output_data.write(item.text())
+                            output_data.write(',')
+                            i += 1
             # catch the permission exception
             except PermissionError:
                 msgBox = QtWidgets.QMessageBox()

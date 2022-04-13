@@ -821,7 +821,7 @@ class Results(QtWidgets.QMainWindow):
 
             self.endonucleaseBox.currentIndexChanged.connect(self.changeEndonuclease)
             # add it to the endoBox choices, and then call transfer_data
-            self.transfer_data(self.org, self.org_files, self.co_target_endo_list, GlobalSettings.CSPR_DB, self.featureDict, self.featureNTDict, "",self.inputtype)
+            self.transfer_data(self.org, self.org_files, self.co_target_endo_list, GlobalSettings.CSPR_DB, self.featureDict, self.featureNTDict,self.inputtype)
         except Exception as e:
             logger.critical("Error in populate_cotarget_table() in results.")
             logger.critical(e)
