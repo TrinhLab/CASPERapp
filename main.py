@@ -1,4 +1,6 @@
 from ast import Global
+from distutils.dep_util import newer
+import enum
 import sys
 import os
 import io
@@ -33,7 +35,6 @@ from annotation_functions import *
 #logger alias for global logger
 logger = GlobalSettings.logger
 
-#Annotation file and search query from MainWindow
 class AnnotationsWindow(QtWidgets.QMainWindow):
     #init annotation window class
     def __init__(self, info_path):
@@ -42,6 +43,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
         self.Submit_button.clicked.connect(self.submit)
         self.Go_Back_Button.clicked.connect(self.go_Back)
+        self.CRISPRai_button.clicked.connect(self.open_padding_window)
         self.select_all_checkbox.stateChanged.connect(self.select_all_genes)
         self.mainWindow = ""
         self.type = ""
@@ -58,6 +60,11 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         #scale UI
         self.scaleUI()
 
+    def open_padding_window(self):
+        #self.CRIPSRai_padding_window.show()
+        GlobalSettings.mainWindow.Padding_Window.show()
+
+    
     def table_sorting(self,logicalIndex):
         try:
             self.switcher_table[logicalIndex] *= -1
@@ -183,8 +190,6 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             logger.critical("Error in submit() in AnnotationsWindow.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
-
-            self.hide()
             msgBox = QtWidgets.QMessageBox()
             msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
             msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -354,6 +359,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.anno_name = ""
         self.endo_name = ""
         self.org = ""
+        self.padding = 0
         self.TNumbers = {}  # the T numbers from a kegg search
         self.orgcodes = {}  # Stores the Kegg organism code by the format {full name : organism code}
         self.gene_list = {}  # list of genes (no ides what they pertain to
@@ -414,6 +420,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.progressBar.setMaximum(100)
         self.progressBar.reset()
         self.Annotation_Window = AnnotationsWindow(info_path)
+        self.Padding_Window = paddingWindow(info_path)
         self.geneEntryField.setPlaceholderText("Example Inputs: \n\n"
                                          "Option 1: Feature (ID, Locus Tag, or Name)\n"
                                          "Example: 854068/YOL086C/ADH1 for S. cerevisiae alcohol dehydrogenase 1\n\n"
@@ -1138,6 +1145,113 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             exit(-1)
 
+    def CRISPRai_location(self, f, index):
+        #self.CRISPRai_button.clicked.connect(self.paddingWindow)
+        padding = self.Padding_Window.paddingBox.value()
+
+        # parser = SeqIO.parse(feature, "genbank")
+        # id = list()
+        # oldStart = list()
+        # newStart = list()
+        # newEnd = list()
+
+        # for choromosome in parser:
+        # for index,f in enumerate(choromosome.features):
+        # if f.type == "source":
+        #     startFile = f.location.start
+        #     endFile = f.location.end
+        startFile, endFile = self.annotation_parser.chrom_info[index]
+
+        # if f.type != "gene" and f.type != "source":
+            
+            # get id of the current gene
+            # id.append(get_id(f))
+
+            # Find the new start and new end location base on their location
+        if int(f.location.strand) == 1:
+            if (int(f.location.start) - padding < startFile):
+                ns = startFile + 1
+            else:
+                ns = f.location.start - padding
+            ne = f.location.start
+
+            # newStart.append(str(ns))
+            # newEnd.append(str(ne))
+        elif int(f.location.strand) == -1:
+            if(int(f.location.end + padding) > endFile):
+                ne = endFile
+            else:
+                ne = f.location.end + padding
+            
+            ns = f.location.end
+
+            # newStart.append(str(ns))
+            # newEnd.append(str(ne))
+
+        #return newStart and newEnd locations lists
+        return ns, ne
+                
+    def collect_table_data_CRISPRai(self):
+        try:
+            # start out the same as the other collect_table_data
+            self.Annotation_Window.hide()
+            self.checked_info.clear()
+            self.genlib_list.clear()
+            self.check_ntseq_info.clear()
+            full_org = str(self.orgChoice.currentText())
+            holder = ()
+            selected_indices = []
+            selected_rows = self.Annotation_Window.tableWidget.selectionModel().selectedRows()
+            for ind in sorted(selected_rows):
+                selected_indices.append(ind.row())
+
+            for item in self.checkBoxes:
+                feature = item[1]
+                # If inidices of checkBoxes list and selected rows in table match...
+                if item[2] in selected_indices:
+                    ### use CRISPRai_location function to get the new start and new end
+                    #### newStart, newEnd = CRISPai_location(feature)
+                    #newStart, newEnd = CRISPRai_location(feature)
+                    # for i in newStart:
+                    #     print(i)
+                    # for i in newEnd:
+                    #     print(i)
+                    newStart, newEnd = self.CRISPRai_location(feature, item[0])
+                    holder = (item[0],int(newStart),int(newEnd))
+                    ### If locus tag available, combine with gene name to create dict key
+                    if 'locus_tag' in feature.qualifiers:
+                        tag = feature.qualifiers['locus_tag'][0]
+                        key = tag + ": " + get_name(feature)
+                    else:
+                        key = get_name(feature)
+                    self.checked_info[key] = holder
+                    self.genlib_list.append((item[0],feature)) # Tuple order: Feature chromosome/scaffold number, SeqFeature object
+                else:
+                    # If item was not selected in the table, go to the next item
+                    continue
+
+            # now call transfer data
+            self.progressBar.setValue(95)
+            self.Results.transfer_data(full_org, self.organisms_to_files[full_org], [str(self.endoChoice.currentText())], os.getcwd(),
+                                       self.checked_info, self.check_ntseq_info,inputtype="feature")
+            self.Results.load_gene_viewer()
+
+            self.progressBar.setValue(100)
+            self.pushButton_ViewTargets.setEnabled(True)
+            self.GenerateLibrary.setEnabled(True)
+        except Exception as e:
+            logger.critical("Error in collect_table_data_nonkegg() in main.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+
+            exit(-1)
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
     def collect_table_data_nonkegg(self):
         try:
@@ -1779,6 +1893,20 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             exit(-1)
 
+class paddingWindow(QtWidgets.QMainWindow): 
+    def __init__(self, infor_path):
+        super(paddingWindow, self).__init__()
+        uic.loadUi(GlobalSettings.appdir + 'CRISPRia_padding_window.ui', self)
+        self.submitPadding.clicked.connect(self.padding_submit)
+        self.hide()
+
+    def padding_submit(self):
+        padding = self.paddingBox.value()
+        GlobalSettings.mainWindow.padding = padding
+        self.hide()
+        GlobalSettings.mainWindow.show()
+        GlobalSettings.mainWindow.collect_table_data_CRISPRai()
+        
 
 #startup window class
 class StartupWindow(QtWidgets.QMainWindow):

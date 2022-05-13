@@ -38,6 +38,8 @@ class Annotation_Parser:
             
             #list of tuples containing (chromosome/scaffold # {int}, Feature matching search criteria {SeqFeature Object})
             self.results_list = list()
+            self.chrom_info = dict()
+
 
         except Exception as e:
             logger.critical("Error initializing Annotation_Parser class.")
@@ -59,6 +61,7 @@ class Annotation_Parser:
 
     def get_sequence_info(self, query):
         try:
+            
             self.results_list.clear()
             parser = SeqIO.parse(self.annotationFileName, 'genbank') # Initialize parser (iterator) for each query
             for j,record in enumerate(parser): # Each record corresponds to a chromosome/scaffold in the FNA/FASTA file
@@ -90,6 +93,7 @@ class Annotation_Parser:
     def genbank_search(self, queries, same_search):
         index_number = 0
         try:
+            self.get_chrom_info() 
             if same_search: # If searching for the same thing, just return the results from last time
                 return self.results_list
             else:
@@ -140,8 +144,31 @@ class Annotation_Parser:
             exit(-1)
     
 
+    def get_chrom_info(self):
+        try:
+            it = 1
+            parser = SeqIO.parse(self.annotationFileName, 'genbank') # Initialize parser (iterator) for each query
+            for record in parser:
+                for feature in record.features:
+                    if feature.type == "source":
+                        tmp = (feature.location.start, feature.location.end)
+                        self.chrom_info[it] = tmp
+                    else:
+                        continue
+                it += 1
+        except Exception as e:
+            logger.critical("Error in get_chrom_info() in annotation parser.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(GlobalSettings.mainWindow.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
 
-
+            exit(-1)
     # This function parses gff files and stores them in a dictionary
     # It also creates a parallel dictionary to use in searching
     # Precondition: ONLY TO BE USED WITH GFF FILES
