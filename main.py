@@ -1,5 +1,6 @@
 from ast import Global
 import sys
+from scoring_window import Scoring_Window
 import os
 import io
 from Bio import SeqIO
@@ -435,6 +436,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.export_csv_window = export_csv_window()
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
+        self.ScoringWindow = Scoring_Window()
 
         self.genomebrowser = genomeBrowser.genomebrowser()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)

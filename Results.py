@@ -9,6 +9,7 @@ import OffTarget
 import platform
 import traceback
 import math
+from scoring_window import Scoring_Window
 
 #global logger
 logger = GlobalSettings.logger
@@ -48,6 +49,9 @@ class Results(QtWidgets.QMainWindow):
             # Initialize Filter Options Object
             self.filter_options = Filter_Options()
 
+            # Initialize Scoring Window Object
+            self.scoring_window = Scoring_Window()
+
             # Target Table settings #
             self.targetTable.setColumnCount(8)  # hardcoded because there will always be 8 columns
             self.targetTable.setShowGrid(False)
@@ -67,6 +71,8 @@ class Results(QtWidgets.QMainWindow):
             self.highlight_gene_viewer_button.clicked.connect(self.highlight_gene_viewer)
             self.checkBoxSelectAll.stateChanged.connect(self.selectAll)
             self.filter_options_button.clicked.connect(self.show_filter_options)
+            self.scoring_options_button.clicked.connect(self.show_scoring_window)
+
 
             self.change_start_end_button.clicked.connect(self.change_indices)
             self.reset_location_button.clicked.connect(self.reset_location)
@@ -1567,10 +1573,53 @@ class Results(QtWidgets.QMainWindow):
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
             msgBox.exec()
-
-
             exit(-1)
 
+    #show scoring window UI 
+    def show_scoring_window(self):
+        try:
+            # Check to make sure gRNAs were highlighted
+            selectedList = self.targetTable.selectedItems()
+            if len(selectedList) <= 0:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Nothing Selected")
+                msgBox.setText("No guides were highlighted. Please highlight the guides you want to score!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+                return
+            else:
+                self.scoring_window.scaleUI()
+                self.scoring_window.centerUI()
+                self.scoring_window.show()
+                self.scoring_window.activateWindow()
+
+        except Exception as e:
+            logger.critical("Error in show_scoring_window() in results.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+            exit(-1)
+
+        except Exception as e:
+            logger.critical("Error in show_scoring_window() in results.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+            exit(-1)
 
 class Filter_Options(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
@@ -1603,8 +1652,6 @@ class Filter_Options(QtWidgets.QMainWindow):
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
             msgBox.exec()
-
-
             exit(-1)
 
     # scale UI based on current screen
@@ -1664,8 +1711,6 @@ class Filter_Options(QtWidgets.QMainWindow):
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
             msgBox.exec()
-
-
             exit(-1)
 
     # center UI on current screen
@@ -1684,7 +1729,6 @@ class Filter_Options(QtWidgets.QMainWindow):
             x = x - (math.ceil(width / 2))
             y = y - (math.ceil(height / 2))
             self.setGeometry(x, y, width, height)
-
             self.repaint()
             QtWidgets.QApplication.processEvents()
         except Exception as e:
@@ -1698,7 +1742,5 @@ class Filter_Options(QtWidgets.QMainWindow):
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
             msgBox.exec()
-
-
             exit(-1)
 
