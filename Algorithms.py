@@ -2,8 +2,17 @@
     SeqTranslate Class. Used for interpreting base64 representations of the target locations as well as their sequences.
     To interpret these run the class instance at the bottom of the file with the desired base64 representation into the
     decompress_tuple function."""
-
+from PyQt5 import QtWidgets, Qt, uic, QtCore, QtGui
 import GlobalSettings
+
+# Takes a QtTableWidget and returns a list of headers
+def get_table_headers(table):
+    labels = []
+    for c in range(table.columnCount()):
+        it = table.horizontalHeaderItem(c)
+        labels.append(str(c+1) if it is None else it.text())
+    return labels
+
 class SeqTranslate:
 
     def __init__(self):

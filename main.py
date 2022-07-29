@@ -1,4 +1,5 @@
 from ast import Global
+from Algorithms import get_table_headers
 import sys
 from scoring_window import Scoring_Window
 import os
@@ -19,7 +20,7 @@ import requests
 import GlobalSettings
 import multitargeting
 from AnnotationParser import Annotation_Parser
-from export_to_csv import export_csv_window
+from export_tool import export_tool
 from generateLib import genLibrary
 from CSPRparser import CSPRparser
 import populationAnalysis
@@ -433,7 +434,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.newEndonuclease = NewEndonuclease()
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
-        self.export_csv_window = export_csv_window()
+        self.export_tool_window = export_tool()
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
         self.ScoringWindow = Scoring_Window()
@@ -666,6 +667,15 @@ class CMainWindow(QtWidgets.QMainWindow):
                 msgBox.exec()
 
             else:
+
+                ### Remove additional scoring columns if necessary
+                header = get_table_headers(self.Results.targetTable)
+                col_indices = [header.index(x) for x in GlobalSettings.algorithms if x in header]
+                if len(col_indices) > 0:
+                    for i in col_indices:
+                        self.Results.targetTable.removeColumn(i)
+                self.Results.targetTable.resizeColumnsToContents()
+
                 self.progressBar.setValue(10)
                 if self.radioButton_Gene.isChecked():
                     ginput = [x.strip() for x in self.inputstring.split('\n')] # Split search based on newline character and remove deadspace
@@ -912,6 +922,20 @@ class CMainWindow(QtWidgets.QMainWindow):
                         self.progressBar.setValue(0)
                         return
 
+                    ### Make sure chromosome exists
+                    elif int(searchIndices[0]) > self.annotation_parser.get_max_chrom():
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("Position Error: Chromsome Doesn't Exist")
+                        msgBox.setText(
+                            "Chromosome %s does not exist in the selected annotation file." % searchIndices[0])
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
+                        self.progressBar.setValue(0)
+                        return
+
                     # append the data into the checked_info
                     tempString = 'chrom: ' + str(searchIndices[0]) + ',start: ' + str(searchIndices[1]) + ',end: ' + str(searchIndices[2])
                     self.checked_info[tempString] = (int(searchIndices[0]), int(searchIndices[1])-1, int(searchIndices[2]))
@@ -1004,6 +1028,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 # Check the GBFF file for the sequence
                 my_check = self.annotation_parser.get_sequence_info(inputstring)
+
                 self.progressBar.setValue(55) # Update progress bar
 
                 if type(my_check) == bool: # This means the sequence was not found

@@ -31,7 +31,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             self.goBackButton.clicked.connect(self.go_back)
             self.analyze_button.clicked.connect(self.pre_analyze)
             self.clear_Button.clicked.connect(self.clear)
-            self.export_button.clicked.connect(self.export_to_csv)
+            self.export_button.clicked.connect(self.export_tool)
             self.sq = Algorithms.SeqTranslate()
             self.ref_para_list = list()
             self.mode = 0
@@ -232,7 +232,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             exit(-1)
 
     #export shared seed table to csv function
-    def export_to_csv(self):
+    def export_tool(self):
         try:
             select_items = self.table2.selectedItems()
             if len(select_items) <= 0:
@@ -245,9 +245,9 @@ class Pop_Analysis(QtWidgets.QMainWindow):
                 msgBox.exec()
 
                 return
-            GlobalSettings.mainWindow.export_csv_window.launch(select_items,"pa")
+            GlobalSettings.mainWindow.export_tool_window.launch(select_items,"pa")
         except Exception as e:
-            logger.critical("Error in export_to_csv() in population analysis.")
+            logger.critical("Error in export_tool() in population analysis.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             msgBox = QtWidgets.QMessageBox()

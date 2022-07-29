@@ -76,7 +76,7 @@ class Results(QtWidgets.QMainWindow):
 
             self.change_start_end_button.clicked.connect(self.change_indices)
             self.reset_location_button.clicked.connect(self.reset_location)
-            self.export_button.clicked.connect(self.open_export_to_csv)
+            self.export_button.clicked.connect(self.open_export_tool)
 
             #self.targetTable.itemSelectionChanged.connect(self.item_select)
             self.filter_options.minScoreLine.setText("0")
@@ -103,7 +103,6 @@ class Results(QtWidgets.QMainWindow):
             self.rows_and_seq_list = []
             self.seq_and_avg_list = []
             self.files_list = []
-            self.seq_finder_cspr_file = ''
             self.mwfg = self.frameGeometry()  ##Center window
             self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
 
@@ -279,9 +278,9 @@ class Results(QtWidgets.QMainWindow):
 
             exit(-1)
 
-    # this function opens the export_to_csv window
+    # this function opens the export_tool window
     # first it makes sure that the user actually has some highlighted targets that they want exported
-    def open_export_to_csv(self):
+    def open_export_tool(self):
         try:
             select_items = self.targetTable.selectedItems()
             if len(select_items) <= 0:
@@ -295,9 +294,9 @@ class Results(QtWidgets.QMainWindow):
 
                 return
             # now launch the window
-            GlobalSettings.mainWindow.export_csv_window.launch(select_items,"vt")
+            GlobalSettings.mainWindow.export_tool_window.launch(select_items,"vt")
         except Exception as e:
-            logger.critical("Error in open_export_to_csv() in results.")
+            logger.critical("Error in open_export_tool() in results.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             msgBox = QtWidgets.QMessageBox()
@@ -738,12 +737,6 @@ class Results(QtWidgets.QMainWindow):
 
     def goBack(self):
         try:
-            # check and see if they searched on Sequence. If so, delete the temp CSPR file
-            if len(self.seq_finder_cspr_file) > 0:
-                os.remove(self.seq_finder_cspr_file)
-                GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
-                self.seq_finder_cspr_file = ''
-
             GlobalSettings.mainWindow.show()
             self.filter_options.cotarget_checkbox.setChecked(0)
             self.filter_options.hide()
@@ -752,8 +745,9 @@ class Results(QtWidgets.QMainWindow):
             except:
                 pass
             GlobalSettings.mainWindow.CoTargeting.hide()
-
+            self.scoring_window.hide()
             self.hide()
+
         except Exception as e:
             logger.critical("Error in goBack() in results.")
             logger.critical(e)
@@ -1450,12 +1444,6 @@ class Results(QtWidgets.QMainWindow):
     # this function calls the closingWindow class.
     def closeEvent(self, event):
         try:
-            # check and see if they searched on Sequence. If so, delete the temp CSPR file
-            if len(self.seq_finder_cspr_file) > 0:
-                os.remove(self.seq_finder_cspr_file)
-                GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
-                self.seq_finder_cspr_file = ''
-
             GlobalSettings.mainWindow.closeFunction()
             event.accept()
         except Exception as e:

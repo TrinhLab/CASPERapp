@@ -1,4 +1,5 @@
 from ast import Global
+from Algorithms import get_table_headers
 import GlobalSettings
 import azimuth.model_comparison as az
 import os
@@ -8,6 +9,24 @@ import traceback
 import math
 from Bio import SeqIO
 import numpy as np
+import warnings
+import contextlib
+import sys
+
+""" Code for suppressing stdout of azimuth algorithm """
+class DummyFile(object):
+    def write(self, x): pass
+
+@contextlib.contextmanager
+def nostdout():
+    save_stdout = sys.stdout
+    sys.stdout = DummyFile()
+    yield
+    sys.stdout = save_stdout
+
+#Ignore the warnings that Azimuth spits out
+warnings.filterwarnings("ignore")
+""" ************************************************ """
 
 #global logger
 logger = GlobalSettings.logger
@@ -449,67 +468,75 @@ class Scoring_Window(QtWidgets.QMainWindow):
             msgBox.exec()
             exit(-1)
 
-
-
-
-
-    def score_sequences(self):
+    def score_azimuth(self):
         try:
             ### Intialize the data structures for storing results
-            score_dict = {}
-            pass_list = []
+            guide_list = []
             reject_list = []
             full_seqs = []
-            azimuth_scores = []
+            
+            ### Find the full sequences for each gRNA from within the FASTA file and save them to full_seqs. Save index of sequences that could not be found.
             targettable = GlobalSettings.mainWindow.Results.targetTable # Make new variable for table name so that referencing isn't quite so tedious
-
+            it = 0
             for i in range(targettable.rowCount()):
                 if targettable.item(i, 0).isSelected(): # If row was selected...
-                    strand = targettable.item(i, 3).text() 
-                    seq = targettable.item(i, 2).text() + targettable.item(i,4).text()
+                    strand = targettable.item(i, 3).text() # Grab strand
+                    seq = targettable.item(i, 2).text() + targettable.item(i,4).text() # Grab full seq (guide+PAM)
+                    guide_list.append(seq) # Save the gRNA to guide_list
                     if strand == "+":
                         tmp = self.genome.find(seq)
-                        if tmp != 1:
-                            pass_list.append(seq) # Save the 
-                            full_seqs.append(self.genome[tmp-4:tmp+26]) # Get full 30-net sequence and append to pass list
+                        if tmp != -1:
+                            full_seqs.append(self.genome[tmp-4:tmp+26]) # Get full 30-nt sequence and append to full_seqsa
                         else:
-                            reject_list.append(seq) # This gRNA was not able to be found
-                            azimuth_scores.append(-1) # Return a -1 for the score
-                    else:
+                            reject_list.append(it) # Append index of gRNA to reject_list
+                    else: # If strand == "-"
                         tmp = self.rev_genome.find(seq)
-                        if tmp != 1:
-                            pass_list.append(seq) # Save the 
+                        if tmp != -1:
                             full_seqs.append(self.rev_genome[tmp-4:tmp+26]) # Get full 30-net sequence and append to pass list
                         else:
-                            reject_list.append(seq) # This gRNA was not able to be found
-                            azimuth_scores.append(-1) # Return a -1 for the score
+                            reject_list.append(it) # This gRNA was not able to be found
+                    it += 1
                 else: # If row wasn't selected, skip it
                     continue 
-            full_seqs = np.array(full_seqs) # Convert 30-nt seqs into a np.array
-            az_scores = az.predict(full_seqs) # Predict scores
-            print(len(az_scores))
+            if len(full_seqs) != 0: # If some sequences were found
+                full_seqs = np.array(full_seqs) # Convert 30-nt seqs into a np.array
+                with nostdout():
+                    az_scores = az.predict(full_seqs)*100 # Predict scores and multiply by 100
+                if len(reject_list) > 0: # If some sequences were not found
+                    print(reject_list)
+                    print(guide_list)
+                    msg_string = "\n".join([guide_list[i] for i in reject_list]) # Separate missing sequences by newline char
+                    # Now insert -1's for each guide that wasn't found
+                    for i in reject_list:
+                        az_scores = np.insert(az_scores, i, -1) 
+                    # Generate a message showing the sequences that weren't found
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical) # Consider changing this in the future to something less dire
+                    msgBox.setWindowTitle("Sequences Not Found!")
+                    msgBox.setText("The following sequences (gRNA+PAM) were not found:\n%s\n\nThey have been given placeholder scores of -1." % msg_string)
+                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                    msgBox.exec()
+            else:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical) # Consider changing this in the future to something less dire
+                msgBox.setWindowTitle("No Sequences Found!")
+                msgBox.setText("None of the selected guides were found. Please ensure you have the correct FASTA file and try again.")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+                return
 
+            self.transfer_results(az_scores, "Azimuth 2.0") # Call transfer_results to fill the table with the scores
             """
             TO DO
-            1. Finish connecting scores back to Results table
-            2. Add Error checking/edge case handling for when gRNAs cannot be found
-            3. Add loading bar and text label progress output to scoring window
-            4. Clean all the code up and make sure everything is neatly commented
+            1. Make sure all items are highlighted automatically after adding Azimuth scores
+            2. Add loading bar and text label progress output to scoring window
+            3. Clean all the code up and make sure everything is neatly commented
             """
 
-            # if any of the sequences return 0 matches, show the user which ones were not found
-            # if len(failed_guides) > 0:
-            #     msgBox = QtWidgets.QMessageBox()
-            #     msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            #     msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            #     msgBox.setWindowTitle("Warning")
-            #     msgBox.setText(
-            #         "The following sequence(s) were not found in the Gene Viewer text:\n\t" + "\n".join(failed_guides))
-            #     msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-            #     msgBox.exec()
-
         except Exception as e:
-            logger.critical("Error in score_sequences() in scoring_window.")
+            logger.critical("Error in score_azimuth() in scoring_window.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             msgBox = QtWidgets.QMessageBox()
@@ -521,7 +548,30 @@ class Scoring_Window(QtWidgets.QMainWindow):
             msgBox.exec()
             exit(-1)
 
+    def transfer_results(self, scores, algorithm):
+        targettable = GlobalSettings.mainWindow.Results.targetTable # Make new variable for table name so that referencing isn't quite so tedious
+        headers = get_table_headers(targettable) # Get table headers
+        num_cols = len(headers) # Get number of columns
+        if algorithm not in headers: # If this algorithm hasn't been ran yet, add a column for it and place scores in it.
+            targettable.insertColumn(num_cols-2) # Add column before off-target columns
+            targettable.setHorizontalHeaderLabels(["Location", "Endonuclease", "Sequence", "Strand", "PAM", "Score", algorithm, "Off-Target", "Details"]) # Update column headers
+            targettable.horizontalHeader().setSectionResizeMode(num_cols, QtWidgets.QHeaderView.Stretch) #Ensures last column goes to the edge of table
+
+        col_index = get_table_headers(targettable).index(algorithm) # Get index of column to add scores to
+        # Add scores to algorithm column 
+        it = 0
+        for i in range(targettable.rowCount()):
+            if targettable.item(i, 0).isSelected(): # If row was selected, add the corresponding score to the table
+                score = QtWidgets.QTableWidgetItem()
+                score.setData(QtCore.Qt.EditRole, round(float(scores[it]),2))
+                targettable.setItem(i,col_index, score)
+                it += 1
+        targettable.resizeColumnsToContents()
+        self.close_window()
+    
+    def close_window(self):
+        self.hide()
+
     def submit(self):
         self.load_fasta()
-        self.score_sequences()
-        # self.close_window()
+        self.score_azimuth()

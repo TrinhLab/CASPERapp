@@ -57,6 +57,13 @@ class Annotation_Parser:
     def flatten_list(self,t):
         return [item.lower() for sublist in t for item in sublist]
 
+    ### This function finds how many chromosomes are within the selcted annotation file and returns the value 
+    def get_max_chrom(self):
+        parser = SeqIO.parse(self.annotationFileName, 'genbank') # Initialize parser (iterator) for each query
+        for i, record in enumerate(parser):
+            max_chrom = i+1
+        return max_chrom
+
     def get_sequence_info(self, query):
         try:
             self.results_list.clear()
@@ -66,7 +73,11 @@ class Annotation_Parser:
                 if tmp != -1: # If match is found
                     return (j+1,tmp+1,tmp+len(query)) # Chromosome number, start index, stop index
                 else:
-                    continue # Move to the next chromosome
+                    tmp = str(record.seq.reverse_complement()).find(query) # Check the reverse complement now
+                    if tmp != -1: # If match is found
+                        return (j+1,tmp-len(query),tmp-1) # Chromosome number, start index, stop index
+                    else:
+                        continue
             return False
         
         except Exception as e:
