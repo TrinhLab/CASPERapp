@@ -530,9 +530,8 @@ class Scoring_Window(QtWidgets.QMainWindow):
             self.transfer_results(az_scores, "Azimuth 2.0") # Call transfer_results to fill the table with the scores
             """
             TO DO
-            1. Make sure all items are highlighted automatically after adding Azimuth scores
-            2. Add loading bar and text label progress output to scoring window
-            3. Clean all the code up and make sure everything is neatly commented
+            1. Add loading bar and text label progress output to scoring window
+            2. Clean all the code up and make sure everything is neatly commented
             """
 
         except Exception as e:
@@ -562,9 +561,10 @@ class Scoring_Window(QtWidgets.QMainWindow):
         it = 0
         for i in range(targettable.rowCount()):
             if targettable.item(i, 0).isSelected(): # If row was selected, add the corresponding score to the table
-                score = QtWidgets.QTableWidgetItem()
+                score = QtWidgets.QTableWidgetItem() # Create new table item for the score to be placed into
                 score.setData(QtCore.Qt.EditRole, round(float(scores[it]),2))
-                targettable.setItem(i,col_index, score)
+                targettable.setItem(i,col_index, score) # Add the item
+                targettable.item(i,col_index).setSelected(True) # Make it selected by default to prevent export issues
                 it += 1
         targettable.resizeColumnsToContents()
         self.close_window()
