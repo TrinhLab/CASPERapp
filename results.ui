@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1381</width>
-    <height>743</height>
+    <height>731</height>
    </rect>
   </property>
   <property name="font">
@@ -179,7 +179,7 @@
          </size>
         </property>
         <property name="title">
-         <string>Gene Viewer</string>
+         <string>Guide Viewer</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_4">
          <item row="6" column="0">
