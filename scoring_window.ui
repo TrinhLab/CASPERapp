@@ -105,15 +105,14 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="2">
-        <widget class="QLineEdit" name="fasta_edit">
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="0">
         <widget class="QLabel" name="fasta_label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;CASPER needs to find an algorithm-specific amount of padding around each gRNA in order to score them. Please provide the same FASTA/FNA file that was used to make the CSPR DB.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
@@ -122,14 +121,7 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0" colspan="4">
-        <widget class="QProgressBar" name="progressBar">
-         <property name="value">
-          <number>0</number>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
+       <item row="2" column="1">
         <widget class="QRadioButton" name="azimuth_button">
          <property name="text">
           <string>Azimuth 2.0</string>
@@ -139,10 +131,24 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="3">
+       <item row="4" column="0" colspan="3">
+        <widget class="QProgressBar" name="progressBar">
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="3">
         <widget class="QPushButton" name="submit_button">
          <property name="text">
           <string>Submit</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1" colspan="2">
+        <widget class="QLineEdit" name="fasta_edit">
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
