@@ -1,4 +1,5 @@
 import warnings
+from Algorithms import get_table_headers
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, Qt
 from Bio.Seq import Seq
 from Bio import SeqIO
@@ -919,9 +920,9 @@ class Results(QtWidgets.QMainWindow):
             subset_display = []
             # set the start and end numbers, as well as set the geneViewer text, if the displayGeneViewer is checked
             if self.displayGeneViewer.isChecked():
-                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1)) # Add 1 to account for Python indexing convention
-                self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
-                self.geneViewer.setText(self.featureNTDict[self.curgene])
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1)) # Set start index for gene (Add 1 to account for Python indexing convention)
+                self.lineEditEnd.setText(str(self.featureDict[self.curgene][2])) # Set end index for gene
+                self.geneViewer.setText(self.featureNTDict[self.curgene]) # Get gene sequence
 
             # if this checkBox is checked, remove the single endo
             if self.filter_options.cotarget_checkbox.isChecked():
@@ -946,6 +947,16 @@ class Results(QtWidgets.QMainWindow):
             index = 0
             #changed the number items to use setData so that sorting will work correctly
             #because before the numbers were interpretted as strings and not numbers
+
+
+            ### Remove alternative scoring columns (Azimuth, etc.) when switching between genes or loading new data...this prevents carry-over of the wrong scores from previously scored genes
+            ### One possible solution would be to add alternate scores to self.AllData, but I won't do that for now.
+            header = get_table_headers(self.targetTable) # Returns headers of the target table
+            col_indices = [header.index(x) for x in GlobalSettings.algorithms if x in header] # Returns the index(es) of the alternative scoring column(s) in the target table of View Targets window
+            if len(col_indices) > 0: # If alternative scoring has been done
+                for i in col_indices:
+                    self.targetTable.removeColumn(i)
+
             for item in subset_display:
                 num = int(item[0])
                 loc = QtWidgets.QTableWidgetItem()
@@ -963,8 +974,8 @@ class Results(QtWidgets.QMainWindow):
                 self.targetTable.setItem(index, 3, strand)
                 self.targetTable.setItem(index, 4, PAM)
                 self.targetTable.setItem(index, 5, score)
-                self.targetTable.setItem(index, 6, QtWidgets.QTableWidgetItem("--.--"))
-                self.targetTable.removeCellWidget(index, 7)
+                self.targetTable.setItem(index, 6, QtWidgets.QTableWidgetItem("--.--")) # Give "blank" value for Off-Target
+                self.targetTable.removeCellWidget(7, 7) # Leave the "Details" column empty
                 if (item[1] in self.seq_and_avg_list[self.comboBoxGene.currentIndex()].keys()):
                     OT = QtWidgets.QTableWidgetItem()
                     OT.setData(QtCore.Qt.EditRole, self.seq_and_avg_list[self.comboBoxGene.currentIndex()][item[1]])

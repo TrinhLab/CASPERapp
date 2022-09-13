@@ -1,7 +1,6 @@
 from ast import Global
 from Algorithms import get_table_headers
 import sys
-from scoring_window import Scoring_Window
 import os
 import io
 from Bio import SeqIO
@@ -437,8 +436,6 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.export_tool_window = export_tool()
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
-        self.ScoringWindow = Scoring_Window()
-
         self.genomebrowser = genomeBrowser.genomebrowser()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
@@ -669,9 +666,9 @@ class CMainWindow(QtWidgets.QMainWindow):
             else:
 
                 ### Remove additional scoring columns if necessary
-                header = get_table_headers(self.Results.targetTable)
-                col_indices = [header.index(x) for x in GlobalSettings.algorithms if x in header]
-                if len(col_indices) > 0:
+                header = get_table_headers(self.Results.targetTable) # Returns headers of the target table in View Targets window 
+                col_indices = [header.index(x) for x in GlobalSettings.algorithms if x in header] # Returns the index(es) of the alternative scoring column(s) in the target table of View Targets window
+                if len(col_indices) > 0: # If alternative scoring has been done
                     for i in col_indices:
                         self.Results.targetTable.removeColumn(i)
                 self.Results.targetTable.resizeColumnsToContents()
@@ -1591,7 +1588,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 GlobalSettings.MTWin.first_show = False
             else:
                 GlobalSettings.MTWin.show()
-            GlobalSettings.mainWindow.hide()
+                GlobalSettings.mainWindow.hide()
 
         except Exception as e:
             logger.critical("Error in changeto_multitargeting() in main.")
@@ -2408,7 +2405,7 @@ def main():
         logger.critical(e)
         logger.critical(traceback.format_exc())
         msgBox = QtWidgets.QMessageBox()
-        msgBox.setStyleSheet("font: " + str(GlobalSettings.mainWindow.fontSize) + "pt 'Arial'")
+        msgBox.setStyleSheet("font: " + str(startup.fontSize) + "pt 'Arial'")
         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
         msgBox.setWindowTitle("Fatal Error")
         msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")

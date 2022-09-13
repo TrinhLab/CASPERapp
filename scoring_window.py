@@ -360,6 +360,7 @@ class Scoring_Window(QtWidgets.QMainWindow):
         self.close_window()
     
     def close_window(self):
+        self.progressBar.setValue(0) # Reset progress bar
         self.hide()
 
     def submit(self):
