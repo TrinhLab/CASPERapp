@@ -228,8 +228,8 @@ class Scoring_Window(QtWidgets.QMainWindow):
                 ### Save the chromosome of interest and its reverse complement to the strings self.genome and self.rev_genome, respectively.
                 for i, record in enumerate(SeqIO.parse(self.fasta_edit.text(), "fasta")):
                     if i+1 == current_chrom: # Only save chromosome that contains the selected gRNAs 
-                        self.genome = record.seq.__str__()
-                        self.rev_genome = record.seq.reverse_complement().__str__()
+                        self.genome = record.seq.__str__().upper()
+                        self.rev_genome = record.seq.reverse_complement().__str__().upper()
                     else:
                         continue
                 self.progressBar.setValue(30) # Update progress bar

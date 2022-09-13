@@ -2,6 +2,7 @@ appdirs==1.4.4
 argcomplete==1.12.2
 argh==0.26.2
 beautifulsoup4==4.7.1
+Biomatters-Azimuth==0.2.4
 biopython==1.73
 bioservices==1.6.0
 certifi==2020.12.5
