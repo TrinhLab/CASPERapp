@@ -155,7 +155,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
             fontSize = 30
             self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
 
-            self.groupBox.setMaximumWidth(width * 0.3)
+            self.groupBox.setMaximumWidth(int(width * 0.3))
 
             self.adjustSize()
 

@@ -280,7 +280,7 @@ class Scoring_Window(QtWidgets.QMainWindow):
                         else:
                             reject_list.append(it) # Append index of gRNA to reject_list 
                     increment = scale*(it+1) # Calculate progressBar increment for 1 gRNA search
-                    self.progressBar.setValue(self.progressBar.value()+increment) # Update progress bar
+                    self.progressBar.setValue(int(self.progressBar.value()+increment)) # Update progress bar
                     it += 1 # Iterate iterator
                 else: # If row in table wasn't selected, skip it
                     continue 
@@ -351,7 +351,7 @@ class Scoring_Window(QtWidgets.QMainWindow):
                 targettable.item(i,col_index).setSelected(True) # Make it selected by default to prevent export issues
                 ## Update progress
                 increment = scale*(it+1)
-                self.progressBar.setValue(self.progressBar.value()+increment) # Update progress bar
+                self.progressBar.setValue(int(self.progressBar.value()+increment)) # Update progress bar
                 it += 1
 
 
