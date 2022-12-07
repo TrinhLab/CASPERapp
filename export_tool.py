@@ -167,6 +167,7 @@ class export_tool(QtWidgets.QMainWindow):
             else:
                 self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
             self.selected_table_items = select_items
+            # print(self.selected_table_items.text())
             self.window = window
             self.centerUI()
             self.show()

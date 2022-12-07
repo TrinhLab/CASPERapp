@@ -41,7 +41,7 @@
          <item row="1" column="0">
           <widget class="QLabel" name="label_2">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This is the reference organism that off-target will be run against. List is populated based on currenet CSPR files in CASPER database directory.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This is the reference organism that off-target will be ran against. List is populated based on currenet CSPR files in CASPER database directory.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
             <string>Organism:</string>

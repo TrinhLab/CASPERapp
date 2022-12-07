@@ -616,7 +616,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
                     index += 1
                     running_val += increase_val
-                    self.loading_window.loading_bar.setValue(running_val)
+                    self.loading_window.loading_bar.setValue(int(running_val))
 
             self.table2.resizeColumnsToContents()
             self.loading_window.loading_bar.setValue(25)
@@ -833,7 +833,7 @@ class Pop_Analysis(QtWidgets.QMainWindow):
 
                     index += 1
                     running_val += increase_val
-                    self.loading_window.loading_bar.setValue(running_val)
+                    self.loading_window.loading_bar.setValue(int(running_val))
 
             self.table2.resizeColumnsToContents()
             self.loading_window.hide()

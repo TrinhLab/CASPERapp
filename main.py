@@ -1,11 +1,7 @@
-from ast import Global
 from Algorithms import get_table_headers
 import sys
 import os
 import io
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-from Bio.Seq import Seq
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from CoTargeting import CoTargeting
 from closingWin import closingWindow
@@ -13,7 +9,6 @@ from Results import Results
 from NewGenome import NewGenome
 from NewEndonuclease import NewEndonuclease
 import genomeBrowser
-import gzip
 import webbrowser
 import requests
 import GlobalSettings
