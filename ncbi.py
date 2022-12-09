@@ -1,6 +1,6 @@
-from Bio import SeqIO, Entrez
+from Bio import Entrez
 from bs4 import BeautifulSoup
-from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
+from PyQt5 import QtWidgets, Qt, QtCore, uic
 from ftplib import FTP
 import gzip
 import pandas as pd
@@ -973,12 +973,12 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
         id = data[0]
         my_bool = data[1]
         if my_bool: # If thread finished succesfully
-            self.progressbars[id].setValue(self.progressbars[id].maximum()) #Make sure progress bar is full
+            self.progressbars[id].setValue(int(self.progressbars[id].maximum())) #Make sure progress bar is full
             self.labels[id].setText("Download(s) Complete!") #Make sure progress bar is full
-            self.progressBar.setValue(self.progressBar.value()+1) # Increment overall progress bar when a thread finishes
+            self.progressBar.setValue(int(self.progressBar.value()+1)) # Increment overall progress bar when a thread finishes
             QtWidgets.QApplication.processEvents() # Allow the progress bar to update
         else:
-            self.progressBar.setMaximum(self.progressBar.maximum()-1) # Subtract 1 from progress bar to reflect failed thread.
+            self.progressBar.setMaximum(int(self.progressBar.maximum()-1)) # Subtract 1 from progress bar to reflect failed thread.
             msgBox = QtWidgets.QMessageBox()
             msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
             msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -995,7 +995,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
         prompt = data[1] # This is the prompt to set the label to
         maxval = int(data[2]) # This is the file size
         self.progressbars[id].setValue(0) # Set max value of progressbar
-        self.progressbars[id].setMaximum(maxval/1e3) # Set max value of progressbar
+        self.progressbars[id].setMaximum(int(maxval/1e3)) # Set max value of progressbar
 
         self.labels[id].setText(str(prompt)) # Set label text 
 
@@ -1003,14 +1003,14 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
     def on_progress_ready(self, data):
         id = data[0] # This is the id for the thread
         val = int(data[1]) # This is the increment
-        self.progressbars[id].setValue(self.progressbars[id].value() + val/1e3) # Increment progress bar
+        self.progressbars[id].setValue(int(self.progressbars[id].value() + val/1e3)) # Increment progress bar
 
     ### When a file download finishes, update the label and progress bar and add file name to list 
     def on_file_finish(self,data):
         id = data[0] # This is the id for the thread
         prompt = data[1] # This is the prompt to set the label to
         file_name = data[2] # This is the filename
-        self.progressbars[id].setValue(self.progressbars[id].maximum()) # Make sure progress bar is set to max after finishing download
+        self.progressbars[id].setValue(int(self.progressbars[id].maximum())) # Make sure progress bar is set to max after finishing download
         self.labels[id].setText(str(prompt))
         self.files.append(str(file_name)) # Add filename to list of downloaded files
 
@@ -1036,7 +1036,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             self.threads = {} # Key is the ID, value is the QThread
             indices = self.ncbi_table.selectionModel().selectedRows()
             len_ind = len(indices) # Get number of rows
-            self.progressBar.setMaximum(len_ind) # Set overall progress bar to be equal to number of rows being downloaded
+            self.progressBar.setMaximum(int(len_ind)) # Set overall progress bar to be equal to number of rows being downloaded
             if len_ind == 0:
                 return
             if self.genbank_checkbox.isChecked() == False and self.refseq_checkbox.isChecked() == False:
@@ -1067,7 +1067,7 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
             while len([self.threads[t] for t in self.threads if self.threads[t].isRunning()]) > 0:
                 time.sleep(0.1)
                 QtWidgets.QApplication.processEvents()
-            self.progressBar.setValue(self.progressBar.maximum()) # Set progressBar to maximum
+            self.progressBar.setValue(int(self.progressBar.maximum())) # Set progressBar to maximum
             self.progressLabel.setText("Download(s) Complete!") # Set progressBar to maximum
 
             self.clean_bars() # Clear out all the bars now that downloading is done
@@ -1145,7 +1145,10 @@ class NCBI_search_tool(QtWidgets.QMainWindow):
                 self.rename_window.rename_table.setRowCount(len(files))
                 cnt = 0
                 for file in files:
-                    self.rename_window.rename_table.setItem(cnt, 0, QtWidgets.QTableWidgetItem(file))
+                    item = QtWidgets.QTableWidgetItem(file)
+                    item.setFlags(QtCore.Qt.ItemIsEnabled)
+                    self.rename_window.rename_table.setItem(cnt, 0, item)
+
                     self.rename_window.rename_table.setCellWidget(cnt, 1, QtWidgets.QLineEdit())
                     cnt += 1
 
