@@ -167,7 +167,6 @@ class export_tool(QtWidgets.QMainWindow):
             else:
                 self.fileLocation_line_edit.setText(GlobalSettings.CSPR_DB + "/")
             self.selected_table_items = select_items
-            # print(self.selected_table_items.text())
             self.window = window
             self.centerUI()
             self.show()
@@ -296,7 +295,6 @@ class export_tool(QtWidgets.QMainWindow):
                         if (i+1) % num_cols == 0:
                             tmp_list.append(item.text())
                             output_data.write(str(delim.join(tmp_list))+"\n")
-                            print(tmp_list)
                             tmp_list.clear()
                             it = 0 # Reset iterator
                         elif it == seq_index:
