@@ -10,6 +10,7 @@ import traceback
 import math
 from scoring_window import Scoring_Window
 
+
 #global logger
 logger = GlobalSettings.logger
 
@@ -59,6 +60,7 @@ class Results(QtWidgets.QMainWindow):
             self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
             self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
             self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+            self.targetTable.horizontalHeader().setSectionResizeMode(7, QtWidgets.QHeaderView.Stretch) #Ensures last column goes to the edge of table
             self.targetTable.horizontalHeader().setSectionResizeMode(7, QtWidgets.QHeaderView.Stretch) #Ensures last column goes to the edge of table
 
             self.back_button.clicked.connect(self.goBack)
@@ -1173,8 +1175,19 @@ class Results(QtWidgets.QMainWindow):
 
             exit(-1)
 
+    def getColumnIndexByHeaderName(self, table, header_name):
+        # This functin takes a QTableWidget object and header (column) name and returns the index in the table.
+        header = table.horizontalHeader()
+        for column in range(header.count()):
+           logical_index = header.logicalIndex(column)
+           if header.model().headerData(logical_index, header.orientation()) == header_name:
+               return logical_index
+        return None
+               
     def table_sorting(self, logicalIndex):
         try:
+            if logicalIndex == self.getColumnIndexByHeaderName(self.targetTable, "Details"): # Prevent sorting by Details column to prevent crashing
+                return
             self.switcher[logicalIndex] *= -1
             if self.switcher[logicalIndex] == -1:
                 self.targetTable.sortItems(logicalIndex, QtCore.Qt.DescendingOrder)
