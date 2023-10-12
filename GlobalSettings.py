@@ -11,3 +11,5 @@ OPERATING_SYSTEM_ID = ""
 CSPR_DB = ""
 
 appdir = ""
+
+algorithms = ["Azimuth 2.0"]

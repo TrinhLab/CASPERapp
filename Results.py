@@ -1,14 +1,15 @@
-import warnings
+from Algorithms import get_table_headers
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, Qt
 from Bio.Seq import Seq
 from Bio import SeqIO
 from CSPRparser import CSPRparser
 import GlobalSettings
-import os
 import OffTarget
 import platform
 import traceback
 import math
+from scoring_window import Scoring_Window
+
 
 #global logger
 logger = GlobalSettings.logger
@@ -48,14 +49,18 @@ class Results(QtWidgets.QMainWindow):
             # Initialize Filter Options Object
             self.filter_options = Filter_Options()
 
+            # Initialize Scoring Window Object
+            self.scoring_window = Scoring_Window()
+
             # Target Table settings #
-            self.targetTable.setColumnCount(8)  # hardcoded because there will always be 8 columns
+            self.targetTable.setColumnCount(8)  # 
             self.targetTable.setShowGrid(False)
             self.targetTable.setHorizontalHeaderLabels("Location;Endonuclease;Sequence;Strand;PAM;Score;Off-Target;Details".split(";"))
             self.targetTable.horizontalHeader().setSectionsClickable(True)
             self.targetTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
             self.targetTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
             self.targetTable.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+            self.targetTable.horizontalHeader().setSectionResizeMode(7, QtWidgets.QHeaderView.Stretch) #Ensures last column goes to the edge of table
             self.targetTable.horizontalHeader().setSectionResizeMode(7, QtWidgets.QHeaderView.Stretch) #Ensures last column goes to the edge of table
 
             self.back_button.clicked.connect(self.goBack)
@@ -67,10 +72,12 @@ class Results(QtWidgets.QMainWindow):
             self.highlight_gene_viewer_button.clicked.connect(self.highlight_gene_viewer)
             self.checkBoxSelectAll.stateChanged.connect(self.selectAll)
             self.filter_options_button.clicked.connect(self.show_filter_options)
+            self.scoring_options_button.clicked.connect(self.show_scoring_window)
+
 
             self.change_start_end_button.clicked.connect(self.change_indices)
             self.reset_location_button.clicked.connect(self.reset_location)
-            self.export_button.clicked.connect(self.open_export_to_csv)
+            self.export_button.clicked.connect(self.open_export_tool)
 
             #self.targetTable.itemSelectionChanged.connect(self.item_select)
             self.filter_options.minScoreLine.setText("0")
@@ -97,7 +104,6 @@ class Results(QtWidgets.QMainWindow):
             self.rows_and_seq_list = []
             self.seq_and_avg_list = []
             self.files_list = []
-            self.seq_finder_cspr_file = ''
             self.mwfg = self.frameGeometry()  ##Center window
             self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
 
@@ -273,10 +279,22 @@ class Results(QtWidgets.QMainWindow):
 
             exit(-1)
 
-    # this function opens the export_to_csv window
+    # This function resets (turns off, then on) the selection of all the rows in the ViewTargets table.
+    # For some reason this is necessary after adding values to the table through alternative scoring
+    # (different on-target scoring or off-target), otherwise the export function will bug due to newly
+    # added items being queued to the back of the list of self.targetTable.selectedItems(), instead of
+    # where they belong at the end of each row.
+    def reset_selection(self):
+        rows = sorted(set(index.row() for index in self.targetTable.selectedIndexes())) # Find selected rows
+        self.targetTable.clearSelection() # Clear the selection
+        for row in rows: # For each selected row
+            self.targetTable.selectRow(row) # Reselect each row
+
+    # this function opens the export_tool window
     # first it makes sure that the user actually has some highlighted targets that they want exported
-    def open_export_to_csv(self):
+    def open_export_tool(self):
         try:
+            self.reset_selection()
             select_items = self.targetTable.selectedItems()
             if len(select_items) <= 0:
                 msgBox = QtWidgets.QMessageBox()
@@ -289,9 +307,9 @@ class Results(QtWidgets.QMainWindow):
 
                 return
             # now launch the window
-            GlobalSettings.mainWindow.export_csv_window.launch(select_items,"vt")
+            GlobalSettings.mainWindow.export_tool_window.launch(select_items,"vt")
         except Exception as e:
-            logger.critical("Error in open_export_to_csv() in results.")
+            logger.critical("Error in open_export_tool() in results.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             msgBox = QtWidgets.QMessageBox()
@@ -732,12 +750,6 @@ class Results(QtWidgets.QMainWindow):
 
     def goBack(self):
         try:
-            # check and see if they searched on Sequence. If so, delete the temp CSPR file
-            if len(self.seq_finder_cspr_file) > 0:
-                os.remove(self.seq_finder_cspr_file)
-                GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
-                self.seq_finder_cspr_file = ''
-
             GlobalSettings.mainWindow.show()
             self.filter_options.cotarget_checkbox.setChecked(0)
             self.filter_options.hide()
@@ -746,8 +758,9 @@ class Results(QtWidgets.QMainWindow):
             except:
                 pass
             GlobalSettings.mainWindow.CoTargeting.hide()
-
+            self.scoring_window.hide()
             self.hide()
+
         except Exception as e:
             logger.critical("Error in goBack() in results.")
             logger.critical(e)
@@ -919,9 +932,9 @@ class Results(QtWidgets.QMainWindow):
             subset_display = []
             # set the start and end numbers, as well as set the geneViewer text, if the displayGeneViewer is checked
             if self.displayGeneViewer.isChecked():
-                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1)) # Add 1 to account for Python indexing convention
-                self.lineEditEnd.setText(str(self.featureDict[self.curgene][2]))
-                self.geneViewer.setText(self.featureNTDict[self.curgene])
+                self.lineEditStart.setText(str(self.featureDict[self.curgene][1]+1)) # Set start index for gene (Add 1 to account for Python indexing convention)
+                self.lineEditEnd.setText(str(self.featureDict[self.curgene][2])) # Set end index for gene
+                self.geneViewer.setText(self.featureNTDict[self.curgene]) # Get gene sequence
 
             # if this checkBox is checked, remove the single endo
             if self.filter_options.cotarget_checkbox.isChecked():
@@ -942,10 +955,20 @@ class Results(QtWidgets.QMainWindow):
                             subset_display.append(item[i])
 
             self.targetTable.setRowCount(len(subset_display))
-
             index = 0
             #changed the number items to use setData so that sorting will work correctly
             #because before the numbers were interpretted as strings and not numbers
+
+
+            ### Remove alternative scoring columns (Azimuth, etc.) when switching between genes or loading new data...this prevents carry-over of the wrong scores from previously scored genes
+            ### One possible solution would be to add alternate scores to self.AllData, but I won't do that for now.
+            header = get_table_headers(self.targetTable) # Returns headers of the target table
+            num_cols = len(header) # Get number of columns
+            col_indices = [header.index(x) for x in GlobalSettings.algorithms if x in header] # Returns the index(es) of the alternative scoring column(s) in the target table of View Targets window
+            if len(col_indices) > 0: # If alternative scoring has been done
+                for i in col_indices:
+                    self.targetTable.removeColumn(i)
+
             for item in subset_display:
                 num = int(item[0])
                 loc = QtWidgets.QTableWidgetItem()
@@ -963,8 +986,8 @@ class Results(QtWidgets.QMainWindow):
                 self.targetTable.setItem(index, 3, strand)
                 self.targetTable.setItem(index, 4, PAM)
                 self.targetTable.setItem(index, 5, score)
-                self.targetTable.setItem(index, 6, QtWidgets.QTableWidgetItem("--.--"))
-                self.targetTable.removeCellWidget(index, 7)
+                self.targetTable.setItem(index, 6, QtWidgets.QTableWidgetItem("--.--")) # Give "blank" value for Off-Target
+                self.targetTable.removeCellWidget(index, num_cols-1) # Leave the "Details" column empty
                 if (item[1] in self.seq_and_avg_list[self.comboBoxGene.currentIndex()].keys()):
                     OT = QtWidgets.QTableWidgetItem()
                     OT.setData(QtCore.Qt.EditRole, self.seq_and_avg_list[self.comboBoxGene.currentIndex()][item[1]])
@@ -1152,8 +1175,19 @@ class Results(QtWidgets.QMainWindow):
 
             exit(-1)
 
+    def getColumnIndexByHeaderName(self, table, header_name):
+        # This functin takes a QTableWidget object and header (column) name and returns the index in the table.
+        header = table.horizontalHeader()
+        for column in range(header.count()):
+           logical_index = header.logicalIndex(column)
+           if header.model().headerData(logical_index, header.orientation()) == header_name:
+               return logical_index
+        return None
+               
     def table_sorting(self, logicalIndex):
         try:
+            if logicalIndex == self.getColumnIndexByHeaderName(self.targetTable, "Details"): # Prevent sorting by Details column to prevent crashing
+                return
             self.switcher[logicalIndex] *= -1
             if self.switcher[logicalIndex] == -1:
                 self.targetTable.sortItems(logicalIndex, QtCore.Qt.DescendingOrder)
@@ -1211,7 +1245,7 @@ class Results(QtWidgets.QMainWindow):
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
                 msgBox.setWindowTitle("No Rows Selected")
                 msgBox.setText(
-                    "Please rows from the table to pass into the off target analysis!")
+                    "Please select rows from the table to pass into the off-target analysis!")
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
 
@@ -1233,7 +1267,7 @@ class Results(QtWidgets.QMainWindow):
             f.close()
             #only make off target object if first time, otherwise just
             #reshow the object
-            if(self.first_boot == True):
+            if self.first_boot:
                 self.first_boot = False
                 self.off_tar_win = OffTarget.OffTarget()
                 self.off_tar_win.submitButton.clicked.connect(self.refresh_data)
@@ -1265,8 +1299,8 @@ class Results(QtWidgets.QMainWindow):
             #setup filename based on output name given in OffTarget
             filename = self.off_tar_win.output_path
 
-            # if the user hits submit without running thr program, do nothing
-            if filename == '':
+            # if the user hits submit without running the program, do nothing
+            if not self.off_tar_win.run_clicked:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -1275,14 +1309,8 @@ class Results(QtWidgets.QMainWindow):
                     "There was an error with the Off Target execution. No results file was found.")
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
                 msgBox.exec()
-
                 return
 
-
-            for rows in range(0,self.targetTable.rowCount()):
-                self.targetTable.removeCellWidget(rows,7)
-                self.targetTable.removeCellWidget(rows,5)
-                self.targetTable.setItem(rows, 6, QtWidgets.QTableWidgetItem("--.--"))
             self.off_tar_win.hide()
             filename = filename[:len(filename)-1]
             filename = filename[1:]
@@ -1306,8 +1334,11 @@ class Results(QtWidgets.QMainWindow):
             #read the first line : either AVG or DETAILED OUTPUT
             output_type = out_file.readline()
             output_type = output_type.strip('\r\n')
+
             #parse based on whether avg or detailed output
             line_cnt = 0
+            headers = get_table_headers(self.targetTable) # Get table headers
+            num_cols = len(headers) # Get number of columns
             if(output_type == "AVG OUTPUT"):
                 for line in out_file:
                     line = line.strip('\n')
@@ -1316,7 +1347,7 @@ class Results(QtWidgets.QMainWindow):
                         row = self.rows_and_seq_list[self.comboBoxGene.currentIndex()][values[0]]
                         OT = QtWidgets.QTableWidgetItem()
                         OT.setData(QtCore.Qt.EditRole, values[1])
-                        self.targetTable.setItem(row, 6, OT)
+                        self.targetTable.setItem(row, num_cols-2, OT) # Set the OT score to the second to last column
                         self.seq_and_avg_list[self.comboBoxGene.currentIndex()][values[0]] = values[1]
                         line_cnt += 1
             else:
@@ -1335,7 +1366,7 @@ class Results(QtWidgets.QMainWindow):
                         row = self.rows_and_seq_list[self.comboBoxGene.currentIndex()][values[0]]
                         OT = QtWidgets.QTableWidgetItem()
                         OT.setData(QtCore.Qt.EditRole, values[1])
-                        self.targetTable.setItem(row, 6, OT)
+                        self.targetTable.setItem(row, num_cols - 2, OT)
                         line_cnt += 1
                     elif line != "":
                         details_bool = True
@@ -1343,7 +1374,7 @@ class Results(QtWidgets.QMainWindow):
                         details = QtWidgets.QPushButton()
                         details.setText("Details")
                         details.clicked.connect(self.show_details)
-                        self.targetTable.setCellWidget(row, 7, details)
+                        self.targetTable.setCellWidget(row, num_cols - 1, details)
                         line_cnt += 1
                 if(details_bool == True):
                     self.detail_output_list[self.comboBoxGene.currentIndex()][values[0]] = temp_list
@@ -1394,11 +1425,11 @@ class Results(QtWidgets.QMainWindow):
             for items in self.detail_output_list[self.comboBoxGene.currentIndex()][key]:
                 temp_str += items + "<br>"
 
-            chromo_str = "<html><b>Chromosome: Location, Sequence, Strand, PAM, Score:<br></b></html>"
-            input_str = self.targetTable.item(index.row(),0).text() + ' , ' + key + ' , ' + \
-                        self.targetTable.item(index.row(),3).text() + ' , ' + self.targetTable.item(index.row(),4).text() + \
-                        ' , ' + self.targetTable.item(index.row(),5).text() + "<br><br>"
-            detail_str = "<html><b>Detailed Output: Score, Chromosome, Location, Sequence:<br></b></html>"
+            chromo_str = "<html><b>Reference gRNA:</b><br>Location, Sequence, Strand, PAM, On Score<br></html>"
+            input_str = self.targetTable.item(index.row(),0).text() + ', ' + key + ', ' + \
+                        self.targetTable.item(index.row(),3).text() + ', ' + self.targetTable.item(index.row(),4).text() + \
+                        ', ' + self.targetTable.item(index.row(),5).text() + "<br><br>"
+            detail_str = "<html><b>Off-Target Hits:</b><br>Off Score, Chromosome, Location, Sequence<br></html>"
             msg.setText(chromo_str + input_str + detail_str + temp_str)
             msg.exec()
 
@@ -1444,12 +1475,6 @@ class Results(QtWidgets.QMainWindow):
     # this function calls the closingWindow class.
     def closeEvent(self, event):
         try:
-            # check and see if they searched on Sequence. If so, delete the temp CSPR file
-            if len(self.seq_finder_cspr_file) > 0:
-                os.remove(self.seq_finder_cspr_file)
-                GlobalSettings.mainWindow.pushButton_ViewTargets.setEnabled(False)
-                self.seq_finder_cspr_file = ''
-
             GlobalSettings.mainWindow.closeFunction()
             event.accept()
         except Exception as e:
@@ -1567,10 +1592,53 @@ class Results(QtWidgets.QMainWindow):
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
             msgBox.exec()
-
-
             exit(-1)
 
+    #show scoring window UI 
+    def show_scoring_window(self):
+        try:
+            # Check to make sure gRNAs were highlighted
+            selectedList = self.targetTable.selectedItems()
+            if len(selectedList) <= 0:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msgBox.setWindowTitle("Nothing Selected")
+                msgBox.setText("No guides were highlighted. Please highlight the guides you want to score!")
+                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                msgBox.exec()
+                return
+            else:
+                self.scoring_window.scaleUI()
+                self.scoring_window.centerUI()
+                self.scoring_window.show()
+                self.scoring_window.activateWindow()
+
+        except Exception as e:
+            logger.critical("Error in show_scoring_window() in results.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+            exit(-1)
+
+        except Exception as e:
+            logger.critical("Error in show_scoring_window() in results.")
+            logger.critical(e)
+            logger.critical(traceback.format_exc())
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msgBox.setWindowTitle("Fatal Error")
+            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
+            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
+            msgBox.exec()
+            exit(-1)
 
 class Filter_Options(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
@@ -1603,8 +1671,6 @@ class Filter_Options(QtWidgets.QMainWindow):
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
             msgBox.exec()
-
-
             exit(-1)
 
     # scale UI based on current screen
@@ -1664,8 +1730,6 @@ class Filter_Options(QtWidgets.QMainWindow):
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
             msgBox.exec()
-
-
             exit(-1)
 
     # center UI on current screen
@@ -1684,7 +1748,6 @@ class Filter_Options(QtWidgets.QMainWindow):
             x = x - (math.ceil(width / 2))
             y = y - (math.ceil(height / 2))
             self.setGeometry(x, y, width, height)
-
             self.repaint()
             QtWidgets.QApplication.processEvents()
         except Exception as e:
@@ -1698,7 +1761,5 @@ class Filter_Options(QtWidgets.QMainWindow):
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
             msgBox.exec()
-
-
             exit(-1)
 

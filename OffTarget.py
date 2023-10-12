@@ -20,6 +20,7 @@ class OffTarget(QtWidgets.QMainWindow):
             self.progressBar.setMinimum(0)
             self.progressBar.setMaximum(100)
             self.progressBar.setValue(0)
+            self.run_clicked = False
             self.Run.clicked.connect(self.run_analysis)
             # self.tolerancehorizontalSlider.valueChanged.connect(self.tol_change)
             # self.tolerancehorizontalSlider.setMaximum(100)
@@ -356,6 +357,7 @@ class OffTarget(QtWidgets.QMainWindow):
             #used to know when the process is done
             def finished():
                 self.running = False
+                self.run_clicked = True
                 self.progressBar.setValue(100)
 
             #used to know when data is ready to read from stdout

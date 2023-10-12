@@ -81,7 +81,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             # Listeners for changing the seed sequence or the .cspr file
             self.Analyze_Button.clicked.connect(self.make_graphs)
             self.statistics_overview.clicked.connect(self.show_statistics)
-            self.export_button.clicked.connect(self.export_to_csv)
+            self.export_button.clicked.connect(self.export_tool)
             self.selectAll.stateChanged.connect(self.select_all)
             self.selectAll.setEnabled(False)
 
@@ -186,7 +186,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             currentHeight = self.size().height()
 
             #make sure chromosome viewer doesnt get too small
-            self.groupBox_2.setMinimumHeight(0.3 * height)
+            self.groupBox_2.setMinimumHeight(int(0.3 * height))
 
             # window scaling
             scaledWidth = int((width * 1400) / 1920)
@@ -198,7 +198,7 @@ class Multitargeting(QtWidgets.QMainWindow):
                 scaledWidth = currentWidth
 
             #set min width of table
-            self.table.setMinimumWidth(0.5 * scaledWidth)
+            self.table.setMinimumWidth(int(0.5 * scaledWidth))
 
             screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
             centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
@@ -245,7 +245,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         self.repaint()
         QtWidgets.QApplication.processEvents()
 
-    def export_to_csv(self):
+    def export_tool(self):
         try:
             select_items = self.table.selectedItems()
             if len(select_items) <= 0:
@@ -258,9 +258,9 @@ class Multitargeting(QtWidgets.QMainWindow):
                 msgBox.exec()
 
                 return
-            GlobalSettings.mainWindow.export_csv_window.launch(select_items,"mt")
+            GlobalSettings.mainWindow.export_tool_window.launch(select_items,"mt")
         except Exception as e:
-            logger.critical("Error in export_to_csv() in multi-targeting.")
+            logger.critical("Error in export_tool() in multi-targeting.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
             msgBox = QtWidgets.QMessageBox()

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1381</width>
-    <height>731</height>
+    <width>1246</width>
+    <height>536</height>
    </rect>
   </property>
   <property name="font">
@@ -182,8 +182,8 @@
          <string>Guide Viewer</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_4">
-         <item row="6" column="0">
-          <widget class="QLabel" name="endoLabel">
+         <item row="5" column="0">
+          <widget class="QLabel" name="geneLabel">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -191,61 +191,12 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Endonuclease:</string>
+            <string>Gene:</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="1">
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <item>
-            <widget class="QComboBox" name="comboBoxGene">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>225</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="0" column="0" colspan="2">
-          <spacer name="verticalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>10</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="11" column="0" colspan="2">
-          <spacer name="verticalSpacer_7">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Preferred</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>10</height>
-            </size>
-           </property>
-          </spacer>
+         <item row="10" column="0" colspan="5">
+          <widget class="QTableWidget" name="targetTable"/>
          </item>
          <item row="9" column="0">
           <widget class="QCheckBox" name="checkBoxSelectAll">
@@ -282,11 +233,8 @@
            </property>
           </widget>
          </item>
-         <item row="10" column="0" colspan="3">
-          <widget class="QTableWidget" name="targetTable"/>
-         </item>
-         <item row="5" column="0">
-          <widget class="QLabel" name="geneLabel">
+         <item row="6" column="0">
+          <widget class="QLabel" name="endoLabel">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -294,14 +242,73 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Gene:</string>
+            <string>Endonuclease:</string>
            </property>
           </widget>
          </item>
-         <item row="6" column="1">
+         <item row="11" column="0" colspan="2">
+          <spacer name="verticalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Preferred</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="0" colspan="2">
+          <spacer name="verticalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Preferred</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="9" column="2">
+          <widget class="QPushButton" name="scoring_options_button">
+           <property name="text">
+            <string>Scoring Options</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1" colspan="4">
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
             <widget class="QComboBox" name="endonucleaseBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>225</width>
+               <height>0</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="5" column="1" colspan="4">
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QComboBox" name="comboBoxGene">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                <horstretch>0</horstretch>

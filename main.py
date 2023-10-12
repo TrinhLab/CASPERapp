@@ -1,10 +1,7 @@
-from ast import Global
+from Algorithms import get_table_headers
 import sys
 import os
 import io
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-from Bio.Seq import Seq
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from CoTargeting import CoTargeting
 from closingWin import closingWindow
@@ -12,13 +9,12 @@ from Results import Results
 from NewGenome import NewGenome
 from NewEndonuclease import NewEndonuclease
 import genomeBrowser
-import gzip
 import webbrowser
 import requests
 import GlobalSettings
 import multitargeting
 from AnnotationParser import Annotation_Parser
-from export_to_csv import export_csv_window
+from export_tool import export_tool
 from generateLib import genLibrary
 from CSPRparser import CSPRparser
 import populationAnalysis
@@ -432,10 +428,9 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.newEndonuclease = NewEndonuclease()
         self.CoTargeting = CoTargeting(info_path)
         self.Results = Results()
-        self.export_csv_window = export_csv_window()
+        self.export_tool_window = export_tool()
         self.genLib = genLibrary()
         self.myClosingWindow = closingWindow()
-
         self.genomebrowser = genomeBrowser.genomebrowser()
         self.launch_ncbi_button.clicked.connect(self.launch_ncbi)
 
@@ -664,6 +659,15 @@ class CMainWindow(QtWidgets.QMainWindow):
                 msgBox.exec()
 
             else:
+
+                ### Remove additional scoring columns if necessary
+                header = get_table_headers(self.Results.targetTable) # Returns headers of the target table in View Targets window 
+                col_indices = [header.index(x) for x in GlobalSettings.algorithms if x in header] # Returns the index(es) of the alternative scoring column(s) in the target table of View Targets window
+                if len(col_indices) > 0: # If alternative scoring has been done
+                    for i in col_indices:
+                        self.Results.targetTable.removeColumn(i)
+                self.Results.targetTable.resizeColumnsToContents()
+
                 self.progressBar.setValue(10)
                 if self.radioButton_Gene.isChecked():
                     ginput = [x.strip() for x in self.inputstring.split('\n')] # Split search based on newline character and remove deadspace
@@ -910,6 +914,20 @@ class CMainWindow(QtWidgets.QMainWindow):
                         self.progressBar.setValue(0)
                         return
 
+                    ### Make sure chromosome exists
+                    elif int(searchIndices[0]) > self.annotation_parser.get_max_chrom():
+                        msgBox = QtWidgets.QMessageBox()
+                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                        msgBox.setWindowTitle("Position Error: Chromsome Doesn't Exist")
+                        msgBox.setText(
+                            "Chromosome %s does not exist in the selected annotation file." % searchIndices[0])
+                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+                        msgBox.exec()
+
+                        self.progressBar.setValue(0)
+                        return
+
                     # append the data into the checked_info
                     tempString = 'chrom: ' + str(searchIndices[0]) + ',start: ' + str(searchIndices[1]) + ',end: ' + str(searchIndices[2])
                     self.checked_info[tempString] = (int(searchIndices[0]), int(searchIndices[1])-1, int(searchIndices[2]))
@@ -1002,6 +1020,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
                 # Check the GBFF file for the sequence
                 my_check = self.annotation_parser.get_sequence_info(inputstring)
+
                 self.progressBar.setValue(55) # Update progress bar
 
                 if type(my_check) == bool: # This means the sequence was not found
@@ -1564,7 +1583,7 @@ class CMainWindow(QtWidgets.QMainWindow):
                 GlobalSettings.MTWin.first_show = False
             else:
                 GlobalSettings.MTWin.show()
-            GlobalSettings.mainWindow.hide()
+                GlobalSettings.mainWindow.hide()
 
         except Exception as e:
             logger.critical("Error in changeto_multitargeting() in main.")
@@ -2381,7 +2400,7 @@ def main():
         logger.critical(e)
         logger.critical(traceback.format_exc())
         msgBox = QtWidgets.QMessageBox()
-        msgBox.setStyleSheet("font: " + str(GlobalSettings.mainWindow.fontSize) + "pt 'Arial'")
+        msgBox.setStyleSheet("font: " + str(startup.fontSize) + "pt 'Arial'")
         msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
         msgBox.setWindowTitle("Fatal Error")
         msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")

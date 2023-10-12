@@ -748,19 +748,19 @@ class NewGenome(QtWidgets.QMainWindow):
                                 self.progress = 20
                             elif lines.find("complete.") != -1:
                                 self.progress += self.perc_increase
-                                self.progressBar.setValue(self.progress)
+                                self.progressBar.setValue(int(self.progress))
                             elif lines.find("Processing Targets.") != -1:
                                 self.progress = 70
-                                self.progressBar.setValue(self.progress)
+                                self.progressBar.setValue(int(self.progress))
                             elif lines.find("Writing out uniques.") != -1:
                                 self.progress = 90
-                                self.progressBar.setValue(self.progress)
+                                self.progressBar.setValue(int(self.progress))
                             elif lines.find("Writing out repeats.") != -1:
                                 self.progress = 95
-                                self.progressBar.setValue(self.progress)
+                                self.progressBar.setValue(int(self.progress))
                             elif lines == "Finished.":
                                 self.progress = 100
-                                self.progressBar.setValue(self.progress)
+                                self.progressBar.setValue(int(self.progress))
                             self.output_browser.append(lines)
 
                 job_args = self.JobsQueue[row_index]
