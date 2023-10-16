@@ -13,7 +13,8 @@ a = Analysis(['main.py'],
 				('CASPERinfo', '.'),
 				('CASPER-logo.jpg', '.'),
 				('CASPER_icon.icns', '.'),
-				('genomeBrowserTemplate.html', '.')
+				('genomeBrowserTemplate.html', '.'),
+                ('/Users/ddooley/venvs/casper_env/lib/python3.8/site-packages/azimuth','azimuth')
 			 ],
              hiddenimports=[],
              hookspath=[],
@@ -50,4 +51,5 @@ coll = COLLECT(exe,
 
 app = BUNDLE(coll, icon='CASPER_icon.icns',
              name='CASPERapp.app',
+             version='2.0.1',
              bundle_identifier=None)
