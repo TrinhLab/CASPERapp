@@ -2344,8 +2344,9 @@ def main():
         GlobalSettings.appdir = sys.executable
         if platform.system() == 'Windows':
             GlobalSettings.appdir = GlobalSettings.appdir[:GlobalSettings.appdir.rfind("\\") + 1]
-        else:
-            GlobalSettings.appdir = GlobalSettings.appdir[:GlobalSettings.appdir.rfind("/") + 1]
+        else: # If platform is Mac
+            GlobalSettings.appdir = GlobalSettings.appdir[:GlobalSettings.appdir.rfind("Contents/") + 9]
+            GlobalSettings.appdir += "Resources/" 
     else:
         # log CASPER is not in packaged format
         logger.info("Running a non-packaged version of CASPER.")
