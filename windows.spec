@@ -5,30 +5,25 @@ block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['C:/Users/Tfry/Desktop/CASPERapp'],
+             pathex=['C:/Users/Trinh^ Lab/Desktop/CASPERapp'],
              datas=[
 				('OffTargetFolder', 'OffTargetFolder'),
 				('SeqFinderFolder', 'SeqFinderFolder'),
+				('*.ui','.'),
 				('CASPERinfo', '.'),
-				('cas9image.ico', '.'),
-				('*.ui', '.'),
 				('CASPER-logo.jpg', '.'),
-				('genomeBrowserTemplate.html', '.')
+				('CASPER_icon.icns', '.'),
+				('CASPER_icon.ico', '.'),
+				('genomeBrowserTemplate.html', '.'),
+				('C:/Users/Trinh Lab/Desktop/casper_env/Lib/site-packages/azimuth', 'azimuth')
 			 ],
-             hiddenimports=[
-				'repeats_vs_seeds_line', 
-				'seeds_vs_repeats_bar', 
-				'repeats_vs_chromo',
-				'pop_analysis_3dgraph',
-				'pop_analysis_repeats_graph',
-				'pop_analysis_venn_diagram',
-				'pkg_resources.py2_warn'
-			 ],
+             hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
              excludes=[
 				 'cryptography',
-				 'Crypto'
+				 'Crypto',
+				 'tkinter'
 			 ],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
