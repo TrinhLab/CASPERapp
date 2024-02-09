@@ -43,7 +43,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "C:\Users\Trinh Lab\Desktop\CASPERapp\dist\CASPERapp\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion ; Permissions: everyone-full
-Source: "C:\Users\Trinh Lab\Desktop\CASPERapp\dist\CASPERapp\_internal\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs ; Permissions: everyone-full
+Source: "C:\Users\Trinh Lab\Desktop\CASPERapp\dist\CASPERapp\_internal\*"; DestDir: "{app}\_internal"; Flags: ignoreversion recursesubdirs createallsubdirs ; Permissions: everyone-full
 
 [Dirs]
 Name: "{app}"; Permissions: everyone-full

@@ -2343,8 +2343,7 @@ def main():
 
         GlobalSettings.appdir = sys.executable
         if platform.system() == 'Windows':
-            GlobalSettings.appdir = GlobalSettings.appdir[:GlobalSettings.appdir.rfind("\\") + 1]
-            # GlobalSettings.appdir += "_internal/" 
+            GlobalSettings.appdir = sys._MEIPASS + "\\"
         else: # If platform is Mac
             GlobalSettings.appdir = GlobalSettings.appdir[:GlobalSettings.appdir.rfind("Contents/") + 9]
             GlobalSettings.appdir += "Resources/" 
