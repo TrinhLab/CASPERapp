@@ -1,10 +1,28 @@
-.idea
-__pycache__
+# IDE and editor specific files
+.idea/
+.vscode/
+
+# Python cache files
+__pycache__/
+
+# Executable files
 Casper_Seq_Finder.exe
+
+# HTML files
 genomeBrowserTemplate.html
+
+# Database files
 temp_join.db
-.vscode/settings.json
-OffTargetFolder/temp.txt
+
+# Log files
 CASPER.log
+
+# Temporary files
 temp.txt
+OffTargetFolder/temp.txt
+
+# Other files
 CASPERinfo
+
+# Operating system specific files
+.DS_Store
