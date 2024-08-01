@@ -9,6 +9,8 @@ import platform
 import traceback
 import math
 
+from ui_utils import center_ui
+
 #global logger
 logger = GlobalSettings.logger
 
@@ -258,8 +260,8 @@ class NewGenome(QtWidgets.QMainWindow):
             self.strainName.setValidator(input_validator1)
             self.orgCode.setValidator(input_validator2)
 
-            ### Scale UI
-            self.scaleUI()
+            ### Scale UI ?
+            # scale_ui(self)
             self.first_show = True
 
         except Exception as e:
@@ -294,102 +296,6 @@ class NewGenome(QtWidgets.QMainWindow):
             msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
             msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
             msgBox.exec()
-            exit(-1)
-
-    #scale the UI
-    def scaleUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
-            # font scaling
-            fontSize = 12
-            self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
-            self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
-
-            # CASPER header scaling
-            fontSize = 30
-            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
-
-            self.adjustSize()
-
-            currentWidth = self.size().width()
-            currentHeight = self.size().height()
-
-            # window scaling
-            # 1920x1080 => 850x750
-            scaledWidth = int((width * 850) / 1920)
-            scaledHeight = int((height * 750) / 1080)
-
-            if scaledHeight < currentHeight:
-                scaledHeight = currentHeight
-            if scaledWidth < currentWidth:
-                scaledWidth = currentWidth
-
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-        except Exception as e:
-            logger.critical("Error in scaleUI() in new genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
-    #center the UI on current screen
-    def centerUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            #center window on current screen
-            width = self.width()
-            height = self.height()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(width / 2))
-            y = y - (math.ceil(height / 2))
-            self.setGeometry(x, y, width, height)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-        except Exception as e:
-            logger.critical("Error in centerUI() in new genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
             exit(-1)
 
     #open the ncbi search tool window
@@ -1033,7 +939,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 # center main on current screen
                 if GlobalSettings.mainWindow.first_show == True:
                     GlobalSettings.mainWindow.first_show = False
-                    GlobalSettings.mainWindow.centerUI()
+                    center_ui(GlobalSettings.mainWindow)
                 GlobalSettings.mainWindow.show()
                 self.hide()
         except Exception as e:

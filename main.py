@@ -25,34 +25,14 @@ import traceback
 import math
 import logging
 from annotation_functions import *
+from error_handling import show_error
+from common_utils import show_message
+from ui_utils import scale_ui, center_ui
 
 #logger alias for global logger
 logger = GlobalSettings.logger
 
 fontSize = 12
-
-
-def show_message_box(title, message, icon, button):
-    msgBox = QtWidgets.QMessageBox()
-    msgBox.setStyleSheet(f"font: {fontSize}pt 'Arial'")
-    msgBox.setIcon(icon)
-    msgBox.setWindowTitle(title)
-    msgBox.setText(message)
-    msgBox.addButton(button)
-    msgBox.exec()
-
-def show_critical_error(context, exception):
-    logger.critical(f"Error in {context}.")
-    logger.critical(exception)
-    logger.critical(traceback.format_exc())
-    show_message_box(
-        title="Fatal Error",
-        message=f"Fatal Error:\n{exception}\n\nFor more information on this error, look at CASPER.log in the application folder.",
-        icon=QtWidgets.QMessageBox.Icon.Critical,
-        button=QtWidgets.QMessageBox.StandardButton.Close
-    )
-
-    exit(-1)
 
 #Annotation file and search query from MainWindow
 class AnnotationsWindow(QtWidgets.QMainWindow):
@@ -77,30 +57,8 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
         self.tableWidget.setAutoScroll(False)
         self.tableWidget.horizontalHeader().sectionClicked.connect(self.table_sorting)
 
-        #scale UI
-        self.scaleUI()
+        scale_ui(self)
 
-    def show_message_box(self, title, message, icon, button):
-        msgBox = QtWidgets.QMessageBox()
-        msgBox.setStyleSheet(f"font: {self.fontSize}pt 'Arial'")
-        msgBox.setIcon(icon)
-        msgBox.setWindowTitle(title)
-        msgBox.setText(message)
-        msgBox.addButton(button)
-        msgBox.exec()
-
-    def show_critical_error(self, context, exception):
-        logger.critical(f"Error in {context}.")
-        logger.critical(exception)
-        logger.critical(traceback.format_exc())
-        self.show_message_box(
-            title="Fatal Error",
-            message=f"Fatal Error:\n{exception}\n\nFor more information on this error, look at CASPER.log in the application folder.",
-            icon=QtWidgets.QMessageBox.Icon.Critical,
-            button=QtWidgets.QMessageBox.StandardButton.Close
-        )
-
-        exit(-1)
 
     def table_sorting(self, logicalIndex):
         try:
@@ -108,101 +66,9 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             order = QtCore.Qt.DescendingOrder if self.switcher_table[logicalIndex] == -1 else QtCore.Qt.AscendingOrder
             self.tableWidget.sortItems(logicalIndex, order)
         except Exception as e:
-            self.show_critical_error("table_sorting() in Annotation Window", e)
+            show_error("table_sorting() in Annotation Window", e)
 
-    #scale UI based on current screen
-    def scaleUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
-            # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = 12
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
-            self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
-
-            #CASPER header scaling
-            fontSize = 30
-            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
-
-            self.adjustSize()
-
-            currentWidth = self.size().width()
-            currentHeight = self.size().height()
-
-            # window scaling
-            scaledWidth = int((width * 900) / 1920)
-            scaledHeight = int((height * 600) / 1080)
-
-            if scaledHeight < currentHeight:
-                scaledHeight = currentHeight
-            if scaledWidth < currentWidth:
-                scaledWidth = currentWidth
-
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-        except Exception as e:
-            logger.critical("Error in scaleUI() in AnnotationWindow.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-            exit(-1)
-
-    #center UI on current screen
-    def centerUI(self):
-        try:
-            self.repaint()
-
-            #center UI on current screen
-            width = self.width()
-            height = self.height()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(width / 2))
-            y = y - (math.ceil(height / 2))
-
-            self.setGeometry(x, y, width, height)
-            self.repaint()
-        except Exception as e:
-            logger.critical("Error in centerUI() in AnnotationWindow.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-
-            QtWidgets.QApplication.processEvents()
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    #submit selected rows for results to process
+      #submit selected rows for results to process
     def submit(self):
         try:
             self.mainWindow.collect_table_data_nonkegg()
@@ -211,7 +77,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             logger.critical("Error in submit() in AnnotationsWindow.")
             logger.critical(e)
             logger.critical(traceback.format_exc())
-            self.show_critical_error("submit() in AnnotationsWindow", e)
+            show_error("submit() in AnnotationsWindow", e)
         finally:
             self.hide()  # Close annotation window regardless of success or failure
 
@@ -225,7 +91,7 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             self.mainWindow.progressBar.setValue(0)
             self.hide()
         except Exception as e:
-            self.show_critical_error("go_Back() in AnnotationsWindow", e)
+            show_error("go_Back() in AnnotationsWindow", e)
             self.mainWindow.checkBoxes.clear()
     
     # this is the connection for the select all checkbox - selects/deselects all the genes in the table
@@ -263,13 +129,13 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             mainWindow.hide()
 
             #center on current screen
-            self.centerUI()
+            center_ui(self)
             self.show()
             self.activateWindow()
 
             return 0
         except Exception as e:
-            self.show_critical_error("fill_table_nonKegg() in AnnotationsWindow", e)
+            show_error("fill_table_nonKegg() in AnnotationsWindow", e)
 
     # this is the connection for the select all checkbox - selects/deselects all the genes in the table
     def select_all_genes(self):
@@ -279,14 +145,14 @@ class AnnotationsWindow(QtWidgets.QMainWindow):
             else:
                 self.tableWidget.clearSelection()
         except Exception as e:
-            self.show_critical_error("select_all_genes() in AnnotationsWindow", e)
+            show_error("select_all_genes() in AnnotationsWindow", e)
 
     # this function calls the closingWindow class.
     def closeEvent(self, event):
         try:
             GlobalSettings.mainWindow.closeFunction()
         except Exception as e:
-            self.show_critical_error("closeEvent() in AnnotationsWindow", e)
+            show_error("closeEvent() in AnnotationsWindow", e)
             event.accept()
 
 # =========================================================================================
@@ -304,6 +170,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         self.info_path = info_path
         self.anno_name = ""
         self.endo_name = ""
+        self.fontSize = 12
         self.org = ""
         self.TNumbers = {}  # the T numbers from a kegg search
         self.orgcodes = {}  # Stores the Kegg organism code by the format {full name : organism code}
@@ -391,103 +258,7 @@ class CMainWindow(QtWidgets.QMainWindow):
 
         #scale UI
         self.first_show = True
-        self.scaleUI()
-
-    #scale UI based on current screen
-    def scaleUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
-            # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = 12
-            self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
-            self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
-
-            #CASPER header scaling
-            fontSize = 30
-            self.label_8.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
-
-            self.adjustSize()
-
-            currentWidth = self.size().width()
-            currentHeight = self.size().height()
-
-            #window resize and center
-            scaledWidth = int((width * 1150) / 1920)
-            scaledHeight = int((height * 650) / 1080)
-
-            if scaledHeight < currentHeight:
-                scaledHeight = currentHeight
-            if scaledWidth < currentWidth:
-                scaledWidth = currentWidth
-
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-        except Exception as e:
-            logger.critical("Error in scaleUI() in main.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-
-# that define the search for targets e.g. endonuclease, organism genome, gene target etc.
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    #center UI on current screen
-    def centerUI(self):
-        try:
-            self.repaint()
-
-            width = self.width()
-            height = self.height()
-            # scale/center window
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(width / 2))
-            y = y - (math.ceil(height / 2))
-            self.setGeometry(x, y, width, height)
-
-            self.repaint()
-        except Exception as e:
-            logger.critical("Error in centerUI() in main.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-
-            QtWidgets.QApplication.processEvents()
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+        scale_ui(self)
 
     # this function prepares everything for the generate library function
     # it is very similar to the gather settings, how ever it stores the data instead of calling the Annotation Window class
@@ -663,85 +434,55 @@ class CMainWindow(QtWidgets.QMainWindow):
     # so far the gff files seems to all be different. Need to think about how we want to parse it
     def run_results_own_ncbi_file(self, inputstring, fileName, same_search, openAnnoWindow=True):
         try:
-            self.progressBar.setValue(35)
-            ### Now actually search for inputs in annotation file
-            self.results_list = self.annotation_parser.genbank_search(inputstring,same_search)
+            self.set_progress(35)
+            self.results_list = self.annotation_parser.genbank_search(inputstring, same_search)
 
-            ### Quick error check to make sure the chromosome numbers match
             cspr_file = self.organisms_to_files[self.orgChoice.currentText()][self.endoChoice.currentText()][0]
-            if platform.system() == 'Windows':
-                cspr_file = GlobalSettings.CSPR_DB + '\\' + cspr_file
-            else:
-                cspr_file = GlobalSettings.CSPR_DB + '/' + cspr_file
-
+            cspr_file = os.path.join(GlobalSettings.CSPR_DB, cspr_file)
+            
             own_cspr_parser = CSPRparser(cspr_file)
             own_cspr_parser.read_first_lines()
-
             if len(own_cspr_parser.karystatsList) != self.annotation_parser.max_chrom:
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Warning:")
-                msgBox.setText(
-                    "The number of chromosomes do not match. This could cause errors.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Warning,
+                    title="Warning:",
+                    message="The number of chromosomes do not match. This could cause errors.",
+                    button=QtWidgets.QMessageBox.StandardButton.Ok
+                )
+            self.set_progress(60)
 
-            self.progressBar.setValue(60)
-
-            # now go through and search for the actual locus tag, in the case the user input that
-            searchValues = self.separate_line(inputstring[0])
             self.searches.clear()
 
-            self.progressBar.setValue(75)
-            if len(self.results_list) <= 0:
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("No Matches Found")
-                msgBox.setText(
-                    "No matches found with that search, please try again.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
+            self.set_progress(75)
+            if not self.results_list:
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="No Matches Found",
+                    message="No matches found with that search, please try again.",
+                    button=QtWidgets.QMessageBox.StandardButton.Ok
+                )
+                self.set_progress(0) 
+                return False if not openAnnoWindow else None
 
-                self.progressBar.setValue(0)
-                if openAnnoWindow:
-                    return
-                else:
-                    return False
+            self.set_progress(80)
 
-            # if we get to this point, that means that the search yieleded results, so fill the table
-            self.progressBar.setValue(80)
-            # check whether this function call is for Annotation Window, or for generate Lib
-            if openAnnoWindow:
-                self.Annotation_Window.fill_table_nonKegg(self,self.results_list)
-            else:
-                return True
+            return self.Annotation_Window.fill_table_nonKegg(self, self.results_list) if openAnnoWindow else True
         except Exception as e:
-            logger.critical("Error in run_results_own_ncbi_file() in main.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
+            show_error(f"Error in run_results_own_ncbi_file() in main.", e)
 
-            exit(-1)
+    def set_progress(self, value):
+        self.progressBar.setValue(value)
 
     def run_results(self, inputtype, inputstring, same_search, openAnnoWindow=True):
         try:
-            fileName = self.annotation_files.currentText()
-            # self.annotation_parser = Annotation_Parser()
-            #get complete path of file
+            file_name = self.annotation_files.currentText()
             for file in glob.glob(GlobalSettings.CSPR_DB + "/**/*.gb*", recursive=True):
-                if file.find(fileName) != -1:
+                if file_name in file:
                     self.annotation_parser.annotationFileName = file
                     break
-            self.Results.annotation_path = self.annotation_parser.annotationFileName  ### Set annotation path
-            #print("run results")
+            self.Results.annotation_path = self.annotation_parser.annotationFileName
 
             progvalue = 15
             self.searches = {}
@@ -1018,18 +759,26 @@ class CMainWindow(QtWidgets.QMainWindow):
 
             exit(-1)
 
-    #launch new genome tool
+    def handle_feature_search(self, input_string, open_anno_window):
+        file_type = self.annotation_parser.find_which_file_version()
+        if file_type == -1 or self.annotation_files.currentText() == "None":
+            self.show_error_message("Feature search requires a GenBank formatted annotation file.")
+            return False
+
+        return self.run_results_own_ncbi_file(input_string, self.annotation_files.currentText(), same_search, open_anno_window)
+
+
     def launch_newGenome(self):
         try:
             # Update endo list
             self.newGenome.fillEndo()
             if self.newGenome.first_show:
-                self.newGenome.centerUI()
+                center_ui(self.newGenome)
                 self.newGenome.first_show = False
             self.hide()
             self.newGenome.show()
         except Exception as e:
-            self.show_critical_error("launch_newGenome() in main", e)
+            show_error("launch_newGenome() in main", e)
 
     #launch new endo tool
     def launch_newEndonuclease(self):
@@ -1039,14 +788,14 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.newEndonuclease.show()
             self.newEndonuclease.activateWindow()
         except Exception as e:
-            self.show_critical_error("launch_newEndonuclease() in main", e)
+            show_error("launch_newEndonuclease() in main", e)
 
     #launch genome browser tool
     def launch_newGenomeBrowser(self):
         try:
             self.genomebrowser.createGraph(self)
         except Exception as e:
-            self.show_critical_error("launch_newGenomeBrowser() in main", e)
+            show_error("launch_newGenomeBrowser() in main", e)
 
     #launch ncbi tool
     def launch_ncbi(self):
@@ -1067,7 +816,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.ncbi.show()
             self.ncbi.activateWindow()
         except Exception as e:
-            self.show_critical_error("launch_ncbi() in main", e)
+            show_error("launch_ncbi() in main", e)
 
     # this function does the same stuff that the other collect_table_data does, but works with the other types of files
     def collect_table_data_nonkegg(self):
@@ -1424,67 +1173,38 @@ class CMainWindow(QtWidgets.QMainWindow):
 
     def change_directory(self):
         try:
-            filed = QtWidgets.QFileDialog()
-            mydir = QtWidgets.QFileDialog.getExistingDirectory(filed, "Open a folder...",
-                                                               self.dbpath, QtWidgets.QFileDialog.ShowDirsOnly)
+            mydir = QtWidgets.QFileDialog.getExistingDirectory(
+                None, "Open a folder...", self.dbpath, QtWidgets.QFileDialog.ShowDirsOnly)
 
-            if os.path.isdir(mydir) == False:
-                #check if directory is a valid directory
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Not a directory")
-                msgBox.setText(
-                    "The directory you selected does not exist.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
+            if not os.path.isdir(mydir):
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Not a directory",
+                    message="The directory you selected does not exist."
+                )
                 return
 
-
-            #check if directory contains CSPR files
-            found = False
-            for file in os.listdir(mydir):
-                if (file.find(".cspr") != -1):
-                    found = True
-                    break
-            if (found == False):
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Directory is invalid!")
-                msgBox.setText(
-                    "You must select a directory with CSPR Files!")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
+            if not any(file.endswith(".cspr") for file in os.listdir(mydir)):
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Directory is invalid!",
+                    message="You must select a directory with CSPR Files!"
+                )
                 return
-
 
             os.chdir(mydir)
-            if platform.system() == "Windows":
-                mydir = mydir.replace("/","\\")
+            mydir = mydir.replace("/", "\\") if platform.system() == "Windows" else mydir
             GlobalSettings.CSPR_DB = mydir
-            #update dropdowns in main, MT, pop
-            self.getData()
 
             GlobalSettings.MTWin.directory = mydir
             GlobalSettings.MTWin.get_data()
             GlobalSettings.pop_Analysis.get_data()
+            self.getData()
             self.fill_annotation_dropdown()
         except Exception as e:
-            logger.critical("Error in change_directory() in main.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in change_directory() in main.", e)
 
     #change to multi-targeting window
     def changeto_multitargeting(self):
@@ -1565,13 +1285,13 @@ class CMainWindow(QtWidgets.QMainWindow):
         try:
             webbrowser.open('https://blast.ncbi.nlm.nih.gov/Blast.cgi', new=2)
         except Exception as e:
-            self.show_critical_error("open_ncbi_blast_web_page() in main", e)
+            show_error("open_ncbi_blast_web_page() in main", e)
 
     def open_ncbi_web_page(self):
         try:
             webbrowser.open('https://www.ncbi.nlm.nih.gov/', new=2)
         except Exception as e:
-            self.show_critical_error("open_ncbi_web_page() in main", e)
+            show_error("open_ncbi_web_page() in main", e)
 
     # def open_casper2_web_page(self):
     #     try:
@@ -1586,7 +1306,7 @@ class CMainWindow(QtWidgets.QMainWindow):
         try:
             webbrowser.open('https://github.com/TrinhLab/CASPERapp')
         except Exception as e:
-            self.show_critical_error("visit_repo_func() in main", e)
+            show_error("visit_repo_func() in main", e)
 
     @QtCore.pyqtSlot()
     def view_results(self):
@@ -1625,7 +1345,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.myClosingWindow.centerUI()
             self.myClosingWindow.show()
         except Exception as e:
-            self.show_critical_error("closeFunction() in main", e)
+            show_error("closeFunction() in main", e)
 
     def close_app(self):
         try:
@@ -1639,7 +1359,7 @@ class CMainWindow(QtWidgets.QMainWindow):
             self.closeFunction()
             self.close()
         except Exception as e:
-            self.show_critical_error("close_app() in main", e)
+            show_error("close_app() in main", e)
 
 #startup window class
 class StartupWindow(QtWidgets.QMainWindow):
@@ -1671,7 +1391,7 @@ class StartupWindow(QtWidgets.QMainWindow):
 
             #setup event handlers for startup buttons
             self.currentDirText.setText(self.databaseDirectory)
-            self.changeDir.clicked.connect(self.changeDirectory)
+            self.changeDir.clicked.connect(self.change_directory)
             self.goToMain.clicked.connect(self.launchMainWindow)
             self.goToNewGenome.clicked.connect(self.launchNewGenome)
 
@@ -1679,7 +1399,7 @@ class StartupWindow(QtWidgets.QMainWindow):
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
 
             #scale UI
-            self.scaleUI()
+            scale_ui(self)
 
         except Exception as e:
             logger.critical("Error initializing StartupWindow class.")
@@ -1687,100 +1407,25 @@ class StartupWindow(QtWidgets.QMainWindow):
             logger.critical(traceback.format_exc())
             exit(-1)
 
-    #function for scaling the font size and logo size based on resolution and DPI of screen
-    def scaleUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            screen = self.screen()
-            dpi = math.ceil(screen.physicalDotsPerInch())
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
-            #log width x height
-            logger.info("Resolution: %s x %s", width, height)
-
-            # log DPI information
-            logger.info("DPI = %d" % (dpi))
-
-            # font scaling
-            # 16px is used for 92 dpi 1920x1080
-            fontSize = 12
-            self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
-
-            #set logo image
-            pixmapOriginal = QtGui.QPixmap(GlobalSettings.appdir + "assets/CASPER-logo.jpg")
-            self.logo.setPixmap(pixmapOriginal)
-
-            #scale and center UI
-            scaledWidth = int((width * 850) / 1920)
-            scaledHeight = int((height * 550) / 1080)
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-        except Exception as e:
-            logger.critical("Error in scaleUI() in startup window.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            exit(-1)
-
-    #center UI on current screen
-    def centerUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            #center UI
-            width = self.width()
-            height = self.height()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(width / 2))
-            y = y - (math.ceil(height / 2))
-            self.setGeometry(x, y, width, height)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-        except Exception as e:
-            logger.critical("Error in centerUI() in startup window.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            exit(-1)
-
     #event handler for user clicking the "Change..." button - used for changing CASPER database directory
-    def changeDirectory(self):
+    def change_directory(self):
         try:
             # Launch OS file browser
-            fileBrowser = QtWidgets.QFileDialog()
             newDirectory = QtWidgets.QFileDialog.getExistingDirectory(
-                fileBrowser, "Open a folder...", self.databaseDirectory, QtWidgets.QFileDialog.ShowDirsOnly)
+                self, "Open a folder...", self.databaseDirectory, QtWidgets.QFileDialog.ShowDirsOnly)
 
             # Check if selected path is a directory in the system
             if not os.path.isdir(newDirectory):
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet(f"font: {self.fontSize}pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Not a directory")
-                msgBox.setText("The directory you selected does not exist.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
+                show_message(
+                    fontSize=self.fontSize,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Not a directory",
+                    message="The directory you selected does not exist.",
+                )
                 return
 
             # Ensure directory contains correct filepath format based on OS
-            if platform.system() == "Windows":
-                newDirectory = newDirectory.replace("/", "\\")
+            newDirectory = newDirectory.replace("/", "\\") if platform.system() == "Windows" else newDirectory.replace("\\", "/")
 
             # Update text edit showing the current selected database directory
             self.currentDirText.setText(newDirectory)
@@ -1788,59 +1433,37 @@ class StartupWindow(QtWidgets.QMainWindow):
             # Update CASPER database directories
             self.databaseDirectory = newDirectory
             GlobalSettings.CSPR_DB = newDirectory
+
         except Exception as e:
-            self.show_critical_error("changeDirectory() in startup window", e)
+            show_error("change_directory() in startup window", e)
 
     #function for loading the default database directory specified in CASPERinfo
     #returns: default database parsed from CASPERinfo
     def loadDatabaseDirectory(self):
-        try:
-            #variable to hold default directory from CASPERinfo
-            defaultDirectory = ""
+        casperInfoPath = os.path.join(GlobalSettings.appdir, "CASPERinfo")
+        defaultDirectory = "Where would you like to store CASPER database files?"  # Default message if directory not found
 
-            try:
-                #open CASPERinfo file in application directory
-                CASPERInfo = open(GlobalSettings.appdir + "CASPERinfo", 'r+')
-                #read file, parse for the default database directory
-                CASPERInfo = CASPERInfo.read()
-                lines = CASPERInfo.split('\n')
-                for item in lines:
-                    if 'DIRECTORY:' in item:
-                        #default directory found
-                        defaultDirectory = item
+        try:
+            with open(casperInfoPath, 'r') as file:
+                for line in file:
+                    if 'DIRECTORY:' in line:
+                        defaultDirectory = line.strip().replace("DIRECTORY:", "").strip()
                         break
 
-                #remove lines meta-data
-                defaultDirectory = defaultDirectory.replace("DIRECTORY:", "")
+            # Ensure the directory path is formatted correctly based on the operating system
+            if platform.system() == "Windows":
+                defaultDirectory = defaultDirectory.replace("/", "\\")
+            else:
+                defaultDirectory = defaultDirectory.replace("\\", "/")
 
-                #make sure directory is formatted properly based on OS
-                if platform.system() == "Windows":
-                    defaultDirectory = defaultDirectory.replace("/","\\")
-                else:
-                    defaultDirectory = defaultDirectory.replace("\\", "/")
-
-                logger.debug("Successfully parsed CASPERinfo for default database directory.")
-            except Exception as e:
-                logger.error("Unable to read CASPERinfo file to get default database directory.")
-                logger.error(e)
-                logger.error(traceback.format_exc())
-                return "Where would you like to store CASPER database files?"
-
+            logger.debug("Successfully parsed CASPERinfo for default database directory.")
             return defaultDirectory
 
         except Exception as e:
-            logger.critical("Error in loadDatabaseDirectory() in startup window.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
+            logger.error(f"Error reading {casperInfoPath}: {e}")
+            logger.error(traceback.format_exc())
 
-            exit(-1)
+        return defaultDirectory
 
     #function for saving the currently selected database directory to CASPERinfo to be the new default value on startup
     def saveDatabaseDirectory(self):
@@ -1906,11 +1529,11 @@ class StartupWindow(QtWidgets.QMainWindow):
             self.databaseDirectory = str(self.currentDirText.text())
 
             if not os.path.isdir(self.databaseDirectory):
-                show_message_box(
-                    "Not a directory",
-                    "The directory you selected does not exist.",
-                    QtWidgets.QMessageBox.Icon.Critical,
-                    QtWidgets.QMessageBox.StandardButton.Ok
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Not a directory",
+                    message="The directory you selected does not exist.",
                 )
                 return
 
@@ -1931,14 +1554,14 @@ class StartupWindow(QtWidgets.QMainWindow):
 
             self.close()
         except Exception as e:
-            show_critical_error("launchNewGenome() in startup window", e)
+            show_error("launchNewGenome() in startup window", e)
 
     def launch_new_genome(self):
         try:
             GlobalSettings.mainWindow.launch_newGenome()
             logger.debug("Successfully initialized New Genome in startup window.")
         except Exception as e:
-            show_critical_error("launch_new_genome() in startup window", e)
+            show_error("launch_new_genome() in startup window", e)
 
     # Event handler for user clicking "Main Program" button - used to launch Main Window
     def launchMainWindow(self):
@@ -1948,21 +1571,21 @@ class StartupWindow(QtWidgets.QMainWindow):
 
             # Make sure the path is a valid path before launching New Genome
             if not os.path.isdir(self.databaseDirectory):
-                show_message_box(
-                    "Not a directory",
-                    "The directory you selected does not exist.",
-                    QtWidgets.QMessageBox.Icon.Critical,
-                    QtWidgets.QMessageBox.StandardButton.Ok
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Not a directory",
+                    message="The directory you selected does not exist.",
                 )
                 return
 
             # Check if database directory has CSPR files in it
             if not any(file.endswith(".cspr") for file in os.listdir(self.databaseDirectory)):
-                show_message_box(
-                    "Directory is invalid!",
-                    "You must select a directory with CSPR Files!",
-                    QtWidgets.QMessageBox.Icon.Critical,
-                    QtWidgets.QMessageBox.StandardButton.Ok
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Directory is invalid!",
+                    message="You must select a directory with CSPR Files!",
                 )
                 return
 
@@ -1987,7 +1610,7 @@ class StartupWindow(QtWidgets.QMainWindow):
             self.close()
             
         except Exception as e:
-            show_critical_error("launchMainWindow() in startup window", e)
+            show_error("launchMainWindow() in startup window", e)
 
     def load_dropdown_data(self):
         try:
@@ -1995,19 +1618,19 @@ class StartupWindow(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.fill_annotation_dropdown()
             logger.debug("Successfully loaded organism/endo/annotation drop down information in Main.")
         except Exception as e:
-            show_critical_error("load_dropdown_data() in Main", e)
+            show_error("load_dropdown_data() in Main", e)
 
         try:
             GlobalSettings.MTWin.launch()
             logger.debug("Successfully loaded organism/endo drop down information in Multi-targeting.")
         except Exception as e:
-            show_critical_error("load_dropdown_data() in Multi-targeting", e)
+            show_error("load_dropdown_data() in Multi-targeting", e)
 
         try:
             GlobalSettings.pop_Analysis.launch()
             logger.debug("Successfully loaded organism/endo drop down information in Population Analysis.")
         except Exception as e:
-            show_critical_error("load_dropdown_data() in Population Analysis", e)
+            show_error("load_dropdown_data() in Population Analysis", e)
 
 def initialize_app_directories():
     required_dirs = ["FNA", "GBFF"]
@@ -2040,6 +1663,30 @@ def setup_logger():
     fh.setLevel(logging.DEBUG)
     GlobalSettings.logger.addHandler(fh)
 
+# def update_directory(current_directory, fontSize, update_ui_callback):
+#     try:
+#         filed = QtWidgets.QFileDialog()
+#         new_directory = QtWidgets.QFileDialog.getExistingDirectory(
+#             filed, "Open a folder...", current_directory, QtWidgets.QFileDialog.ShowDirsOnly)
+
+#         if not os.path.isdir(new_directory):
+#             show_message("Not a directory", "The directory you selected does not exist.", fontSize)
+#             return
+
+#         if not any(file.endswith(".cspr") for file in os.listdir(new_directory)):
+#             show_message("Directory is invalid!", "You must select a directory with CSPR Files!", fontSize)
+#             return
+
+#         if platform.system() == "Windows":
+#             new_directory = new_directory.replace("/", "\\")
+
+#         os.chdir(new_directory)
+#         GlobalSettings.CSPR_DB = new_directory
+#         update_ui_callback(new_directory)
+
+#     except Exception as e:
+#         show_critical_error("Error in updating directory", e, fontSize)
+
 def main():
     setup_logger()
     app = QtWidgets.QApplication(sys.argv)
@@ -2061,11 +1708,11 @@ def main():
         GlobalSettings.pop_Analysis = populationAnalysis.Pop_Analysis()
         logger.debug("Successfully initialized Population Analysis Window.")
 
-        startup.centerUI()
+        center_ui(startup)
         startup.show()
         sys.exit(app.exec_())
     except Exception as e:
-        show_critical_error(context="An error occurred during application initialization", exception=e)
+        show_error("An error occurred during application initialization", e)
 
 if __name__ == '__main__':
     main()

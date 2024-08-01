@@ -5,6 +5,8 @@ import GlobalSettings
 import gzip
 import traceback
 import math
+from error_handling import show_error
+from common_utils import show_message
 
 #global logger
 logger = GlobalSettings.logger
@@ -310,13 +312,48 @@ class OffTarget(QtWidgets.QMainWindow):
     #run button linked to run_analysis, which is linked to the run button
     def run_command(self):
         try:
-            #get tolerance value
-            self.tolerance = self.toleranceSpinBox.value()
+            output_file_name = self.outputFileName.text().strip()
+            save_internally = self.outputCheckBox.isChecked()
+            if not output_file_name and not save_internally:
+                show_message(
+                    fontSize=self.fontSize,
+                    icon=QtWidgets.QMessageBox.Icon.Warning,
+                    title="Input Error",
+                    message="Please enter a valid output file name."
+                )
+                return
 
-            #reset bools for new command to run
+            if save_internally:
+                full_output_path = os.path.join(GlobalSettings.appdir, 'local_output.txt')  
+            else:
+                full_output_path = os.path.join(GlobalSettings.CSPR_DB, output_file_name)
+                if os.path.isfile(full_output_path):
+                    show_message(
+                        fontSize=self.fontSize,
+                        icon=QtWidgets.QMessageBox.Icon.Critical,
+                        title="Error",
+                        message="Output file already exists. Please choose a new output file name."
+                    )
+                    return
+
+            self.tolerance = self.toleranceSpinBox.value()
             self.perc = False
             self.bool_temp = False
             self.running = False
+
+            # #setup arguments for C++ .exe
+            app_path = GlobalSettings.appdir.replace('\\','/')
+            exe_path = os.path.join(app_path, 'OffTargetFolder', 'OT_Win.exe' if platform.system() == 'Windows' else 'OT_Lin' if platform.system() == 'Linux' else 'OT_Mac')
+            # data_path = os.path.join(app_path, 'OffTargetFolder', 'temp.txt')
+            # db_path = os.path.join(GlobalSettings.CSPR_DB, self.db_file)
+            # CASPER_info_path = os.path.join(app_path, 'CASPERinfo')
+            # cspr_path = os.path.join(GlobalSettings.CSPR_DB, self.cspr_file)
+            num_of_mismatches = int(self.mismatchcomboBox.currentText())
+            # endo = self.EndocomboBox.currentText()
+            # hsu = GlobalSettings.mainWindow.Results.endo_data[self.EndocomboBox.currentText()][2]
+
+            # cmd = f'"{exe_path}" "{data_path}" "{endo}" "{cspr_path}" "{db_path}" "{full_output_path}" "{CASPER_info_path}" {num_of_mismatches} {self.tolerance} {"TRUE" if self.AVG.isChecked() else "FALSE"} {"FALSE" if self.AVG.isChecked() else "TRUE"} "{hsu}"'
+
 
             if (self.AVG.isChecked()):
                 avg_output = r'TRUE'
@@ -325,34 +362,19 @@ class OffTarget(QtWidgets.QMainWindow):
                 avg_output = r'FALSE'
                 detailed_output = r' TRUE '
 
-            #setup arguments for C++ .exe
-            app_path = GlobalSettings.appdir.replace('\\','/')
-            if platform.system() == 'Windows':
-                exe_path = app_path + r'OffTargetFolder/OT_Win.exe'
-            elif platform.system() == 'Linux':
-                exe_path = app_path + r'OffTargetFolder/OT_Lin'
-            else:
-                exe_path = app_path + r'OffTargetFolder/OT_Mac'
-            exe_path = '"' +  exe_path + '"'
             data_path = ' "' + app_path + 'OffTargetFolder/temp.txt' + '"' ##
             cspr_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.cspr_file + '"'
             db_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.db_file + '"'
-            self.output_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.FileName.text() + '"'
-            filename = self.output_path
-            filename = filename[:len(filename) - 1]
-            filename = filename[1:]
-            filename = filename.replace('"', '')
-            exists = os.path.isfile(filename)
+            self.output_path = ' "' + full_output_path + '"'
             CASPER_info_path = r' "' + app_path + 'CASPERinfo' + '" '
-            num_of_mismathes = int(self.mismatchcomboBox.currentText())
-            tolerance = self.tolerance
             endo = ' "' + self.EndocomboBox.currentText() + '"'
             hsu = ' "' + GlobalSettings.mainWindow.Results.endo_data[self.EndocomboBox.currentText()][2] + '"'
 
             #create command string
-            cmd = exe_path + data_path + endo + cspr_path + db_path + self.output_path + CASPER_info_path + str(num_of_mismathes) + ' ' + str(tolerance) + detailed_output + avg_output + hsu
-            if platform.system() == 'Windows':
-                cmd = cmd.replace('/', '\\')
+                        # cmd = f'"{exe_path}" "{data_path}" "{endo}" "{cspr_path}" "{db_path}" "{full_output_path}" "{CASPER_info_path}" {num_of_mismatches} {self.tolerance} {"TRUE" if self.AVG.isChecked() else "FALSE"} {"FALSE" if self.AVG.isChecked() else "TRUE"} "{hsu}"'
+            cmd = f'"{exe_path}"' + data_path + endo + cspr_path + db_path + self.output_path + CASPER_info_path + str(num_of_mismatches) + ' ' + str(self.tolerance) + detailed_output + avg_output + hsu
+            cmd = cmd.replace('/', '\\') if platform.system() == 'Windows' else cmd
+
 
             #used to know when the process is done
             def finished():
@@ -366,62 +388,26 @@ class OffTarget(QtWidgets.QMainWindow):
                 #percentages to be able to type cast them as floats and update the progress bar. Also, must
                 #split the input read based on '\n\ characters since the stdout read can read multiple lines at
                 #once and is all read in as raw bytes
-                line = str(self.process.readAllStandardOutput())
-
-                line = line[2:]
-                line = line[:len(line)-1]
-                if platform.system() == 'Windows':
-                    for lines in filter(None, line.split(r'\r\n')):
-                        if line.find("Parsing Input Arguments") != -1:
-                            self.progressBar.setValue(10)
-                        elif line.find("Loading data for algorithm") != -1:
-                            self.progressBar.setValue(25)
-                        elif line.find("Running OffTarget Analysis") != -1:
-                            self.progressBar.setValue(50)
-                else:
-                    for lines in filter(None, line.split(r'\n')):
-                        if lines.find("Parsing Input Arguments") != -1:
-                            self.progressBar.setValue(10)
-                        elif lines.find("Loading data for algorithm") != -1:
-                            self.progressBar.setValue(25)
-                        elif lines.find("Running OffTarget Analysis") != -1:
-                            self.progressBar.setValue(50)
-
-
+                raw_data = self.process.readAllStandardOutput().data().decode()
+                lines = raw_data.replace('\r', '').split('\n')
+                for line in lines:
+                    if "Parsing Input Arguments" in line:
+                        self.progressBar.setValue(10)
+                    elif "Loading data for algorithm" in line:
+                        self.progressBar.setValue(25)
+                    elif "Running OffTarget Analysis" in line:
+                        self.progressBar.setValue(50)
+                
             #connect QProcess to the dataReady func, and finished func, reset progressBar only if the outputfile name
             #given does not already exist
-            if(exists == False):
-                self.process.readyReadStandardOutput.connect(partial(dataReady))
-                self.process.readyReadStandardError.connect(partial(dataReady))
-                self.progressBar.setValue(1)
-                QtCore.QTimer.singleShot(100, partial(self.process.start, cmd))
-                self.process.finished.connect(finished)
-
-            else: #error message about file already being created
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Error")
-                msgBox.setText("Output file already exists. Please choose a new output file name.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
+            self.process.readyReadStandardOutput.connect(partial(dataReady))
+            self.process.readyReadStandardError.connect(partial(dataReady))
+            self.progressBar.setValue(1)
+            QtCore.QTimer.singleShot(100, partial(self.process.start, cmd))
+            self.process.finished.connect(finished)
         except Exception as e:
-            logger.critical("Error in run_command() in OffTarget.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
+            show_error("Error in run_command() in OffTarget.", e)
 
-
-            exit(-1)
-
-    #linked to run button
     def run_analysis(self):
         try:
             #make sure an analysis isn't already running before starting
@@ -451,6 +437,14 @@ class OffTarget(QtWidgets.QMainWindow):
             self.running = False
             self.process.kill()
             self.hide()
+
+            local_output_path = os.path.join(GlobalSettings.appdir, 'local_output.txt')
+        
+            if os.path.exists(local_output_path):
+                os.remove(local_output_path)
+                print("Local output file deleted successfully.")
+            else:
+                print("Local output file does not exist.")
         except Exception as e:
             logger.critical("Error in exit() in OffTarget.")
             logger.critical(e)
