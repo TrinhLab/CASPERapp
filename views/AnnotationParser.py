@@ -1,17 +1,15 @@
 ###############################################################################
-# This is the Annotation Parser File
 # INPUTS: inputs are the annotation files to parse. Currently, only gbff is supported.
 # OUTPUTS: the outputs are data structures that store the parsed data
 ################################################################################
 
 from PyQt5 import QtWidgets
 import gffutils
-import GlobalSettings
+import models.GlobalSettings as GlobalSettings
 import os
 from Bio import SeqIO
 import traceback
 
-#global logger
 logger = GlobalSettings.logger
 
 class Annotation_Parser:
@@ -94,9 +92,6 @@ class Annotation_Parser:
 
             exit(-1)
     
-
-
- 
     ### The workhorse function of AnnotationParser, this searches the annotation file for the user's search and returns features matching the description.
     def genbank_search(self, queries, same_search):
         index_number = 0

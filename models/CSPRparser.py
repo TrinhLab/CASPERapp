@@ -1,18 +1,14 @@
-from Algorithms import SeqTranslate
+from utils.Algorithms import SeqTranslate
 import gzip
 
 ##################################################################################################################################
-# CLASS NAME: CSPRparser
 # Use: Use as a parser for the cspr files
 # Precondition: Only to the used with .cspr files. Will not work with any other files
 # This class also took some of the parsing functions from with classes (Multitargeting and Results) and stores them in here
 ##################################################################################################################################
 
 class CSPRparser:
-
     def __init__(self, inputFileName):
-
-        # variables used in this class
         self.multiSum = 0  # multitargetting sum taken from the previous version of make_graphs
         self.multiCount = 0  # multitargetting count taken from the previous version of make_graphs
         self.seqTrans = SeqTranslate()  # SeqTranslate variable. for decrompressing the data

@@ -1,10 +1,10 @@
 from PyQt5 import QtWidgets, Qt, QtGui, QtCore, uic
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-import GlobalSettings
+import models.GlobalSettings as GlobalSettings
 import matplotlib
-from Algorithms import SeqTranslate
-from CSPRparser import CSPRparser
+from utils.Algorithms import SeqTranslate
+from models.CSPRparser import CSPRparser
 from matplotlib.ticker import MaxNLocator
 import os
 import sqlite3
@@ -18,8 +18,8 @@ from matplotlib.widgets import Slider
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
-
-#global logger
+from utils.ui import show_message, show_error, scale_ui, center_ui
+                
 logger = GlobalSettings.logger
 
 class Multitargeting(QtWidgets.QMainWindow):
@@ -27,7 +27,7 @@ class Multitargeting(QtWidgets.QMainWindow):
         try:
             self.count = 0
             super(Multitargeting, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'mt.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'ui/mt.ui', self)
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.multitargeting_statistics = Multitargeting_Statistics()
 
@@ -85,7 +85,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.selectAll.stateChanged.connect(self.select_all)
             self.selectAll.setEnabled(False)
 
-            # go back to main button
+            # go back to main window
             self.back_button.clicked.connect(self.go_back)
 
             # Statistics storage variables
@@ -98,14 +98,12 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.bar_coords = []
             self.seed_id_seq_pair = {}
 
-            # parser object
             self.parser = CSPRparser("")
 
             self.ready_chromo_min_max = True
             self.ready_chromo_make_graph = True
             self.info_path = os.getcwd()
 
-            ##################################
             self.scene = QtWidgets.QGraphicsScene()
             self.scene2 = QtWidgets.QGraphicsScene()
             self.graphicsView_2.setScene(self.scene2)
@@ -120,22 +118,14 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.sql_settings = sql_query_settings()
             self.sql_settings.row_count.textChanged.connect(self.sql_row_count_value_changed)
 
-            #scale UI
             self.first_show = True
-            self.scaleUI()
+            scale_ui(self, custom_scale_width=1400, custom_scale_height=900)
+
+            dpi = self.screen().physicalDotsPerInch()
+            self.dpi = dpi
 
         except Exception as e:
-            logger.critical("Error initializing Multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-            exit(-1)
+            show_error("Error initializing Multi-targeting.", e)
 
     def select_all(self):
         try:
@@ -144,164 +134,39 @@ class Multitargeting(QtWidgets.QMainWindow):
             else:
                 self.table.clearSelection()
         except Exception as e:
-            logger.critical("Error in selectAll() in multitargeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
-
-    def scaleUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
-            self.dpi = dpi
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
-            # font scaling
-            fontSize = 12
-            self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
-            self.menuBar().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';" )
-
-            #CASPER header scaling
-            fontSize = 30
-            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
-
-            self.adjustSize()
-
-            currentWidth = self.size().width()
-            currentHeight = self.size().height()
-
-            #make sure chromosome viewer doesnt get too small
-            self.groupBox_2.setMinimumHeight(int(0.3 * height))
-
-            # window scaling
-            scaledWidth = int((width * 1400) / 1920)
-            scaledHeight = int((height * 900) / 1080)
-
-            if scaledHeight < currentHeight:
-                scaledHeight = currentHeight
-            if scaledWidth < currentWidth:
-                scaledWidth = currentWidth
-
-            #set min width of table
-            self.table.setMinimumWidth(int(0.5 * scaledWidth))
-
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-        except Exception as e:
-            logger.critical("Error in scaleUI() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    def centerUI(self):
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
-
-        width = self.width()
-        height = self.height()
-        # scale/center window
-        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-        x = centerPoint.x()
-        y = centerPoint.y()
-        x = x - (math.ceil(width / 2))
-        y = y - (math.ceil(height / 2))
-        self.setGeometry(x, y, width, height)
-
-        self.Analyze_Button.resize(200, 200)
-
-        self.repaint()
-        QtWidgets.QApplication.processEvents()
+            show_error("Error in selectAll() in multitargeting.", e)
 
     def export_tool(self):
         try:
             select_items = self.table.selectedItems()
             if len(select_items) <= 0:
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Nothing Selected")
-                msgBox.setText("No targets were highlighted. Please highlight the targets you want to be exported to a CSV File!")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
+                show_message(
+                    fontSize=12, 
+                    icon=QtWidgets.QMessageBox.Icon.Critical, 
+                    title="No targets were highlighted", 
+                    message="Please highlight the targets you want to be exported to a CSV File!"
+                )
                 return
             GlobalSettings.mainWindow.export_tool_window.launch(select_items,"mt")
         except Exception as e:
-            logger.critical("Error in export_tool() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in export_tool() in multi-targeting.", e)
 
     def show_statistics(self):
         try:
             if (self.line_bool and self.bar_bool):
-                self.multitargeting_statistics.centerUI()
+                center_ui(self.multitargeting_statistics)
                 self.multitargeting_statistics.show()
                 self.multitargeting_statistics.activateWindow()
             else:
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("No analysis run.")
-                msgBox.setText('Multitargeting Analysis must be performed before viewing statistics.\n\nSelect an organism and endonuclease and click "Analyze" then try again.')
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
+                show_message(
+                    fontSize=12, 
+                    icon=QtWidgets.QMessageBox.Icon.Critical, 
+                    title="No analysis run.", 
+                    message="Multitargeting Analysis must be performed before viewing statistics.\n\nSelect an organism and endonuclease and click 'Analyze' then try again."
+                )
                 return True
         except Exception as e:
-            logger.critical("Error in show_statistics() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in show_statistics() in multi-targeting.", e)
 
     #event handler to show details of targets in chromosome viewer while hovering over canvases
     def chromosome_event_handler(self, event):
@@ -338,64 +203,29 @@ class Multitargeting(QtWidgets.QMainWindow):
                 text.setFont(font)
 
         except Exception as e:
-            logger.critical("Error in event_data() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in event_data() in multi-targeting.", e)
 
     def launch(self):
         try:
             self.get_data()
         except Exception as e:
-            logger.critical("Error in launch() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in launch() in multi-targeting.", e)
+            
     #button trigger for sql settings
     def update_sql_query_settings(self):
         try:
-            self.sql_settings.centerUI()
+            center_ui(self.sql_settings)
             self.sql_settings.show()
             self.sql_settings.activateWindow()
         except Exception as e:
-            logger.critical("Error in update_sql_query_settings() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in update_sql_query_settings() in multi-targeting.", e)
+            
     #trigger for if sql line edit value has changed
     def sql_row_count_value_changed(self):
         try:
             self.row_limit = int(self.sql_settings.row_count.text())
         except Exception as e:
-            logger.critical("Error in sql_row_count_value_changed() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
+            show_error("Error in sql_row_count_value_changed() in multi-targeting.", e)
             pass
 
     def get_data(self):
@@ -452,19 +282,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][endos[0]][0]
             self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][endos[0]][1]
         except Exception as e:
-            logger.critical("Error in get_data() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in get_data() in multi-targeting.", e)
+            
     def update_endos(self):
         try:
             #try to disconnect index changed signal on endo dropdown if there is one
@@ -478,26 +297,15 @@ class Multitargeting(QtWidgets.QMainWindow):
             endos = self.organisms_to_endos[str(self.organism_drop.currentText())]
             self.endo_drop.addItems(endos)
         except Exception as e:
-            logger.critical("Error in update_endos() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in update_endos() in multi-targeting.", e)
+            
     def make_graphs(self):
         try:
             self.cspr_file = self.organisms_to_files[str(self.organism_drop.currentText())][str(self.endo_drop.currentText())][0]
             self.db_file = self.organisms_to_files[str(self.organism_drop.currentText())][str(self.endo_drop.currentText())][1]
 
             self.loading_window.loading_bar.setValue(0)
-            self.loading_window.centerUI()
+            center_ui(self.loading_window)
             self.loading_window.show()
             QtCore.QCoreApplication.processEvents()
             self.chromo_length.clear()
@@ -521,18 +329,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             QtWidgets.QApplication.processEvents()
 
         except Exception as e:
-            logger.critical("Error in make_graphs() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in make_graphs() in multi-targeting.", e)
 
     #function to fill table in UI
     def fill_table(self):
@@ -676,18 +473,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             #reconnect row trigger
             self.table.itemSelectionChanged.connect(self.row_selection_trigger)
         except Exception as e:
-            logger.critical("Error in fill_table() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in fill_table() in multi-targeting.", e)
 
     #function for triggering graph updates when user selects row in table
     def row_selection_trigger(self):
@@ -699,19 +485,8 @@ class Multitargeting(QtWidgets.QMainWindow):
                 self.fill_Chromo_Text(seed)
                 self.chro_bar_create(seed)
         except Exception as e:
-            logger.critical("Error in row_selection_trigger() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in row_selection_trigger() in multi-targeting.", e)
+            
     # sorting to table
     def table_sorting(self, logicalIndex):
         try:
@@ -721,18 +496,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             else:
                 self.table.sortItems(logicalIndex, QtCore.Qt.AscendingOrder)
         except Exception as e:
-            logger.critical("Error in table_sorting() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in table_sorting() in multi-targeting.", e)
 
     #fill in chromo bar visualization
     def fill_Chromo_Text(self, seed):
@@ -844,18 +608,7 @@ class Multitargeting(QtWidgets.QMainWindow):
 
                 return False
         except Exception as e:
-            logger.critical("Error in fill_Chromo_text() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in fill_Chromo_text() in multi-targeting.", e)
 
     # creates bar graph num of repeats vs. chromosome
     def chro_bar_create(self, seed):
@@ -898,18 +651,7 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.line_canvas.axes.tick_params(axis='both', which='major', labelsize=8)
             self.line_canvas.draw()
         except Exception as e:
-            logger.critical("Error in chro_bar_create() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in chro_bar_create() in multi-targeting.", e)
 
     def bar_seeds_vs_repeats(self):
         try:
@@ -943,19 +685,8 @@ class Multitargeting(QtWidgets.QMainWindow):
 
             self.bar_bool = True
         except Exception as e:
-            logger.critical("Error in bar_seeds_vs_repeats() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in bar_seeds_vs_repeats() in multi-targeting.", e)
+            
     # # plots the repeats per ID number graph as line graph
     def plot_repeats_vs_seeds(self):
         try:
@@ -994,19 +725,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.line_bool = True
             self.line_canvas.draw()
         except Exception as e:
-            logger.critical("Error in plot_repeats_vs_seeds() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in plot_repeats_vs_seeds() in multi-targeting.", e)
+            
     def seed_chromo_changed(self):
         try:
             self.loading_window.loading_bar.setValue(5)
@@ -1017,19 +737,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.loading_window.loading_bar.setValue(100)
             self.loading_window.hide()
         except Exception as e:
-            logger.critical("Error in seed_chromo_changed() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in seed_chromo_changed() in multi-targeting.", e)
+            
     #connects to go back button in bottom left to switch back to the main CASPER window
     def go_back(self):
         try:
@@ -1038,19 +747,8 @@ class Multitargeting(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.show()
             self.hide()
         except Exception as e:
-            logger.critical("Error in go_back() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in go_back() in multi-targeting.", e)
+            
     # this function calls the closingWindow class.
     def closeEvent(self, event):
         try:
@@ -1059,132 +757,22 @@ class Multitargeting(QtWidgets.QMainWindow):
             self.multitargeting_statistics.hide()
             event.accept()
         except Exception as e:
-            logger.critical("Error in closeEvent() in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in closeEvent() in multi-targeting.", e)
 
 class loading_window(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(loading_window, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + "loading_data_form.ui", self)
+            uic.loadUi(GlobalSettings.appdir + "ui/loading_data_form.ui", self)
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.loading_bar.setValue(0)
             self.setWindowTitle("Loading Data")
 
-            #scale UI
-            self.scaleUI()
+            scale_ui(self, custom_scale_width=450, custom_scale_height=125)
 
         except Exception as e:
-            logger.critical("Error initializing loading_window class in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    def scaleUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
-            # font scaling
-            # 14px is used for 92 dpi
-            fontSize = 12
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
-
-            self.adjustSize()
-
-            currentWidth = self.size().width()
-            currentHeight = self.size().height()
-
-            # scale/center window
-            scaledWidth = int((width * 450) / 1920)
-            scaledHeight = int((height * 125) / 1080)
-
-            if scaledHeight < currentHeight:
-                scaledHeight = currentHeight
-            if scaledWidth < currentWidth:
-                scaledWidth = currentWidth
-
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-        except Exception as e:
-            logger.critical("Error in scaleUI() in loading_window() class in multitargeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    def centerUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            # center window on current screen
-            width = self.width()
-            height = self.height()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(width / 2))
-            y = y - (math.ceil(height / 2))
-            self.setGeometry(x, y, width, height)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-        except Exception as e:
-            logger.critical("Error in centerUI() in loading window in multitargeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-
+            show_error("Error initializing loading_window class in multi-targeting.", e)
+            
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         try:
@@ -1207,252 +795,31 @@ class MplCanvas(FigureCanvasQTAgg):
             #                                 QtWidgets.QSizePolicy.Expanding)
             # FigureCanvasQTAgg.updateGeometry(self)
         except Exception as e:
-            logger.critical("Error initializing MplCanvas class in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error initializing MplCanvas class in multi-targeting.", e)
 
 class Multitargeting_Statistics(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         try:
             super(Multitargeting_Statistics, self).__init__(parent)
-            uic.loadUi(GlobalSettings.appdir + 'multitargeting_stats.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'ui/multitargeting_stats.ui', self)
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.setWindowTitle("Statistics")
 
-            #scale UI
-            self.scaleUI()
+            scale_ui(self, custom_scale_width=275, custom_scale_height=185)
 
         except Exception as e:
-            logger.critical("Error initializing Multitargeting_Statistics class in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    #scale UI based on current screen
-    def scaleUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
-            # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = 12
-            self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
-
-            # CASPER header scaling
-            fontSize = 20
-            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
-
-            self.adjustSize()
-
-            currentWidth = self.size().width()
-            currentHeight = self.size().height()
-
-            # window scaling
-            scaledWidth = int((width * 275) / 1920)
-            scaledHeight = int((height * 185) / 1080)
-
-            if scaledHeight < currentHeight:
-                scaledHeight = currentHeight
-            if scaledWidth < currentWidth:
-                scaledWidth = currentWidth
-
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-        except Exception as e:
-            logger.critical("Error in scaleUI() in multitargeting statistics in multitargeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    # center UI on current screen
-    def centerUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            # center window on current screen
-            width = self.width()
-            height = self.height()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(width / 2))
-            y = y - (math.ceil(height / 2))
-            self.setGeometry(x, y, width, height)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-        except Exception as e:
-            logger.critical("Error in centerUI() in multitargeting statistics in multitargeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-
+            show_error("Error initializing Multitargeting_Statistics class in multi-targeting.", e)
+    
 class sql_query_settings(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(sql_query_settings, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + "multitargeting_sql_settings.ui", self)
+            uic.loadUi(GlobalSettings.appdir + "ui/multitargeting_sql_settings.ui", self)
             self.setWindowTitle("SQL Settings")
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.row_count.setValidator(QtGui.QIntValidator())
 
-            #scale the UI
-            self.scaleUI()
+            scale_ui(self, custom_scale_width=375, custom_scale_height=140)
 
         except Exception as e:
-            logger.critical("Error initializing sql_query_settings class in multi-targeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    #scale UI based on current screen
-    def scaleUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
-            # font scaling
-            # 16px is used for 92 dpi / 1920x1080
-            fontSize = 12
-            self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
-
-            # CASPER header scaling
-            fontSize = 20
-            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
-
-            self.adjustSize()
-
-            currentWidth = self.size().width()
-            currentHeight = self.size().height()
-
-            # window scaling
-            scaledWidth = int((width * 375) / 1920)
-            scaledHeight = int((height * 140) / 1080)
-
-            if scaledHeight < currentHeight:
-                scaledHeight = currentHeight
-            if scaledWidth < currentWidth:
-                scaledWidth = currentWidth
-
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-        except Exception as e:
-            logger.critical("Error in scaleUI() in sql settings in multitargeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    #center UI on current screen
-    def centerUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            # center window on current screen
-            width = self.width()
-            height = self.height()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(width / 2))
-            y = y - (math.ceil(height / 2))
-            self.setGeometry(x, y, width, height)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-        except Exception as e:
-            logger.critical("Error in centerUI() in sql settings in multitargeting.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error initializing sql_query_settings class in multi-targeting.", e)

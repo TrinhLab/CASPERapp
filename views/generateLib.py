@@ -1,29 +1,26 @@
-import GlobalSettings
+import models.GlobalSettings as GlobalSettings
 import os
 from PyQt5 import QtWidgets, Qt, uic, QtCore
 from functools import partial
-from CSPRparser import CSPRparser
+from models.CSPRparser import CSPRparser
 import re
 import platform
 import traceback
 import math
-from annotation_functions import *
+from utils.ui import show_message, show_error, scale_ui, center_ui
+from views.annotation_functions import *
 
-#global logger
 logger = GlobalSettings.logger
 
-# Class Name: genLibrary
 # this class is a window that allows the user to select the settings for Generate Library
 # When the user clicks Generate Library, it goes ahead and gets the Annotation Data needed
 #   Then the user can select the settings they want, and then hit submit.
 #   It creates a txt file with the data
 class genLibrary(QtWidgets.QMainWindow):
-
     def __init__(self):
         try:
-            # qt stuff
             super(genLibrary, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'generate_library.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'ui/generate_library.ui', self)
             self.setWindowTitle('Generate Library')
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + 'cas9image.ico'))
 
@@ -40,14 +37,11 @@ class genLibrary(QtWidgets.QMainWindow):
             self.Step3.setStyleSheet(groupbox_style.replace("Step1", "Step3"))
             self.Step4.setStyleSheet(groupbox_style.replace("Step1", "Step4"))
 
-
-            # button connections
             self.cancel_button.clicked.connect(self.cancel_function)
             self.BrowseButton.clicked.connect(self.browse_function)
             self.submit_button.clicked.connect(self.submit_data)
             self.progressBar.setValue(0)
 
-            # variables
             self.anno_data = dict()
             self.kegg_nonKegg = ''
             self.gen_lib_dict = dict()
@@ -65,118 +59,12 @@ class genLibrary(QtWidgets.QMainWindow):
             # set the numbers for the minOn combo box
             for i in range(19, 70):
                 self.minON_comboBox.addItem(str(i + 1))
-
-            #scale UI
-            self.scaleUI()
-
-        except Exception as e:
-            logger.critical("Error initializing generate library class.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    #scale UI based on current screen
-    def scaleUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            screen = QtWidgets.QApplication.screens()[screen]
-            dpi = screen.physicalDotsPerInch()
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
-            # font scaling
-            fontSize = 12
-            self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
-
-            #scale title
-            fontSize = 30
-            self.label.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
-
-            self.adjustSize()
-
-            currentWidth = self.size().width()
-            currentHeight = self.size().height()
-
-            # window scaling
-            # 1920x1080 => 800x650
-            scaledWidth = int((width * 950) / 1920)
-            scaledHeight = int((height * 500) / 1080)
-
-            if scaledHeight < currentHeight:
-                scaledHeight = currentHeight
-            if scaledWidth < currentWidth:
-                scaledWidth = currentWidth
-
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
+            
+            scale_ui(self, custom_scale_width=950, custom_scale_height=500)
 
         except Exception as e:
-            logger.critical("Error in scaleUI() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    #center UI on current screen
-    def centerUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            #center window on current screen
-            width = self.width()
-            height = self.height()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(width / 2))
-            y = y - (math.ceil(height / 2))
-            self.setGeometry(x, y, width, height)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-        except Exception as e:
-            logger.critical("Error in centerUI() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error initializing generate library class.", e)
+    
     # this function launches the window
     # Parameters:
     #       annotation_data: a dictionary that has the data for the annotations searched for
@@ -191,7 +79,6 @@ class genLibrary(QtWidgets.QMainWindow):
             self.kegg_nonKegg = anno_type
             self.process = QtCore.QProcess()
             self.parser.fileName = org_file
-
 
             # setting the path and file name fields
             index1 = self.cspr_file.find('.')
@@ -215,23 +102,11 @@ class genLibrary(QtWidgets.QMainWindow):
             self.cspr_data = self.parser.gen_lib_parser(self.gen_lib_dict, GlobalSettings.mainWindow.endoChoice.currentText())
             self.get_endo_data()
 
-            #center UI
-            self.centerUI()
+            center_ui(self)
             self.show()
             self.activateWindow()
         except Exception as e:
-            logger.critical("Error in launch() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in launch() in generate library.", e)
 
     def get_endo_data(self):
         try:
@@ -258,19 +133,8 @@ class genLibrary(QtWidgets.QMainWindow):
                     break
             f.close()
         except Exception as e:
-            logger.critical("Error in get_endo_data() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in get_endo_data() in generate library.", e)
+            
     # this is here in case the user clicks 'x' instead of cancel. Just calls the cancel function
     def closeEvent(self, event):
         try:
@@ -282,19 +146,8 @@ class genLibrary(QtWidgets.QMainWindow):
             else:
                 event.accept()
         except Exception as e:
-            logger.critical("Error in closeEvent() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in closeEvent() in generate library.", e)
+            
     # this function takes all of the cspr data and compresses it again for off-target usage
     def compress_file_off(self):
         try:
@@ -314,19 +167,8 @@ class genLibrary(QtWidgets.QMainWindow):
                     f.write(output + '\n')
             f.close()
         except Exception as e:
-            logger.critical("Error in compress_file_off() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in compress_file_off() in generate library.", e)
+            
     # this function parses the temp_off file, which holds the off-target analysis results
     # it also updates each target in the cspr_data dictionary to replace the endo with the target's results in off-target
     def parse_off_file(self):
@@ -354,19 +196,8 @@ class genLibrary(QtWidgets.QMainWindow):
                     tempTuple = (self.cspr_data[gene][i][0], self.cspr_data[gene][i][1], self.cspr_data[gene][i][2], self.cspr_data[gene][i][3], self.cspr_data[gene][i][4], scoreDict[self.cspr_data[gene][i][1]])
                     self.cspr_data[gene][i] = tempTuple
         except Exception as e:
-            logger.critical("Error in parse_off_file() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in parse_off_file() in generate library.", e)
+            
     # this function runs the off_target command
     # NOTE: some changes may be needed to get it to work with other OS besides windows
     def get_offTarget_data(self, num_targets, minScore, spaceValue, output_file, fiveseq):
@@ -385,15 +216,12 @@ class genLibrary(QtWidgets.QMainWindow):
                     #self.process.kill()
                     if did_work != -1:
                         self.cancel_function()
-                        msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Information)
-                        msgBox.setWindowTitle("Library Generated!")
-                        msgBox.setText(
-                            "CASPER has finished generating your library!")
-                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                        msgBox.exec()
-
+                        show_message(
+                            fontSize=12,
+                            icon=QtWidgets.QMessageBox.Icon.Information,
+                            title="Library Generated!",
+                            message="CASPER has finished generating your library!"
+                        )
                         os.remove(GlobalSettings.CSPR_DB + '/off_input.txt')
                         os.remove(GlobalSettings.CSPR_DB + '/temp_off.txt')
 
@@ -473,19 +301,8 @@ class genLibrary(QtWidgets.QMainWindow):
             QtCore.QTimer.singleShot(100, partial(self.process.start, cmd))
             self.process.finished.connect(finished)
         except Exception as e:
-            logger.critical("Error in get_offTarget_data() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
+            show_error("Error in get_offTarget_data() in generate library.", e)
+            
     # submit function
     # this function takes all of the input from the window, and calls the generate function
     # Still need to add the checks for 5' seq, and the percentage thing
@@ -512,103 +329,78 @@ class genLibrary(QtWidgets.QMainWindow):
             elif self.space_line_edit.text().isdigit():
                 spaceValue = int(self.space_line_edit.text())
             elif not self.space_line_edit.text().isdigit():
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Error")
-                msgBox.setText(
-                    "Please enter integers only for space between guides.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Error",
+                    message="Please enter integers only for space between guides."
+                )
                 return
             # if space value is more than 200, default to 200
             if spaceValue > 200:
                 spaceValue = 200
             elif spaceValue < 0:
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Error")
-                msgBox.setText(
-                    "Please enter a space-value that is 0 or greater.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Error",
+                    message="Please enter a space-value that is 0 or greater."
+                )
                 return
 
             if self.find_off_Checkbox.isChecked():
                 self.compress_file_off()
 
-
-
             # get the fiveprimseq data and error check it
             if self.fiveprimeseq.text() != '' and self.fiveprimeseq.text().isalpha():
                 fiveseq = self.fiveprimeseq.text()
             elif self.fiveprimeseq.text() != '' and not self.fiveprimeseq.text().isalpha():
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Error")
-                msgBox.setText(
-                    "Please make sure only the letters A, T, G, or C are added into 5' End specificity box.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Error",
+                    message="Please make sure only the letters A, T, G, or C are added into 5' End specificity box."
+                )
                 return
-
 
             # get the targeting range data, and error check it here
             if not self.start_target_range.text().isdigit() or not self.end_target_range.text().isdigit():
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Error")
-                msgBox.setText(
-                    "Error: Please make sure that the start and end target ranges are numbers only. Please make sure that start is 0 or greater, and end is 100 or less. ")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Error",
+                    message="Error: Please make sure that the start and end target ranges are numbers only. Please make sure that start is 0 or greater, and end is 100 or less. "
+                )
                 return
             elif int(self.start_target_range.text()) >= int(self.end_target_range.text()):
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Error")
-                msgBox.setText(
-                    "Please make sure that the start number is always less than the end number")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Error",
+                    message="Please make sure that the start number is always less than the end number"
+                )
                 return
-
 
             # if they check Off-Targeting
             if self.find_off_Checkbox.isChecked():
                 # make sure its a digit
                 if self.maxOFF_comboBox.text() == '' or not self.maxOFF_comboBox.text().isdigit() and '.' not in self.maxOFF_comboBox.text():
-                    msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msgBox.setWindowTitle("Error")
-                    msgBox.setText(
-                        "Please enter only numbers for Maximum Off-Target Score. It cannot be left blank")
-                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                    msgBox.exec()
-
+                    show_message(
+                        fontSize=12,
+                        icon=QtWidgets.QMessageBox.Icon.Critical,
+                        title="Error",
+                        message="Please enter only numbers for Maximum Off-Target Score. It cannot be left blank"
+                    )
                     return
                 else:
                     # make sure it between 0 and .5
                     if not 0.0 < float(self.maxOFF_comboBox.text()) <= .5:
-                        msgBox = QtWidgets.QMessageBox()
-                        msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                        msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                        msgBox.setWindowTitle("Error")
-                        msgBox.setText(
-                            "Please enter a max off-target score between 0 and 0.5!")
-                        msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                        msgBox.exec()
-
+                        show_message(
+                            fontSize=12,
+                            icon=QtWidgets.QMessageBox.Icon.Critical,
+                            title="Error",
+                            message="Please enter a max off-target score between 0 and 0.5!"
+                        )
                         return
                     # compress the data, and then run off-targeting
                     self.compress_file_off()
@@ -619,36 +411,21 @@ class genLibrary(QtWidgets.QMainWindow):
 
                 if did_work != -1:
                     self.cancel_function()
-                    msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msgBox.setWindowTitle("Library Generated!")
-                    msgBox.setText(
-                        "CASPER has finished generating your library!")
-                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                    msgBox.exec()
-
+                    show_message(
+                        fontSize=12,
+                        icon=QtWidgets.QMessageBox.Icon.Critical,
+                        title="Library Generated!",
+                        message="CASPER has finished generating your library!"
+                    )
         except Exception as e:
-            logger.critical("Error in submit_data() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    # cancel function
+            show_error("Error in submit_data() in generate library.", e)
+            
     # clears everything and hides the window
     def cancel_function(self):
         try:
             if self.off_target_running:
                 msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
+                msgBox.setStyleSheet("font: " + str(12) + "pt 'Arial'")
                 msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
                 msgBox.setWindowTitle("Off-Targeting is running")
                 msgBox.setText(
@@ -685,20 +462,8 @@ class genLibrary(QtWidgets.QMainWindow):
 
             self.hide()
         except Exception as e:
-            logger.critical("Error in cancel_function() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    # browse function
+            show_error("Error in cancel_function() in generate library.", e)
+            
     # allows the user to browse for a folder
     # stores their selection in the output_path line edit
     def browse_function(self):
@@ -718,18 +483,7 @@ class genLibrary(QtWidgets.QMainWindow):
             else:
                 self.output_path.setText(mydir + "/")
         except Exception as e:
-            logger.critical("Error in browse_function() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in browse_function() in generate library.", e)
 
     # this function builds the dictionary that is used in the generate function
     # this is the version that builds it from data from feature_table, gbff, or gff
@@ -745,18 +499,7 @@ class genLibrary(QtWidgets.QMainWindow):
                 ### Order: chromosome number, gene start, gene end, dir of gene, gene description, gene name/locus tag
                 self.gen_lib_dict[feature_name] = [chrom,int(feature.location.start),int(feature.location.end),get_strand(feature),get_description(feature),get_name(feature)]
         except Exception as e:
-            logger.critical("Error in build_dict_non_kegg() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in build_dict_non_kegg() in generate library.", e)
 
     # generate function taken from Brian's code
     def generate(self,num_targets_per_gene, score_limit, space, output_file, fiveseq):
@@ -773,15 +516,12 @@ class genLibrary(QtWidgets.QMainWindow):
                     endNum = endNum / 100
                     checkStartandEndBool = True
                 else:
-                    msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msgBox.setWindowTitle("Invalid Targeting Range:")
-                    msgBox.setText(
-                        "Please select a targeting range between 0 and 100.")
-                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                    msgBox.exec()
-
+                    show_message(
+                        fontSize=12,
+                        icon=QtWidgets.QMessageBox.Icon.Critical,
+                        title="Invalid Targeting Range:",
+                        message="Please select a targeting range between 0 and 100."
+                    )
                     return -1
 
             for gene in self.gen_lib_dict:
@@ -908,29 +648,15 @@ class genLibrary(QtWidgets.QMainWindow):
 
                 f.close()
             except PermissionError:
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("File Cannot Open")
-                msgBox.setText(
-                    "This file cannot be opened. Please make sure that the file is not opened elsewhere and try again.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="File Cannot Open",
+                    message="This file cannot be opened. Please make sure that the file is not opened elsewhere and try again."
+                )
                 return -1
             except Exception as e:
                 print(e)
                 return
         except Exception as e:
-            logger.critical("Error in generate() in generate library.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
+            show_error("Error in generate() in generate library.", e)

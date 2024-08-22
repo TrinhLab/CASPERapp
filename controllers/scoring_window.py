@@ -1,5 +1,5 @@
-from Algorithms import get_table_headers
-import GlobalSettings
+from utils.Algorithms import get_table_headers
+import models.GlobalSettings as GlobalSettings
 import azimuth.model_comparison as az
 from PyQt5 import QtWidgets, uic, QtCore
 import platform
@@ -50,7 +50,7 @@ class Scoring_Window(QtWidgets.QMainWindow):
         try:
             # qt stuff
             super(Scoring_Window, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'scoring_window.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'ui/scoring_window.ui', self)
             self.progressBar.setValue(0) # Make sure the progress bar starts at 0
 
             # Button Connections

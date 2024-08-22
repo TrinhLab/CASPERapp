@@ -1,22 +1,16 @@
 import os, platform
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, Qt
 from functools import partial
-import GlobalSettings
-import gzip
-import traceback
-import math
-from error_handling import show_error
-from common_utils import show_message
+import models.GlobalSettings as GlobalSettings
+from utils.ui import show_message, show_error, scale_ui, center_ui
 
-#global logger
 logger = GlobalSettings.logger
 
 class OffTarget(QtWidgets.QMainWindow):
-
     def __init__(self):
         try:
             super(OffTarget, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'off_target.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'ui/off_target.ui', self)
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.setWindowTitle("Off-Target Analysis")
             self.progressBar.setMinimum(0)
@@ -35,8 +29,6 @@ class OffTarget(QtWidgets.QMainWindow):
             self.bool_temp = False
             self.running = False
             self.process = QtCore.QProcess()
-
-            # make sure to intialize the class variable in init. That way elsewhere and other classes can access it
             self.output_path = ''
 
             groupbox_style = """
@@ -52,117 +44,10 @@ class OffTarget(QtWidgets.QMainWindow):
             self.Step2.setStyleSheet(groupbox_style.replace("Step1", "Step2"))
             self.Step3.setStyleSheet(groupbox_style.replace("Step1", "Step3"))
 
-            #scale UI
-            self.scaleUI()
+            scale_ui(self, custom_scale_width=400, custom_scale_height=450)
 
         except Exception as e:
-            logger.critical("Error initializing OffTarget class.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    #scale UI based on current screen
-    def scaleUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
-            # font scaling
-            fontSize = 12
-            self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
-
-            # CASPER header scaling
-            fontSize = 20
-            self.title.setStyleSheet("font: bold " + str(fontSize) + "pt 'Arial';")
-
-            self.adjustSize()
-
-            currentWidth = self.size().width()
-            currentHeight = self.size().height()
-
-            # window scaling
-            # 1920x1080 => 850x750
-            scaledWidth = int((width * 400) / 1920)
-            scaledHeight = int((height * 450) / 1080)
-
-            if scaledHeight < currentHeight:
-                scaledHeight = currentHeight
-            if scaledWidth < currentWidth:
-                scaledWidth = currentWidth
-
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-        except Exception as e:
-            logger.critical("Error in scaleUI() in Off-Target.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
-    #center UI on current screen
-    def centerUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            # center window on current screen
-            width = self.width()
-            height = self.height()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(width / 2))
-            y = y - (math.ceil(height / 2))
-            self.setGeometry(x, y, width, height)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-        except Exception as e:
-            logger.critical("Error in centerUI() in Off-Target.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error initializing OffTarget class.", e)
 
     #copied from MT to fill in the chromo and endo dropdowns based on CSPR files user provided at the startup
     def fill_data_dropdown(self):
@@ -226,19 +111,7 @@ class OffTarget(QtWidgets.QMainWindow):
             self.mismatchcomboBox.addItems(mismatch_list)
             self.mismatchcomboBox.setCurrentIndex(3) ### Max number of mismatches is 4 by default
         except Exception as e:
-            logger.critical("Error in fill_data_dropdown() in OffTarget.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in fill_data_dropdown() in OffTarget.", e)
 
     def change_endos(self):
         try:
@@ -246,20 +119,8 @@ class OffTarget(QtWidgets.QMainWindow):
             self.cspr_file = self.organisms_to_files[str(self.OrgcomboBox.currentText())][str(self.EndocomboBox.currentText())][0]
             self.db_file = self.organisms_to_files[str(self.OrgcomboBox.currentText())][str(self.EndocomboBox.currentText())][1]
         except Exception as e:
-            logger.critical("Error in change_endos() in OffTarget.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
+            show_error("Error in change_endos() in OffTarget.", e)
+            
     def update_endos(self):
         try:
             #try to disconnect index changed signal on endo dropdown if there is one
@@ -278,20 +139,8 @@ class OffTarget(QtWidgets.QMainWindow):
             #reconnect index changed signal on endo dropdown
             self.EndocomboBox.currentIndexChanged.connect(self.change_endos)
         except Exception as e:
-            logger.critical("Error in update_endos() in OffTarget.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
+            show_error("Error in update_endos() in OffTarget.", e)
+            
     #tolerance slider / entry box. Allows for slider to update, or the user to input in text box
     # def tol_change(self):
     #     try:
@@ -324,7 +173,7 @@ class OffTarget(QtWidgets.QMainWindow):
                 return
 
             if save_internally:
-                full_output_path = os.path.join(GlobalSettings.appdir, 'local_output.txt')  
+                full_output_path = os.path.join(GlobalSettings.appdir, 'local/local_output.txt')  
             else:
                 full_output_path = os.path.join(GlobalSettings.CSPR_DB, output_file_name)
                 if os.path.isfile(full_output_path):
@@ -341,42 +190,21 @@ class OffTarget(QtWidgets.QMainWindow):
             self.bool_temp = False
             self.running = False
 
-            # #setup arguments for C++ .exe
             app_path = GlobalSettings.appdir.replace('\\','/')
             exe_path = os.path.join(app_path, 'OffTargetFolder', 'OT_Win.exe' if platform.system() == 'Windows' else 'OT_Lin' if platform.system() == 'Linux' else 'OT_Mac')
-            # data_path = os.path.join(app_path, 'OffTargetFolder', 'temp.txt')
-            # db_path = os.path.join(GlobalSettings.CSPR_DB, self.db_file)
-            # CASPER_info_path = os.path.join(app_path, 'CASPERinfo')
-            # cspr_path = os.path.join(GlobalSettings.CSPR_DB, self.cspr_file)
+            data_path = os.path.join(app_path, 'OffTargetFolder', 'temp.txt')
+            endo = self.EndocomboBox.currentText()
+            cspr_path = os.path.join(GlobalSettings.CSPR_DB, self.cspr_file)
+            db_path = os.path.join(GlobalSettings.CSPR_DB, self.db_file)
+            CASPER_info_path = os.path.join(app_path, 'CASPERinfo')
             num_of_mismatches = int(self.mismatchcomboBox.currentText())
-            # endo = self.EndocomboBox.currentText()
-            # hsu = GlobalSettings.mainWindow.Results.endo_data[self.EndocomboBox.currentText()][2]
+            hsu = GlobalSettings.mainWindow.Results.endo_data[self.EndocomboBox.currentText()][2]
 
-            # cmd = f'"{exe_path}" "{data_path}" "{endo}" "{cspr_path}" "{db_path}" "{full_output_path}" "{CASPER_info_path}" {num_of_mismatches} {self.tolerance} {"TRUE" if self.AVG.isChecked() else "FALSE"} {"FALSE" if self.AVG.isChecked() else "TRUE"} "{hsu}"'
-
-
-            if (self.AVG.isChecked()):
-                avg_output = r'TRUE'
-                detailed_output = r' FALSE '
-            else:
-                avg_output = r'FALSE'
-                detailed_output = r' TRUE '
-
-            data_path = ' "' + app_path + 'OffTargetFolder/temp.txt' + '"' ##
-            cspr_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.cspr_file + '"'
-            db_path = ' "' + GlobalSettings.CSPR_DB + '/' + self.db_file + '"'
             self.output_path = ' "' + full_output_path + '"'
-            CASPER_info_path = r' "' + app_path + 'CASPERinfo' + '" '
-            endo = ' "' + self.EndocomboBox.currentText() + '"'
-            hsu = ' "' + GlobalSettings.mainWindow.Results.endo_data[self.EndocomboBox.currentText()][2] + '"'
-
-            #create command string
-                        # cmd = f'"{exe_path}" "{data_path}" "{endo}" "{cspr_path}" "{db_path}" "{full_output_path}" "{CASPER_info_path}" {num_of_mismatches} {self.tolerance} {"TRUE" if self.AVG.isChecked() else "FALSE"} {"FALSE" if self.AVG.isChecked() else "TRUE"} "{hsu}"'
-            cmd = f'"{exe_path}"' + data_path + endo + cspr_path + db_path + self.output_path + CASPER_info_path + str(num_of_mismatches) + ' ' + str(self.tolerance) + detailed_output + avg_output + hsu
+            
+            cmd = f'"{exe_path}" "{data_path}" "{endo}" "{cspr_path}" "{db_path}" "{full_output_path}" "{CASPER_info_path}" {num_of_mismatches} {self.tolerance} {"TRUE" if self.AVG.isChecked() else "FALSE"} {"FALSE" if self.AVG.isChecked() else "TRUE"} "{hsu}"'   
             cmd = cmd.replace('/', '\\') if platform.system() == 'Windows' else cmd
 
-
-            #used to know when the process is done
             def finished():
                 self.running = False
                 self.run_clicked = True
@@ -415,20 +243,8 @@ class OffTarget(QtWidgets.QMainWindow):
                 self.running = True
                 self.run_command()
         except Exception as e:
-            logger.critical("Error in run_analysis() in OffTarget.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
+            show_error("Error in run_analysis() in OffTarget.", e)
+            
     #exit linked to user clicking cancel, resets bools, and kills process if one was running
     def exit(self):
         try:
@@ -438,7 +254,7 @@ class OffTarget(QtWidgets.QMainWindow):
             self.process.kill()
             self.hide()
 
-            local_output_path = os.path.join(GlobalSettings.appdir, 'local_output.txt')
+            local_output_path = os.path.join(GlobalSettings.appdir, 'local/local_output.txt')
         
             if os.path.exists(local_output_path):
                 os.remove(local_output_path)
@@ -446,20 +262,8 @@ class OffTarget(QtWidgets.QMainWindow):
             else:
                 print("Local output file does not exist.")
         except Exception as e:
-            logger.critical("Error in exit() in OffTarget.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
+            show_error("Error in exit() in OffTarget.", e)
+            
     #closeEvent linked to user pressing the x in the top right of windows, resets bools, and
     #kills process if there was one running
     def closeEvent(self, event):
@@ -470,17 +274,4 @@ class OffTarget(QtWidgets.QMainWindow):
             self.running = False
             event.accept()
         except Exception as e:
-            logger.critical("Error in closeEvent() in OffTarget.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
+            show_error("Error in closeEvent() in OffTarget.", e)

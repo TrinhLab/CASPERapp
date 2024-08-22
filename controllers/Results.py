@@ -1,14 +1,15 @@
-from Algorithms import get_table_headers
+from utils.Algorithms import get_table_headers
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, Qt
 from Bio.Seq import Seq
 from Bio import SeqIO
-from CSPRparser import CSPRparser
-import GlobalSettings
-import OffTarget
+from models.CSPRparser import CSPRparser
+import models.GlobalSettings as GlobalSettings
+import controllers.OffTarget as OffTarget
 import platform
 import traceback
 import math
-from scoring_window import Scoring_Window
+from controllers.scoring_window import Scoring_Window
+from utils.ui import scale_ui, center_ui
 
 
 #global logger
@@ -24,7 +25,7 @@ class Results(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         try:
             super(Results, self).__init__(parent)
-            uic.loadUi(GlobalSettings.appdir + 'results.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'ui/results.ui', self)
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.setWindowTitle('Results')
             self.geneViewer.setReadOnly(True)
@@ -1271,7 +1272,7 @@ class Results(QtWidgets.QMainWindow):
                 self.first_boot = False
                 self.off_tar_win = OffTarget.OffTarget()
                 self.off_tar_win.submitButton.clicked.connect(self.refresh_data)
-            self.off_tar_win.centerUI()
+            center_ui(self.off_tar_win)
             ref_org = str(GlobalSettings.mainWindow.orgChoice.currentText()) ### Set default reference organism to the organism that is being targeted
             index = self.off_tar_win.OrgcomboBox.findText(ref_org) ### Find organism in combo box list
             self.off_tar_win.OrgcomboBox.setCurrentIndex(index) ### Set combo box to appropriate index
@@ -1644,7 +1645,7 @@ class Filter_Options(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         try:
             super(Filter_Options, self).__init__(parent)
-            uic.loadUi(GlobalSettings.appdir + 'filter_options.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'ui/filter_options.ui', self)
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.setWindowTitle("Filter Options")
             self.minScoreLine.setText("0")

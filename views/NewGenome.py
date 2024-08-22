@@ -1,17 +1,16 @@
 from ast import Global
 import os
 from PyQt5 import QtWidgets, uic, QtGui, QtCore, Qt
-import GlobalSettings
+import models.GlobalSettings as GlobalSettings
 from functools import partial
-from Algorithms import SeqTranslate
+from utils.Algorithms import SeqTranslate
 import webbrowser
 import platform
 import traceback
 import math
+from utils.ui import show_message, show_error, scale_ui, center_ui
+from utils.web import ncbi_page, repo_page
 
-from ui_utils import center_ui
-
-#global logger
 logger = GlobalSettings.logger
 
 def iter_except(function, exception):
@@ -22,13 +21,12 @@ def iter_except(function, exception):
     except exception:
         return
 
-
 #UI prompt for when the user has finished running jobs in new genome to allow them to choose where the want to proceed
 class goToPrompt(QtWidgets.QMainWindow):
     def __init__(self):
         try:
             super(goToPrompt, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'newgenomenavigationpage.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'ui/newgenomenavigationpage.ui', self)
 
             groupbox_style = """
             QGroupBox:title{subcontrol-origin: margin;
@@ -39,125 +37,20 @@ class goToPrompt(QtWidgets.QMainWindow):
                             font: bold 14pt 'Arial';
                             margin-top: 10px;}"""
             self.groupBox.setStyleSheet(groupbox_style)
-            self.scaleUI()
+            scale_ui(self, custom_scale_width=575, custom_scale_height=175)
             self.setWindowTitle("New Genome")
             self.setWindowIcon(Qt.QIcon(GlobalSettings.appdir + "cas9image.ico"))
             self.hide()
 
         except Exception as e:
-            logger.critical("Unable to initialize goToPrompt class in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-            exit(-1)
-
-    #scale UI based on current screen
-    def scaleUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            screen = self.screen()
-            dpi = screen.physicalDotsPerInch()
-            width = screen.geometry().width()
-            height = screen.geometry().height()
-
-            # font scaling
-            fontSize = 12
-            self.fontSize = fontSize
-            self.centralWidget().setStyleSheet("font: " + str(fontSize) + "pt 'Arial';")
-
-            self.adjustSize()
-
-            currentWidth = self.size().width()
-            currentHeight = self.size().height()
-
-            # window scaling
-            # 1920x1080 => 550x200
-            scaledWidth = int((width * 575) / 1920)
-            scaledHeight = int((height * 175) / 1080)
-
-            if scaledHeight < currentHeight:
-                scaledHeight = currentHeight
-            if scaledWidth < currentWidth:
-                scaledWidth = currentWidth
-
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(scaledWidth / 2))
-            y = y - (math.ceil(scaledHeight / 2))
-            self.setGeometry(x, y, scaledWidth, scaledHeight)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-        except Exception as e:
-            logger.critical("Error in scaleUI() in new genome navigation window.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
-    #center UI on current screen
-    def centerUI(self):
-        try:
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-
-            #center window on current screen
-            width = self.width()
-            height = self.height()
-            screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
-            centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
-            x = centerPoint.x()
-            y = centerPoint.y()
-            x = x - (math.ceil(width / 2))
-            y = y - (math.ceil(height / 2))
-            self.setGeometry(x, y, width, height)
-
-            self.repaint()
-            QtWidgets.QApplication.processEvents()
-        except Exception as e:
-            logger.critical("Error in centerUI() in new genome navigation window.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
+            show_error("Unable to initialize goToPrompt class in New Genome.", e)
 
 #New genome class to allow users to generate new CSPR files
 class NewGenome(QtWidgets.QMainWindow):
-
-    #init class
     def __init__(self, info_path):
         try:
             super(NewGenome, self).__init__()
-            uic.loadUi(GlobalSettings.appdir + 'NewGenome.ui', self)
+            uic.loadUi(GlobalSettings.appdir + 'ui/NewGenome.ui', self)
             self.setWindowTitle('New Genome')
             self.setWindowTitle('New Genome')
             self.info_path = info_path
@@ -203,7 +96,6 @@ class NewGenome(QtWidgets.QMainWindow):
             self.seqTrans = SeqTranslate()
             self.exit = False
 
-
             self.first = False
             #show functionalities on window
             self.fillEndo()
@@ -219,7 +111,6 @@ class NewGenome(QtWidgets.QMainWindow):
             self.job_Table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
             self.fin_index=0
 
-
             self.mwfg = self.frameGeometry()  ##Center window
             self.cp = QtWidgets.QDesktopWidget().availableGeometry().center()  ##Center window
             self.total_chrom_count = 0
@@ -227,8 +118,8 @@ class NewGenome(QtWidgets.QMainWindow):
             self.progress = 0
 
             #toolbar button actions
-            self.visit_repo.triggered.connect(self.visit_repo_func)
-            self.go_ncbi.triggered.connect(self.open_ncbi_web_page)
+            self.visit_repo.triggered.connect(repo_page)
+            self.go_ncbi.triggered.connect(ncbi_page)
 
             self.comboBoxEndo.currentIndexChanged.connect(self.changeEndos)
 
@@ -260,24 +151,10 @@ class NewGenome(QtWidgets.QMainWindow):
             self.strainName.setValidator(input_validator1)
             self.orgCode.setValidator(input_validator2)
 
-            ### Scale UI ?
-            # scale_ui(self)
+            scale_ui(self, custom_scale_width=850, custom_scale_height=750)
             self.first_show = True
-
         except Exception as e:
-            logger.critical("Unable to initialize New Genome class.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error initializing New Genome class.", e)
 
     def launch_newEndonuclease(self):
         try:
@@ -286,17 +163,7 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.newEndonuclease.show()
             GlobalSettings.mainWindow.newEndonuclease.activateWindow()
         except Exception as e:
-            logger.critical("Error in launch_newEndonuclease() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-            exit(-1)
+            show_error("Error in launch_newEndonuclease() in New Genome.", e)
 
     #open the ncbi search tool window
     def open_ncbi_tool(self):
@@ -312,21 +179,8 @@ class NewGenome(QtWidgets.QMainWindow):
             GlobalSettings.mainWindow.ncbi.show()
             GlobalSettings.mainWindow.ncbi.activateWindow()
         except Exception as e:
-            logger.critical("Error in open_ncbi_tool() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
+            show_error("Error in open_ncbi_tool() in New Genome.", e)
 
-
-            exit(-1)
-
-    #remove jobs from queue
     def remove_from_queue(self):
         try:
             while(True):
@@ -335,19 +189,7 @@ class NewGenome(QtWidgets.QMainWindow):
                     break
                 self.job_Table.removeRow(indexes[0].row())
         except Exception as e:
-            logger.critical("Error in remove_from_queue() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in remove_from_queue() in New Genome.", e)
 
     #prompt user with file browser to select fasta/fna files
     def selectFasta(self):
@@ -356,33 +198,18 @@ class NewGenome(QtWidgets.QMainWindow):
             myFile = QtWidgets.QFileDialog.getOpenFileName(filed, "Choose a File")
             if (myFile[0] != ""):
                 if not myFile[0].endswith(".fa") and not myFile[0].endswith(".fna") and not myFile[0].endswith(".fasta"):
-                    msgBox = QtWidgets.QMessageBox()
-                    msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                    msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msgBox.setWindowTitle("File Selection Error")
-                    msgBox.setText("You have selected an incorrect type of file. Please choose a FASTA/FNA file.")
-                    msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                    msgBox.exec()
-
+                    show_message(
+                        fontSize=12,
+                        icon=QtWidgets.QMessageBox.Icon.Critical,
+                        title="File Selection Error",
+                        message="You have selected an incorrect type of file. Please choose a FASTA/FNA file."
+                    )
                     return
                 else:
                     self.file = myFile[0]
                     self.selectedFile.setText(str(myFile[0]))
-
         except Exception as e:
-            logger.critical("Error in selectFasta() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in selectFasta() in New Genome.", e)
 
     #submit jobs to queue
     def submit(self):
@@ -393,15 +220,13 @@ class NewGenome(QtWidgets.QMainWindow):
             if len(self.file) == 0:
                 warning = warning + "You need to select a file."
             if len(warning) != 0:
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("Required Information")
-                msgBox.setText(warning)
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Required Information",
+                    message=warning
+                )
                 return
-
             if len(self.strainName.text()) == 0:
                 warning = warning + "\nIt is recommended to include the organism's subspecies/strain."
             if len(self.orgCode.text()) == 0:
@@ -418,8 +243,6 @@ class NewGenome(QtWidgets.QMainWindow):
 
                 if msgBox.result() == QtWidgets.QMessageBox.No:
                     return
-
-
 
             #endo, pam, repeats, directionality, five length, seed length, three length, orgcode, output path, CASPERinfo path, fna path, orgName, notes, on target matrix
             args = self.Endos[self.comboBoxEndo.currentText()][0]
@@ -458,14 +281,12 @@ class NewGenome(QtWidgets.QMainWindow):
 
             tmp = self.orgName.text()+ " " + self.strainName.text() + " " + self.Endos[self.comboBoxEndo.currentText()][0] + " " + self.orgCode.text()
             if tmp in self.check_strings:
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Question)
-                msgBox.setWindowTitle("Duplicate Entry")
-                msgBox.setText("You have submitted a duplicate entry. Consider changing the organism code or strain name to differentiate closely related strains.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Duplicate Entry",
+                    message="You have submitted a duplicate entry. Consider changing the organism code or strain name to differentiate closely related strains."
+                )
                 return
             name = self.orgCode.text() + "_" + str(self.Endos[self.comboBoxEndo.currentText()][0])
             rowPosition = self.job_Table.rowCount()
@@ -476,19 +297,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.check_strings.append(tmp)
             self.JobsQueue.append(args)
         except Exception as e:
-            logger.critical("Error in submit() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in submit() in New Genome.", e)
 
     #fill the endo dropdown
     def fillEndo(self):
@@ -535,19 +344,7 @@ class NewGenome(QtWidgets.QMainWindow):
             #reconnect signal
             self.comboBoxEndo.currentIndexChanged.connect(self.changeEndos)
         except Exception as e:
-            logger.critical("Error in fillEndo() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in fillEndo() in New Genome.", e)
 
     #event handler for endo changing - update endo length data
     def changeEndos(self):
@@ -557,19 +354,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.five_length.setText(self.Endos[key][2])
             self.three_length.setText(self.Endos[key][4])
         except Exception as e:
-            logger.critical("Error in changeEndos() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in changeEndos() in New Genome.", e)
 
     #check if endo is 3' or 5'
     def endo_settings(self):
@@ -580,19 +365,7 @@ class NewGenome(QtWidgets.QMainWindow):
             elif int(self.seqTrans.endo_info[self.Endos[self.comboBoxEndo.currentText()][0]][3]) == 5:
                 self.pamBox.setChecked(1)
         except Exception as e:
-            logger.critical("Error in endo_settings() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in endo_settings() in New Genome.", e)
 
     #wrapper for running jobs
     def run_jobs_wrapper(self):
@@ -605,19 +378,7 @@ class NewGenome(QtWidgets.QMainWindow):
                     self.indexes.append(index.row())
             self.run_job()
         except Exception as e:
-            logger.critical("Error in run_jobs_wrapper() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in run_jobs_wrapper() in New Genome.", e)
 
     #run job in queue
     def run_job(self):
@@ -680,28 +441,14 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.process.readyReadStandardOutput.connect(partial(output_stdout, self.process))
                 self.process.start(program)
             else:
-                msgBox = QtWidgets.QMessageBox()
-                msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-                msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                msgBox.setWindowTitle("No Jobs To Run")
-                msgBox.setText("No jobs are in the queue to run. Please add a job before running.")
-                msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
-                msgBox.exec()
-
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="No Jobs To Run",
+                    message="No jobs are in the queue to run. Please add a job before running."
+                )
         except Exception as e:
-            logger.critical("Error in run_job() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in run_job() in New Genome.", e)
 
     #even handler for when jobs finish execution
     def upon_process_finishing(self):
@@ -717,23 +464,11 @@ class NewGenome(QtWidgets.QMainWindow):
                 self.run_job()
             else:
                 #prompt user if they want to analyze their new files
-                self.goToPrompt.centerUI()
+                center_ui(self.goToPrompt)
                 self.goToPrompt.show()
                 self.goToPrompt.activateWindow()
         except Exception as e:
-            logger.critical("Error in upon_process_finishing() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in upon_process_finishing() in New Genome.", e)
 
     #clear the job table
     def clear_all(self):
@@ -754,19 +489,7 @@ class NewGenome(QtWidgets.QMainWindow):
             self.progressBar.setValue(0)
             self.first = False
         except Exception as e:
-            logger.critical("Error in clear_all() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in clear_all() in New Genome.", e)
 
     #reset the whole form
     def reset(self):
@@ -780,58 +503,8 @@ class NewGenome(QtWidgets.QMainWindow):
             self.output_browser.setText("Waiting for program initiation...")
             self.file = ""
         except Exception as e:
-            logger.critical("Error in reset() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
-    #menu button for launching NCBI web page
-    def open_ncbi_web_page(self):
-        try:
-            webbrowser.open('https://www.ncbi.nlm.nih.gov/', new=2)
-        except Exception as e:
-            logger.critical("Error in open_ncbi_web_page() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
-    #menu button for launching github repo
-    def visit_repo_func(self):
-        try:
-            webbrowser.open('https://github.com/TrinhLab/CASPERapp')
-        except Exception as e:
-            logger.critical("Error in visit_repo_func() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
-
+            show_error("Error in reset() in New Genome.", e)
+    
     #event handler for user wanting to close the window
     def closeEvent(self, event):
         try:
@@ -861,7 +534,6 @@ class NewGenome(QtWidgets.QMainWindow):
                 else:
                     self.exit = False
                     event.accept()
-
             else:
                 self.process.kill()
                 self.clear_all()
@@ -881,19 +553,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 GlobalSettings.mainWindow.show()
                 event.accept()
         except Exception as e:
-            logger.critical("Error in closeEvent() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in closeEvent() in New Genome.", e)
 
     #event handler for user wanting to go to Main once jobs complete
     def continue_to_main(self):
@@ -918,11 +578,9 @@ class NewGenome(QtWidgets.QMainWindow):
                 msgBox.addButton(QtWidgets.QMessageBox.StandardButton.No)
                 msgBox.exec()
 
-
                 if (msgBox.result() == QtWidgets.QMessageBox.Yes):
                     self.exit = True
                     self.close()
-
             else:
                 self.process.kill()
                 self.clear_all()
@@ -943,19 +601,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 GlobalSettings.mainWindow.show()
                 self.hide()
         except Exception as e:
-            logger.critical("Error in continue_to_main() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in continue_to_main() in New Genome.", e)
 
     #event handler for user wanting to go to multi-targeting once jobs complete
     def continue_to_MT(self):
@@ -1007,19 +653,7 @@ class NewGenome(QtWidgets.QMainWindow):
                 GlobalSettings.MTWin.show()
                 self.hide()
         except Exception as e:
-            logger.critical("Error in continue_to_MT() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in continue_to_MT() in New Genome.", e)
 
     #event handler for user wanting to go to population analysis once jobs complete
     def continue_to_pop(self):
@@ -1068,16 +702,4 @@ class NewGenome(QtWidgets.QMainWindow):
                 GlobalSettings.pop_Analysis.show()
                 self.hide()
         except Exception as e:
-            logger.critical("Error in continue_to_pop() in New Genome.")
-            logger.critical(e)
-            logger.critical(traceback.format_exc())
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet("font: " + str(self.fontSize) + "pt 'Arial'")
-            msgBox.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msgBox.setWindowTitle("Fatal Error")
-            msgBox.setText("Fatal Error:\n"+str(e)+ "\n\nFor more information on this error, look at CASPER.log in the application folder.")
-            msgBox.addButton(QtWidgets.QMessageBox.StandardButton.Close)
-            msgBox.exec()
-
-
-            exit(-1)
+            show_error("Error in continue_to_pop() in New Genome.", e)

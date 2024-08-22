@@ -3,7 +3,7 @@
     To interpret these run the class instance at the bottom of the file with the desired base64 representation into the
     decompress_tuple function."""
 from PyQt5 import QtWidgets, Qt, uic, QtCore, QtGui
-import GlobalSettings
+import models.GlobalSettings as GlobalSettings
 
 # Takes a QtTableWidget and returns a list of headers
 def get_table_headers(table):
