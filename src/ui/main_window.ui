@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>901</width>
+    <height>788</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Arial</family>
+    <pointsize>12</pointsize>
+    <weight>50</weight>
+    <italic>false</italic>
+    <bold>false</bold>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>CASPER</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="font">
+    <font>
+     <family>Arial</family>
+     <pointsize>12</pointsize>
+     <weight>50</weight>
+     <italic>false</italic>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>801</width>
+      <height>541</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Tab 1</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>Tab 2</string>
+     </attribute>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>901</width>
+     <height>37</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+     <pointsize>8</pointsize>
+     <weight>50</weight>
+     <italic>false</italic>
+     <bold>false</bold>
+    </font>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionExit"/>
+    <addaction name="actChangeDatabaseDirectory"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actOpenGenomeBrowser"/>
+   </widget>
+   <widget class="QMenu" name="menuLinks">
+    <property name="title">
+     <string>Links</string>
+    </property>
+    <addaction name="actGoToNCBI"/>
+    <addaction name="actionGoToNCBIBLAST"/>
+    <addaction name="separator"/>
+    <addaction name="actionGoToCASPERRepository"/>
+   </widget>
+   <widget class="QMenu" name="menuCASPER">
+    <property name="title">
+     <string>CASPER</string>
+    </property>
+    <addaction name="actionAbout_CASPER"/>
+   </widget>
+   <addaction name="menuCASPER"/>
+   <addaction name="menuFile"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuLinks"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <action name="actionNew">
+   <property name="text">
+    <string>New</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+  </action>
+  <action name="actionOpen_Recent">
+   <property name="text">
+    <string>Open Recent...</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Exit</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="text">
+    <string>Undo</string>
+   </property>
+  </action>
+  <action name="actionCut">
+   <property name="text">
+    <string>Cut</string>
+   </property>
+  </action>
+  <action name="actionCopy">
+   <property name="text">
+    <string>Copy</string>
+   </property>
+  </action>
+  <action name="actionPaste">
+   <property name="text">
+    <string>Paste</string>
+   </property>
+  </action>
+  <action name="actionCut_Rev_Com">
+   <property name="text">
+    <string>Cut Rev-Com</string>
+   </property>
+  </action>
+  <action name="actionCopy_Rev_Com">
+   <property name="text">
+    <string>Copy Rev-Com</string>
+   </property>
+  </action>
+  <action name="actionPaste_Rev_Com">
+   <property name="text">
+    <string>Paste Rev-Com</string>
+   </property>
+  </action>
+  <action name="actionUpload_New_Genome">
+   <property name="text">
+    <string>Analyze New Genome</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
+   </property>
+  </action>
+  <action name="actionUpload_New_Endonuclease">
+   <property name="text">
+    <string>Define New Endonuclease</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
+   </property>
+  </action>
+  <action name="actOpenGenomeBrowser">
+   <property name="text">
+    <string>Open Genome Browser</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
+   </property>
+  </action>
+  <action name="action">
+   <property name="text">
+    <string>Change Database Directory</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
+   </property>
+  </action>
+  <action name="actOpenNCBIBLAST">
+   <property name="text">
+    <string>NCBI BLAST</string>
+   </property>
+  </action>
+  <action name="actionExcel_csv">
+   <property name="text">
+    <string>Excel (.csv)</string>
+   </property>
+  </action>
+  <action name="actionIDT_Order">
+   <property name="text">
+    <string>IDT Order</string>
+   </property>
+  </action>
+  <action name="actionMultitargeting">
+   <property name="text">
+    <string>Multitargeting Analysis</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
+   </property>
+  </action>
+  <action name="actionPopulation_Analysis">
+   <property name="text">
+    <string>Population Analysis</string>
+   </property>
+  </action>
+  <action name="actionComplete_Target_Analysis">
+   <property name="text">
+    <string>Complete Target Analysis</string>
+   </property>
+  </action>
+  <action name="actGoToNCBI">
+   <property name="text">
+    <string>Go to NCBI</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
+   </property>
+  </action>
+  <action name="actionCasper2">
+   <property name="text">
+    <string>CASPER Online</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
+   </property>
+  </action>
+  <action name="actionCo_Targeting">
+   <property name="text">
+    <string>Co-Targeting</string>
+   </property>
+  </action>
+  <action name="actOpenRepository">
+   <property name="text">
+    <string>Visit Repository</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
+   </property>
+  </action>
+  <action name="actionNew_2">
+   <property name="text">
+    <string>New</string>
+   </property>
+  </action>
+  <action name="actiontesting">
+   <property name="text">
+    <string>testing</string>
+   </property>
+  </action>
+  <action name="actionAbout_CASPER">
+   <property name="text">
+    <string>About CASPER</string>
+   </property>
+  </action>
+  <action name="actChangeDatabaseDirectory">
+   <property name="text">
+    <string>Change Database Directory</string>
+   </property>
+  </action>
+  <action name="actionGoToCASPERRepository">
+   <property name="text">
+    <string>Go to CASPER repository</string>
+   </property>
+  </action>
+  <action name="actionGoToNCBIBLAST">
+   <property name="text">
+    <string>Go to NCBI BLAST</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -26,3 +26,7 @@ CASPERinfo
 
 # Operating system specific files
 .DS_Store
+
+# PyInstaller files
+dist/
+build/
