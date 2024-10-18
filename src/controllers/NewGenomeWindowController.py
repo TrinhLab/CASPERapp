@@ -18,6 +18,8 @@ class NewGenomeWindowController:
         except Exception as e:
             show_error(self.settings, "Error initializing NewGenomeWindowController", str(e))
 
+        # self.model.cspr_files_created.connect(self._on_cspr_files_created)
+
     def _initialize_process(self):
         self.job_process = QtCore.QProcess()
         self.job_process.setProcessChannelMode(QtCore.QProcess.ProcessChannelMode.MergedChannels)
@@ -222,3 +224,6 @@ class NewGenomeWindowController:
     # def open_ncbi_tool(self):
     #     ncbi_tool_window = self.settings.get_ncbi_tool()
     #     position_window(ncbi_tool_window, self.view)
+
+    # def _on_cspr_files_created(self):
+        # self.settings.update_db_state()

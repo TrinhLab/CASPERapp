@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QPlain
 from PyQt6 import uic, QtWidgets
 from utils.ui import show_error
 from typing import Optional
-
+import os
 class HomeWindowView(QWidget):
     def __init__(self, global_settings):
         super().__init__()
@@ -11,7 +11,7 @@ class HomeWindowView(QWidget):
 
     def _init_ui(self) -> None:
         try:
-            uic.loadUi(self.global_settings.get_ui_dir() + "/home_window_copy.ui", self)
+            uic.loadUi(os.path.join(self.global_settings.get_ui_dir_path(), "home_window_copy.ui"), self)
             self._init_ui_elements()
         except Exception as e:
             self._handle_init_error(e)

@@ -345,7 +345,7 @@
                 </widget>
                </item>
                <item row="1" column="2">
-                <widget class="QLineEdit" name="ledFiveLength">
+                <widget class="QLineEdit" name="ledFivePrimeLength">
                  <property name="placeholderText">
                   <string>Ex. 4</string>
                  </property>
@@ -368,7 +368,7 @@
                 </widget>
                </item>
                <item row="2" column="2">
-                <widget class="QLineEdit" name="ledThreeLength">
+                <widget class="QLineEdit" name="ledThreePrimeLength">
                  <property name="placeholderText">
                   <string>Ex. 0</string>
                  </property>
@@ -465,8 +465,8 @@
   <tabstop>ledAbbreviation</tabstop>
   <tabstop>ledCRISPRType</tabstop>
   <tabstop>ledSeedLength</tabstop>
-  <tabstop>ledFiveLength</tabstop>
-  <tabstop>ledThreeLength</tabstop>
+  <tabstop>ledFivePrimeLength</tabstop>
+  <tabstop>ledThreePrimeLength</tabstop>
   <tabstop>ledPAMSequence</tabstop>
   <tabstop>rbtnThreePAM</tabstop>
   <tabstop>rbtnFivePAM</tabstop>

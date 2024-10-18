@@ -2,9 +2,12 @@ import os
 import platform
 from utils.sequence_utils import SeqTranslate
 from collections import OrderedDict
+from PyQt6.QtCore import QObject, pyqtSignal
 
-class NewGenomeWindowModel:
+class NewGenomeWindowModel(QObject):
+
     def __init__(self, global_settings):
+        super().__init__()
         self.settings = global_settings
         self.logger = global_settings.get_logger()
         self.jobs = []
@@ -63,6 +66,9 @@ class NewGenomeWindowModel:
         return pam_field.split(',')[0] if ',' in pam_field else pam_field
 
     def add_job(self, organism_name, strain, organism_code, file_path, endonuclease, multithreading_checked, generate_repeats_checked):
+        # Ensure the database path exists before adding a job
+        self.settings.ensure_db_path_exists()
+
         # This method adds a new job to the queue and checks for duplicates
         
         # Get the endonuclease data from the endonucleases dictionary
@@ -98,6 +104,15 @@ class NewGenomeWindowModel:
         return False
 
     def create_arguments_command_for_job(self, organism_name, strain, organism_code, file_path, endonuclease_data, multithreading_checked, generate_repeats_checked):
+        db_path = self.settings.get_db_path()
+        
+        # Preserve trailing slash if present
+        if db_path.endswith(os.path.sep):
+            db_path = db_path.rstrip(os.path.sep) + os.path.sep
+        # Add trailing slash for Darwin (macOS) machines
+        elif platform.system() == 'Darwin':
+            db_path = db_path.rstrip('/') + '/'
+
         arguments = [
             endonuclease_data['name'],  # endo
             endonuclease_data['pam'],  # pam
@@ -108,11 +123,11 @@ class NewGenomeWindowModel:
             endonuclease_data['seed_length'],  # seed length
             endonuclease_data['three_prime_length'],  # three length
             organism_code,
-            f'{self.settings.get_db_path()}',
+            f'{db_path}',
             f'{self.settings.get_casper_info_path()}',
             f'{file_path}',
-            f'"{organism_name} {strain}"',
-            '"notes"',
+            f'{organism_name} {strain}',
+            'notes',
             f'"DATA:{endonuclease_data["on_target_data"]}"'  # on target matrix
         ]
         return arguments
@@ -124,11 +139,11 @@ class NewGenomeWindowModel:
 
     def get_job_command(self):
         if platform.system() == 'Windows':
-            program = f'"{os.path.join(self.settings.get_SeqFinder_dir(), "Casper_Seq_Finder_Win.exe")}" '
+            program = f'"{os.path.join(self.settings.get_SeqFinder_dir_path(), "Casper_Seq_Finder_Win.exe")}" '
         elif platform.system() == 'Linux':
-            program = f'"{os.path.join(self.settings.get_SeqFinder_dir(), "Casper_Seq_Finder_Lin")}" '
+            program = f'"{os.path.join(self.settings.get_SeqFinder_dir_path(), "Casper_Seq_Finder_Lin")}" '
         else:
-            program = f'{os.path.join(self.settings.get_SeqFinder_dir(), "Casper_Seq_Finder_Mac")}'
+            program = f'{os.path.join(self.settings.get_SeqFinder_dir_path(), "Casper_Seq_Finder_Mac")}'
         return program 
 
     def update_total_progress(self):
@@ -165,4 +180,3 @@ class NewGenomeWindowModel:
 
     def get_endonuclease_info(self, endonuclease):
         return self.endonucleases.get(endonuclease, (None, None, None, None, None))
-

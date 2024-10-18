@@ -9,14 +9,13 @@ class NewGenomeWindowView(QtWidgets.QMainWindow):
         self.global_settings = global_settings
         self.logger = global_settings.get_logger()
         self.check_mark = "✓" 
-        self.spinner_movie = QtGui.QMovie(os.path.join(self.global_settings.get_assets_dir(), "throbber.gif"))
+        self.spinner_movie = QtGui.QMovie(os.path.join(self.global_settings.get_ui_dir_path(), "throbber.gif"))
         self.spinner_movie.setScaledSize(QtCore.QSize(20, 20)) 
 
         self._init_ui()
 
     def _init_ui(self):
-        uic.loadUi(os.path.join(self.global_settings.get_ui_dir(), 'new_genome_window.ui'), self)
-        self.setWindowIcon(QtGui.QIcon(os.path.join(self.global_settings.get_assets_dir(), "cas9image.ico")))
+        uic.loadUi(os.path.join(self.global_settings.get_ui_dir_path(), 'new_genome_window.ui'), self)
         # self.set_styles()
 
         self._init_ui_components()

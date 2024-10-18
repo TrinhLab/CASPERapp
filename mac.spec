@@ -1,35 +1,34 @@
 # -*- mode: python ; coding: utf-8 -*-
-import sys
-sys.setrecursionlimit(5000)
 block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['/Users/ddooley/bioinformatics_packages/individual_packages/crispr_tools/CASPERapp'],
+             pathex=[],
              datas=[
 				('OffTargetFolder', 'OffTargetFolder'),
 				('SeqFinderFolder', 'SeqFinderFolder'),
-				('*.ui','.'),
+                ('controllers', 'controllers'),
+                ('models', 'models'),
+                ('utils', 'utils'),
+                ('views', 'views'),
+				('ui', 'ui'),
 				('CASPERinfo', '.'),
-				('CASPER-logo.jpg', '.'),
-				('CASPER_icon.icns', '.'),
+				('assets', 'assets'),
 				('genomeBrowserTemplate.html', '.'),
-                ('/Users/ddooley/venvs/casper_env/lib/python3.8/site-packages/azimuth','azimuth')
+                ('logs', 'logs')
 			 ],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
-             excludes=[
-				 'cryptography',
-				 'Crypto',
-                 'tkinter'
-			 ],
+             excludes=[],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
+
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
+
 exe = EXE(pyz,
           a.scripts,
           [],
@@ -39,7 +38,13 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=False)
+          console=False,
+          disable_windowed_traceback=False,
+          target_arch=None,
+          codesign_identity=None,
+          entitlements_file=None,
+          icon='assets/CASPER_icon.icns')
+          
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
@@ -49,7 +54,8 @@ coll = COLLECT(exe,
                upx_exclude=[],
                name='CASPERapp')
 
-app = BUNDLE(coll, icon='CASPER_icon.icns',
+app = BUNDLE(coll, 
              name='CASPERapp.app',
+             icon='assets/CASPER_icon.icns',
              version='2.0.1',
              bundle_identifier=None)

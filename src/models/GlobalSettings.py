@@ -2,85 +2,66 @@ import os
 import logging
 import sys
 import platform
-from functools import cached_property, lru_cache
-import yaml
-from collections import OrderedDict
-from dotenv import load_dotenv, set_key
-from controllers.NCBIRenameWindowController import NCBIRenameWindowController
-from PyQt6.QtCore import QSettings, QObject, QEvent, Qt
+from functools import lru_cache
+import importlib
+from PyQt6.QtCore import QSettings, QObject, pyqtSignal
 from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtWidgets import QApplication
-import time
-import importlib
 
-def represent_ordereddict(dumper, data):
-    return dumper.represent_mapping('tag:yaml.org,2002:map', data.items())
+from models.DatabaseManager import DatabaseManager
+from models.ConfigManager import ConfigManager
 
-yaml.add_representer(OrderedDict, represent_ordereddict)
+class GlobalSettings(QObject):
+    db_state_updated = pyqtSignal(bool, str, list)  # Combined signal
+    first_time_startup = pyqtSignal()  # New signal
 
-class GlobalSettings:
-    def __init__(self, application_directory):
-        start_time = time.time()
+    def __init__(self, app_dir_path):
+        super().__init__()
         
-        self.app_dir = application_directory
-        self.src_dir = os.path.join(self.app_dir, 'src')
-        self.config_dir = os.path.join(self.app_dir, 'config')
-        self.env_path = os.path.join(self.app_dir, '.env')
-        self._load_env()
-        self.config = self._initialize_config()  # Initialize config before using it
+        self.app_dir_path = app_dir_path
         
-        # Set up logging first
         self.logger = self._setup_logging()
         
-        self.CSPR_DB = self.load_database_path()
-        self.algorithms = self.config.get('algorithms', ["Azimuth 2.0"])
-        self.ui_dir = os.path.join(self.src_dir, self.config['paths']['ui'])
-        self.controllers_dir = os.path.join(self.src_dir, self.config['paths']['controllers'])
-        self.assets_dir = os.path.join(self.app_dir, self.config['paths']['assets'])
-        self.models_dir = os.path.join(self.src_dir, 'models')
-        self.views_dir = os.path.join(self.src_dir, 'views')
-        self.utils_dir = os.path.join(self.src_dir, 'utils')
-        self.SeqFinder_dir = os.path.join(self.src_dir, 'SeqFinder')
-        self.casper_info_path = os.path.join(self.config_dir, 'CASPERinfo')
+        self.config_manager = ConfigManager(app_dir_path=self.app_dir_path, logger=self.logger)
+        self.config_manager.load_env()
+        
+        self.is_first_time_startup = self.config_manager.get_env_value('FIRST_TIME_START', 'TRUE').upper() == 'TRUE'
+        
+        self._initialize_directories()  # Add this line
+        
+        self.db_manager = DatabaseManager(self.logger, self.config_manager)
+        self.db_manager.db_state_updated.connect(self._on_db_state_updated)
+        
+        self.CSPR_DB = self.db_manager.get_db_path()
+        self.algorithms = self.config_manager.get_config_value('algorithms', ["Azimuth 2.0"])
 
         self.settings = QSettings("TrinhLab-UTK", "CASPER")
-
-        self.logger.info(f"Initialized CSPR_DB: {self.CSPR_DB}")
-
-        self.update_env_file()
-
         self.theme = self.settings.value("theme", "light")
 
         self.light_palette = None
         self.dark_palette = None
         self.initialize_palettes()
 
-        self.save_config()
+        self.main_window = None 
 
-        end_time = time.time()
-        initialization_time = end_time - start_time
-        self.logger.info(f"GlobalSettings initialization time: {initialization_time:.4f} seconds")
-
-        self.main_window = None  # Initialize as None
-
-    def _load_env(self):
-        if not os.path.exists(self.env_path):
-            self._create_default_env()
-        load_dotenv(self.env_path)
-
-    def _create_default_env(self):
-        with open(self.env_path, 'w') as f:
-            f.write(f'APP_DIR="{self.app_dir}"\n')
-            f.write('CSPR_DB=""\n')  # Empty string, but with quotes
-            f.write('LOG_LEVEL=DEBUG\n')
+    def _initialize_directories(self):
+        self.src_dir_path = os.path.join(self.app_dir_path, 'src')
+        self.ui_dir_path = os.path.join(self.src_dir_path, self.config_manager.get_config_value('paths.ui'))
+        self.controllers_dir_path = os.path.join(self.src_dir_path, self.config_manager.get_config_value('paths.controllers'))
+        self.assets_dir_path = os.path.join(self.app_dir_path, self.config_manager.get_config_value('paths.assets'))
+        self.models_dir_path = os.path.join(self.src_dir_path, 'models')
+        self.views_dir_path = os.path.join(self.src_dir_path, 'views')
+        self.utils_dir_path = os.path.join(self.src_dir_path, 'utils')
+        self.SeqFinder_dir_path = os.path.join(self.src_dir_path, 'SeqFinder')
+        self.casper_info_path = os.path.join(self.config_manager.config_dir_path, 'CASPERinfo')
 
     def _setup_logging(self):
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
         
-        log_dir = os.path.join(self.app_dir, 'logs')
-        os.makedirs(log_dir, exist_ok=True)
-        log_file_path = os.path.join(log_dir, 'app.log')
+        log_dir_path = os.path.join(self.app_dir_path, 'logs')
+        os.makedirs(log_dir_path, exist_ok=True)
+        log_file_path = os.path.join(log_dir_path, 'app.log')
         
         fh = logging.FileHandler(log_file_path, mode='w')
         fh_formatter = logging.Formatter('%(asctime)s %(levelname)s %(lineno)d:%(filename)s(%(process)d) - %(message)s')
@@ -96,88 +77,47 @@ class GlobalSettings:
 
         return logger
 
-    def load_database_path(self):
-        """Load the database path from .env file."""
-        db_path = os.getenv('CSPR_DB', '')
-        # Remove both single and double quotes if present
-        db_path = db_path.strip("'\"")
-        if db_path and self.validate_db_path(db_path):
-            return db_path
-        return ''
+    def get_db_path(self):
+        return self.db_manager.get_db_path()
 
     def validate_db_path(self, path):
-        """Validate that the given path exists and contains CSPR files."""
-        self.logger.debug(f"Validating DB path: {path}")
-        if not os.path.isdir(path):
-            self.logger.debug(f"Path is not a directory: {path}")
-            return False
-        has_cspr_files = any(file.endswith(".cspr") for file in os.listdir(path))
-        self.logger.debug(f"Path {path} contains CSPR files: {has_cspr_files}")
-        return has_cspr_files
+        return self.db_manager.validate_db_path(path)
 
-    def save_database_path(self, path):
-        """Save the database path to .env file."""
-        if self.validate_db_path(path):
-            self._write_to_env('CSPR_DB', self.adjust_path_for_os(path))
-            self.CSPR_DB = self.adjust_path_for_os(path)
-            print(f"Saved database path: {self.CSPR_DB}")
-        else:
-            print(f"Invalid database path: {path}")
+    def save_db_path(self, path):
+        return self.db_manager.save_db_path(path)
 
-    def _write_to_env(self, key, value):
-        """Write a key-value pair to the .env file, ensuring proper quoting."""
-        with open(self.env_path, 'r') as f:
-            lines = f.readlines()
+    def _on_db_state_updated(self, is_valid, message, cspr_files):
+        self.db_state_updated.emit(is_valid, message, cspr_files)
 
-        with open(self.env_path, 'w') as f:
-            for line in lines:
-                if line.startswith(f'{key}='):
-                    if key == 'CSPR_DB' and platform.system() == "Darwin":
-                        # Add a trailing slash if it's not already there
-                        value = value.rstrip('/') + '/'
-                    f.write(f'{key}="{value}"\n')  # Always use double quotes
-                else:
-                    f.write(line)
+    def ensure_db_path_exists(self):
+        self.db_manager.ensure_db_path_exists()
 
-    def ensure_correct_env_format(self):
-        """Ensure the .env file has the correct format for CSPR_DB."""
-        with open(self.env_path, 'r') as f:
-            lines = f.readlines()
+    def adjust_path_for_os(self, path):
+        return self.db_manager.adjust_path_for_os(path)
 
-        with open(self.env_path, 'w') as f:
-            for line in lines:
-                if line.startswith('CSPR_DB='):
-                    value = line.split('=', 1)[1].strip().strip("'\"")
-                    f.write(f'CSPR_DB="{value}"\n')
-                else:
-                    f.write(line)
-
-    def get_app_dir(self):
-        return self.app_dir
+    def get_app_dir_path(self):
+        return self.app_dir_path
     
-    def get_src_dir(self):
-        return self.src_dir
+    def get_src_dir_path(self):
+        return self.src_dir_path
     
-    def get_ui_dir(self):
-        return self.ui_dir
+    def get_ui_dir_path(self):
+        return self.ui_dir_path
     
-    def get_assets_dir(self):
-        return self.assets_dir
+    def get_assets_dir_path(self):
+        return self.assets_dir_path
     
-    def get_controllers_dir(self):
-        return self.controllers_dir
+    def get_controllers_dir_path(self):
+        return self.controllers_dir_path
 
-    def get_SeqFinder_dir(self):
-        return self.SeqFinder_dir
+    def get_SeqFinder_dir_path(self):
+        return self.SeqFinder_dir_path
 
     def get_logger(self):
         return self.logger
     
     def get_casper_info_path(self):
         return self.casper_info_path
-    
-    def get_db_path(self):
-        return self.adjust_path_for_os(self.CSPR_DB)
     
     def get_theme(self):
         return self.theme
@@ -193,165 +133,6 @@ class GlobalSettings:
             app.setPalette(self.dark_palette)
         else:
             app.setPalette(self.light_palette)
-
-    @cached_property
-    def main_window(self):
-        from controllers.MainWindowController import MainWindowController
-        if not hasattr(self, '_main_window'):
-            self._main_window = MainWindowController(self)
-        return self._main_window
-    
-    @cached_property
-    def home_window(self):
-        from controllers.HomeWindowController import HomeWindowController
-        if not hasattr(self, '_home_window'):
-            self._home_window = HomeWindowController(self)
-        return self._home_window
-
-    # @cached_property
-    # def startup_window(self):
-    #     from views.StartupWindowView_old import StartupWindowView
-    #     from controllers.StartupWindowController import StartupWindowController
-    #     if not hasattr(self, '_startup_window'):
-    #         ui = StartupWindowView(self)
-    #         self._startup_window = StartupWindowController(ui, self)
-    #     return self._startup_window
-
-    @cached_property
-    def multitargeting_window(self):
-        from controllers.MultitargetingWindowController import MultitargetingWindowController
-        if not hasattr(self, '_multitargeting_window'):
-            self._multitargeting_window = MultitargetingWindowController(self)
-        return self._multitargeting_window
-
-    @cached_property
-    def population_analysis_window(self):
-        from controllers.PopulationAnalysisWindowController import PopulationAnalysisWindowController
-        if not hasattr(self, '_population_analysis_window'):
-            self._population_analysis_window = PopulationAnalysisWindowController(self)
-        return self._population_analysis_window
-    
-    @cached_property
-    def new_endonuclease_window(self):
-        from controllers.NewEndonucleaseController import NewEndonucleaseController
-        if not hasattr(self, '_new_endonuclease_window'):
-            self._new_endonuclease_window = NewEndonucleaseController(self)
-        return self._new_endonuclease_window
-    
-    @cached_property
-    def ncbi_window(self):
-        from controllers.NCBIWindowController import NCBIWindowController
-        if not hasattr(self, '_ncbi_window'):
-            self._ncbi_window = NCBIWindowController(self)
-        return self._ncbi_window
-
-    @cached_property
-    def ncbi_rename_window(self):
-        if not hasattr(self, '_ncbi_rename_window'):
-            self._ncbi_rename_window = NCBIRenameWindowController(self, [], None)
-        return self._ncbi_rename_window
-
-    def get_default_database_path(self):
-        default_path = os.path.join(self.app_dir, 'CSPR_DB')
-        return self.adjust_path_for_os(default_path)
-
-    def set_db_path(self, directory_path):
-        self.CSPR_DB = self.adjust_path_for_os(directory_path)
-        self.save_database_path(self.CSPR_DB)
-
-    def adjust_path_for_os(self, path):
-        """Adjust the file path based on the operating system."""
-        if platform.system() == "Windows":
-            return path.replace("/", "\\")
-        else:
-            path = path.replace("\\", "/")
-            if not path.endswith("/"):
-                path += "/"
-        return path
-
-    def initialize_app_directories(self):
-        """Create required directories if they don't exist."""
-        required_dirs = ["FNA", "GBFF"]
-        for directory in required_dirs:
-            path = os.path.join(self.CSPR_DB, directory)
-            if not os.path.exists(path):
-                os.makedirs(path, exist_ok=True)
-                self.logger.debug(f"Directory created: {path}")
-
-    def _initialize_config(self):
-        config_path = os.path.join(self.config_dir, 'config.yml')
-        if not os.path.exists(config_path):
-            print(f"Config file not found. Creating default config at {config_path}")
-            self._create_default_config(config_path)
-        return self._load_config(config_path)
-
-    def _create_default_config(self, config_path):
-        config = OrderedDict([
-            ('paths', OrderedDict([
-                ('ui', 'ui'),
-                ('controllers', 'controllers'),
-                ('assets', 'assets'),
-                ('casper_info', 'CASPERinfo')
-            ])),
-            ('algorithms', ['Azimuth 2.0'])
-        ])
-        
-        os.makedirs(os.path.dirname(config_path), exist_ok=True)
-        with open(config_path, 'w') as f:
-            yaml.dump(config, f, default_flow_style=False)
-        print(f"Default config created at {config_path}")
-
-    def _load_config(self, config_path):
-        try:
-            with open(config_path, 'r') as f:
-                return yaml.safe_load(f)
-        except Exception as e:
-            print(f"Error loading config from {config_path}: {e}")
-            return None
-
-    def save_config(self):
-        config_path = os.path.join(self.config_dir, 'config.yml')
-        config = OrderedDict([
-            ('paths', OrderedDict([
-                ('ui', self.config['paths']['ui']),
-                ('controllers', self.config['paths']['controllers']),
-                ('assets', self.config['paths']['assets']),
-                ('casper_info', self.config['paths']['casper_info'])
-            ])),
-            ('algorithms', self.algorithms)
-        ])
-        
-        with open(config_path, 'w') as f:
-            yaml.dump({'paths': config['paths']}, f, default_flow_style=False)
-            f.write("\n")  # Add an extra newline here
-            yaml.dump({'algorithms': config['algorithms']}, f, default_flow_style=False)
-        print(f"Config saved to {config_path}")
-
-    def save_window_position(self, window_name, position):
-        self.settings.setValue(f"{window_name}_pos", position)
-
-    def load_window_position(self, window_name):
-        return self.settings.value(f"{window_name}_pos")
-
-    def save_window_size(self, window_name, size):
-        self.settings.setValue(f"{window_name}_size", size)
-
-    def load_window_size(self, window_name):
-        return self.settings.value(f"{window_name}_size")
-
-    def update_env_file(self):
-        """Update the .env file to ensure correct formatting."""
-        with open(self.env_path, 'r') as f:
-            lines = f.readlines()
-
-        with open(self.env_path, 'w') as f:
-            for line in lines:
-                if line.startswith('CSPR_DB='):
-                    value = line.split('=', 1)[1].strip().strip("'\"")
-                    f.write(f'CSPR_DB="{value}"\n')
-                else:
-                    f.write(line)
-
 
     def initialize_palettes(self):
         self.light_palette = QPalette()  # Use default Qt light palette
@@ -372,27 +153,26 @@ class GlobalSettings:
         self.dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
         self.dark_palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
 
+    def save_config(self):
+        self.config_manager.save_config()
 
-    @cached_property
-    def new_endonuclease_controller(self):
-        from controllers.NewEndonucleaseController import NewEndonucleaseController
-        from views.NewEndonucleaseView import NewEndonucleaseView
-        from models.NewEndonucleaseModel import NewEndonucleaseModel
-        
-        view = NewEndonucleaseView(self)
-        model = NewEndonucleaseModel(self)
-        return NewEndonucleaseController(self, view, model)
+    def get_config_value(self, key, default=None):
+        return self.config_manager.get_config_value(key, default)
 
-    @cached_property
-    def population_analysis_window(self):
-        from controllers.PopulationAnalysisWindowController import PopulationAnalysisWindowController
-        if not hasattr(self, '_population_analysis_window') or self._population_analysis_window is None:
-            self._population_analysis_window = PopulationAnalysisWindowController(self)
-        return self._population_analysis_window
+    def set_config_value(self, key, value):
+        self.config_manager.set_config_value(key, value)
 
-    def _initialize_new_genome_window(self):
-        from controllers.NewGenomeWindowController import NewGenomeWindowController
-        return NewGenomeWindowController(self)
+    def save_window_position(self, window_name, position):
+        self.settings.setValue(f"{window_name}_pos", position)
+
+    def load_window_position(self, window_name):
+        return self.settings.value(f"{window_name}_pos")
+
+    def save_window_size(self, window_name, size):
+        self.settings.setValue(f"{window_name}_size", size)
+
+    def load_window_size(self, window_name):
+        return self.settings.value(f"{window_name}_size")
 
     @lru_cache(maxsize=None)
     def _get_window_class(self, window_name):
@@ -444,6 +224,25 @@ class GlobalSettings:
 
     def set_main_window(self, main_window):
         self.main_window = main_window
+
+    def update_db_state(self):
+        self.db_manager.check_db_state()
+
+    def _on_env_file_created(self):
+        self.logger.info("GlobalSettings: _on_env_file_created")
+        self.is_first_time_startup = True
+        self.first_time_startup.emit()
+
+    def set_first_time_startup_completed(self):
+        self.logger.info("First time startup completed")
+        self.config_manager.set_env_value('FIRST_TIME_START', 'FALSE')
+        self.is_first_time_startup = False
+
+    def check_and_emit_first_time_startup(self):
+        if self.is_first_time_startup:
+            self.logger.info("Emitting first_time_startup signal")
+            self.first_time_startup.emit()
+            # We no longer set FIRST_TIME_START to FALSE here
 
 # Global instance
 global_settings = None

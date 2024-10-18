@@ -97,7 +97,6 @@ class HomeWindowController:
             new_genome_controller = self.global_settings.get_new_genome_window()
             self.global_settings.main_window.open_new_tab("New Genome", new_genome_controller)
         except Exception as e:
-            self.logger.error(f"Error in open_new_genome_module: {str(e)}", exc_info=True)
             show_error(self.global_settings, "Error in open_new_genome_widget() in Home", str(e))
 
     def open_new_endonuclease_module(self):

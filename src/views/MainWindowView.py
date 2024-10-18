@@ -82,9 +82,8 @@ class MainWindowView(QMainWindow):
             self._handle_init_error(e)
 
     def _load_ui_file(self) -> None:
-        ui_file = os.path.join(self.global_settings.get_ui_dir(), "main_window.ui")
+        ui_file = os.path.join(self.global_settings.get_ui_dir_path(), "main_window.ui")
         uic.loadUi(ui_file, self)
-        self.logger.info(f"Loaded UI file: {ui_file}")
 
     def _init_window_properties(self) -> None:
         """
@@ -284,7 +283,7 @@ class MainWindowView(QMainWindow):
 
     def update_theme_icon(self) -> None:
         icon_name = "dark_mode.png" if self.global_settings.get_theme() == "dark" else "light_mode.png"
-        icon_path = os.path.join(self.global_settings.get_assets_dir(), icon_name)
+        icon_path = os.path.join(self.global_settings.get_assets_dir_path(), icon_name)
         icon = QIcon(icon_path)
         self.theme_toggle_button.setIcon(icon)
         self.theme_toggle_button.setIconSize(QtCore.QSize(16, 16)) 

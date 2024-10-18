@@ -536,7 +536,7 @@ search parameters</string>
        <string notr="true"/>
       </property>
       <property name="text">
-       <string>Define New Genome</string>
+       <string>Analyze New Genome</string>
       </property>
       <property name="scaledContents">
        <bool>false</bool>

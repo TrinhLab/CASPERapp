@@ -1,20 +1,26 @@
 from PyQt6 import QtWidgets, QtGui, QtCore, uic
 from typing import Optional
+from utils.ui import show_error
 import os
 
 class StartupWindowView(QtWidgets.QMainWindow):
+    db_path_text_changed = QtCore.pyqtSignal(str)
+    open_new_genome_requested = QtCore.pyqtSignal()
+
     def __init__(self, global_settings):
         super().__init__()
-        self.global_settings = global_settings
-        self.logger = global_settings.get_logger()
+        self.settings = global_settings
+        self.logger = self.settings.get_logger()
 
         self._init_ui()
 
     def _init_ui(self):
-        uic.loadUi(os.path.join(self.global_settings.get_ui_dir(), 'startup_window.ui'), self)
-
-        self._init_ui_components()
-        self.setMinimumSize(self.sizeHint())
+        try:
+            uic.loadUi(os.path.join(self.settings.get_ui_dir_path(), 'startup_window.ui'), self)
+            self._init_ui_components()
+        except Exception as e:
+            show_error(self.settings, "Error initializing StartupWindowView", str(e))
+            raise
 
     def _init_ui_components(self):
         self._init_boxlayvTop()
@@ -23,7 +29,6 @@ class StartupWindowView(QtWidgets.QMainWindow):
 
     def _init_boxlayvTop(self):
         self.label_logo = self._find_widget('lblLogo', QtWidgets.QLabel)
-
         self._set_startup_image()
 
     def _init_boxlayvMiddle(self):
@@ -33,8 +38,11 @@ class StartupWindowView(QtWidgets.QMainWindow):
         self.label_db_status.setWordWrap(True) 
         self.boxlayvMiddle.addWidget(self.label_db_status)
 
+        self.line_edit_database_directory.textChanged.connect(self._on_db_path_text_changed)
+
     def _init_boxlayvBottom(self):
         self.push_button_go_to_home_or_new_genome = self._find_widget('pbtnGoToHomeOrNewGenome', QtWidgets.QPushButton)
+        self.push_button_go_to_home_or_new_genome.clicked.connect(self._on_go_to_home_or_new_genome_clicked)
 
     def _find_widget(self, name: str, widget_type: type) -> Optional[QtWidgets.QWidget]:
         widget = self.findChild(widget_type, name)
@@ -43,7 +51,7 @@ class StartupWindowView(QtWidgets.QMainWindow):
         return widget
 
     def _set_startup_image(self):
-        image_path = os.path.join(self.global_settings.get_assets_dir(), "startup_image.jpg")
+        image_path = os.path.join(self.settings.get_assets_dir_path(), "startup_image.jpg")
         if os.path.exists(image_path):
             pixmap = QtGui.QPixmap(image_path)
             self.label_logo.setPixmap(pixmap)
@@ -58,22 +66,20 @@ class StartupWindowView(QtWidgets.QMainWindow):
     def get_db_path(self):
         return self.line_edit_database_directory.text()
 
-    def set_valid_db_state(self):
-        self.logger.debug("Setting valid DB state")
-        self.label_db_status.setText("")
-        self.label_db_status.hide()
-        self.push_button_go_to_home_or_new_genome.setText("Go to Home")
-        self.push_button_go_to_home_or_new_genome.setEnabled(True)
-        self.adjustSize()
+    def _on_db_path_text_changed(self, new_path):
+        self.db_path_text_changed.emit(new_path)
 
-    def set_invalid_db_state(self):
-        self.logger.debug("Setting invalid DB state")
-        self.label_db_status.setText("You must select a directory with CSPR files. Define a new genome or change directory.")
-        self.label_db_status.show()
-        self.push_button_go_to_home_or_new_genome.setText("Define a New Genome")
+    def set_db_status(self, is_valid, message):
+        if is_valid:
+            self.label_db_status.hide()
+            self.push_button_go_to_home_or_new_genome.setText("Go to Home")
+        else:
+            self.label_db_status.setText(message)
+            self.label_db_status.show()
+            self.label_db_status.setStyleSheet("color: red;")
+            self.push_button_go_to_home_or_new_genome.setText("Define a New Genome")
         self.push_button_go_to_home_or_new_genome.setEnabled(True)
-        self.adjustSize()
 
-    def adjustSize(self):
-        super().adjustSize()
-        self.setFixedSize(self.sizeHint())
+    def _on_go_to_home_or_new_genome_clicked(self):
+        if self.push_button_go_to_home_or_new_genome.text() == "Define a New Genome":
+            self.open_new_genome_requested.emit()

@@ -6,7 +6,7 @@ from models.MainWindowModel import MainWindowModel
 from controllers.MultitargetingWindowController import MultitargetingWindowController
 from utils.ui import show_error, show_message, scale_ui, center_ui, position_window
 from utils.web import ncbi_page, repo_page, ncbi_blast_page 
-from PyQt6.QtCore import QObject
+from PyQt6.QtCore import QObject, Qt
 import qdarktheme
 
 class MainWindowController:
@@ -15,10 +15,15 @@ class MainWindowController:
         self.logger = global_settings.get_logger()
         self.tab_widgets = {}  # Store references to tab widgets
         self.startup_controller = None
+        self.is_first_time_startup = self.global_settings.is_first_time_startup
+
         try:
             self.view = MainWindowView(global_settings)
             self._setup_connections()
             self._init_ui()
+            
+            # Check and emit first_time_startup signal after initialization
+            self.global_settings.check_and_emit_first_time_startup()
         except Exception as e:
             show_error(self.global_settings, "Error initializing MainWindowController", str(e))
 
@@ -41,25 +46,39 @@ class MainWindowController:
             self.view.tab_widget.tab_closed.connect(self._on_tab_closed)
             self.view.tab_widget.tabCloseRequested.connect(self._close_tab)
 
+            self.global_settings.first_time_startup.connect(self._handle_first_time_startup)
+
         except Exception as e:
             show_error(self.global_settings, "Error setting up connections in MainWindowController", str(e))
 
     def _init_ui(self):
         try:
-            db_path = self.global_settings.get_db_path()
-            if db_path and self.global_settings.validate_db_path(db_path):
-                self.logger.info(f"Database path is set and valid: {db_path}")
-                self._open_home_tab()
-            else:
-                self.logger.info(f"Database path is not set or invalid: {db_path}")
+            if self.is_first_time_startup:
+                self.logger.info("First time startup detected in _init_ui. Opening startup tab.")
                 self._open_startup_tab()
+            else:
+                db_path = self.global_settings.get_db_path()
+                is_valid, message = self.global_settings.validate_db_path(db_path)
+                if db_path and is_valid:
+                    self.logger.info(f"Database path is set and valid: {db_path}")
+                    self._open_home_tab()
+                else:
+                    self.logger.info(f"Database path is not set or invalid: {db_path}. {message}")
+                    self._open_startup_tab()
         except Exception as e:
             show_error(self.global_settings, "Error initializing UI in MainWindowController", str(e))
+
+    def _handle_first_time_startup(self):
+        self.logger.info("First time startup signal received. Opening startup tab.")
+        self.is_first_time_startup = True
+        self._open_startup_tab()
 
     def _open_startup_tab(self):
         try:
             self.startup_controller = self.global_settings.get_startup_window()
             self.open_new_tab("Startup", self.startup_controller)
+            self.view.setFixedSize(750, 550)
+            self.view.setWindowFlags(self.view.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
         except Exception as e:
             show_error(self.global_settings, "Error opening startup tab", str(e))
 
@@ -221,3 +240,18 @@ class MainWindowController:
         except Exception as e:
             self.global_settings.logger.error(f"Error showing main window: {str(e)}", exc_info=True)
             show_error(self.global_settings, "Error showing main window", e)
+
+    def open_new_genome_tab(self):
+        tab_title = "New Genome"
+        existing_tab = self.find_tab_by_title(tab_title)
+        if existing_tab:
+            self.view.tab_widget.setCurrentWidget(existing_tab)
+        else:
+            new_genome_controller = self.global_settings.get_new_genome_window()
+            self.open_new_tab(tab_title, new_genome_controller)
+
+    def find_tab_by_title(self, title):
+        for i in range(self.view.tab_widget.count()):
+            if self.view.tab_widget.tabText(i) == title:
+                return self.view.tab_widget.widget(i)
+        return None
