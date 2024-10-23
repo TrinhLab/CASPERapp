@@ -70,6 +70,9 @@ class StartupWindowView(QtWidgets.QMainWindow):
         self.db_path_text_changed.emit(new_path)
 
     def set_db_status(self, is_valid, message):
+        if not hasattr(self, 'label_db_status'):
+            return  # Exit if the label doesn't exist anymore
+        
         if is_valid:
             self.label_db_status.hide()
             self.push_button_go_to_home_or_new_genome.setText("Go to Home")
@@ -77,9 +80,9 @@ class StartupWindowView(QtWidgets.QMainWindow):
             self.label_db_status.setText(message)
             self.label_db_status.show()
             self.label_db_status.setStyleSheet("color: red;")
-            self.push_button_go_to_home_or_new_genome.setText("Define a New Genome")
+            self.push_button_go_to_home_or_new_genome.setText("Analyze a New Genome")
         self.push_button_go_to_home_or_new_genome.setEnabled(True)
 
     def _on_go_to_home_or_new_genome_clicked(self):
-        if self.push_button_go_to_home_or_new_genome.text() == "Define a New Genome":
+        if self.push_button_go_to_home_or_new_genome.text() == "Analyze a New Genome":
             self.open_new_genome_requested.emit()

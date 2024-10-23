@@ -13,49 +13,36 @@ import pandas as pd
 class NCBIWindowController:
     def __init__(self, settings):
         self.settings = settings
-        self.model = NCBIWindowModel(settings)
-        self.view = NCBIWindowView(settings)
-        self.logger = settings.get_logger()
-        
-        self.initialize_ui()
-        self.setup_connections()
-        print("NCBIWindowController initialized")
+        try:
+            self.logger = self.settings.get_logger()
+            self.model = NCBIWindowModel(settings)
+            self.view = NCBIWindowView(settings)
+            
+            self._init_ui()
+            self.setup_connections()
+        except Exception as e:
+            show_error(self.settings, "Error initializing NCBIWindowController", str(e))
 
     def setup_connections(self):
         try:
-            print("Setting up connections")
-            if self.view.search_button:
-                self.view.search_button.clicked.connect(self.query_db)
-                print("Search button connected to query_db")
-            else:
-                print("Search button not found in view")
+            self.view.push_button_search.clicked.connect(self.search_ncbi)
+            self.view.push_button_download_files.clicked.connect(self.download_files_wrapper)
+            self.view.check_box_select_all_rows.clicked.connect(self.select_all_rows_in_table)
+            self.view.radio_button_collections_genbank.toggled.connect(self.is_checked_GenBank_radio_button)
 
-            if self.view.download_button:
-                self.view.download_button.clicked.connect(self.download_files_wrapper)
-            if self.view.all_rows:
-                self.view.all_rows.clicked.connect(self.select_all)
-            if self.view.back_button:
-                self.view.back_button.clicked.connect(self.go_back)
-            if self.view.genbank_checkbox:
-                self.view.genbank_checkbox.toggled.connect(self.check_genbank)
-
-            # Add a manual click for testing
-            QtCore.QTimer.singleShot(1000, self.test_search_button)
         except Exception as e:
             self.logger.error(f"Error setting up connections: {str(e)}", exc_info=True)
             show_error(self.settings, "Error setting up connections", str(e))
 
-    def initialize_ui(self):
-        self.view.ret_max_line_edit.setText("100")
-        self.view.progressBar.setValue(0)
+    def _init_ui(self):
+        # self.view.ret_max_line_edit.setText("100")
+        # self.view.progressBar.setValue(0)
+        pass
 
-    def query_db(self):
-        print("query_db method called")
+    def search_ncbi(self):
         try:
-            print("Querying DB")
             self.view.reset_progress()
             search_params = self.view.get_search_parameters()
-            print(f"Search parameters: {search_params}")
             
             # Set default values if fields are empty
             if not search_params['organism'].strip():
@@ -65,7 +52,7 @@ class NCBIWindowController:
 
             self.logger.info(f"Querying NCBI with parameters: {search_params}")
             
-            self.df = self.model.query_ncbi(search_params)
+            self.df = self.model.search_ncbi(search_params)
             
             if self.df.empty:
                 print("No results found")
@@ -74,7 +61,7 @@ class NCBIWindowController:
             else:
                 print(f"Query returned {len(self.df)} results")
                 self.logger.info(f"Query returned {len(self.df)} results")
-                self.populate_table(self.df)
+                self.populate_ncbi_table(self.df)
             
             self.view.activateWindow()
         except Exception as e:
@@ -82,13 +69,13 @@ class NCBIWindowController:
             self.logger.error(f"Error in query_db: {str(e)}", exc_info=True)
             show_error(self.settings, "Error in query_db", e)
 
-    def populate_table(self, data):
+    def populate_ncbi_table(self, data):
         try:
             self.logger.info(f"Populating table with {len(data)} rows")
             self.pandas_model = PandasModel(data)
             self.proxy_model = CustomProxyModel(self.view)
             self.proxy_model.setSourceModel(self.pandas_model)
-            self.view.populate_table(self.proxy_model)
+            self.view.populate_ncbi_table(self.proxy_model)
             self.logger.info("Table populated successfully")
         except Exception as e:
             self.logger.error(f"Error in populate_table: {str(e)}", exc_info=True)
@@ -104,17 +91,17 @@ class NCBIWindowController:
 
             indices = self.view.get_selected_rows()
             if not indices:
-                show_message(12, QtWidgets.QMessageBox.Icon.Warning, "No Rows Selected", "Please select rows from the table!")
+                show_message("No Rows Selected", "Please select rows from the table!")
                 return
 
             thread_count = QtCore.QThreadPool.globalInstance().maxThreadCount()
             if len(indices) > thread_count:
-                show_message(12, QtWidgets.QMessageBox.Icon.Warning, "Too Many Selections!", 
+                show_message("Too Many Selections!", 
                              f"You only have {thread_count} threads available to download with.\n\nPlease select {thread_count} or fewer rows.")
                 return
 
-            if not self.view.fna_checkbox.isChecked() and not self.view.gbff_checkbox.isChecked():
-                show_message(12, QtWidgets.QMessageBox.Icon.Warning, "No File Type Selected", "No file type selected. Please select the file types you want to download!")
+            if not self.view.radio_button_collections_refseq.isChecked() and not self.view.radio_button_collections_genbank.isChecked():
+                show_message("No File Type Selected", "No file type selected. Please select the file types you want to download!")
                 return
 
             self.download_files(indices)
@@ -126,8 +113,8 @@ class NCBIWindowController:
         try:
             self.view.reset_progress()
             self.total_files = len(selected_rows)
-            self.view.progressBar.setMaximum(self.total_files)
-            self.view.update_status_label("Preparing to download...")
+            self.view.progress_bar_download_files.setMaximum(self.total_files)
+            self.view.set_download_files_status_label("Preparing to download...")
 
             self.model.clear_downloaded_files()
             self.download_threads = []
@@ -140,7 +127,7 @@ class NCBIWindowController:
                 strain = self.proxy_model.data(self.proxy_model.index(index.row(), 2))
                 self.logger.info(f"Processing ID: {id}")
                 
-                url = self.model.get_download_url(id, self.view.genbank_checkbox.isChecked())
+                url = self.model.get_download_url(id, self.view.radio_button_collections_genbank.isChecked())
                 self.logger.info(f"Download URL for ID {id}: {url}")
                 if not url:
                     self.logger.warning(f"No download URL found for ID: {id}")
@@ -148,7 +135,7 @@ class NCBIWindowController:
                     self.on_thread_completed()  # Increment completed threads for unavailable files
                     continue
 
-                downloader = DownloadThread(self, url, id, species_name, strain, self.view.fna_checkbox.isChecked(), self.view.gbff_checkbox.isChecked())
+                downloader = DownloadThread(self, url, id, species_name, strain, self.view.check_box_file_types_fna.isChecked(), self.view.check_box_file_types_gbff.isChecked())
                 downloader.finished.connect(self.on_download_finished)
                 downloader.progress_updated.connect(self.update_progress)
                 downloader.status_updated.connect(self.update_status)
@@ -169,7 +156,7 @@ class NCBIWindowController:
         self.view.set_progress(self.completed_threads)
         
         if self.completed_threads == self.total_files:
-            self.view.update_status_label("Download Complete.<br>Press Back to go back to the Main window.")
+            self.view.set_download_files_status_label("Download Complete.<br>Press Back to go back to the Main window.")
 
             if self.unavailable_files:
                 self.show_unavailable_files_warning()
@@ -179,8 +166,6 @@ class NCBIWindowController:
             elif not self.unavailable_files:
                 show_message(12, QtWidgets.QMessageBox.Icon.Warning, "No Files Downloaded", "No files were downloaded. Please check your selection and try again.")
             
-         
-
     def show_unavailable_files_warning(self):
         warning_text = "The following files were not available for download:\n\n"
         for species_name, strain in self.unavailable_files:
@@ -195,18 +180,18 @@ class NCBIWindowController:
         )
 
     def update_progress(self, id, value, max_value):
-        current_value = self.view.progressBar.value()
+        current_value = self.view.progress_bar_download_files.value()
         self.view.set_progress(current_value + 1)
 
     def update_status(self, status):
-        self.view.update_status_label(status)
+        self.view.set_download_files_status_label(status)
 
     def on_download_finished(self, success):
         if success:
-            current_value = self.view.progressBar.value()
+            current_value = self.view.progress_bar_download_files.value()
             self.view.set_progress(current_value + 1)
         else:
-            self.view.update_status_label("Download Failed")
+            self.view.set_download_files_status_label("Download Failed")
             show_message(12, QtWidgets.QMessageBox.Icon.Warning, "Download Failed", "Failed to download one or more files. Please check your internet connection and try again.")
 
     def rename_files(self, files):
@@ -224,8 +209,8 @@ class NCBIWindowController:
 
     def on_rename_complete(self):
         try:
-            self.update_main_window()
-            self.view.update_status_label("Download and renaming complete.<br>Press Back to go back to the Main window.")
+            # self.update_main_window()
+            self.view.set_download_files_status_label("Download and renaming complete.<br>Press Back to go back to the Main window.")
         except Exception as e:
             self.logger.error(f"Error in on_rename_complete: {str(e)}", exc_info=True)
             show_error(self.settings, "Error after renaming", str(e))
@@ -240,90 +225,20 @@ class NCBIWindowController:
             self.logger.error(f"Error updating main window: {str(e)}", exc_info=True)
             show_error(self.settings, "Error updating main window", str(e))
 
-    def select_all(self):
-        if self.view.all_rows.isChecked():
-            self.view.ncbi_table.selectAll()
+    def select_all_rows_in_table(self):
+        if self.view.check_box_select_all_rows.isChecked():
+            self.view.table_ncbi_results.selectAll()
         else:
-            self.view.ncbi_table.clearSelection()
+            self.view.table_ncbi_results.clearSelection()
         
         # Force the view to update
-        self.view.ncbi_table.viewport().update()
+        self.view.table_ncbi_results.viewport().update()
 
-    def check_genbank(self, checked):
+    def is_checked_GenBank_radio_button(self, checked):
         if checked:
-            show_message(12, QtWidgets.QMessageBox.Icon.Warning, "Warning!", 
+            show_message("Warning!", 
                          "The GenBank collection may contain poorly or partially annotated annotation files. "
                          "We highly recommend using the RefSeq collection if it is available.")
-
-    def go_back(self):
-        self.logger.info("Attempting to return to main window")
-        try:
-            # Reset the progress bar
-            self.view.progressBar.setValue(0)
-            
-            # Reset the status text
-            self.view.update_status_label("Ready to download")
-            
-            # Clear the table
-            self.view.clear_table()
-            
-            # Hide the NCBI window
-            self.view.hide()
-            
-            # Show the main window
-            self.main_window.show()
-            
-            self.logger.info("Successfully returned to main window")
-        except Exception as e:
-            self.logger.error(f"Error in go_back method: {str(e)}")
-            self.logger.exception("Traceback:")
-            # Still attempt to show the main window even if clearing fails
-            self.view.hide()
-            self.main_window.show()
-
-    def show(self):
-        # Reset the progress bar
-        self.view.progressBar.setValue(0)
-        
-        # Reset the status text
-        self.view.update_status_label("Ready to download")
-        
-        # Clear the table if it's not already empty
-        if self.view.ncbi_table.model() and self.view.ncbi_table.model().rowCount() > 0:
-            self.view.clear_table()
-        
-        # Always position relative to the main window
-        position_window(self.view, self.main_window.view)
-        self.view.show()
-
-    def show_window(self):
-        print("Showing NCBI Window")
-        self.show()
-        self.view.show()
-        if self.view.search_button:
-            self.view.search_button.setFocus()
-            self.view.search_button.setVisible(True)
-            self.view.search_button.raise_()
-            self.view.search_button.setEnabled(True)
-            print(f"Search button has focus: {self.view.search_button.hasFocus()}")
-            print(f"Search button is visible: {self.view.search_button.isVisible()}")
-            print(f"Search button is enabled: {self.view.search_button.isEnabled()}")
-            print(f"Search button parent: {self.view.search_button.parent()}")
-            print(f"Search button geometry: {self.view.search_button.geometry()}")
-        
-        # Ensure all widgets are properly laid out
-        self.view.adjustSize()
-        self.adjustSize()
-
-    def test_search_button(self):
-        print("Testing search button")
-        if self.view.search_button:
-            print(f"Search button is visible: {self.view.search_button.isVisible()}")
-            print(f"Search button is enabled: {self.view.search_button.isEnabled()}")
-            print(f"Search button geometry: {self.view.search_button.geometry()}")
-            self.view.search_button.click()
-        else:
-            print("Search button not found")
 
 class DownloadThread(QtCore.QThread):
     finished = QtCore.pyqtSignal(bool)
@@ -389,7 +304,13 @@ class DownloadThread(QtCore.QThread):
 
             for file in files_to_download:
                 self.status_updated.emit(f"Downloading: {file}")
-                local_filename = os.path.join(self.controller.settings.CSPR_DB, 'FNA' if file.endswith('.fna.gz') else 'GBFF', file)
+                file_type = 'FNA' if file.endswith('.fna.gz') else 'GBFF'
+                output_dir = os.path.join(self.controller.settings.CSPR_DB, file_type)
+                
+                # Create the output directory if it doesn't exist
+                os.makedirs(output_dir, exist_ok=True)
+                
+                local_filename = os.path.join(output_dir, file)
                 
                 self.controller.logger.info(f"Downloading file: {file} to {local_filename}")
                 

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>571</width>
-    <height>589</height>
+    <width>725</width>
+    <height>884</height>
    </rect>
   </property>
   <property name="font">
@@ -20,24 +20,6 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
-    <item row="5" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Define New Endonuclease</string>
-        </property>
-       </widget>
-      </item>
-      <item alignment="Qt::AlignRight">
-       <widget class="QLabel" name="lblRequired">
-        <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#fc0107;&quot;&gt;* Required&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
     <item row="11" column="0">
      <layout class="QHBoxLayout" name="boxlayhbotButtons">
       <property name="sizeConstraint">
@@ -62,6 +44,13 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="pbtnDelete">
+        <property name="text">
+         <string>Delete Endonuclease</string>
+        </property>
+       </widget>
+      </item>
       <item alignment="Qt::AlignRight">
        <widget class="QPushButton" name="pbtnSubmit">
         <property name="sizePolicy">
@@ -83,6 +72,20 @@
       </item>
      </layout>
     </item>
+    <item row="5" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="lblSelectEndonuclease">
+        <property name="text">
+         <string>Select endonuclease:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="cmbSelectEndonuclease"/>
+      </item>
+     </layout>
+    </item>
     <item row="10" column="0">
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="0">
@@ -93,7 +96,7 @@
            <string>Cas Details</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_9">
-           <item row="2" column="0">
+           <item row="3" column="0">
             <layout class="QGridLayout" name="gridLayout_8">
              <item row="0" column="0">
               <layout class="QGridLayout" name="gridLayout_6">
@@ -258,7 +261,7 @@
                <item row="4" column="2">
                 <layout class="QHBoxLayout" name="horizontalLayout_11">
                  <item>
-                  <widget class="QRadioButton" name="rbtnThreePAM">
+                  <widget class="QRadioButton" name="rbtnThreePrimePAM">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -274,7 +277,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QRadioButton" name="rbtnFivePAM">
+                  <widget class="QRadioButton" name="rbtnFivePrimePAM">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -456,9 +459,41 @@
       </item>
      </layout>
     </item>
+    <item row="6" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="spacing">
+       <number>-1</number>
+      </property>
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="lblRequired">
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#fc0107;&quot;&gt;* Required&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <tabstops>
   <tabstop>ledOrganism</tabstop>
@@ -468,8 +503,8 @@
   <tabstop>ledFivePrimeLength</tabstop>
   <tabstop>ledThreePrimeLength</tabstop>
   <tabstop>ledPAMSequence</tabstop>
-  <tabstop>rbtnThreePAM</tabstop>
-  <tabstop>rbtnFivePAM</tabstop>
+  <tabstop>rbtnThreePrimePAM</tabstop>
+  <tabstop>rbtnFivePrimePAM</tabstop>
   <tabstop>cmbOnTargetMatrix</tabstop>
   <tabstop>cmbOffTargetMatrix</tabstop>
   <tabstop>pbtnResetForm</tabstop>

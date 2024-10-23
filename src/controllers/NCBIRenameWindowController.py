@@ -1,5 +1,5 @@
 from PyQt6 import QtWidgets
-from views.NCBIRenameWindowUI import NCBIRenameWindowUI
+from views.NCBIRenameWindowView import NCBIRenameWindowView
 from utils.ui import show_message
 import os
 import platform
@@ -11,7 +11,7 @@ class NCBIRenameWindowController:
         self.parent_controller = parent_controller
         self.model = NCBIRenameWindowModel(settings)
         self.model.set_files(files)
-        self.view = NCBIRenameWindowUI(settings, files)
+        self.view = NCBIRenameWindowView(settings, files)
         self.logger = settings.get_logger()
         
         self.setup_connections()

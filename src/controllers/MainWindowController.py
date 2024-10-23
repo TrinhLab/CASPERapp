@@ -1,5 +1,5 @@
 import os
-from PyQt6 import QtWidgets, QtCore, uic
+from PyQt6 import QtWidgets, QtCore, uic, QtGui
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout
 from views.MainWindowView import MainWindowView
 from models.MainWindowModel import MainWindowModel
@@ -8,6 +8,7 @@ from utils.ui import show_error, show_message, scale_ui, center_ui, position_win
 from utils.web import ncbi_page, repo_page, ncbi_blast_page 
 from PyQt6.QtCore import QObject, Qt
 import qdarktheme
+from PyQt6.QtCore import QSize
 
 class MainWindowController:
     def __init__(self, global_settings):
@@ -16,6 +17,15 @@ class MainWindowController:
         self.tab_widgets = {}  # Store references to tab widgets
         self.startup_controller = None
         self.is_first_time_startup = self.global_settings.is_first_time_startup
+        self.tab_sizes = {
+            "Startup": QSize(750, 550),
+            "New Genome": QSize(575, 700),
+            "Home": QSize(1000, 700),  # Add a default size for Home tab
+            "Define New Endonuclease": QSize(450, 600),
+            "NCBI Download Tool": QSize(1000, 700),
+            "View Targets": QSize(1500, 700),
+        }
+        self.current_tab = None
 
         try:
             self.view = MainWindowView(global_settings)
@@ -77,8 +87,6 @@ class MainWindowController:
         try:
             self.startup_controller = self.global_settings.get_startup_window()
             self.open_new_tab("Startup", self.startup_controller)
-            self.view.setFixedSize(750, 550)
-            self.view.setWindowFlags(self.view.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
         except Exception as e:
             show_error(self.global_settings, "Error opening startup tab", str(e))
 
@@ -86,23 +94,35 @@ class MainWindowController:
         try:
             self.logger.debug("Switching to home from startup")
             # Find the startup tab
-            startup_tab = None
-            for i in range(self.view.tab_widget.count()):
-                if self.view.tab_widget.tabText(i) == "Startup":
-                    startup_tab = self.view.tab_widget.widget(i)
-                    break
-
+            startup_tab = self.find_tab_by_title("Startup")
             if startup_tab:
                 index = self.view.tab_widget.indexOf(startup_tab)
                 self._close_tab(index)
                 self.logger.debug(f"Closed startup tab at index {index}")
+                
+                # Deactivate the startup controller
+                if self.startup_controller:
+                    self.startup_controller.deactivate()
+                    self.startup_controller = None
             else:
                 self.logger.warning("Startup tab not found when trying to close it")
 
-            self._open_home_tab()
+            self.close_new_genome_and_switch_to_home()
+            self._center_window()  # Center the window after switching to home
         except Exception as e:
             self.logger.error(f"Error switching to home from startup: {str(e)}", exc_info=True)
             show_error(self.global_settings, "Error switching to home tab", str(e))
+
+    def _center_window(self):
+        try:
+            center_point = QtGui.QGuiApplication.primaryScreen().availableGeometry().center()
+            frame_geometry = self.view.frameGeometry()
+            frame_geometry.moveCenter(center_point)
+            self.view.move(frame_geometry.topLeft())
+            self.logger.debug(f"Centered window. New position: {self.view.pos()}")
+        except Exception as e:
+            self.logger.error(f"Error centering window: {str(e)}", exc_info=True)
+            show_error(self.global_settings, "Error centering window", str(e))
 
     def _open_home_tab(self):
         try:
@@ -114,29 +134,51 @@ class MainWindowController:
     def _change_database_directory(self):
         try:
             new_directory = QtWidgets.QFileDialog.getExistingDirectory(
-                self.view, "Select Database Directory", self.global_settings.CSPR_DB,
+                self.view, "Select Database Directory", self.global_settings.get_db_path(),
                 QtWidgets.QFileDialog.Option.ShowDirsOnly
             )
             if new_directory:
-                if self.global_settings.validate_db_path(new_directory):
-                    self.global_settings.save_database_path(new_directory)
-                    self.global_settings.initialize_app_directories()
-                    self.load_combo_box_data()
-                    show_message(12, QtWidgets.QMessageBox.Icon.Information,
-                                 "Success", "Database directory changed successfully.")
+                is_valid, message = self.global_settings.validate_db_path(new_directory)
+                if is_valid:
+                    self._process_valid_directory(new_directory)
                 else:
-                    show_message(12, QtWidgets.QMessageBox.Icon.Warning,
-                                 "Invalid Directory", "The selected directory does not contain valid CSPR files.")
+                    self._handle_invalid_directory(new_directory, message)
         except Exception as e:
             self.logger.error(f"Error changing database directory: {str(e)}", exc_info=True)
             show_error(self.global_settings, "Error changing database directory", str(e))
-    
+
+    def _process_valid_directory(self, new_directory):
+        self.global_settings.save_db_path(new_directory)
+        self.global_settings.update_db_state()
+        show_message("Success", "Database directory changed successfully.")
+        
+        # If we're currently on the startup tab, switch to the home tab
+        if self.startup_controller and self.view.tab_widget.currentWidget() == self.startup_controller.view:
+            self._switch_to_home_from_startup()
+
+    def _handle_invalid_directory(self, new_directory, message):
+        reply = QtWidgets.QMessageBox.question(
+            self.view,
+            "Invalid Directory",
+            f"The selected directory does not contain valid CSPR files: {message}\n\n"
+            "Would you like to analyze a new genome in this directory?",
+            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+            QtWidgets.QMessageBox.StandardButton.No
+        )
+        
+        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
+            self.global_settings.save_db_path(new_directory)
+            self.global_settings.update_db_state()
+            self.open_new_genome_tab()
+        else:
+            show_message("Operation Cancelled", "Database directory change cancelled.")
+
     def _open_ncbi_website(self):
         ncbi_page()
 
     def _open_repository_website(self):
         repo_page()
-
+ 
     def _open_ncbi_blast_website(self):
         ncbi_blast_page()
 
@@ -167,44 +209,66 @@ class MainWindowController:
         try:
             self.logger.debug(f"Attempting to open new tab: {title}")
             
-            if title in self.tab_widgets:
+            # Check if the tab already exists
+            existing_tab = self.find_tab_by_title(title)
+            if existing_tab:
                 self.logger.debug(f"Tab '{title}' already exists, switching to it")
-                existing_widget = self.tab_widgets[title]
-                self.view.tab_widget.setCurrentWidget(existing_widget)
+                self.view.tab_widget.setCurrentWidget(existing_tab)
+                self._resize_for_tab(title)
                 return
 
-            # Determine if content is a controller or a widget
+            # If the tab doesn't exist, create a new one
             if hasattr(content, 'view'):
-                self.logger.debug("Content is a controller, getting its view")
                 widget = content.view
             else:
-                self.logger.debug("Content is a widget")
                 widget = content
 
             # Create a wrapper widget with padding
-            self.logger.debug("Creating wrapper widget with padding")
             wrapper = QWidget()
             layout = QVBoxLayout(wrapper)
             layout.setContentsMargins(10, 10, 10, 10)
             layout.addWidget(widget)
 
             # Add the wrapper to the tab widget
-            self.logger.debug("Adding wrapper to tab widget")
             index = self.view.tab_widget.addTab(wrapper, title)
             self.view.tab_widget.setCurrentIndex(index)
             self.tab_widgets[title] = wrapper
 
-            # Resize the main window if it's the New Genome tab
-            if title == "New Genome":
-                self.logger.debug("Resizing main window for New Genome tab")
-                new_size = widget.sizeHint()
-                self.view.resize(new_size)
+            self._resize_for_tab(title)
 
-            # center_ui(self.view)  # Re-center the window after resizing
             self.logger.info(f"Opened new tab '{title}' at index {index}")
         except Exception as e:
             self.logger.error(f"Error opening tab '{title}': {str(e)}", exc_info=True)
             show_error(self.global_settings, f"Error opening tab '{title}'", str(e))
+
+        self.view.tab_widget.currentChanged.connect(self._on_tab_changed)
+
+    def _resize_for_tab(self, title):
+        if title in self.tab_sizes:
+            new_size = self.tab_sizes[title]
+            if title == "Startup":
+                # For Startup tab, set fixed size and disable maximize button
+                self.view.setFixedSize(new_size)
+                self.view.setWindowFlags(self.view.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
+            else:
+                # For other tabs, allow resizing but set a minimum size
+                self.view.setMinimumSize(QSize(400, 300))  # Set a reasonable minimum size
+                self.view.setMaximumSize(QtCore.QSize(16777215, 16777215))
+                self.view.setWindowFlags(self.view.windowFlags() | Qt.WindowType.WindowMaximizeButtonHint)
+                
+                # Resize to the specified size for the tab
+                self.view.resize(new_size)
+        else:
+            # Default behavior for unknown tabs
+            self.view.setMinimumSize(QSize(400, 300))  # Set a reasonable minimum size
+            self.view.setMaximumSize(QtCore.QSize(16777215, 16777215))
+            self.view.setWindowFlags(self.view.windowFlags() | Qt.WindowType.WindowMaximizeButtonHint)
+        
+        # Ensure window flags are updated
+        self.view.show()
+        
+        # Update the current tab
+        self.current_tab = title
 
     def _close_tab(self, index):
         if 0 <= index < self.view.tab_widget.count():
@@ -217,8 +281,20 @@ class MainWindowController:
             if title in self.tab_widgets:
                 del self.tab_widgets[title]
             self.logger.debug(f"Closed tab '{title}' at index {index}")
+
+            # If we're closing the New Genome tab and Home tab exists, refresh it
+            if title == "New Genome":
+                home_tab = self.find_tab_by_title("Home")
+                if home_tab:
+                    home_controller = self.global_settings.get_home_window()
+                    home_controller.refresh_data()
         else:
             self.logger.warning(f"Attempted to close non-existent tab at index {index}")
+
+        if self.view.tab_widget.count() > 0:
+            new_index = self.view.tab_widget.currentIndex()
+            new_tab_title = self.view.tab_widget.tabText(new_index)
+            self._resize_for_tab(new_tab_title)
 
     def _toggle_theme(self):
         try:
@@ -242,16 +318,76 @@ class MainWindowController:
             show_error(self.global_settings, "Error showing main window", e)
 
     def open_new_genome_tab(self):
-        tab_title = "New Genome"
-        existing_tab = self.find_tab_by_title(tab_title)
+        # Check if the New Genome tab already exists
+        existing_tab = self.find_tab_by_title("New Genome")
         if existing_tab:
+            # If it exists, just switch to it
             self.view.tab_widget.setCurrentWidget(existing_tab)
         else:
+            # If it doesn't exist, create a new one
             new_genome_controller = self.global_settings.get_new_genome_window()
-            self.open_new_tab(tab_title, new_genome_controller)
+            new_genome_view = new_genome_controller.view
+            tab_index = self.view.tab_widget.addTab(new_genome_view, "New Genome")
+            self.view.tab_widget.setCurrentIndex(tab_index)
+            self.tab_widgets["New Genome"] = new_genome_view
+        
+        self._resize_for_tab("New Genome")
+        
+        # Ensure the window is visible and brought to front
+        self.view.show()
+        self.view.raise_()
+        self.view.activateWindow()
+
+        # Log the current state
+        self.logger.debug(f"Window visibility after opening New Genome tab: {self.view.isVisible()}")
+        self.logger.debug(f"Window geometry after opening New Genome tab: {self.view.geometry()}")
 
     def find_tab_by_title(self, title):
         for i in range(self.view.tab_widget.count()):
             if self.view.tab_widget.tabText(i) == title:
                 return self.view.tab_widget.widget(i)
         return None
+
+    def _on_tab_changed(self, index):
+        # Save the current tab size before switching
+        if self.current_tab:
+            current_size = self.view.size()
+            if current_size.width() >= 400 and current_size.height() >= 300:
+                self.tab_sizes[self.current_tab] = current_size
+
+        # Get the new tab title
+        new_tab_title = self.view.tab_widget.tabText(index)
+
+        # Resize for the new tab
+        self._resize_for_tab(new_tab_title)
+
+    def close_new_genome_and_switch_to_home(self):
+        try:
+            self.logger.debug("Attempting to close New Genome tab and switch to Home")
+            
+            # Find and close the New Genome tab if it's open
+            new_genome_tab = self.find_tab_by_title("New Genome")
+            if new_genome_tab:
+                index = self.view.tab_widget.indexOf(new_genome_tab)
+                self._close_tab(index)
+                self.logger.debug("Closed New Genome tab")
+            else:
+                self.logger.debug("New Genome tab not found")
+
+            # Switch to the Home tab or create it if it doesn't exist
+            home_tab = self.find_tab_by_title("Home")
+            if home_tab:
+                self.view.tab_widget.setCurrentWidget(home_tab)
+                self.logger.debug("Switched to existing Home tab")
+            else:
+                self._open_home_tab()
+                self.logger.debug("Opened new Home tab")
+
+            # Resize for the Home tab
+            self._resize_for_tab("Home")
+
+        except Exception as e:
+            self.logger.error(f"Error in close_new_genome_and_switch_to_home: {str(e)}", exc_info=True)
+            show_error(self.global_settings, "Error switching to Home tab", str(e))
+
+

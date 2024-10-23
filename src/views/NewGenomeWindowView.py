@@ -1,15 +1,17 @@
 from PyQt6 import QtWidgets, QtGui, QtCore, uic
 import os
 from typing import Optional
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 
 class NewGenomeWindowView(QtWidgets.QMainWindow): 
+    endonuclease_changed = pyqtSignal(str)
+
     def __init__(self, global_settings):
         super().__init__()
         self.global_settings = global_settings
         self.logger = global_settings.get_logger()
         self.check_mark = "✓" 
-        self.spinner_movie = QtGui.QMovie(os.path.join(self.global_settings.get_ui_dir_path(), "throbber.gif"))
+        self.spinner_movie = QtGui.QMovie(os.path.join(self.global_settings.get_assets_dir_path(), "throbber.gif"))
         self.spinner_movie.setScaledSize(QtCore.QSize(20, 20)) 
 
         self._init_ui()
@@ -49,7 +51,7 @@ class NewGenomeWindowView(QtWidgets.QMainWindow):
         self.line_edit_organism_code = self._find_widget('ledOrganismCode', QtWidgets.QLineEdit)
 
         reg_exp_organism_name_strain = QtCore.QRegularExpression("[^/\\\\_]+") 
-        reg_exp_organism_code = QtCore.QRegularExpression("\\S+")
+        reg_exp_organism_code = QtCore.QRegularExpression("[^/\\\\]+")
 
         self.line_edit_organism_name.setValidator(QtGui.QRegularExpressionValidator(reg_exp_organism_name_strain, self))
         self.line_edit_strain.setValidator(QtGui.QRegularExpressionValidator(reg_exp_organism_name_strain, self))
@@ -68,6 +70,13 @@ class NewGenomeWindowView(QtWidgets.QMainWindow):
         self.line_edit_five_length.setEnabled(False)
         self.line_edit_three_length.setEnabled(False)
         self.check_box_generate_repeats.setEnabled(False)
+
+        grey_style = "color: grey;" # Hexadecimal for grey
+        self.line_edit_seed_length.setStyleSheet(grey_style)
+        self.line_edit_five_length.setStyleSheet(grey_style)
+        self.line_edit_three_length.setStyleSheet(grey_style)
+
+        self.combo_box_endonuclease.currentTextChanged.connect(self.on_endonuclease_changed)
 
     def _init_grpStep2(self):
         self.push_button_ncbi_search = self._find_widget('pbtnNCBISearch', QtWidgets.QPushButton)
@@ -109,6 +118,7 @@ class NewGenomeWindowView(QtWidgets.QMainWindow):
         self.progress_bar_jobs.setFormat("%p%")
 
     def reset_table_widget_jobs(self):
+        self.stop_spinner()  # Stop all spinners
         self.table_widget_jobs.clearContents()
         self.table_widget_jobs.setRowCount(0)
 
@@ -141,12 +151,16 @@ class NewGenomeWindowView(QtWidgets.QMainWindow):
         
         self.table_widget_jobs.setCellWidget(row, 1, widget)
 
-    def stop_spinner(self, row):
+    def stop_spinner(self, row=None):
         self.spinner_movie.stop()
-        self.table_widget_jobs.removeCellWidget(row, 1)
-        queued_item = QtWidgets.QTableWidgetItem("Queued")
-        queued_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.table_widget_jobs.setItem(row, 1, queued_item)
+        if row is not None:
+            self.table_widget_jobs.removeCellWidget(row, 1)
+            queued_item = QtWidgets.QTableWidgetItem("Queued")
+            queued_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.table_widget_jobs.setItem(row, 1, queued_item)
+        else:
+            for row in range(self.table_widget_jobs.rowCount()):
+                self.table_widget_jobs.removeCellWidget(row, 1)
 
     def set_job_completed(self, row):
         widget = QtWidgets.QWidget()
@@ -159,6 +173,7 @@ class NewGenomeWindowView(QtWidgets.QMainWindow):
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         self.table_widget_jobs.setCellWidget(row, 1, widget)
+        self.table_widget_jobs.viewport().update()
 
     def update_endonuclease_dropdown(self, endos):
         self.combo_box_endonuclease.clear()
@@ -217,3 +232,27 @@ class NewGenomeWindowView(QtWidgets.QMainWindow):
     def sizeHint(self):
         return QtCore.QSize(575, 700)
     
+    # Add this method
+    def on_endonuclease_changed(self, new_endonuclease):
+        print(f"Endonuclease changed to {new_endonuclease}")
+        if new_endonuclease:  # Only emit the signal if the new_endonuclease is not empty
+            self.endonuclease_changed.emit(new_endonuclease)
+        else:
+            # Clear the length fields when an empty selection is made
+            self.line_edit_seed_length.clear()
+            self.line_edit_five_length.clear()
+            self.line_edit_three_length.clear()
+
+    def get_queued_job_indexes(self):
+        queued_indexes = []
+        for row in range(self.table_widget_jobs.rowCount()):
+            cell_widget = self.table_widget_jobs.cellWidget(row, 1)
+            if cell_widget is None:
+                # If there's no cell widget, it's still in the initial "Queued" state
+                queued_indexes.append(row)
+            else:
+                # Check if the cell widget contains a "Queued" label
+                labels = cell_widget.findChildren(QtWidgets.QLabel)
+                if any(label.text() == "Queued" for label in labels):
+                    queued_indexes.append(row)
+        return queued_indexes

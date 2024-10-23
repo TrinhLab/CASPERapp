@@ -24,9 +24,9 @@ class NCBIWindowModel:
         # Suppress the XMLParsedAsHTMLWarning
         warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
-    def query_ncbi(self, search_params):
+    def search_ncbi(self, search_params):
         try:
-            retmax = int(search_params['ret_max']) if search_params['ret_max'] else 100
+            retmax = int(search_params['max_results']) if search_params['max_results'] else 100
             term = f'"{search_params["organism"]}"[Organism]'
             
             if search_params['complete_genomes_only']:

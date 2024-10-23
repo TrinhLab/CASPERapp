@@ -15,10 +15,21 @@ class NewGenomeWindowController:
             self._setup_connections()
             self._init_ui()
             self._initialize_process()
+            
+            self.view.endonuclease_changed.connect(self._update_endonuclease_lengths)
+            
+            self._load_initial_endonuclease_settings()
         except Exception as e:
             show_error(self.settings, "Error initializing NewGenomeWindowController", str(e))
 
         # self.model.cspr_files_created.connect(self._on_cspr_files_created)
+
+        self.view.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding
+        )
+
+        self.settings.endonuclease_updated.connect(self._update_endonuclease_dropdown)
 
     def _initialize_process(self):
         self.job_process = QtCore.QProcess()
@@ -36,7 +47,7 @@ class NewGenomeWindowController:
 
     def _setup_connections(self):
         # grpStep2
-        # self.view.NCBI_File_Search.clicked.connect(self.open_ncbi_tool)
+        self.view.push_button_ncbi_search.clicked.connect(self._open_ncbi_module)
         self.view.push_button_browse_file.clicked.connect(self._browse_fasta_file)
         self.view.push_button_add_job.clicked.connect(self._add_job_to_table)
 
@@ -50,7 +61,8 @@ class NewGenomeWindowController:
 
     def _init_ui(self):
         self.view.update_endonuclease_dropdown(self.model.endonucleases.keys())
-        self._load_endonuclease_settings()
+        # Remove this line as we'll call it in _update_endonuclease_lengths
+        # self._load_endonuclease_settings()
 
     def _handle_reset(self):
         self.view.line_edit_organism_name.clear()
@@ -136,36 +148,46 @@ class NewGenomeWindowController:
             show_message(fontSize=12, icon=QtWidgets.QMessageBox.Icon.Warning,
                          title="No Selection", message="Please select a job to remove.")
 
-    def _load_endonuclease_settings(self):
-        endonuclease = self.view.combo_box_endonuclease.currentText()
+    def _update_endonuclease_lengths(self, endonuclease):
+        print(f"Updating endonuclease lengths for {endonuclease}")
+        if not endonuclease:  # If endonuclease is empty, don't proceed
+            return
+        
         endonuclease_info = self.model.get_endonuclease_info(endonuclease)
         self.logger.debug(f"Endonuclease info: {endonuclease_info}")
         
         if endonuclease_info is not None:
-            self.view.set_endonuclease_lengths(endonuclease_info['seed_length'], endonuclease_info['five_prime_length'], endonuclease_info['three_prime_length'])
-    
+            self.view.set_endonuclease_lengths(
+                endonuclease_info['endonuclease_seed_length'],
+                endonuclease_info['endonuclease_five_prime_length'],
+                endonuclease_info['endonuclease_three_prime_length']
+            )
+        else:
+            self.logger.warning(f"No information found for endonuclease: {endonuclease}")
+            # Optionally, clear the length fields here as well
+            self.view.set_endonuclease_lengths('', '', '')
+
     def _run_all_jobs(self):
-        self.logger.debug("Starting to run all jobs")
-        self.view.table_widget_jobs.selectAll()
-        indexes = self.view.table_widget_jobs.selectionModel().selectedRows()
-        print(f"Selected indexes: {indexes}")
-        self.job_indexes = [index.row() for index in sorted(indexes) if self.view.table_widget_jobs.item(index.row(), 0).text()]
+        self.logger.debug("Starting to run all queued jobs")
+        queued_indexes = self.view.get_queued_job_indexes()
+        print(f"Queued job indexes: {queued_indexes}")
         
-        if not self.job_indexes:
-            show_message(fontSize=12, icon=QtWidgets.QMessageBox.Icon.Critical,
+        if not queued_indexes:
+            show_message(fontSize=12, icon=QtWidgets.QMessageBox.Icon.Information,
                          title="No Jobs To Run",
-                         message="No jobs are in the queue to run. Please add a job before running.")
+                         message="No queued jobs are available to run.")
             return
 
         self.model.reset_progress()
-        self.model.set_total_jobs(len(self.job_indexes))
+        self.model.set_total_jobs(len(queued_indexes))
         self.view.reset_progress_bar_jobs()
         
+        self.job_indexes = queued_indexes
         if self.job_indexes:
             first_row_index = self.job_indexes[0]
             self._run_job(first_row_index)
 
-        self.logger.debug("All jobs queued")
+        self.logger.debug(f"Queued {len(self.job_indexes)} jobs for running")
 
     def _run_job(self, row_index):
         self.logger.debug(f"Running job at row {row_index}")
@@ -210,20 +232,42 @@ class NewGenomeWindowController:
                 next_row_index = self.job_indexes[0]
                 self._run_job(next_row_index)
             else:
-                self.logger.info("All jobs completed")
+                self.logger.info("All queued jobs completed")
                 self.view.set_progress_bar_jobs(100)
+                self.settings.update_db_state()
         else:
             self.logger.warning("No job indexes found or all jobs completed")
 
         self.view.table_widget_jobs.viewport().update()
 
     def _reset_table_widget_jobs(self):
-        self.view.stop_spinner()
         self.view.reset_table_widget_jobs()
+        self.model.jobs.clear()  # Clear the jobs in the model as well
 
-    # def open_ncbi_tool(self):
-    #     ncbi_tool_window = self.settings.get_ncbi_tool()
-    #     position_window(ncbi_tool_window, self.view)
+    def _open_ncbi_module(self):
+        try:
+            ncbi_controller = self.settings.get_ncbi_window()
+            self.settings.main_window.open_new_tab("NCBI Download Tool", ncbi_controller)
+        except Exception as e:
+            show_error(self.settings, "Error opening NCBI module", str(e))
+            self.logger.error(f"Failed to open NCBI module: {str(e)}")
+        
+    # def _on_cspr_files_created(self):
+        # self.settings.update_db_state()
+
+    def _load_initial_endonuclease_settings(self):
+        initial_endonuclease = self.view.get_selected_endonuclease()
+        print(f"Initial endonuclease: {initial_endonuclease}")
+        self._update_endonuclease_lengths(initial_endonuclease)
 
     # def _on_cspr_files_created(self):
         # self.settings.update_db_state()
+
+    def _update_endonuclease_dropdown(self):
+        print(f"Updating endonuclease dropdown, {self.model.endonucleases.keys()}")
+        self.view.update_endonuclease_dropdown(self.model.endonucleases.keys())
+        # If there's a currently selected endonuclease, update its info
+        # current_endo = self.view.get_selected_endonuclease()
+        # if current_endo:
+            # self._update_endonuclease_lengths(current_endo)
+        pass

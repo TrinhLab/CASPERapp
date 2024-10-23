@@ -105,3 +105,22 @@ class HomeWindowView(QWidget):
 
     def reset_progress_bar(self) -> None:
         self.set_progress_bar(0)
+
+    def get_find_targets_input(self) -> dict:
+        return {
+            "organism": self.combo_box_organism.currentText(),
+            "endonuclease": self.combo_box_endonuclease.currentText(),
+            "annotation_file": self.combo_box_local_annotation_files.currentText(),
+            "search_type": self.get_search_type(),
+            "search_query": self.text_edit_gene_entry.toPlainText()
+        }
+
+    def get_search_type(self) -> str:
+        if self.radio_button_feature.isChecked():
+            return "feature"
+        elif self.radio_button_position.isChecked():
+            return "position"
+        elif self.radio_button_sequence.isChecked():
+            return "sequence"
+        else:
+            return "feature"  # Default to feature if somehow none are selected

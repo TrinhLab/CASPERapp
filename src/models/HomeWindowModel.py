@@ -16,11 +16,13 @@ class HomeWindowModel:
         self.org = ""
         self.genlib_list = []
         self.results_list = []
+        self.load_data()
 
     def load_data(self) -> None:
         try:
             self.load_organisms_and_endonuclease()
             self.load_annotation_files()
+            print(f"Organism to files: {self.data['organism_to_files']}")
         except Exception as e:
             self.logger.error(f"Error loading data: {str(e)}")
             show_error(self.global_settings, "Error Loading Data", str(e))
@@ -64,12 +66,15 @@ class HomeWindowModel:
             self.logger.error(f"Error in load_annotation_files: {str(e)}")
 
     def get_organism_to_files(self) -> Dict[str, Dict[str, List[str]]]:
-        return self.data.get("organism_to_files", {})
+        return self.data['organism_to_files']
 
     def get_organism_to_endonuclease(self) -> Dict[str, List[str]]:
         return self.data.get("organism_to_endonuclease", {})
 
     def get_annotation_files(self) -> List[str]:
         return self.data.get("annotation_files", [])
+    
+    def find_targets(self, input_data: dict) -> None:
+        pass
 
     # Add other methods that handle data processing, validation, and storage

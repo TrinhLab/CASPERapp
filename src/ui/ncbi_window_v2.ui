@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>865</width>
-    <height>723</height>
+    <width>1098</width>
+    <height>814</height>
    </rect>
   </property>
   <property name="font">
@@ -21,59 +21,39 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <property name="bottomMargin">
-       <number>0</number>
+     <widget class="QLabel" name="lblRequired">
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;* Required&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
-      <item>
-       <widget class="QLabel" name="title">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>NCBI Tool</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;* Required&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-     </layout>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
     </item>
     <item row="1" column="0">
      <layout class="QGridLayout" name="gridLayout">
-      <item row="3" column="0" colspan="2">
-       <widget class="QGroupBox" name="Step2">
+      <item row="2" column="0" colspan="2">
+       <widget class="QGroupBox" name="grpStep2">
         <property name="title">
          <string>Step 2: Search and Select Files</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_6">
          <item row="0" column="1" alignment="Qt::AlignRight">
-          <widget class="QCheckBox" name="all_rows">
+          <widget class="QCheckBox" name="chkSelectAllRows">
            <property name="text">
             <string>Select all rows</string>
            </property>
           </widget>
          </item>
          <item row="1" column="0" colspan="2">
-          <widget class="QTableView" name="ncbi_table">
+          <widget class="QTableView" name="tblNCBIResults">
            <property name="layoutDirection">
             <enum>Qt::LeftToRight</enum>
            </property>
           </widget>
          </item>
          <item row="0" column="0" alignment="Qt::AlignLeft">
-          <widget class="QPushButton" name="search_button">
+          <widget class="QPushButton" name="pbtnSearch">
            <property name="minimumSize">
             <size>
              <width>125</width>
@@ -88,15 +68,8 @@
         </layout>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QGroupBox" name="Step1">
+      <item row="1" column="0">
+       <widget class="QGroupBox" name="grpStep1">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -108,7 +81,7 @@
         </property>
         <layout class="QGridLayout" name="gridLayout_4">
          <item row="3" column="0">
-          <widget class="QLabel" name="label_5">
+          <widget class="QLabel" name="lblCompleteGenomesOnly">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -124,7 +97,7 @@
           </widget>
          </item>
          <item row="0" column="0">
-          <widget class="QLabel" name="label">
+          <widget class="QLabel" name="lblOrganism">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -137,14 +110,14 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QLineEdit" name="ret_max_line_edit">
+          <widget class="QLineEdit" name="ledMaxResults">
            <property name="text">
             <string>100</string>
            </property>
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QLabel" name="label_3">
+          <widget class="QLabel" name="lblStrain">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -152,19 +125,19 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Strain Designation</string>
+            <string>Strain</string>
            </property>
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="infra_name_line_edit">
+          <widget class="QLineEdit" name="ledStrain">
            <property name="placeholderText">
             <string>Ex. K-12</string>
            </property>
           </widget>
          </item>
          <item row="2" column="0">
-          <widget class="QLabel" name="label_4">
+          <widget class="QLabel" name="lblMaxResults">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -175,19 +148,19 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Number of search results to return.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Return Max (Default = 100)</string>
+            <string>Max Results (Default = 100)</string>
            </property>
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QLineEdit" name="organism_line_edit">
+          <widget class="QLineEdit" name="ledOrganism">
            <property name="placeholderText">
             <string>Ex. Escherichia coli</string>
            </property>
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QCheckBox" name="yes_box">
+          <widget class="QCheckBox" name="chkCompleteGenomesOnly">
            <property name="text">
             <string/>
            </property>
@@ -196,8 +169,8 @@
         </layout>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QGroupBox" name="Step3">
+      <item row="1" column="1">
+       <widget class="QGroupBox" name="grpStep3">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -209,7 +182,7 @@
         </property>
         <layout class="QGridLayout" name="gridLayout_5">
          <item row="1" column="0">
-          <widget class="QLabel" name="label_7">
+          <widget class="QLabel" name="lblFileTypes">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;These are the file types that you are choosing to download. GBFF = annotation file, FASTA/FNA = genomic sequence file.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
@@ -219,7 +192,7 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QRadioButton" name="refseq_checkbox">
+          <widget class="QRadioButton" name="rbtnCollectionsRefSeq">
            <property name="text">
             <string>RefSeq</string>
            </property>
@@ -229,7 +202,7 @@
           </widget>
          </item>
          <item row="2" column="0">
-          <widget class="QPushButton" name="download_button">
+          <widget class="QPushButton" name="pbtnDownloadFiles">
            <property name="minimumSize">
             <size>
              <width>125</width>
@@ -242,21 +215,21 @@
           </widget>
          </item>
          <item row="3" column="0" colspan="3">
-          <widget class="QProgressBar" name="progressBar">
+          <widget class="QProgressBar" name="pbDownloadFiles">
            <property name="value">
             <number>24</number>
            </property>
           </widget>
          </item>
          <item row="2" column="1" colspan="2">
-          <widget class="QLabel" name="progressLabel">
+          <widget class="QLabel" name="lblDownloadFilesStatus">
            <property name="text">
             <string/>
            </property>
           </widget>
          </item>
          <item row="0" column="0">
-          <widget class="QLabel" name="label_6">
+          <widget class="QLabel" name="lblCollections">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;These are the databases that files are downloaded from. Refseq is considered the gold standard for annotations and assemblies. It is HIGHLY recommended to use Refseq if available for the genome of interest.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
@@ -266,7 +239,7 @@
           </widget>
          </item>
          <item row="0" column="2">
-          <widget class="QRadioButton" name="genbank_checkbox">
+          <widget class="QRadioButton" name="rbtnCollectionsGenBank">
            <property name="text">
             <string>GenBank</string>
            </property>
@@ -276,7 +249,7 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QCheckBox" name="fna_checkbox">
+          <widget class="QCheckBox" name="chkFileTypesFNA">
            <property name="text">
             <string>FASTA/FNA</string>
            </property>
@@ -286,7 +259,7 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QCheckBox" name="gbff_checkbox">
+          <widget class="QCheckBox" name="chkFileTypesGBFF">
            <property name="text">
             <string>GBFF</string>
            </property>
@@ -305,36 +278,22 @@
         </layout>
        </widget>
       </item>
-      <item row="4" column="0" alignment="Qt::AlignLeft">
-       <widget class="QPushButton" name="back_button">
-        <property name="minimumSize">
-         <size>
-          <width>125</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Back</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </item>
    </layout>
   </widget>
  </widget>
  <tabstops>
-  <tabstop>organism_line_edit</tabstop>
-  <tabstop>infra_name_line_edit</tabstop>
-  <tabstop>ret_max_line_edit</tabstop>
-  <tabstop>yes_box</tabstop>
-  <tabstop>search_button</tabstop>
-  <tabstop>all_rows</tabstop>
-  <tabstop>ncbi_table</tabstop>
-  <tabstop>genbank_checkbox</tabstop>
-  <tabstop>refseq_checkbox</tabstop>
-  <tabstop>download_button</tabstop>
-  <tabstop>back_button</tabstop>
+  <tabstop>ledOrganism</tabstop>
+  <tabstop>ledStrain</tabstop>
+  <tabstop>ledMaxResults</tabstop>
+  <tabstop>chkCompleteGenomesOnly</tabstop>
+  <tabstop>pbtnSearch</tabstop>
+  <tabstop>chkSelectAllRows</tabstop>
+  <tabstop>tblNCBIResults</tabstop>
+  <tabstop>rbtnCollectionsGenBank</tabstop>
+  <tabstop>rbtnCollectionsRefSeq</tabstop>
+  <tabstop>pbtnDownloadFiles</tabstop>
  </tabstops>
  <resources/>
  <connections/>

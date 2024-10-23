@@ -8,6 +8,7 @@ class StartupWindowController:
     def __init__(self, global_settings):
         self.settings = global_settings
         self.logger = self.settings.get_logger()
+        self.is_active = True  # Initialize is_active here
 
         try:
             self.view = StartupWindowView(self.settings)
@@ -15,6 +16,11 @@ class StartupWindowController:
 
             self._setup_connections()
             self._init_ui()
+
+            self.view.setSizePolicy(
+                QtWidgets.QSizePolicy.Policy.Fixed,
+                QtWidgets.QSizePolicy.Policy.Fixed
+            )
         except Exception as e:
             show_error(self.settings, "Error initializing StartupWindowController", str(e))
 
@@ -29,7 +35,8 @@ class StartupWindowController:
         self.model.save_db_path(new_path)
 
     def _on_db_state_updated(self, is_valid, message, cspr_files):
-        self.view.set_db_status(is_valid, message)
+        if self.is_active and hasattr(self, 'view'):
+            self.view.set_db_status(is_valid, message)
 
     def _init_ui(self):
         db_path = self.model.get_db_path()
@@ -72,3 +79,9 @@ class StartupWindowController:
         except Exception as e:
             self.logger.error(f"Error opening New Genome tab: {str(e)}", exc_info=True)
             show_error(self.settings, "Error opening New Genome module", str(e))
+
+    # Add this method
+    def deactivate(self):
+        self.is_active = False
+        if hasattr(self, 'view'):
+            delattr(self, 'view')

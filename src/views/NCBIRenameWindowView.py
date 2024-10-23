@@ -1,18 +1,17 @@
 from PyQt6 import QtWidgets, QtGui, QtCore, uic
 import os
 
-class NCBIRenameWindowUI(QtWidgets.QDialog):  # Changed to QDialog
+class NCBIRenameWindowView(QtWidgets.QDialog):
     def __init__(self, settings, files):
-        super(NCBIRenameWindowUI, self).__init__()
+        super(NCBIRenameWindowView, self).__init__()
         self.settings = settings
         self.files = files
         self.setup_ui()
 
     def setup_ui(self):
         # Load the UI file
-        uic.loadUi(os.path.join(self.settings.get_ui_dir(), 'ncbi_rename_window.ui'), self)
+        uic.loadUi(os.path.join(self.settings.get_ui_dir_path(), 'ncbi_rename_window.ui'), self)
         self.setWindowTitle("Rename Files")
-        self.setWindowIcon(QtGui.QIcon(os.path.join(self.settings.get_assets_dir(), "cas9image.ico")))
 
         # Initialize UI components
         self.init_ui_components()

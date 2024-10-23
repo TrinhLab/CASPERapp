@@ -3,7 +3,7 @@ import traceback
 import models.GlobalSettings as GlobalSettings
 
 
-def show_message(fontSize, icon, title, message, button=QtWidgets.QMessageBox.StandardButton.Close):
+def show_message(title, message, fontSize=12, icon=QtWidgets.QMessageBox.Icon.Information, button=QtWidgets.QMessageBox.StandardButton.Close):
     try:
         msgBox = QtWidgets.QMessageBox()
         msgBox.setStyleSheet(f"font: {fontSize}pt 'Arial'")
@@ -48,8 +48,6 @@ def scale_ui(window, base_width=1920, base_height=1080, font_size=12, header_fon
 
         # Font scaling
         window.centralWidget().setStyleSheet(f"font: {font_size}pt 'Arial';")
-        if hasattr(window, 'menuBar'):
-            window.menuBar().setStyleSheet(f"font: {font_size}pt 'Arial';")
 
         if hasattr(window, 'title'):
             scaled_title_font_size = int(header_font_size * (width / base_width))

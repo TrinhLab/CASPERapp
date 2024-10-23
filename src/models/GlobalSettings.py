@@ -14,6 +14,7 @@ from models.ConfigManager import ConfigManager
 class GlobalSettings(QObject):
     db_state_updated = pyqtSignal(bool, str, list)  # Combined signal
     first_time_startup = pyqtSignal()  # New signal
+    endonuclease_updated = pyqtSignal()
 
     def __init__(self, app_dir_path):
         super().__init__()
@@ -194,32 +195,42 @@ class GlobalSettings(QObject):
     
     def get_home_window(self):
         controller = self._create_window("HomeWindow")
-        self._current_home_window = controller  # Store reference
+        self._current_home_window = controller
         return controller
 
     def get_new_genome_window(self):
         controller = self._create_window("NewGenomeWindow")
-        self._current_new_genome_window = controller  # Store reference
+        self._current_new_genome_window = controller
         return controller
 
     def get_new_endonuclease_window(self):
         controller = self._create_window("NewEndonuclease")
-        self._current_new_endonuclease_window = controller  # Store reference
+        self._current_new_endonuclease_window = controller
         return controller
 
     def get_ncbi_window(self):
         controller = self._create_window("NCBIWindow")
-        self._current_ncbi_window = controller  # Store reference
+        self._current_ncbi_window = controller
         return controller
 
     def get_multitargeting_window(self):
         controller = self._create_window("MultitargetingWindow")
-        self._current_multitargeting_window = controller  # Store reference
+        self._current_multitargeting_window = controller
         return controller
 
     def get_population_analysis_window(self):
         controller = self._create_window("PopulationAnalysisWindow")
-        self._current_population_analysis_window = controller  # Store reference
+        self._current_population_analysis_window = controller
+        return controller
+
+    def get_find_targets_window(self):
+        controller = self._create_window("FindTargets")
+        self._current_find_targets_window = controller
+        return controller
+    
+    def get_view_targets_window(self):
+        controller = self._create_window("ViewTargets")
+        self._current_view_targets_window = controller  
         return controller
 
     def set_main_window(self, main_window):
@@ -243,6 +254,19 @@ class GlobalSettings(QObject):
             self.logger.info("Emitting first_time_startup signal")
             self.first_time_startup.emit()
             # We no longer set FIRST_TIME_START to FALSE here
+    
+    def get_organism_to_endonuclease(self):
+        if hasattr(self, '_current_home_window'):
+            return self._current_home_window.model.get_organism_to_endonuclease()
+        else:
+            self.logger.warning("Home window not initialized when trying to get organism_to_endonuclease")
+            return {}
+
+    def get_annotation_files(self):
+        return self.home_window_model.get_annotation_files()
+    
+    def get_endonucleases(self):
+        return self.config_manager.get_endonucleases()
 
 # Global instance
 global_settings = None

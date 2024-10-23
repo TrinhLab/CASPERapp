@@ -22,10 +22,13 @@ class ConfigManager(QObject):
     def __init__(self, app_dir_path, logger):
         super().__init__()
         self.app_dir_path = app_dir_path
+        self.endonucleases = OrderedDict()
         self.logger = logger
         self.config_dir_path = os.path.join(self.app_dir_path, 'config')
+        self.casper_info_path = os.path.join(self.config_dir_path, 'CASPERinfo')
         self.env_path = os.path.join(self.app_dir_path, '.env')
         self.config = self._initialize_config()
+        self.load_endonucleases_data()
 
     def _initialize_config(self):
         config_path = os.path.join(self.config_dir_path, 'config.yml')
@@ -132,5 +135,56 @@ class ConfigManager(QObject):
         self.logger.info(f"Set config value: {key}")
 
     def ensure_config_dir_exists(self):
-        os.makedirs(self.config_dir, exist_ok=True)
-        self.logger.info(f"Ensured config directory exists: {self.config_dir}")
+        os.makedirs(self.config_dir_path, exist_ok=True)
+        self.logger.info(f"Ensured config directory exists: {self.config_dir_path}")
+
+    def load_endonucleases_data(self):
+        self.endonucleases.clear()  # Clear existing data before reloading
+        try:
+            with open(self.casper_info_path, 'r') as casper_info_file:
+                for line in casper_info_file:
+                    if line.startswith('ENDONUCLEASES'):
+                        self._parse_endonuclease_data(casper_info_file)
+                        break
+        except Exception as e:
+            self.logger.error(f"Error loading endonucleases: {e}")
+
+    def _parse_endonuclease_data(self, file):
+        for line in file:
+            if line.startswith('-'):
+                break
+            self._process_endonuclease_line(line)
+
+    def _process_endonuclease_line(self, line):
+        fields = line.strip().split(';')
+        print(fields)
+        if len(fields) == 10:
+            endonuclease_name = fields[0]
+            endonuclease_abbreviation = fields[1]
+            # pam_sequence = self._get_primary_pam(fields[1])
+            endonuclease_CRISPR_type = fields[2]
+            pam_sequence = fields[3]
+            five_prime_length, seed_length, three_prime_length, direction = fields[4:8]
+            endonuclease_on_target_matrix = fields[8]
+            endonuclease_off_target_matrix = fields[9]
+
+            endonuclease_key = f"{endonuclease_abbreviation} - PAM: {pam_sequence}"
+            endonuclease_value = {
+                'endonuclease_organism': endonuclease_name,
+                'endonuclease_abbreviation': endonuclease_abbreviation,
+                'endonuclease_CRISPR_type': endonuclease_CRISPR_type,
+                'endonuclease_pam_sequence': pam_sequence,
+                'endonuclease_five_prime_length': five_prime_length,
+                'endonuclease_seed_length': seed_length,
+                'endonuclease_three_prime_length': three_prime_length,
+                'endonuclease_direction': direction,
+                'endonuclease_on_target_scoring': endonuclease_on_target_matrix,
+                'endonuclease_off_target_scoring': endonuclease_off_target_matrix
+            }
+            self.endonucleases[endonuclease_key] = endonuclease_value
+
+    def _get_primary_pam(self, pam_field):
+        return pam_field.split(',')[0] if ',' in pam_field else pam_field
+    
+    def get_endonucleases(self):
+        return self.endonucleases
