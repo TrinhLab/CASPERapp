@@ -4,16 +4,14 @@ DIRECTORY:/Users/admin/Documents/proj/CASPERdb1
 
 -----------------------------------------------------------
 ENDONUCLEASES
-saCas9;NNGRRT;4;20;3;3;Staphylococcus aureus;II-C;CRISPRSCAN;HSU MATRIX-spCas9-2013
-saCas9;NNGRRT;4;20;3;3;Staphylococcus aureus;II-C;CRISPRSCAN;HSU MATRIX-spCas9-2013
-spCas9;NGG;4;16;0;3;Streptococcus pyogenes;II-A;CRISPRSCAN;HSU MATRIX-spCas9-2013
-saCas9;NNGRRT;4;16;0;3;Staphylococcus aureus;II-A;CRISPRSCAN;HSU MATRIX-saCas9-2017
-spCas9-VRER;NGCG;4;16;0;3;Streptococcus pyogenes engineered variant;II-A;CRISPRSCAN;HSU MATRIX-spCas9-2013
-st1Cas9;NNAGAAW;8;16;0;3;Streptococcus thermophilus;II-C;CRISPRSCAN;HSU MATRIX-spCas9-2013
-nmeCas9;NNNNGATT;8;16;0;3;Neisseria meningitidis;II-C;CRISPRSCAN;HSU MATRIX-spCas9-2013
-asCas12;TTTV;0;16;8;5;Acidimonaccocus;V-A;CRISPRSCAN;HSU MATRIX-asCas12-2016
-LbCpf1;TTTV,TCTN;0;16;8;5;Lachnospiraceae bacterium;V-A;CRISPRSCAN;HSU MATRIX-asCas12-2016
-LbuCas13a;HN;4;12;4;5;Leptospirae buccalis;VI-A;CRISPRSCAN;HSU MATRIX-spCas9-2013
+Streptococcus pyogenes;spCas9;II-A;NGG;4;16;0;3;CRISPRSCAN;HSU MATRIX-spCas9-2013
+Staphylococcus aureus;saCas9;II-A;NNGRRT;4;16;0;3;CRISPRSCAN;HSU MATRIX-saCas9-2017
+Streptococcus pyogenes engineered variant;spCas9-VRER;II-A;NGCG;4;16;0;3;CRISPRSCAN;HSU MATRIX-spCas9-2013
+Streptococcus thermophilus;st1Cas9;II-C;NNAGAAW;8;16;0;3;CRISPRSCAN;HSU MATRIX-spCas9-2013
+Neisseria meningitidis;nmeCas9;II-C;NNNNGATT;8;16;0;3;CRISPRSCAN;HSU MATRIX-spCas9-2013
+Acidimonaccocus;asCas12;V-A;TTTV;0;16;8;5;CRISPRSCAN;HSU MATRIX-asCas12-2016
+Lachnospiraceae bacterium;LbCpf1;V-A;TTTV,TCTN;0;16;8;5;CRISPRSCAN;HSU MATRIX-asCas12-2016
+Leptospirae buccalis;LbuCas13a;VI-A;HN;4;12;4;5;CRISPRSCAN;HSU MATRIX-spCas9-2013
 -----------------------------------------------------------
 ON-TARGET DATA
 DATA:CRISPRSCAN
