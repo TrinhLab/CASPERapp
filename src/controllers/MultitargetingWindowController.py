@@ -1,67 +1,256 @@
 from PyQt6.QtWidgets import QMainWindow
 from views.MultitargetingWindowView import MultitargetingWindowView
 from models.MultitargetingWindowModel import MultitargetingWindowModel
+from utils.ui import show_error
 
 class MultitargetingWindowController(QMainWindow):
     def __init__(self, global_settings):
         super().__init__()
-        self.global_settings = global_settings
-        self._view = MultitargetingWindowView(global_settings)
-        self._model = MultitargetingWindowModel(global_settings)
-        self.setCentralWidget(self._view)
-        self.setup_connections()
-
-    @property
-    def view(self):
-        return self._view
-
-    @property
-    def model(self):
-        return self._model
-
-    def show(self):
-        super().show()
-
-    def setup_connections(self):
-        # Connect signals from view to controller methods
-        self.view.comboBox_organism.currentIndexChanged.connect(self.update_endo_list)
-        self.view.comboBox_endo.currentIndexChanged.connect(self.load_data)
-        self.view.pushButton_load.clicked.connect(self.load_data)
-        # Add more connections as needed
-
-    def update_endo_list(self):
-        organism = self.view.comboBox_organism.currentText()
-        endos = self.model.get_endos_for_organism(organism)
-        self.view.comboBox_endo.clear()
-        self.view.comboBox_endo.addItems(endos)
-
-    def load_data(self):
-        organism = self.view.comboBox_organism.currentText()
-        endo = self.view.comboBox_endo.currentText()
-        self.model.set_files(organism, endo)
+        self.settings = global_settings
+        self.logger = global_settings.get_logger()
         
-        # Load and process data
-        repeats_data = self.model.get_repeats_data()
-        kstats = self.model.get_kstats()
-        
-        # Update view with data
-        self.view.update_table(repeats_data)
-        self.view.update_global_stats(self.model)
-        
-        # Load and update graphs
-        self.load_graphs()
+        try:
+            self._model = MultitargetingWindowModel(global_settings)
+            self._view = MultitargetingWindowView(global_settings)
+            self.setCentralWidget(self._view)
+            
+            self._init_ui()
+            self._setup_connections()
+        except Exception as e:
+            show_error(self.settings, "Error initializing MultitargetingWindowController", str(e))
 
-    def load_graphs(self):
-        # Load data for graphs
-        seeds_vs_repeats = self.model.get_seeds_vs_repeats_data()
-        repeats_vs_seeds = self.model.get_repeats_vs_seeds_data()
-        
-        # Update graphs in view
-        self.view.update_global_line_graph(seeds_vs_repeats)
-        self.view.update_global_bar_graph(repeats_vs_seeds)
+    def _init_ui(self):
+        """Initialize UI components"""
+        try:
+            # Set up initial data
+            organisms = self._model.get_organisms()
+            
+            self._view.combo_box_organism.clear()
+            self._view.combo_box_organism.addItems(organisms)
+            
+            # If we have organisms, trigger the first one
+            if organisms:
+                self._on_organism_changed(0)
+            
+            # Initialize plots
+            self._view.setup_plots()
+            
+        except Exception as e:
+            self.logger.error(f"Error in _init_ui: {str(e)}")
+            show_error(self.settings, "Error", f"Failed to initialize UI: {str(e)}")
 
-    def initialize(self):
-        organisms = self.model.get_organisms()
-        self.view.comboBox_organism.addItems(organisms)
-        self.view.scaleUI()
-        self.view.centerUI()
+    def _setup_connections(self):
+        """Set up signal-slot connections"""
+        # Organism and endonuclease selection
+        self._view.combo_box_organism.currentIndexChanged.connect(self._on_organism_changed)
+        self._view.combo_box_endonuclease.currentIndexChanged.connect(self._on_endonuclease_changed)
+        
+        # Buttons
+        self._view.push_button_analyze.clicked.connect(self._on_analyze_clicked)
+        self._view.push_button_statistics_overview.clicked.connect(self._on_statistics_overview_clicked)
+        self._view.tool_button_sql_settings.clicked.connect(self._on_sql_settings_clicked)
+        
+        # Table selection
+        self._view.table_seeds.itemSelectionChanged.connect(self._on_seed_selected)
+        self._view.check_box_select_all.stateChanged.connect(self._on_select_all_changed)
+
+    def _on_organism_changed(self, index):
+        """Handle organism selection change"""
+        try:
+            organism = self._view.combo_box_organism.currentText()
+            if not organism:
+                return
+                
+            # Get endos for selected organism
+            endos = self._model.get_endos_for_organism(organism)
+            
+            # Update endonuclease combo box
+            self._view.combo_box_endonuclease.clear()
+            self._view.combo_box_endonuclease.addItems(endos)
+            
+            # Update file paths
+            if endos:
+                self._model.set_files(organism, endos[0])
+                
+        except Exception as e:
+            self.logger.error(f"Error in _on_organism_changed: {str(e)}")
+            show_error(self.settings, "Error", f"Failed to update endonucleases: {str(e)}")
+
+    def _on_endonuclease_changed(self, index):
+        """Handle endonuclease selection change"""
+        self._update_analysis_button_state()
+
+    def _on_analyze_clicked(self):
+        """Handle analyze button click"""
+        try:
+            organism = self._view.combo_box_organism.currentText()
+            endo = self._view.combo_box_endonuclease.currentText()
+            
+            if not organism or not endo:
+                show_error(self.settings, "Analysis Error", "Please select both an organism and an endonuclease.")
+                return
+                
+            # Load data
+            try:
+                self._model.set_files(organism, endo)
+            except FileNotFoundError as e:
+                show_error(self.settings, "File Error", 
+                          f"Could not find required files for {organism} with {endo}. Please ensure the files exist.")
+                return
+            except ValueError as e:
+                show_error(self.settings, "Input Error", str(e))
+                return
+                
+            seeds_data = self._model.get_repeats_data()
+            
+            # Update UI
+            self._view.update_seeds_table(seeds_data)
+            self._update_plots()
+            
+        except Exception as e:
+            show_error(self.settings, "Analysis Error", str(e))
+
+    def _on_statistics_overview_clicked(self):
+        """Handle statistics overview button click"""
+        try:
+            stats = self._model.calculate_statistics()
+            self._show_statistics_dialog(stats)
+        except Exception as e:
+            show_error(self.settings, "Statistics Error", str(e))
+
+    def _on_sql_settings_clicked(self):
+        """Handle SQL settings button click"""
+        try:
+            current_settings = self._model.get_sql_settings()
+            if self._show_sql_settings_dialog(current_settings):
+                new_settings = self._get_sql_settings_from_dialog()
+                self._model.update_sql_settings(new_settings)
+        except Exception as e:
+            show_error(self.settings, "SQL Settings Error", str(e))
+
+    def _on_seed_selected(self):
+        """Handle seed selection in table"""
+        try:
+            selected_items = self._view.table_seeds.selectedItems()
+            if selected_items:
+                row = selected_items[0].row()
+                seed = self._view.table_seeds.item(row, 0).text()
+                
+                # Get seed data
+                seed_data = self._model.get_seed_data(seed)
+                if not seed_data:
+                    return
+
+                # Process seed data for visualization
+                kstats = self._model.get_kstats()
+                seed_data_processed, event_data = self._process_seed_data(seed_data, kstats)
+                
+                # Update chromosome viewer
+                self._view.fill_chromosome_viewer(seed_data_processed, event_data)
+                
+                # Update only the chromosome bar plot
+                chromosome_data = self._model.get_chro_bar_data(seed)
+                # Update only the chromosome plot, keep other plots unchanged
+                self._view._update_repeat_vs_chromosome_plot(chromosome_data)
+                
+        except Exception as e:
+            self.logger.error(f"Error handling seed selection: {str(e)}")
+            show_error(self.settings, "Error", f"Failed to display seed data: {str(e)}")
+
+    def _process_seed_data(self, seed_data, kstats):
+        """Process seed data for visualization"""
+        try:
+            seed_data_processed = {}
+            event_data = {}
+            
+            for data in seed_data:
+                # Split chromosome and location strings into lists
+                chromos = [int(x) for x in data[0].split(',')]
+                locs = [int(x) for x in data[1].split(',')]
+                pams = data[2].split(',')
+                scores = data[3].split(',')
+                fives = data[4].split(',')
+                threes = data[5].split(',')
+                
+                # Process each chromosome location
+                for i in range(len(chromos)):
+                    chromo = chromos[i]
+                    pos = locs[i]
+                    
+                    # Normalize location
+                    dir = "+" if pos >= 0 else "-"
+                    normalized_location = abs(float(pos) / float(kstats[chromo - 1]))
+                    
+                    # Store data
+                    if chromo in seed_data_processed:
+                        seed_data_processed[chromo].append(normalized_location)
+                        event_data[chromo].append([
+                            normalized_location, 
+                            pos, 
+                            fives[i] + threes[i], 
+                            pams[i], 
+                            scores[i], 
+                            dir
+                        ])
+                    else:
+                        seed_data_processed[chromo] = [normalized_location]
+                        event_data[chromo] = [[
+                            normalized_location, 
+                            pos, 
+                            fives[i] + threes[i], 
+                            pams[i], 
+                            scores[i], 
+                            dir
+                        ]]
+                        
+            return seed_data_processed, event_data
+            
+        except Exception as e:
+            self.logger.error(f"Error processing seed data: {str(e)}")
+            raise
+
+    def _on_select_all_changed(self, state):
+        """Handle select all checkbox state change"""
+        self._view.table_seeds.selectAll() if state else self._view.table_seeds.clearSelection()
+
+    def _update_analysis_button_state(self):
+        """Update analyze button enabled state"""
+        has_organism = bool(self._view.organism_drop.currentText())
+        has_endo = bool(self._view.combo_box_endonuclease.currentText())
+        self._view.push_button_analyze.setEnabled(has_organism and has_endo)
+        
+        # Clear any existing data if selection changes
+        if not (has_organism and has_endo):
+            self._view.table_seeds.setRowCount(0)
+            self._view.update_plots(None, None, None)
+
+    def _update_plots(self):
+        """Update all plots with current data"""
+        try:
+            # Get repeats vs seeds data first
+            repeats_data = self._model.get_repeats_vs_seeds_data()
+            
+            # Get sequences vs repeats data
+            sequences_data = self._model.get_seeds_vs_repeats_data()
+
+            # Update all plots at once
+            self._view.update_plots(repeats_data, sequences_data, None)  # chromosome_data will be updated on seed selection
+            
+        except Exception as e:
+            self.logger.error(f"Error in _update_plots: {str(e)}")
+            show_error(self.settings, "Plot Update Error", str(e))
+
+    def _show_statistics_dialog(self, stats):
+        """Show statistics overview dialog"""
+        # Implement statistics dialog display
+        pass
+
+    def _show_sql_settings_dialog(self, current_settings):
+        """Show SQL settings dialog"""
+        # Implement SQL settings dialog display
+        return False
+
+    def _get_sql_settings_from_dialog(self):
+        """Get settings from SQL settings dialog"""
+        # Implement getting settings from dialog
+        return {}

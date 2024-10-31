@@ -61,24 +61,63 @@ class ViewTargetsView(QtWidgets.QMainWindow):
         return widget 
 
     def display_targets_in_table(self, targets):
+        """Display targets in table with all data"""
         self.table_targets.setRowCount(len(targets))
+        
         for row, target in enumerate(targets):
-            self.table_targets.setItem(row, 0, QTableWidgetItem(str(target[0])))  # Location
-            self.table_targets.setItem(row, 1, QTableWidgetItem(target[5]))  # Endonuclease
-            self.table_targets.setItem(row, 2, QTableWidgetItem(target[1]))  # Sequence
-            self.table_targets.setItem(row, 3, QTableWidgetItem(target[4]))  # Strand
-            self.table_targets.setItem(row, 4, QTableWidgetItem(target[2]))  # PAM
-            self.table_targets.setItem(row, 5, QTableWidgetItem(str(target[3])))  # Score
-            self.table_targets.setItem(row, 6, QTableWidgetItem("N/A"))  # Off-Target (placeholder)
+            # Handle tuple format (location, sequence, pam, score, strand, endonuclease)
+            if isinstance(target, tuple):
+                self.table_targets.setItem(row, 0, QTableWidgetItem(str(target[0])))  # Location
+                self.table_targets.setItem(row, 1, QTableWidgetItem(str(target[5])))  # Endonuclease
+                self.table_targets.setItem(row, 2, QTableWidgetItem(str(target[1])))  # Sequence
+                self.table_targets.setItem(row, 3, QTableWidgetItem(str(target[4])))  # Strand
+                self.table_targets.setItem(row, 4, QTableWidgetItem(str(target[2])))  # PAM
+                self.table_targets.setItem(row, 5, QTableWidgetItem(str(target[3])))  # Score
+                self.table_targets.setItem(row, 6, QTableWidgetItem("--.--"))  # Off-Target placeholder
+            # Handle dictionary format
+            else:
+                self.table_targets.setItem(row, 0, QTableWidgetItem(str(target['location'])))
+                self.table_targets.setItem(row, 1, QTableWidgetItem(str(target['endonuclease'])))
+                self.table_targets.setItem(row, 2, QTableWidgetItem(str(target['sequence'])))
+                self.table_targets.setItem(row, 3, QTableWidgetItem(str(target['strand'])))
+                self.table_targets.setItem(row, 4, QTableWidgetItem(str(target['pam'])))
+                self.table_targets.setItem(row, 5, QTableWidgetItem(str(target['score'])))
+                self.table_targets.setItem(row, 6, QTableWidgetItem("--.--"))
             
+            # Add details button
             details_button = QtWidgets.QPushButton("Details")
             self.table_targets.setCellWidget(row, 7, details_button)
-
+        
         self.table_targets.resizeColumnsToContents()
 
     def get_selected_targets(self):
+        """Get selected targets with all necessary data"""
         selected_rows = set(index.row() for index in self.table_targets.selectedIndexes())
-        return [self.get_row_data(row) for row in selected_rows]
+        selected_targets = []
+        
+        # Get column indices once
+        columns = {
+            'location': 0,
+            'endonuclease': 1,
+            'sequence': 2,  # Make sure to get the sequence
+            'strand': 3,
+            'pam': 4,
+            'score': 5,
+            'off_target': 6
+        }
+        
+        for row in selected_rows:
+            target = {
+                'location': self.table_targets.item(row, columns['location']).text(),
+                'endonuclease': self.table_targets.item(row, columns['endonuclease']).text(),
+                'sequence': self.table_targets.item(row, columns['sequence']).text(),  # Get sequence
+                'strand': self.table_targets.item(row, columns['strand']).text(),
+                'pam': self.table_targets.item(row, columns['pam']).text(),
+                'score': self.table_targets.item(row, columns['score']).text(),
+                'off_target': self.table_targets.item(row, columns['off_target']).text()
+            }
+            selected_targets.append(target)
+        return selected_targets
 
     def get_row_data(self, row):
         return {

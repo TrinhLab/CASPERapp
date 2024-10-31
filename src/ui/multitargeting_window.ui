@@ -19,11 +19,19 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>885</width>
+     <height>564</height>
+    </rect>
+   </property>
    <layout class="QGridLayout" name="gridLayout_2">
-    <item row="1" column="1">
+    <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="0" rowspan="2">
-       <widget class="QGroupBox" name="groupBox">
+      <item row="1" column="0" rowspan="2">
+       <widget class="QGroupBox" name="grpSelectOrganism">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -34,8 +42,8 @@
          <string>Select Organism and Endonuclease:</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_8">
-         <item row="2" column="0">
-          <widget class="QComboBox" name="organism_drop">
+         <item row="1" column="0">
+          <widget class="QComboBox" name="cmbOrganism">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -50,10 +58,10 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="0" colspan="2">
+         <item row="2" column="0" colspan="2">
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
-            <widget class="QPushButton" name="Analyze_Button">
+            <widget class="QPushButton" name="pbtnAnalyze">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -72,7 +80,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QToolButton" name="sql_query_settings">
+            <widget class="QToolButton" name="tbtnSQLSettings">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -86,8 +94,8 @@
            </item>
           </layout>
          </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="label_2">
+         <item row="0" column="1">
+          <widget class="QLabel" name="lblEndonuclease">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -99,8 +107,8 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="0" colspan="2">
-          <widget class="QTableWidget" name="table">
+         <item row="4" column="0" colspan="2">
+          <widget class="QTableWidget" name="tblSeeds">
            <property name="minimumSize">
             <size>
              <width>400</width>
@@ -109,8 +117,8 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label">
+         <item row="0" column="0">
+          <widget class="QLabel" name="lblOrganism">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -122,8 +130,8 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="endo_drop">
+         <item row="1" column="1">
+          <widget class="QComboBox" name="cmbEndonuclease">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -138,40 +146,8 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="0" colspan="2">
-          <spacer name="verticalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>10</width>
-             <height>10</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="6" column="0" colspan="2">
-          <spacer name="verticalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>10</width>
-             <height>10</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="4" column="0">
-          <widget class="QCheckBox" name="selectAll">
+         <item row="3" column="0">
+          <widget class="QCheckBox" name="chkSelectAll">
            <property name="text">
             <string>Select All</string>
            </property>
@@ -180,8 +156,8 @@
         </layout>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QGroupBox" name="groupBox_2">
+      <item row="1" column="1">
+       <widget class="QGroupBox" name="grpSeedAnalysis">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
           <horstretch>0</horstretch>
@@ -198,40 +174,8 @@
          <string>Seed Analysis</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_6">
-         <item row="3" column="0">
-          <spacer name="verticalSpacer_8">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>10</width>
-             <height>10</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
          <item row="0" column="0">
-          <spacer name="verticalSpacer_7">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>10</width>
-             <height>10</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="1" column="0">
-          <widget class="QTabWidget" name="tabWidget">
+          <widget class="QTabWidget" name="tabsSeedAnalysis">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -247,13 +191,13 @@
            <property name="currentIndex">
             <number>0</number>
            </property>
-           <widget class="QWidget" name="tab_3">
+           <widget class="QWidget" name="tabChromosomeViewer">
             <attribute name="title">
              <string>Scaffold/Chromosome Viewer:</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_4">
              <item row="0" column="0">
-              <widget class="QGraphicsView" name="graphicsView_2">
+              <widget class="QGraphicsView" name="graphviewChromosome">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -269,7 +213,7 @@
               </widget>
              </item>
              <item row="1" column="0">
-              <widget class="QScrollArea" name="scrollArea">
+              <widget class="QScrollArea" name="scrollChromosome">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                  <horstretch>0</horstretch>
@@ -279,13 +223,13 @@
                <property name="widgetResizable">
                 <bool>true</bool>
                </property>
-               <widget class="QWidget" name="scrollAreaWidgetContents">
+               <widget class="QWidget" name="scrollviewChromosome">
                 <property name="geometry">
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>424</width>
-                  <height>121</height>
+                  <width>369</width>
+                  <height>112</height>
                  </rect>
                 </property>
                </widget>
@@ -293,13 +237,13 @@
              </item>
             </layout>
            </widget>
-           <widget class="QWidget" name="tab_4">
+           <widget class="QWidget" name="tabSeedDistribution">
             <attribute name="title">
              <string>Seed Distribution</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_9">
              <item row="0" column="0">
-              <widget class="QWidget" name="repeats_vs_chromo" native="true"/>
+              <widget class="QWidget" name="plotRepeatVsChromosome" native="true"/>
              </item>
             </layout>
            </widget>
@@ -308,8 +252,8 @@
         </layout>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QGroupBox" name="groupBox_3">
+      <item row="2" column="1">
+       <widget class="QGroupBox" name="grpGlobalAnalysis">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -332,24 +276,8 @@
          <string>Global Analysis</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_7">
-         <item row="3" column="0">
-          <spacer name="verticalSpacer_6">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>10</width>
-             <height>10</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="1" column="0">
-          <widget class="QPushButton" name="statistics_overview">
+         <item row="0" column="0">
+          <widget class="QPushButton" name="pbtnStatisticsOverview">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -367,8 +295,8 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
-          <widget class="QTabWidget" name="tabWidget_2">
+         <item row="1" column="0">
+          <widget class="QTabWidget" name="tabsGlobalAnalysis">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -378,23 +306,23 @@
            <property name="currentIndex">
             <number>1</number>
            </property>
-           <widget class="QWidget" name="tab">
+           <widget class="QWidget" name="tabRepeatsVsSeed">
             <attribute name="title">
-             <string>Repeats per ID Number</string>
+             <string>Repeats per Seed ID Number</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_11">
              <item row="0" column="0">
-              <widget class="QWidget" name="repeats_vs_seeds_line" native="true"/>
+              <widget class="QWidget" name="plotRepeatsVsSeed" native="true"/>
              </item>
             </layout>
            </widget>
-           <widget class="QWidget" name="tab_2">
+           <widget class="QWidget" name="tabSequencesVsRepeats">
             <attribute name="title">
-             <string>Seeds per Number Repeats</string>
+             <string>Sequences per Number Repeats</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_10">
              <item row="0" column="0">
-              <widget class="QWidget" name="seeds_vs_repeats_bar" native="true">
+              <widget class="QWidget" name="plotSequencesVsRepeats" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                  <horstretch>0</horstretch>
@@ -407,41 +335,18 @@
            </widget>
           </widget>
          </item>
-         <item row="0" column="0">
-          <spacer name="verticalSpacer_5">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>10</width>
-             <height>10</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
         </layout>
        </widget>
       </item>
       <item row="0" column="0">
-       <widget class="QLabel" name="title">
+       <widget class="QLabel" name="lblMultitargeting">
         <property name="text">
          <string>Multitargeting</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0" alignment="Qt::AlignLeft">
-       <widget class="QPushButton" name="back_button">
+      <item row="3" column="0" alignment="Qt::AlignLeft">
+       <widget class="QPushButton" name="pbtnBank">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -459,8 +364,8 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1" alignment="Qt::AlignRight">
-       <widget class="QPushButton" name="export_button">
+      <item row="3" column="1" alignment="Qt::AlignRight">
+       <widget class="QPushButton" name="pbtnExport">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -480,73 +385,8 @@
       </item>
      </layout>
     </item>
-    <item row="1" column="0">
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeType">
-       <enum>QSizePolicy::Fixed</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="2" column="1">
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeType">
-       <enum>QSizePolicy::Fixed</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="1" column="2">
-     <spacer name="horizontalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeType">
-       <enum>QSizePolicy::Fixed</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="0" column="1">
-     <spacer name="verticalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeType">
-       <enum>QSizePolicy::Fixed</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
  <connections/>

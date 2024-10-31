@@ -35,13 +35,8 @@ def show_error(settings, message, e):
 
 def scale_ui(window, base_width=1920, base_height=1080, font_size=12, header_font_size=30, custom_scale_width=None, custom_scale_height=None):
     try:
-        window.repaint()
-        QtWidgets.QApplication.processEvents()
-
         # Get the primary screen
         screen = QtGui.QGuiApplication.primaryScreen()
-        
-        # Get the geometry of the screen
         screen_geometry = screen.geometry()
         width = screen_geometry.width()
         height = screen_geometry.height()
@@ -53,31 +48,25 @@ def scale_ui(window, base_width=1920, base_height=1080, font_size=12, header_fon
             scaled_title_font_size = int(header_font_size * (width / base_width))
             window.title.setStyleSheet(f"font: bold {scaled_title_font_size}pt 'Arial';")
 
-        window.adjustSize()
-
-        currentWidth = window.size().width()
-        currentHeight = window.size().height()
-
-        # Window resize and center
+        # Calculate sizes
         scaledWidth = int((width * (custom_scale_width if custom_scale_width else 1150)) / base_width)
         scaledHeight = int((height * (custom_scale_height if custom_scale_height else 650)) / base_height)
+
+        # Ensure minimum size
+        window.adjustSize()
+        currentWidth = window.size().width()
+        currentHeight = window.size().height()
 
         if scaledHeight < currentHeight:
             scaledHeight = currentHeight
         if scaledWidth < currentWidth:
             scaledWidth = currentWidth
 
-        # Center the window on the screen
-        centerPoint = screen_geometry.center()
-        x = centerPoint.x() - (scaledWidth // 2)
-        y = centerPoint.y() - (scaledHeight // 2)
-        window.setGeometry(x, y, scaledWidth, scaledHeight)
-
-        window.repaint()
-        QtWidgets.QApplication.processEvents()
+        # Resize in a single operation
+        window.resize(scaledWidth, scaledHeight)
 
     except Exception as e:
-        print(f"Error in scale_ui: {e}") 
+        print(f"Error in scale_ui: {e}")
 
 def center_ui(window):
     try:

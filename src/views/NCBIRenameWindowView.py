@@ -5,7 +5,8 @@ class NCBIRenameWindowView(QtWidgets.QDialog):
     def __init__(self, settings, files):
         super(NCBIRenameWindowView, self).__init__()
         self.settings = settings
-        self.files = files
+        # Store only filenames, not full paths
+        self.files = [os.path.basename(file) for file in files]
         self.setup_ui()
 
     def setup_ui(self):
@@ -42,6 +43,7 @@ class NCBIRenameWindowView(QtWidgets.QDialog):
     def populate_table(self):
         self.rename_table.setRowCount(len(self.files))
         for row, file in enumerate(self.files):
+            # Create item with just the filename
             item = QtWidgets.QTableWidgetItem(file)
             item.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.rename_table.setItem(row, 0, item)

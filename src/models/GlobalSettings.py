@@ -15,6 +15,7 @@ class GlobalSettings(QObject):
     db_state_updated = pyqtSignal(bool, str, list)  # Combined signal
     first_time_startup = pyqtSignal()  # New signal
     endonuclease_updated = pyqtSignal()
+    annotation_file_changed = pyqtSignal(str)  # New signal for annotation file changes
 
     def __init__(self, app_dir_path):
         super().__init__()
@@ -44,6 +45,8 @@ class GlobalSettings(QObject):
         self.initialize_palettes()
 
         self.main_window = None 
+
+        self._current_annotation_file = None
 
     def _initialize_directories(self):
         self.src_dir_path = os.path.join(self.app_dir_path, 'src')
@@ -267,6 +270,20 @@ class GlobalSettings(QObject):
     
     def get_endonucleases(self):
         return self.config_manager.get_endonucleases()
+
+    def set_current_annotation_file(self, annotation_file):
+        """Set the current annotation file and notify listeners"""
+        if self._current_annotation_file != annotation_file:
+            self._current_annotation_file = annotation_file
+            self.logger.debug(f"Current annotation file changed to: {annotation_file}")
+            self.annotation_file_changed.emit(annotation_file)
+
+    def get_current_annotation_file(self):
+        """Get the currently selected annotation file"""
+        if not self._current_annotation_file and hasattr(self, '_current_home_window'):
+            # Try to get from home window if not set
+            self._current_annotation_file = self._current_home_window.get_annotation_file()
+        return self._current_annotation_file
 
 # Global instance
 global_settings = None

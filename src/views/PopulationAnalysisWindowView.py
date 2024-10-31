@@ -1,130 +1,138 @@
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
-from PyQt6.QtWidgets import QHeaderView
+from PyQt6.QtWidgets import QHeaderView, QAbstractItemView
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import mplcursors
 import numpy as np
 import matplotlib.patches as patches
-from utils.ui import show_error, scale_ui, center_ui
+from utils.ui import show_error, scale_ui
 
 class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
     def __init__(self, global_settings):
-        super(PopulationAnalysisWindowView, self).__init__()
-        self.global_settings = global_settings
+        super().__init__()
+        self.settings = global_settings
+        self.logger = self.settings.get_logger()
         self.init_ui()
 
     def init_ui(self):
         try:
-            uic.loadUi(self.global_settings.get_ui_dir() + '/pop.ui', self)
-            self.setWindowIcon(QtGui.QIcon(self.global_settings.get_assets_dir() + "/cas9image.ico"))
-            self.setWindowTitle('Population Analysis')
-            self.setup_tables()
-            self.setup_buttons()
-            self.setup_colormap()
-            self.setup_styles()
-            scale_ui(self, base_width=1920, base_height=1080, font_size=12, header_font_size=30)
+            uic.loadUi(self.settings.get_ui_dir_path() + '/population_analysis.ui', self)
+            self._init_ui_components()
         except Exception as e:
-            show_error(self.global_settings, "Error initializing PopulationAnalysisWindowView.", str(e))
+            show_error(self.settings, "Error initializing PopulationAnalysisWindowView", str(e))
 
-    def setup_tables(self):
-        # Organism table
-        self.org_Table.setColumnCount(1)
-        self.org_Table.setShowGrid(False)
-        self.org_Table.setHorizontalHeaderLabels(["Organism"])
-        self.org_Table.horizontalHeader().setSectionsClickable(True)
-        self.org_Table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.org_Table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
-        self.org_Table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.org_Table.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.MultiSelection)
+    def _init_ui_components(self):
+        self._init_grpSelectOrganisms()
+        self._init_grpSeedAnalysis()
+        # self._init_colormap()
 
-        # Shared seeds table
-        self.table2.setColumnCount(9)
-        self.table2.setShowGrid(False)
-        self.table2.setHorizontalHeaderLabels(["Seed","% Coverage","Total Repeats","Avg. Repeats/Scaffold", "Consensus Sequence", "% Consensus", "Score","PAM", "Strand"])
-        self.table2.horizontalHeader().setSectionsClickable(True)
-        self.table2.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-        self.table2.setSelectionBehavior(QtWidgets.QTableView.SelectionBehavior.SelectRows)
-        self.table2.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.MultiSelection)
-        self.table2.resizeColumnsToContents()
+    def _init_grpSelectOrganisms(self):
+        self.combo_box_endonuclease = self._find_widget('cmbEndonuclease', QtWidgets.QComboBox)
+        print(self.combo_box_endonuclease)
+        self.table_organism = self._find_widget('tblOrganism', QtWidgets.QTableWidget)
+        self.push_button_analyze_organism = self._find_widget('pbtnAnalyzeOrganism', QtWidgets.QPushButton)
 
-        # Location finder table
-        self.loc_finder_table.setColumnCount(5)
-        self.loc_finder_table.setShowGrid(False)
-        self.loc_finder_table.setHorizontalHeaderLabels(["Seed ID", "Sequence", "Organism", "Scaffold", "Location"])
-        self.loc_finder_table.horizontalHeader().setSectionsClickable(True)
-        self.loc_finder_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        self.loc_finder_table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.loc_finder_table.resizeColumnsToContents()
+        self.tab_widget_shared_seeds_heatmap = self._find_widget('tabsSharedSeedHeatmap', QtWidgets.QTabWidget)
+        self.tab_shared_seed_heatmap = self._find_widget('tabSharedSeedHeatmap', QtWidgets.QWidget)
+        self.heatmap_seed = self._find_widget('heatmapSeed', QtWidgets.QWidget)
 
-    def setup_buttons(self):
-        self.goBackButton.setText("Go Back")
-        self.analyze_button.setText("Analyze")
-        self.clear_Button.setText("Clear")
-        self.export_button.setText("Export")
-        self.find_locs_button.setText("Find Locations")
-        self.clear_loc_button.setText("Clear Locations")
-        self.query_seed_button.setText("Search Seeds")
+        self.table_organism.setColumnCount(1)
+        self.table_organism.setShowGrid(False)
+        self.table_organism.setHorizontalHeaderLabels(["Organism"])
+        self.table_organism.horizontalHeader().setSectionsClickable(True)
+        self.table_organism.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table_organism.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.table_organism.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table_organism.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
 
-    def setup_colormap(self):
-        self.colormap_layout = QtWidgets.QVBoxLayout()
-        self.colormap_layout.setContentsMargins(0, 0, 0, 0)
-        self.colormap_canvas = MplCanvas(self)
-        self.colormap_layout.addWidget(self.colormap_canvas)
-        self.colormap_figure.setLayout(self.colormap_layout)
+    def _init_grpSeedAnalysis(self):
+        self.line_edit_seed = self._find_widget('ledSeed', QtWidgets.QLineEdit)
+        self.push_button_query_seed = self._find_widget('pbtnQuerySeed', QtWidgets.QPushButton)
+        self.push_button_clear_seeds = self._find_widget('pbtnClearSeeds', QtWidgets.QPushButton)
+        self.table_seed = self._find_widget('tblSeed', QtWidgets.QTableWidget)
 
-    def setup_styles(self):
-        groupbox_style = """
-        QGroupBox:title{subcontrol-origin: margin;
-                        left: 10px;
-                        padding: 0 5px 0 15px;}
-        QGroupBox#groupBox{border: 2px solid rgb(111,181,110);
-                        border-radius: 9px;
-                        font: bold 14pt 'Arial';
-                        margin-top: 10px;}"""
-        self.groupBox.setStyleSheet(groupbox_style)
-        self.groupBox_2.setStyleSheet(groupbox_style.replace("groupBox","groupBox_2"))
+        self.table_seed.setColumnCount(9)
+        self.table_seed.setShowGrid(False)
+        self.table_seed.setHorizontalHeaderLabels([
+            "Seed", "% Coverage", "Total Repeats", "Avg. Repeats/Scaffold",
+            "Consensus Sequence", "% Consensus", "Score", "PAM", "Strand"
+        ])
+        self.table_seed.horizontalHeader().setSectionsClickable(True)
+        self.table_seed.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table_seed.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.table_seed.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+
+        self.push_button_find_locations = self._find_widget('pbtnFindLocations', QtWidgets.QPushButton)
+        self.push_button_clear_locations = self._find_widget('pbtnClearLocations', QtWidgets.QPushButton)
+
+        self.table_locations = self._find_widget('tblLocation', QtWidgets.QTableWidget)
+
+        self.table_locations.setColumnCount(5)
+        self.table_locations.setShowGrid(False)
+        self.table_locations.setHorizontalHeaderLabels([
+                "Seed ID", "Sequence", "Organism", "Scaffold", "Location"
+        ])
+        self.table_locations.horizontalHeader().setSectionsClickable(True)
+        self.table_locations.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.table_locations.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+
+    # def _init_colormap(self):
+    #     self.colormap_figure = self._find_widget('wgtColormap', QtWidgets.QWidget)
+    #     if self.colormap_figure:
+    #         self.colormap_layout = QtWidgets.QVBoxLayout()
+    #         self.colormap_layout.setContentsMargins(0, 0, 0, 0)
+    #         self.colormap_canvas = MplCanvas(self)
+    #         self.colormap_layout.addWidget(self.colormap_canvas)
+    #         self.colormap_figure.setLayout(self.colormap_layout)
+
+    def _find_widget(self, name: str, widget_type: type) -> QtWidgets.QWidget:
+        widget = self.findChild(widget_type, name)
+        if widget is None:
+            self.logger.warning(f"Widget '{name}' not found in UI file.")
+        return widget
 
     def get_selected_endo(self):
-        return self.endoBox.currentText()
+        return self.combo_box_endonuclease.currentText()
 
     def get_selected_organisms(self):
         return [index.row() for index in self.org_Table.selectionModel().selectedRows()]
 
     def get_selected_seeds(self):
-        return [self.table2.item(index.row(), 0).text() for index in self.table2.selectionModel().selectedRows()]
+        return [self.table_seed.item(index.row(), 0).text() for index in self.table_seed.selectionModel().selectedRows()]
 
     def get_seed_input(self):
         return self.seed_input.text()
 
     def get_selected_seeds_for_export(self):
-        return [item.text() for item in self.table2.selectedItems() if item.column() == 0]
+        return [item.text() for item in self.table_seed.selectedItems() if item.column() == 0]
 
     def update_org_table(self, org_data):
-        self.org_Table.setRowCount(len(org_data))
+        self.table_organism.setRowCount(len(org_data))
         for row, (org_name, cspr_file, db_file) in enumerate(org_data):
             item = QtWidgets.QTableWidgetItem(org_name)
             item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignVCenter)
-            self.org_Table.setItem(row, 0, item)
-        self.org_Table.resizeColumnsToContents()
+            self.table_organism.setItem(row, 0, item)
+        self.table_organism.resizeColumnsToContents()
 
     def update_shared_seeds_table(self, seed_data):
-        self.table2.setRowCount(len(seed_data))
+        self.table_seed.setRowCount(len(seed_data))
         for row, data in enumerate(seed_data):
+            print(data)
             for col, value in enumerate(data):
                 item = QtWidgets.QTableWidgetItem(str(value))
                 item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-                self.table2.setItem(row, col, item)
-        self.table2.resizeColumnsToContents()
+                self.table_seed.setItem(row, col, item)
+        self.table_seed.resizeColumnsToContents()
 
     def update_loc_finder_table(self, loc_data):
-        self.loc_finder_table.setRowCount(len(loc_data))
+        self.table_locations.setRowCount(len(loc_data))
         for row, data in enumerate(loc_data):
+            print(data)
             for col, key in enumerate(['seed', 'sequence', 'organism', 'chromosome', 'location']):
                 item = QtWidgets.QTableWidgetItem(str(data[key]))
                 item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-                self.loc_finder_table.setItem(row, col, item)
-        self.loc_finder_table.resizeColumnsToContents()
+                self.table_locations.setItem(row, col, item)
+        self.table_locations.resizeColumnsToContents()
 
     def plot_heatmap(self, data, labels):
         self.colormap_canvas.axes.clear()
@@ -159,28 +167,35 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
         self.colormap_canvas.draw()
 
     def clear_shared_seeds_table(self):
-        self.table2.setRowCount(0)
+        self.table_seed.setRowCount(0)
 
     def clear_loc_finder_table(self):
         self.loc_finder_table.setRowCount(0)
 
-    def show_loading_window(self, value):
-        self.loading_window.loading_bar.setValue(value)
-        self.loading_window.show()
-
-    def hide_loading_window(self):
-        self.loading_window.hide()
-
-    def update_loading_window(self, value, text):
-        self.loading_window.loading_bar.setValue(value)
-        self.loading_window.info_label.setText(text)
-
     def update_endo_dropdown(self, endos):
-        self.endoBox.clear()
-        self.endoBox.addItems(endos)
+        """Update the endonuclease dropdown with the provided options"""
+        try:
+            self.logger.info("Starting update_endo_dropdown")
+            self.logger.debug(f"Received endos: {endos}")
+
+            print(self.combo_box_endonuclease)
+            
+            # if not self.combo_box_endonuclease:
+                # self.logger.error("combo_box_endonuclease is None")
+                # return
+                
+            self.combo_box_endonuclease.clear()
+            self.combo_box_endonuclease.addItems(endos)
+            
+            self.logger.info(f"Updated endonuclease dropdown with {len(endos)} options")
+            self.logger.debug(f"Current items in dropdown: {[self.combo_box_endonuclease.itemText(i) for i in range(self.combo_box_endonuclease.count())]}")
+        except Exception as e:
+            self.logger.error(f"Error updating endonuclease dropdown: {str(e)}")
+            self.logger.exception("Full traceback:")
+            show_error(self.settings, "Error updating endonuclease dropdown", str(e))
 
     def sort_table2(self, column):
-        self.table2.sortItems(column)
+        self.table_seed.sortItems(column)
 
     def sort_loc_finder_table(self, column):
         self.loc_finder_table.sortItems(column)
@@ -194,12 +209,3 @@ class MplCanvas(FigureCanvasQTAgg):
             super(MplCanvas, self).__init__(fig)
         except Exception as e:
             show_error("Error initializing MplCanvas class in population analysis.", e)
-
-class LoadingWindow(QtWidgets.QMainWindow):
-    def __init__(self, global_settings):
-        super(LoadingWindow, self).__init__()
-        uic.loadUi(global_settings.get_ui_dir() + "/loading_data_form.ui", self)
-        self.loading_bar.setValue(0)
-        self.setWindowTitle("Loading Data")
-        self.setWindowIcon(QtGui.QIcon(global_settings.get_assets_dir() + "cas9image.ico"))
-        scale_ui(self, base_width=1920, base_height=1080, font_size=12, header_font_size=30, custom_scale_width=450, custom_scale_height=125)

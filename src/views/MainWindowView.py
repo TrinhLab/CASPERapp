@@ -13,53 +13,149 @@ from functools import partial
 import qdarktheme
 
 class CloseableTabWidget(QTabWidget):
-    # Define a new signal that emits the closed widget
     tab_closed = pyqtSignal(QWidget)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setTabsClosable(False)
         self.tabCloseRequested.connect(self.closeTab)
+        self._tabs = {}  # Dictionary to keep track of tab widgets
+        self.tabBar().tabMoved.connect(self._handle_tab_moved)
 
     def closeTab(self, index):
-        if self.count() > 1 and index != 0:
-            widget = self.widget(index)
-            self.removeTab(index)
-            widget.deleteLater()
-            # Emit the signal with the closed widget
-            self.tab_closed.emit(widget)
+        try:
+            if self.count() > 1 and index != 0:
+                widget = self.widget(index)
+                if widget:
+                    # Get tab text before removal
+                    tab_text = self.tabText(index)
+                    
+                    # Clean up the controller if it exists
+                    controller = getattr(widget, 'controller', None)
+                    if controller and hasattr(controller, 'model') and hasattr(controller.model, 'cleanup'):
+                        controller.model.cleanup()
+                    
+                    # Remove from tracking dictionary
+                    if tab_text in self._tabs:
+                        del self._tabs[tab_text]
+                    
+                    # Remove the tab
+                    self.removeTab(index)
+                    
+                    # Emit signal before deletion
+                    self.tab_closed.emit(widget)
+                    
+                    # Schedule widget for deletion
+                    widget.deleteLater()
+                    
+                    # Update all remaining tabs
+                    self._update_all_tabs()
+        except Exception as e:
+            print(f"Error closing tab: {e}")
 
     def addTab(self, widget, label):
-        index = super().addTab(widget, label)
-        print(f"Adding tab: {label}, Index: {index}")
-        if index != 0:
-            # Create a close button
-            close_button = QToolButton(self.tabBar())
-            close_icon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_TitleBarCloseButton)
-            close_button.setIcon(close_icon)
-            close_button.setIconSize(QSize(16, 16)) 
-            close_button.setAutoRaise(True)
-            
-            # Apply updated stylesheet with adjusted negative margin and border-radius
-            close_button.setStyleSheet("""
-                QToolButton {
-                    border: none;
-                    padding: 0px;
+        try:
+            if widget and label:
+                # Store widget reference with unique identifier
+                tab_id = f"{label}_{id(widget)}"
+                self._tabs[tab_id] = {
+                    'widget': widget,
+                    'label': label,
+                    'close_button': None
                 }
-                QToolButton:hover {
-                    background: #c42b1c;
-                }
-            """)
-            close_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-            close_button.setFixedSize(18, 18)  # Fixed size larger than icon to allow padding
-            
-            # Connect the close button's clicked signal using partial to pass the index
-            close_button.clicked.connect(partial(self.closeTab, index))
+                
+                # Add the tab
+                index = super().addTab(widget, label)
+                
+                if index != 0:
+                    # Create and setup close button
+                    close_button = self._create_close_button(index, label)
+                    self._tabs[tab_id]['close_button'] = close_button
+                    self.tabBar().setTabButton(index, QTabBar.ButtonPosition.RightSide, close_button)
+                
+                return index
+        except Exception as e:
+            print(f"Error adding tab: {e}")
+            return -1
 
-            # Add the close button to the tab
-            self.tabBar().setTabButton(index, QTabBar.ButtonPosition.RightSide, close_button)
-        
-        return index
+    def _create_close_button(self, index, label):
+        """Create a new close button for a tab"""
+        close_button = QToolButton(self.tabBar())
+        close_button.setObjectName(f"close_button_{label}")
+        close_icon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_TitleBarCloseButton)
+        close_button.setIcon(close_icon)
+        close_button.setIconSize(QSize(16, 16))
+        close_button.setAutoRaise(True)
+        close_button.setStyleSheet("""
+            QToolButton {
+                border: none;
+                padding: 0px;
+            }
+            QToolButton:hover {
+                background: #c42b1c;
+            }
+        """)
+        close_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        close_button.setFixedSize(18, 18)
+        close_button.clicked.connect(lambda checked, idx=index: self.safely_close_tab(idx))
+        return close_button
+
+    def safely_close_tab(self, index):
+        """Safely handle tab closure with error checking"""
+        try:
+            if 0 <= index < self.count():
+                current_widget = self.widget(index)
+                if current_widget and index != 0:
+                    self.closeTab(index)
+        except Exception as e:
+            print(f"Error in safely_close_tab: {e}")
+
+    def _handle_tab_moved(self, from_index: int, to_index: int):
+        """Handle tab movement and update close buttons"""
+        try:
+            self._update_all_tabs()
+        except Exception as e:
+            print(f"Error handling tab movement: {e}")
+
+    def _update_all_tabs(self):
+        """Update all tabs and their close buttons"""
+        try:
+            for i in range(1, self.count()):  # Skip index 0 (home tab)
+                widget = self.widget(i)
+                if widget:
+                    label = self.tabText(i)
+                    tab_id = f"{label}_{id(widget)}"
+                    
+                    # Create new close button if needed
+                    if tab_id not in self._tabs or not self._tabs[tab_id].get('close_button'):
+                        close_button = self._create_close_button(i, label)
+                        self._tabs[tab_id] = {
+                            'widget': widget,
+                            'label': label,
+                            'close_button': close_button
+                        }
+                        self.tabBar().setTabButton(i, QTabBar.ButtonPosition.RightSide, close_button)
+                    else:
+                        # Update existing close button's click connection
+                        close_button = self._tabs[tab_id]['close_button']
+                        close_button.clicked.disconnect()
+                        close_button.clicked.connect(lambda checked, idx=i: self.safely_close_tab(idx))
+        except Exception as e:
+            print(f"Error updating tabs: {e}")
+
+    def moveTab(self, from_index, to_index):
+        """Override moveTab to safely handle tab movement"""
+        try:
+            if (0 <= from_index < self.count() and 
+                0 <= to_index < self.count() and 
+                from_index != 0 and 
+                to_index != 0):
+                
+                super().moveTab(from_index, to_index)
+                self._update_all_tabs()
+                
+        except Exception as e:
+            print(f"Error moving tab: {e}")
 
 
 class MainWindowView(QMainWindow):
@@ -71,13 +167,38 @@ class MainWindowView(QMainWindow):
         self.oldPos = None
 
     def _init_ui(self) -> None:
+        # Hide the window and disable updates during initialization
+        self.hide()
+        self.setUpdatesEnabled(False)
         try:
-            self._load_ui_file
+            # Calculate center position first
+            screen = QtGui.QGuiApplication.primaryScreen()
+            screen_geometry = screen.geometry()
+            centerPoint = screen_geometry.center()
+            
+            # Load and initialize UI
             self._load_ui_file()
             self._init_window_properties()
             self._init_ui_elements()
+            self.apply_theme()
             self._scale_ui()
-            self.logger.debug(f"After _scale_ui call in _init_ui. Window size: {self.size()}")
+            
+            # Get final size
+            final_size = self.size()
+            
+            # Calculate position only once
+            x = centerPoint.x() - (final_size.width() // 2)
+            y = centerPoint.y() - (final_size.height() // 2)
+            
+            # Set position and size in a single operation
+            self.setGeometry(x, y, final_size.width(), final_size.height())
+            
+            # Re-enable updates and show window
+            self.setUpdatesEnabled(True)
+            self.show()
+            self.repaint()  # Force immediate repaint
+            
+            self.logger.debug(f"Window initialized at position ({x}, {y}) with size {final_size}")
         except Exception as e:
             self._handle_init_error(e)
 
@@ -89,11 +210,16 @@ class MainWindowView(QMainWindow):
         """
         Creates a frameless, translucent window without a toolbar.
         """
+        # Set window flags before other properties
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
+        # Hide toolbars
         toolbars = self.findChildren(QtWidgets.QToolBar)
         for toolbar in toolbars:
             toolbar.hide()
+        # Ensure window starts hidden
+        self.setVisible(False)
 
     def _init_ui_elements(self) -> None:
         # Initialize menu bar and custom title bar
@@ -260,20 +386,40 @@ class MainWindowView(QMainWindow):
     #     self.tab_widget.setCurrentIndex(tab_index)
 
 
-    def _scale_ui(self) -> None:
-        initial_size = self.size()
-        self.logger.debug(f"Initial window size before scale_ui: {initial_size}")
-        scale_ui(self, custom_scale_width=1000, custom_scale_height=350)
-        final_size = self.size()
-        self.logger.debug(f"Final window size after scale_ui: {final_size}")
-        
-        if initial_size == final_size:
-            self.logger.warning("Window size did not change after scale_ui call")
-        else:
-            self.logger.info(f"Window size changed from {initial_size} to {final_size}")
-        
-        self.resize(575, 400)
-        self.logger.debug(f"Forced resize to 1000x350. New size: {self.size()}")
+    def _scale_ui(self):
+        """Modified scale_ui to only handle sizing, not positioning"""
+        try:
+            screen = QtGui.QGuiApplication.primaryScreen()
+            screen_geometry = screen.geometry()
+            width = screen_geometry.width()
+            height = screen_geometry.height()
+
+            # Font scaling
+            self.centralWidget().setStyleSheet(f"font: 12pt 'Arial';")
+
+            if hasattr(self, 'title'):
+                scaled_title_font_size = int(30 * (width / 1920))
+                self.title.setStyleSheet(f"font: bold {scaled_title_font_size}pt 'Arial';")
+
+            # Calculate size only
+            scaledWidth = int((width * 575) / 1920)
+            scaledHeight = int((height * 400) / 1080)
+
+            # Ensure minimum size
+            self.adjustSize()
+            currentWidth = self.size().width()
+            currentHeight = self.size().height()
+
+            if scaledHeight < currentHeight:
+                scaledHeight = currentHeight
+            if scaledWidth < currentWidth:
+                scaledWidth = currentWidth
+
+            # Only resize, don't reposition
+            self.resize(scaledWidth, scaledHeight)
+
+        except Exception as e:
+            self.logger.error(f"Error in _scale_ui: {str(e)}")
 
     def _handle_init_error(self, e: Exception) -> None:
         error_msg = f"Error initializing MainWindowView: {str(e)}"
@@ -395,3 +541,14 @@ class MainWindowView(QMainWindow):
                 background: {theme['tab_hover_bg_color']};
             }}
         """)
+
+    def show_window(self) -> None:
+        """Shows the window without repositioning"""
+        self.show()
+        self.repaint()
+
+
+
+
+
+

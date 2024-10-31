@@ -10,6 +10,8 @@ import platform
 import warnings
 import xml.etree.ElementTree as ET
 from PyQt6.QtCore import Qt
+import socket
+from urllib.parse import urlparse
 
 class NCBIWindowModel:
     def __init__(self, settings):
@@ -20,6 +22,9 @@ class NCBIWindowModel:
         self.refseq_ftp_dict = {}
         self.files = []  # Initialize the files list
         Entrez.email = "your_email@example.com"  # Replace with a valid email
+        
+        # Make DownloadThread accessible through the model
+        self.DownloadThread = DownloadThread
 
         # Suppress the XMLParsedAsHTMLWarning
         warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
@@ -230,3 +235,118 @@ class CustomProxyModel(QtCore.QSortFilterProxyModel):
             if regex.match(text).hasMatch():
                 return False
         return True
+
+class DownloadThread(QtCore.QThread):
+    finished = QtCore.pyqtSignal(bool)
+    progress_updated = QtCore.pyqtSignal(int, int, int)
+    status_updated = QtCore.pyqtSignal(str)
+    all_completed = QtCore.pyqtSignal()
+
+    def __init__(self, controller, url, id, species_name, strain, download_fna, download_gbff):
+        super().__init__()
+        self.controller = controller
+        self.url = url
+        self.id = id
+        self.species_name = species_name
+        self.strain = strain
+        self.download_fna = download_fna
+        self.download_gbff = download_gbff
+
+    def run(self):
+        try:
+            parsed_url = urlparse(self.url)
+            ftp_host = parsed_url.netloc
+            ftp_path = parsed_url.path
+
+            self.controller.logger.info(f"Attempting to connect to FTP server: {ftp_host}")
+            
+            try:
+                ip_address = socket.gethostbyname(ftp_host)
+                self.controller.logger.info(f"Resolved IP address: {ip_address}")
+            except socket.gaierror as e:
+                self.controller.logger.error(f"Failed to resolve hostname: {ftp_host}. Error: {str(e)}")
+                self.finished.emit(False)
+                return
+
+            ftp = FTP(ftp_host)
+            ftp.login()
+            ftp.cwd(ftp_path)
+            ftp.set_pasv(True)
+            
+            # Set binary mode before any operations
+            ftp.voidcmd('TYPE I')
+            
+            files_to_download = []
+            
+            # Get list of all files
+            all_files = ftp.nlst()
+            
+            # Process FNA files if requested
+            if self.download_fna:
+                # Find the main genomic FNA file (should be exactly one)
+                genomic_fna = [f for f in all_files 
+                             if f.endswith('_genomic.fna.gz') 
+                             and not any(x in f for x in ['cds_from', 'rna_from'])]
+                
+                if genomic_fna:
+                    files_to_download.append(genomic_fna[0])
+                    self.controller.logger.info(f"Found main genomic FNA file: {genomic_fna[0]}")
+            
+            # Process GBFF files if requested
+            if self.download_gbff:
+                gbff_files = [f for f in all_files if f.endswith('_genomic.gbff.gz')]
+                files_to_download.extend(gbff_files)
+                self.controller.logger.info(f"Found GBFF files: {gbff_files}")
+
+            # Calculate total size with error handling
+            total_size = 0
+            for file in files_to_download:
+                try:
+                    size = ftp.size(file)
+                    if size is not None:
+                        total_size += size
+                except Exception as e:
+                    self.controller.logger.warning(f"Could not get size for file {file}: {str(e)}")
+
+            downloaded_size = 0
+
+            # Download files
+            for file in files_to_download:
+                try:
+                    self.status_updated.emit(f"Downloading: {file}")
+                    file_type = 'FNA' if file.endswith('.fna.gz') else 'GBFF'
+                    output_dir = os.path.join(self.controller.settings.CSPR_DB, file_type)
+                    os.makedirs(output_dir, exist_ok=True)
+                    
+                    local_filename = os.path.join(output_dir, file)
+                    self.controller.logger.info(f"Downloading file: {file} to {local_filename}")
+                    
+                    with open(local_filename, 'wb') as local_file:
+                        def callback(data):
+                            local_file.write(data)
+                            nonlocal downloaded_size
+                            downloaded_size += len(data)
+                            if total_size > 0:
+                                self.progress_updated.emit(self.id, downloaded_size, total_size)
+
+                        ftp.retrbinary(f"RETR {file}", callback)
+
+                    self.controller.logger.info(f"Download complete: {file}")
+                    self.status_updated.emit(f"Decompressing: {file}")
+
+                    self.controller.model.decompress_file(local_filename)
+                    decompressed_filename = local_filename[:-3]
+                    self.controller.model.add_downloaded_file(decompressed_filename)
+                    
+                except Exception as e:
+                    self.controller.logger.error(f"Error downloading file {file}: {str(e)}")
+                    continue
+
+            ftp.quit()
+            self.controller.logger.info(f"All files downloaded and decompressed successfully for ID: {self.id}")
+            self.all_completed.emit()
+            self.finished.emit(True)
+            
+        except Exception as e:
+            self.controller.logger.error(f"Download error for ID {self.id}: {str(e)}", exc_info=True)
+            self.finished.emit(False)

@@ -2,58 +2,85 @@ from PyQt6 import QtWidgets
 from utils.ui import show_error, show_message, position_window
 from views.PopulationAnalysisWindowView import PopulationAnalysisWindowView
 from models.PopulationAnalysisWindowModel import PopulationAnalysisWindowModel
+import logging
 
 class PopulationAnalysisWindowController:
     def __init__(self, global_settings):
         self.global_settings = global_settings
-        self.model = PopulationAnalysisWindowModel(global_settings)
-        self.view = PopulationAnalysisWindowView(global_settings)
+        self.model = PopulationAnalysisWindowModel(self.global_settings)
+        self.view = PopulationAnalysisWindowView(self.global_settings)
+        self._init_ui()
         self.setup_connections()
 
     def setup_connections(self):
-        self.view.goBackButton.clicked.connect(self.go_back)
-        self.view.analyze_button.clicked.connect(self.pre_analyze)
-        self.view.clear_Button.clicked.connect(self.clear)
-        self.view.export_button.clicked.connect(self.export_tool)
-        self.view.find_locs_button.clicked.connect(self.find_locations)
-        self.view.clear_loc_button.clicked.connect(self.clear_loc_table)
-        self.view.query_seed_button.clicked.connect(self.custom_seed_search)
-        self.view.endoBox.currentIndexChanged.connect(self.change_endo)
-        self.view.table2.horizontalHeader().sectionClicked.connect(self.table2_sorting)
-        self.view.loc_finder_table.horizontalHeader().sectionClicked.connect(self.loc_table_sorter)
+        try:
+            # Group: Select Organisms
+            self.view.combo_box_endonuclease.currentIndexChanged.connect(self.change_endo)
+            self.view.push_button_analyze_organism.clicked.connect(self.pre_analyze)
+            
+            # Group: Seed Analysis
+            self.view.push_button_query_seed.clicked.connect(self.custom_seed_search)
+            self.view.push_button_clear_seeds.clicked.connect(self.clear)
+            self.view.push_button_find_locations.clicked.connect(self.find_locations)
+            self.view.push_button_clear_locations.clicked.connect(self.clear_loc_table)
+            
+            # Tables sorting
+            self.view.table_seed.horizontalHeader().sectionClicked.connect(self.seed_table_sorting)
+            self.view.table_locations.horizontalHeader().sectionClicked.connect(self.loc_table_sorter)
+        except Exception as e:
+            show_error(self.global_settings, "Error setting up connections in population analysis.", str(e))
+
+    def _init_ui(self):
+        self.launch()
 
     def launch(self):
         try:
+            self.logger = self.global_settings.get_logger()
+            self.logger.info("Launching Population Analysis Window")
             self.get_data()
-            self.view.show()
         except Exception as e:
+            self.logger.error(f"Error in launch(): {str(e)}")
             show_error(self.global_settings, "Error in launch() in population analysis.", str(e))
 
     def get_data(self):
         try:
+            self.logger.info("Getting data for Population Analysis")
             self.fillEndo()
         except Exception as e:
+            self.logger.error(f"Error in get_data(): {str(e)}")
             show_error(self.global_settings, "Error in get_data() in population analysis.", str(e))
 
     def fillEndo(self):
         try:
+            self.logger.info("Starting fillEndo()")
             endos = self.model.load_endonucleases()
+            self.logger.debug(f"Loaded endonucleases: {endos}")
+            
+            if not endos:
+                self.logger.warning("No endonucleases found")
+                show_error(self.global_settings, "Error", "No endonucleases found")
+                return
+            
+            self.logger.info(f"Updating dropdown with {len(endos)} endonucleases")
             self.view.update_endo_dropdown(endos.keys())
             self.change_endo()
         except Exception as e:
+            self.logger.error(f"Error in fillEndo(): {str(e)}")
             show_error(self.global_settings, "Error in fillEndo() in population analysis.", str(e))
 
     def change_endo(self):
         try:
             selected_endo = self.view.get_selected_endo()
+            if not selected_endo:
+                return
             org_files = self.model.get_organism_files(selected_endo)
             self.view.update_org_table(org_files)
         except Exception as e:
-            show_error(self.global_settings, "Error in change_endo() in population analysis.", str(e))
+            show_error(self.settings, "Error in change_endo() in population analysis.", str(e))
 
     def pre_analyze(self):
         try:
-            selected_indexes = self.view.get_selected_organisms()
+            selected_indexes = [index.row() for index in self.view.table_organism.selectionModel().selectedRows()]
             if len(selected_indexes) == 0:
                 show_message(
                     fontSize=12,
@@ -73,37 +100,104 @@ class PopulationAnalysisWindowController:
 
     def fill_data(self):
         try:
-            self.view.show_loading_window(5)
             self.model.seeds = self.model.get_shared_seeds(self.model.db_files, True)
             
             if len(self.model.seeds) == 0:
-                self.view.hide_loading_window()
                 return
 
             seed_data = []
             for seed in self.model.seeds:
                 data = self.model.get_seed_data(seed, self.model.db_files)
-                seed_data.append(self.process_seed_data(seed, data))
+                processed_data = self.process_seed_data(seed, data)
+                if processed_data:  # Only add if data was processed successfully
+                    seed_data.append(processed_data)
 
-            self.view.update_shared_seeds_table(seed_data)
-            
-            if len(self.model.db_files) > 1:
-                heatmap_data = self.model.get_heatmap_data(self.model.db_files)
-                self.view.plot_heatmap(heatmap_data, self.model.org_names)
+            if seed_data:  # Only update table if we have data
+                self.view.update_shared_seeds_table(seed_data)
+                
+                if len(self.model.db_files) > 1:
+                    heatmap_data = self.model.get_heatmap_data(self.model.db_files)
+                    self.view.plot_heatmap(heatmap_data, self.model.org_names)
+            else:
+                self.logger.warning("No seed data was processed successfully")
 
-            self.view.hide_loading_window()
         except Exception as e:
             show_error(self.global_settings, "Error in fill_data() in population analysis.", str(e))
 
     def process_seed_data(self, seed, data):
-        # Process the seed data and return a list of values for the table
-        # This method should contain the logic to calculate percentages, averages, etc.
-        # Return a list that matches the columns in the shared seeds table
-        pass
+        """Process seed data and return a tuple of values for the table"""
+        try:
+            # self.logger.debug(f"Processing seed data: {data}")
+            
+            if not data or data['org_count'] == 0:
+                self.logger.warning(f"No data found for seed {seed}")
+                return None
+
+            # Calculate coverage percentage
+            coverage = (data['org_count'] / len(self.model.db_files)) * 100
+            coverage = float("%.2f" % coverage)
+
+            # Calculate average repeats per scaffold
+            avg_rep_per_scaff = data['total_count'] / data['org_count']
+            avg_rep_per_scaff = float("%.2f" % avg_rep_per_scaff)
+
+            # Handle missing data in threes/fives
+            threes = data['threes']
+            fives = data['fives']
+            if len(threes) < len(fives):
+                threes.extend([''] * (len(fives) - len(threes)))
+            elif len(fives) < len(threes):
+                fives.extend([''] * (len(threes) - len(fives)))
+
+            # Find majority sequence
+            majority_index = 0
+            if not threes or threes[0] == '':
+                majority = max(set(fives), key=fives.count)
+                majority_index = fives.index(majority)
+                consensus_seq = fives[majority_index] + seed
+                percent_consensus = (fives.count(fives[majority_index]) / len(fives)) * 100
+            elif not fives or fives[0] == '':
+                majority = max(set(threes), key=threes.count)
+                majority_index = threes.index(majority)
+                consensus_seq = seed + threes[majority_index]
+                percent_consensus = (threes.count(threes[majority_index]) / len(threes)) * 100
+            else:
+                # Both threes and fives present
+                combined = [f"{f}{t}" for f, t in zip(fives, threes)]
+                majority = max(set(combined), key=combined.count)
+                majority_index = combined.index(majority)
+                consensus_seq = fives[majority_index] + seed + threes[majority_index]
+                percent_consensus = (combined.count(majority) / len(combined)) * 100
+
+            percent_consensus = float("%.2f" % percent_consensus)
+
+            # Determine strand
+            strand = "+" if int(data['locs'][majority_index]) >= 0 else "-"
+
+            # Create the row data
+            row_data = (
+                seed,                   # Seed
+                coverage,              # % Coverage
+                data['total_count'],   # Total Repeats
+                avg_rep_per_scaff,     # Avg. Repeats/Scaffold
+                consensus_seq,         # Consensus Sequence
+                percent_consensus,     # % Consensus
+                data['scores'][majority_index],  # Score
+                data['pams'][majority_index],    # PAM
+                strand                 # Strand
+            )
+
+            self.logger.debug(f"Processed seed data: {row_data}")
+            return row_data
+
+        except Exception as e:
+            self.logger.error(f"Error processing seed data: {str(e)}")
+            show_error(self.global_settings, f"Error processing seed {seed}", str(e))
+            return None
 
     def custom_seed_search(self):
         try:
-            seeds = self.view.get_seed_input().split(',')
+            seeds = self.view.line_edit_seed.text().split(',')
             seeds = [seed.strip().upper() for seed in seeds if seed.strip()]
 
             if not seeds:
@@ -124,7 +218,7 @@ class PopulationAnalysisWindowController:
                     )
                     return
 
-            self.view.update_shared_seeds_table(seed_data)
+            self.view.update_seed_table(seed_data)
         except Exception as e:
             show_error(self.global_settings, "Error in custom_seed_search() in population analysis.", str(e))
 
@@ -140,6 +234,10 @@ class PopulationAnalysisWindowController:
                 )
                 return
 
+            # Clear the locations table before adding new entries
+            self.view.table_locations.setRowCount(0)
+
+            # Get and display new locations
             locations = self.model.get_seed_locations(selected_seeds, self.model.db_files)
             self.view.update_loc_finder_table(locations)
         except Exception as e:
@@ -151,11 +249,11 @@ class PopulationAnalysisWindowController:
         except Exception as e:
             show_error(self.global_settings, "Error in clear_loc_table() in population analysis.", str(e))
 
-    def table2_sorting(self, logicalIndex):
+    def seed_table_sorting(self, logicalIndex):
         try:
             self.view.sort_table2(logicalIndex)
         except Exception as e:
-            show_error(self.global_settings, "Error in table2_sorting() in population analysis.", str(e))
+            show_error(self.global_settings, "Error in seed_table_sorting() in population analysis.", str(e))
 
     def loc_table_sorter(self, logicalIndex):
         try:

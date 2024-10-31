@@ -5,8 +5,9 @@ from utils.ui import show_error
 
 class PopulationAnalysisWindowModel:
     def __init__(self, global_settings):
-        self.global_settings = global_settings
-        self.app_dir = global_settings.get_app_dir()
+        self.settings = global_settings
+        self.logger = self.settings.get_logger()
+        self.app_dir = self.settings.get_app_dir_path()
         self.cspr_files = []
         self.db_files = []
         self.org_names = {}
@@ -16,37 +17,75 @@ class PopulationAnalysisWindowModel:
         self.index_to_db = {}
 
     def load_endonucleases(self):
-        endos = {}
+        """Load endonucleases from GlobalSettings"""
         try:
-            with open(self.global_settings.get_casper_info_path(), 'r') as f:
-                for line in f:
-                    if line.startswith('ENDONUCLEASES'):
-                        for line in f:
-                            if line.startswith('-'):
-                                break
-                            line_tokens = line.strip().split(';')
-                            endo = line_tokens[0]
-                            pam = line_tokens[1].split(',')[0] if ',' in line_tokens[1] else line_tokens[1]
-                            default_five_length = line_tokens[2]
-                            default_seed_length = line_tokens[3]
-                            default_three_length = line_tokens[4]
-                            endos[f"{endo} PAM: {pam}"] = (endo, pam, default_five_length, default_seed_length, default_three_length)
+            self.logger.info("Starting load_endonucleases()")
+            
+            # Get endonucleases from global settings
+            endos = self.settings.get_endonucleases()
+            self.logger.debug(f"Raw endonucleases from settings: {endos}")
+            
+            if not endos:
+                self.logger.warning("No endonucleases returned from settings")
+                return {}
+            
+            # Format the endonucleases for display
+            formatted_endos = {}
+            for endo, data in endos.items():
+                self.logger.debug(f"Processing endo: {endo}, data: {data}")
+                pam = data.get('pam', '').strip()
+                # Remove any extra "PAM:" text that might be in the PAM string
+                pam = pam.replace('PAM:', '').strip()
+                # Create display name without duplicate "PAM:" text
+                display_name = f"{endo}"
+                
+                formatted_endos[display_name] = (endo, pam, 
+                                              data.get('default_five_length', ''),
+                                              data.get('default_seed_length', ''),
+                                              data.get('default_three_length', ''))
+            
+            self.logger.info(f"Successfully formatted {len(formatted_endos)} endonucleases")
+            self.logger.debug(f"Formatted endonucleases: {formatted_endos}")
+            return formatted_endos
+            
         except Exception as e:
-            show_error(self.global_settings, "Error loading endonucleases", str(e))
-        return endos
+            self.logger.error(f"Error loading endonucleases: {str(e)}")
+            self.logger.exception("Full traceback:")
+            show_error(self.settings, "Error loading endonucleases", str(e))
+            return {}
 
-    def get_organism_files(self, endo):
+    def get_organism_files(self, endo_display_name):
+        """Get organism files for selected endonuclease using DatabaseManager"""
         org_files = []
         try:
-            for file in os.listdir(self.global_settings.CSPR_DB):
-                if file.endswith('.cspr') and file[file.rfind('_') + 1:file.find('.cspr')] == endo:
-                    cspr_file = os.path.join(self.global_settings.CSPR_DB, file)
-                    db_file = cspr_file.replace(".cspr", "_repeats.db")
-                    with open(cspr_file, 'r') as f:
-                        org_name = f.readline().split(":")[-1].strip()
-                    org_files.append((org_name, cspr_file, db_file))
+            # Extract just the endonuclease name from the display text (remove PAM)
+            endo = endo_display_name.split(" - PAM:")[0].strip()
+            self.logger.info(f"Getting organism files for endonuclease: {endo}")
+            
+            # Get organism mappings from database manager
+            organisms_to_files, organisms_to_endos = self.settings.db_manager.get_organisms_and_endos()
+            
+            # Process each organism that has this endonuclease
+            for organism, endos in organisms_to_endos.items():
+                if endo in endos:
+                    cspr_file = os.path.join(self.settings.CSPR_DB, organisms_to_files[organism][endo][0])
+                    db_file = os.path.join(self.settings.CSPR_DB, organisms_to_files[organism][endo][1])
+                    
+                    if not os.path.exists(db_file):
+                        self.logger.warning(f"Database file not found: {db_file}")
+                        continue
+                    
+                    org_files.append((organism, cspr_file, db_file))
+                    
+                    # Store the mapping for later use
+                    index = len(org_files) - 1
+                    self.index_to_cspr[index] = cspr_file
+                    self.index_to_db[index] = db_file
+            
+            self.logger.info(f"Found {len(org_files)} organism files")
         except Exception as e:
-            show_error(self.global_settings, "Error getting organism files", str(e))
+            self.logger.error(f"Error getting organism files: {str(e)}")
+            show_error(self.settings, "Error getting organism files", str(e))
         return org_files
 
     def get_shared_seeds(self, db_files, limit=False):
@@ -131,6 +170,11 @@ class PopulationAnalysisWindowModel:
         locations = []
         try:
             for db_file in db_files:
+                # Get organism name from CSPR file
+                cspr_file = db_file.replace("_repeats.db", ".cspr")
+                with open(cspr_file, 'r') as f:
+                    organism_name = f.readline().split(":")[-1].strip()
+
                 with sqlite3.connect(db_file) as conn:
                     c = conn.cursor()
                     for seed in seeds:
@@ -145,15 +189,25 @@ class PopulationAnalysisWindowModel:
                                 locations.append({
                                     'seed': seed,
                                     'sequence': sequence,
-                                    'organism': os.path.basename(db_file).split('_')[0],
+                                    'organism': organism_name, 
                                     'chromosome': chrom,
                                     'location': abs(int(locs[i]))
                                 })
+            self.logger.debug(f"Found {len(locations)} locations")
         except Exception as e:
+            self.logger.error(f"Error getting seed locations: {str(e)}")
             show_error(self.global_settings, "Error getting seed locations", str(e))
         return locations
 
     def get_org_names(self):
-        # Implement this method to populate self.org_names
-        pass
+        try:
+            self.org_names = {}
+            for i, cspr_file in self.index_to_cspr.items():
+                with open(cspr_file, 'r') as f:
+                    org_name = f.readline().split(":")[-1].strip()
+                    self.org_names[i] = org_name
+            self.logger.info(f"Loaded {len(self.org_names)} organism names")
+        except Exception as e:
+            self.logger.error(f"Error getting organism names: {str(e)}")
+            show_error(self.settings, "Error getting organism names", str(e))
 

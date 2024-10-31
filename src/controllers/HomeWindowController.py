@@ -78,6 +78,9 @@ class HomeWindowController:
             self.view.push_button_find_targets.clicked.connect(self.gather_settings)
             self.view.push_button_view_targets.clicked.connect(self.view_results)
             self.view.push_button_generate_library.clicked.connect(self.prep_gen_lib)
+
+            # Add connection for annotation file changes
+            self.view.combo_box_local_annotation_files.currentTextChanged.connect(self._on_annotation_file_changed)
         except Exception as e:
             show_error(self.global_settings, "Error setting up connections in HomeWindowController", str(e))
     
@@ -134,17 +137,27 @@ class HomeWindowController:
 
     def open_multitargeting_analysis_module(self):
         try:
-            multitargeting_controller = self.global_settings.get_multitargeting_window()
-            multitargeting_window = multitargeting_controller.view
-            self.global_settings.main_window.open_new_tab("Multitargeting Analysis", multitargeting_window)
+            main_window = self.global_settings.main_window
+            existing_tab = main_window.find_tab_by_title("Multitargeting Analysis")
+            if existing_tab:
+                main_window.view.tab_widget.setCurrentWidget(existing_tab)
+                main_window._resize_for_tab("Multitargeting Analysis")
+            else:
+                multitargeting_controller = self.global_settings.get_multitargeting_window()
+                main_window.open_new_tab("Multitargeting Analysis", multitargeting_controller)
         except Exception as e:
             show_error(self.global_settings, "Error in open_multitargeting_analysis_widget() in Home", str(e))
 
     def open_population_analysis_module(self):
         try:
-            population_analysis_controller = self.global_settings.get_population_analysis_window()
-            population_analysis_window = population_analysis_controller.view
-            self.global_settings.main_window.open_new_tab("Population Analysis", population_analysis_window)
+            main_window = self.global_settings.main_window
+            existing_tab = main_window.find_tab_by_title("Population Analysis")
+            if existing_tab:
+                main_window.view.tab_widget.setCurrentWidget(existing_tab)
+                main_window._resize_for_tab("Population Analysis")
+            else:
+                population_analysis_controller = self.global_settings.get_population_analysis_window()
+                main_window.open_new_tab("Population Analysis", population_analysis_controller)
         except Exception as e:
             show_error(self.global_settings, "Error in open_population_analysis_widget() in Home", str(e))
 
@@ -198,4 +211,11 @@ class HomeWindowController:
 
     def get_annotation_files(self):
         return self.model.get_annotation_files()
+    
+    def get_annotation_file(self):
+        return self.view.get_annotation_file()
+
+    def _on_annotation_file_changed(self, new_file):
+        """Handle changes to the annotation file selection"""
+        self.global_settings.set_current_annotation_file(new_file)
 

@@ -124,3 +124,6 @@ class HomeWindowView(QWidget):
             return "sequence"
         else:
             return "feature"  # Default to feature if somehow none are selected
+        
+    def get_annotation_file(self) -> str:
+        return self.combo_box_local_annotation_files.currentText()

@@ -88,9 +88,9 @@ class NewGenomeWindowModel(QObject):
             f'{db_path}',
             f'{self.settings.get_casper_info_path()}',
             f'{file_path}',
-            f'{organism_name} {strain}',
+            f'"{organism_name} {strain}"',
             'notes',
-            f'"DATA:{endonuclease_data["endonuclease_on_target_scoring"]}"' 
+            f'DATA:{endonuclease_data["endonuclease_on_target_scoring"]}' 
         ]
         return arguments
     

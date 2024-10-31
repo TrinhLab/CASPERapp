@@ -18,18 +18,22 @@ class NCBIWindowController:
             self.model = NCBIWindowModel(settings)
             self.view = NCBIWindowView(settings)
             
+            # Connect to the initialization complete signal
+            self.view.initialization_complete.connect(self.setup_connections)
+            
             self._init_ui()
-            self.setup_connections()
         except Exception as e:
             show_error(self.settings, "Error initializing NCBIWindowController", str(e))
 
     def setup_connections(self):
+        """Set up connections after UI is fully initialized"""
         try:
             self.view.push_button_search.clicked.connect(self.search_ncbi)
             self.view.push_button_download_files.clicked.connect(self.download_files_wrapper)
             self.view.check_box_select_all_rows.clicked.connect(self.select_all_rows_in_table)
             self.view.radio_button_collections_genbank.toggled.connect(self.is_checked_GenBank_radio_button)
-
+            
+            self.logger.debug("NCBI Window connections setup completed")
         except Exception as e:
             self.logger.error(f"Error setting up connections: {str(e)}", exc_info=True)
             show_error(self.settings, "Error setting up connections", str(e))
@@ -135,7 +139,9 @@ class NCBIWindowController:
                     self.on_thread_completed()  # Increment completed threads for unavailable files
                     continue
 
-                downloader = DownloadThread(self, url, id, species_name, strain, self.view.check_box_file_types_fna.isChecked(), self.view.check_box_file_types_gbff.isChecked())
+                downloader = self.model.DownloadThread(self, url, id, species_name, strain, 
+                                                     self.view.check_box_file_types_fna.isChecked(), 
+                                                     self.view.check_box_file_types_gbff.isChecked())
                 downloader.finished.connect(self.on_download_finished)
                 downloader.progress_updated.connect(self.update_progress)
                 downloader.status_updated.connect(self.update_status)
@@ -165,7 +171,7 @@ class NCBIWindowController:
                 self.rename_files(self.model.files)
             elif not self.unavailable_files:
                 show_message(12, QtWidgets.QMessageBox.Icon.Warning, "No Files Downloaded", "No files were downloaded. Please check your selection and try again.")
-            
+
     def show_unavailable_files_warning(self):
         warning_text = "The following files were not available for download:\n\n"
         for species_name, strain in self.unavailable_files:
@@ -209,21 +215,17 @@ class NCBIWindowController:
 
     def on_rename_complete(self):
         try:
-            # self.update_main_window()
             self.view.set_download_files_status_label("Download and renaming complete.<br>Press Back to go back to the Main window.")
+            
+            # Just trigger the database state update
+            self.settings.update_db_state()
+            
+            # No need to manually refresh the Home tab as it will receive the db_state_updated signal
+            self.logger.info("Database state update triggered after NCBI download")
+                
         except Exception as e:
             self.logger.error(f"Error in on_rename_complete: {str(e)}", exc_info=True)
             show_error(self.settings, "Error after renaming", str(e))
-
-    def update_main_window(self):
-        try:
-            if hasattr(self.main_window, 'fill_annotation_dropdown'):
-                self.main_window.fill_annotation_dropdown()
-            else:
-                self.logger.warning("MainWindowController does not have fill_annotation_dropdown method")
-        except Exception as e:
-            self.logger.error(f"Error updating main window: {str(e)}", exc_info=True)
-            show_error(self.settings, "Error updating main window", str(e))
 
     def select_all_rows_in_table(self):
         if self.view.check_box_select_all_rows.isChecked():
@@ -239,105 +241,3 @@ class NCBIWindowController:
             show_message("Warning!", 
                          "The GenBank collection may contain poorly or partially annotated annotation files. "
                          "We highly recommend using the RefSeq collection if it is available.")
-
-class DownloadThread(QtCore.QThread):
-    finished = QtCore.pyqtSignal(bool)
-    progress_updated = QtCore.pyqtSignal(int, int, int)
-    status_updated = QtCore.pyqtSignal(str)
-    all_completed = QtCore.pyqtSignal()  # New signal to indicate all operations are complete
-
-    def __init__(self, controller, url, id, species_name, strain, download_fna, download_gbff):
-        super().__init__()
-        self.controller = controller
-        self.url = url
-        self.id = id
-        self.species_name = species_name
-        self.strain = strain
-        self.download_fna = download_fna
-        self.download_gbff = download_gbff
-
-    def run(self):
-        try:
-            parsed_url = urlparse(self.url)
-            ftp_host = parsed_url.netloc
-            ftp_path = parsed_url.path
-
-            self.controller.logger.info(f"Attempting to connect to FTP server: {ftp_host}")
-            
-            # Resolve the IP address
-            try:
-                ip_address = socket.gethostbyname(ftp_host)
-                self.controller.logger.info(f"Resolved IP address: {ip_address}")
-            except socket.gaierror as e:
-                self.controller.logger.error(f"Failed to resolve hostname: {ftp_host}. Error: {str(e)}")
-                self.finished.emit(False)
-                return
-
-            ftp = FTP(ftp_host)
-            ftp.login()
-            ftp.cwd(ftp_path)
-            ftp.set_pasv(True)  # Use passive mode
-            ftp.voidcmd('TYPE I')  # Set binary mode
-            
-            self.controller.logger.info(f"Successfully connected to FTP server: {ftp_host}")
-            
-            files_to_download = []
-            if self.download_fna:
-                fna_files = [f for f in ftp.nlst() if f.endswith('_genomic.fna.gz')]
-                self.controller.logger.info(f"Found {len(fna_files)} FNA files")
-                files_to_download.extend(fna_files)
-            if self.download_gbff:
-                gbff_files = [f for f in ftp.nlst() if f.endswith('_genomic.gbff.gz')]
-                self.controller.logger.info(f"Found {len(gbff_files)} GBFF files")
-                files_to_download.extend(gbff_files)
-
-            self.controller.logger.info(f"Total files to download: {len(files_to_download)}")
-
-            total_size = 0
-            for file in files_to_download:
-                try:
-                    total_size += ftp.size(file)
-                except Exception as e:
-                    self.controller.logger.warning(f"Could not get size for file {file}: {str(e)}")
-
-            downloaded_size = 0
-
-            for file in files_to_download:
-                self.status_updated.emit(f"Downloading: {file}")
-                file_type = 'FNA' if file.endswith('.fna.gz') else 'GBFF'
-                output_dir = os.path.join(self.controller.settings.CSPR_DB, file_type)
-                
-                # Create the output directory if it doesn't exist
-                os.makedirs(output_dir, exist_ok=True)
-                
-                local_filename = os.path.join(output_dir, file)
-                
-                self.controller.logger.info(f"Downloading file: {file} to {local_filename}")
-                
-                with open(local_filename, 'wb') as local_file:
-                    def callback(data):
-                        local_file.write(data)
-                        nonlocal downloaded_size
-                        downloaded_size += len(data)
-                        if total_size > 0:
-                            self.progress_updated.emit(self.id, downloaded_size, total_size)
-
-                    ftp.retrbinary(f"RETR {file}", callback)
-
-                self.controller.logger.info(f"Download complete: {file}")
-                self.status_updated.emit(f"Decompressing: {file}")
-
-                # Decompress the file
-                self.controller.model.decompress_file(local_filename)
-                
-                # Add the decompressed file to the model's files list
-                decompressed_filename = local_filename[:-3]  # Remove .gz extension
-                self.controller.model.add_downloaded_file(decompressed_filename)
-
-            ftp.quit()
-            self.controller.logger.info(f"All files downloaded and decompressed successfully for ID: {self.id}")
-            self.all_completed.emit()  # Emit the new signal when everything is done
-            self.finished.emit(True)
-        except Exception as e:
-            self.controller.logger.error(f"Download error for ID {self.id}: {str(e)}", exc_info=True)
-            self.finished.emit(False)

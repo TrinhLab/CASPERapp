@@ -4,75 +4,109 @@ import os
 from typing import Optional
 
 class NCBIWindowView(QtWidgets.QMainWindow):
+    initialization_complete = QtCore.pyqtSignal()  # New signal
+
     def __init__(self, settings):
         super(NCBIWindowView, self).__init__()
         self.settings = settings
         self.logger = settings.get_logger()
         self.progress_bars = {}
         self.progress_labels = {}
+        self._is_initialized = False  # Track initialization state
+        self._setup_basic_ui()  # Only do basic initialization first
 
-        self.setup_ui()
+    def _setup_basic_ui(self):
+        """Initial minimal setup to show the window quickly"""
+        try:
+            uic.loadUi(os.path.join(self.settings.get_ui_dir_path(), "ncbi_window_v2.ui"), self)
+            
+            QtCore.QTimer.singleShot(100, self._complete_initialization)
+            
+        except Exception as e:
+            self.logger.error(f"Error in basic UI setup: {str(e)}")
+            raise
 
-    def setup_ui(self):
-        uic.loadUi(os.path.join(self.settings.get_ui_dir_path(), "ncbi_window_v2.ui"), self)
+    def _complete_initialization(self):
+        """Complete the full initialization of UI components"""
+        try:
+            if self._is_initialized:
+                return
 
-        self._init_ui_components()
+            # Initialize all UI components
+            self._init_ui_components()
+            
+            self._is_initialized = True
+            self.logger.debug("NCBI Window initialization completed")
+            
+            # Emit signal after everything is initialized
+            self.initialization_complete.emit()
+            
+        except Exception as e:
+            self.logger.error(f"Error in complete initialization: {str(e)}")
+            raise
 
     def _init_ui_components(self) -> None:
-        self._init_grpStep1()
-        self._init_grpStep2()
-        self._init_grpStep3()
+        """Initialize all UI components at once instead of using timers"""
+        try:
+            self._init_grpStep1()
+            self._init_grpStep2()
+            self._init_grpStep3()
+        except Exception as e:
+            self.logger.error(f"Error in _init_ui_components: {str(e)}")
+            raise
 
     def _init_grpStep1(self) -> None:
-        self.line_edit_organism = self._find_widget("ledOrganism", QtWidgets.QLineEdit)
-        self.line_edit_strain = self._find_widget("ledStrain", QtWidgets.QLineEdit)
-        self.line_edit_max_results = self._find_widget("ledMaxResults", QtWidgets.QLineEdit)
-        self.check_box_complete_genomes_only = self._find_widget("chkCompleteGenomesOnly", QtWidgets.QCheckBox)
+        try:
+            self.line_edit_organism = self._find_widget("ledOrganism", QtWidgets.QLineEdit)
+            self.line_edit_strain = self._find_widget("ledStrain", QtWidgets.QLineEdit)
+            self.line_edit_max_results = self._find_widget("ledMaxResults", QtWidgets.QLineEdit)
+            self.check_box_complete_genomes_only = self._find_widget("chkCompleteGenomesOnly", QtWidgets.QCheckBox)
+            
+            # Set default values
+            self.line_edit_max_results.setText("100")
+            
+        except Exception as e:
+            self.logger.error(f"Error initializing Step 1: {str(e)}")
 
     def _init_grpStep2(self) -> None:
-        self.push_button_search = self._find_widget("pbtnSearch", QtWidgets.QPushButton)
-        self.check_box_select_all_rows = self._find_widget("chkSelectAllRows", QtWidgets.QCheckBox)
-        self.table_ncbi_results = self._find_widget("tblNCBIResults", QtWidgets.QTableView)
+        try:
+            self.push_button_search = self._find_widget("pbtnSearch", QtWidgets.QPushButton)
+            self.check_box_select_all_rows = self._find_widget("chkSelectAllRows", QtWidgets.QCheckBox)
+            self.table_ncbi_results = self._find_widget("tblNCBIResults", QtWidgets.QTableView)
+        except Exception as e:
+            self.logger.error(f"Error initializing Step 2: {str(e)}")
 
     def _init_grpStep3(self) -> None:
-        self.radio_button_collections_refseq = self._find_widget("rbtnCollectionsRefSeq", QtWidgets.QRadioButton)
-        self.radio_button_collections_genbank = self._find_widget("rbtnCollectionsGenBank", QtWidgets.QRadioButton)
-
-        self.check_box_file_types_fna = self._find_widget("chkFileTypesFNA", QtWidgets.QCheckBox)
-        self.check_box_file_types_gbff = self._find_widget("chkFileTypesGBFF", QtWidgets.QCheckBox)
-
-        self.push_button_download_files = self._find_widget("pbtnDownloadFiles", QtWidgets.QPushButton)
-
-        self.progress_bar_download_files = self._find_widget("pbDownloadFiles", QtWidgets.QProgressBar)
-        self.label_download_files_status = self._find_widget("lblDownloadFilesStatus", QtWidgets.QLabel)
-
-        self.progress_bar_download_files.setValue(0)
-
-    def _find_widget(self, name: str, widget_type: type) -> Optional[QtWidgets.QWidget]:
-        widget = self.findChild(widget_type, name)
-        if widget is None:
-            self.settings.logger.warning(f"Widget '{name}' not found in UI file.")
-        return widget
-
-    def set_styles(self):
-        groupbox_style = """
-        QGroupBox:title{subcontrol-origin: margin;
-                        left: 10px;
-                        padding: 0 5px 0 5px;}
-        QGroupBox#Step1{border: 2px solid rgb(111,181,110);
-                        border-radius: 9px;
-                        font: bold 14pt 'Arial';
-                        margin-top: 10px;}"""
-        self.Step1.setStyleSheet(groupbox_style)
-        self.Step2.setStyleSheet(groupbox_style.replace("Step1","Step2"))
-        self.Step3.setStyleSheet(groupbox_style.replace("Step1","Step3"))
+        try:
+            self.radio_button_collections_refseq = self._find_widget("rbtnCollectionsRefSeq", QtWidgets.QRadioButton)
+            self.radio_button_collections_genbank = self._find_widget("rbtnCollectionsGenBank", QtWidgets.QRadioButton)
+            self.check_box_file_types_fna = self._find_widget("chkFileTypesFNA", QtWidgets.QCheckBox)
+            self.check_box_file_types_gbff = self._find_widget("chkFileTypesGBFF", QtWidgets.QCheckBox)
+            self.push_button_download_files = self._find_widget("pbtnDownloadFiles", QtWidgets.QPushButton)
+            self.progress_bar_download_files = self._find_widget("pbDownloadFiles", QtWidgets.QProgressBar)
+            self.label_download_files_status = self._find_widget("lblDownloadFilesStatus", QtWidgets.QLabel)
+            
+            # Set initial states
+            self.progress_bar_download_files.setValue(0)
+            self.radio_button_collections_refseq.setChecked(True)
+            self.check_box_file_types_fna.setChecked(True)
+            
+        except Exception as e:
+            self.logger.error(f"Error initializing Step 3: {str(e)}")
 
     def populate_ncbi_table(self, model):
+        """Populate the table with data and set up proper row selection"""
         self.table_ncbi_results.setModel(model)
         
         # Set selection behavior to select entire rows
         self.table_ncbi_results.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_ncbi_results.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.MultiSelection)
+        
+        # Disable cell editing
+        self.table_ncbi_results.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        
+        # Enable sorting
+        self.table_ncbi_results.setSortingEnabled(True)
         
         # Set the horizontal header to resize mode
         header = self.table_ncbi_results.horizontalHeader()
@@ -104,6 +138,9 @@ class NCBIWindowView(QtWidgets.QMainWindow):
         
         # Ensure the last column doesn't stretch
         header.setStretchLastSection(False)
+        
+        # Set focus policy to enable keyboard selection
+        self.table_ncbi_results.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
 
     def get_search_parameters(self):
         return {
@@ -145,3 +182,8 @@ class NCBIWindowView(QtWidgets.QMainWindow):
         if source_model:
             source_model.clear()
         self.table_ncbi_results.reset()
+    def _find_widget(self, name: str, widget_type: type) -> Optional[QtWidgets.QWidget]:
+        widget = self.findChild(widget_type, name)
+        if widget is None:
+            self.settings.logger.warning(f"Widget '{name}' not found in UI file.")
+        return widget

@@ -17,14 +17,12 @@ class MainWindowController:
         self.tab_widgets = {}  # Store references to tab widgets
         self.startup_controller = None
         self.is_first_time_startup = self.global_settings.is_first_time_startup
-        self.tab_sizes = {
-            "Startup": QSize(750, 550),
-            "New Genome": QSize(575, 700),
-            "Home": QSize(1000, 700),  # Add a default size for Home tab
-            "Define New Endonuclease": QSize(450, 600),
-            "NCBI Download Tool": QSize(1000, 700),
-            "View Targets": QSize(1500, 700),
-        }
+        
+        # Single shared size for all regular tabs
+        self.shared_tab_size = QSize(850, 850)
+        # Separate size only for startup
+        self.startup_size = QSize(750, 550)
+        
         self.current_tab = None
 
         try:
@@ -244,25 +242,16 @@ class MainWindowController:
         self.view.tab_widget.currentChanged.connect(self._on_tab_changed)
 
     def _resize_for_tab(self, title):
-        if title in self.tab_sizes:
-            new_size = self.tab_sizes[title]
-            if title == "Startup":
-                # For Startup tab, set fixed size and disable maximize button
-                self.view.setFixedSize(new_size)
-                self.view.setWindowFlags(self.view.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
-            else:
-                # For other tabs, allow resizing but set a minimum size
-                self.view.setMinimumSize(QSize(400, 300))  # Set a reasonable minimum size
-                self.view.setMaximumSize(QtCore.QSize(16777215, 16777215))
-                self.view.setWindowFlags(self.view.windowFlags() | Qt.WindowType.WindowMaximizeButtonHint)
-                
-                # Resize to the specified size for the tab
-                self.view.resize(new_size)
+        if title == "Startup":
+            # For Startup tab, set fixed size and disable maximize button
+            self.view.setFixedSize(self.startup_size)
+            self.view.setWindowFlags(self.view.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
         else:
-            # Default behavior for unknown tabs
-            self.view.setMinimumSize(QSize(400, 300))  # Set a reasonable minimum size
+            # For all other tabs, use the shared size and allow resizing
+            self.view.setMinimumSize(QSize(400, 300))
             self.view.setMaximumSize(QtCore.QSize(16777215, 16777215))
             self.view.setWindowFlags(self.view.windowFlags() | Qt.WindowType.WindowMaximizeButtonHint)
+            self.view.resize(self.shared_tab_size)
         
         # Ensure window flags are updated
         self.view.show()
@@ -349,16 +338,15 @@ class MainWindowController:
         return None
 
     def _on_tab_changed(self, index):
-        # Save the current tab size before switching
-        if self.current_tab:
+        # Save the current size before switching if it's not the startup tab
+        if self.current_tab and self.current_tab != "Startup":
             current_size = self.view.size()
             if current_size.width() >= 400 and current_size.height() >= 300:
-                self.tab_sizes[self.current_tab] = current_size
+                # Update shared size for all non-startup tabs
+                self.shared_tab_size = current_size
 
-        # Get the new tab title
+        # Get the new tab title and resize
         new_tab_title = self.view.tab_widget.tabText(index)
-
-        # Resize for the new tab
         self._resize_for_tab(new_tab_title)
 
     def close_new_genome_and_switch_to_home(self):
@@ -389,5 +377,7 @@ class MainWindowController:
         except Exception as e:
             self.logger.error(f"Error in close_new_genome_and_switch_to_home: {str(e)}", exc_info=True)
             show_error(self.global_settings, "Error switching to Home tab", str(e))
+
+
 
 

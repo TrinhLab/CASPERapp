@@ -25,7 +25,6 @@ class NewEndonucleaseController:
             self.view.push_button_reset_form.clicked.connect(self._handle_reset_form)
             self.view.push_button_delete.clicked.connect(self._handle_delete)
             self.view.combo_box_select_endonuclease.currentIndexChanged.connect(self._handle_endonuclease_selection)
-            self.view.show()
         except Exception as e:
             show_error(self.settings, "Error setting up connections in NewEndonucleaseController", str(e))
 
