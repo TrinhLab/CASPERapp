@@ -3,7 +3,7 @@ from PyQt6 import QtWidgets, QtCore, uic
 from PyQt6.QtWidgets import QMainWindow
 from views.HomeWindowView import HomeWindowView
 from models.HomeWindowModel import HomeWindowModel
-from utils.ui import show_error, show_message, scale_ui, center_ui, position_window
+from utils.ui import show_error, show_message
 from PyQt6.QtCore import QObject
 from controllers.FindTargetsController import FindTargetsController
 

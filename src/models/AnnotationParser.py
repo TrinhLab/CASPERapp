@@ -3,6 +3,9 @@ from Bio import SeqIO
 import os
 import traceback
 from functools import lru_cache
+import json
+import pickle
+import time
 
 class AnnotationParser:
     def __init__(self, global_settings):
@@ -10,36 +13,129 @@ class AnnotationParser:
         self.logger = global_settings.get_logger()
         self.annotation_file_name = ""
         self.available_genes = []
-        self._feature_cache = {}  # Cache for feature data
-        self._record_cache = {}   # Cache for SeqIO records
-        self.gene_cache = {}  # Add cache for gene data
+        self._feature_cache = {}
+        self._record_cache = {}
+        self.gene_cache = {}
+        self.index_file = None
 
     def set_annotation_file(self, file_path):
-        if self.annotation_file_name != file_path:
-            self.annotation_file_name = file_path
-            self.logger.debug(f"Set annotation file to: {file_path}")
-            self._feature_cache.clear()  # Clear cache when file changes
-            self._record_cache.clear()
-            if hasattr(self, '_gene_index'):
-                delattr(self, '_gene_index')
-            
-            # Pre-load records and build index
-            records = self._get_records()
-            self._build_gene_index(records)
-            self._parse_available_genes()
+        try:
+            if self.annotation_file_name != file_path:
+                total_start = time.time()
+                
+                self.annotation_file_name = file_path
+                self.logger.debug(f"Set annotation file to: {file_path}")
+                
+                # Set index file path
+                self.index_file = f"{file_path}.index"
+                
+                # Load or create index
+                index_start = time.time()
+                if not self._load_index():
+                    self.logger.debug("Index not found or outdated, creating new index...")
+                    create_start = time.time()
+                    self._create_index()
+                    create_time = time.time() - create_start
+                    self.logger.debug(f"Index creation time: {create_time:.2f} seconds")
+                index_time = time.time() - index_start
+                self.logger.debug(f"Total index handling time: {index_time:.2f} seconds")
+                
+        except Exception as e:
+            self.logger.error(f"Error in set_annotation_file: {str(e)}")
+            raise
 
-    @lru_cache(maxsize=1)
-    def _get_records(self):
-        """Cache and return all records from the annotation file"""
-        if not self._record_cache:
-            try:
-                self._record_cache = list(SeqIO.parse(self.annotation_file_name, "genbank"))
-            except Exception as e:
-                self.logger.error(f"Error reading annotation file: {str(e)}")
-                return []
-        return self._record_cache
+    def _create_index(self):
+        try:
+            start_time = time.time()
+            self.logger.debug("Creating gene index file...")
+            
+            # Initialize index structure
+            index_data = {
+                'locus_tags': {},  # Only store by locus_tag
+                'sequences': {}  # Keep sequences for quick access
+            }
+            
+            # Process records
+            record_count = 0
+            feature_count = 0
+            
+            for record in SeqIO.parse(self.annotation_file_name, "genbank"):
+                record_count += 1
+                record_start = time.time()
+                
+                # Store sequence information first
+                index_data['sequences'][record.id] = str(record.seq)
+                
+                # Process features
+                for feature in record.features:
+                    if feature.type in ['CDS', 'gene']:
+                        feature_count += 1
+                        feature_info = self._get_feature_info(feature)
+                        locus_tag = feature_info['feature_id']
+                        
+                        # Only create feature entry if we have a valid locus_tag
+                        if locus_tag and locus_tag.lower() != "n/a":
+                            feature_entry = {
+                                'record_id': record.id,
+                                'feature_type': feature.type,
+                                'chromosome': record.id,
+                                'location': self._get_feature_location(feature),
+                                'strand': '+' if feature.location.strand == 1 else '-',
+                                'locus_tag': locus_tag,
+                                'gene_name': feature_info['feature_name'],
+                                'description': feature_info['feature_description'],
+                                'qualifiers': {k: v[0] if isinstance(v, list) else v 
+                                             for k, v in feature.qualifiers.items()}
+                            }
+                            
+                            # Index only by locus_tag (lowercase for case-insensitive lookup)
+                            index_data['locus_tags'][locus_tag.lower()] = feature_entry
+                            
+            record_time = time.time() - record_start
+            if record_count % 100 == 0:
+                self.logger.debug(f"Processed {record_count} records, {feature_count} features. Last record time: {record_time:.2f}s")
+            
+            # Save index to file
+            save_start = time.time()
+            with open(self.index_file, 'wb') as f:
+                pickle.dump(index_data, f)
+            save_time = time.time() - save_start
+            
+            total_time = time.time() - start_time
+            
+            self._index = index_data
+            
+            self.logger.debug(f"Index creation complete. Records: {record_count}, Features: {feature_count}")
+            self.logger.debug(f"Save time: {save_time:.2f}s, Total time: {total_time:.2f}s")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error creating index: {str(e)}")
+            return False
+
+    def _load_index(self):
+        """Load the index file if it exists and is newer than the GenBank file"""
+        try:
+            if not os.path.exists(self.index_file):
+                return False
+                
+            # Check if index is older than GenBank file
+            if os.path.getmtime(self.index_file) < os.path.getmtime(self.annotation_file_name):
+                return False
+
+            start_time = time.time()
+            with open(self.index_file, 'rb') as f:
+                self._index = pickle.load(f)
+            load_time = time.time() - start_time
+            self.logger.debug(f"Index file loaded successfully in {load_time:.2f} seconds")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error loading index: {str(e)}")
+            return False
 
     def genbank_search(self, queries):
+        """Search using the index file for better performance"""
         try:
             if not self.annotation_file_name:
                 raise ValueError("Annotation file not set")
@@ -49,38 +145,85 @@ class AnnotationParser:
             
             # Convert queries to lowercase set for faster lookup
             queries = {q.lower() for q in queries}
+            print(f"Search queries: {queries}")
             
-            # Use cached records
-            for record in self._get_records():
-                for feature in record.features:
-                    if feature.type in ['CDS', 'gene']:
-                        # Create a hashable cache key using feature start and end positions
-                        cache_key = (record.id, feature.type, 
-                                   str(feature.location.start), 
-                                   str(feature.location.end))
+            # Search through index
+            if hasattr(self, '_index'):
+                # Search through all features
+                for feature_key, feature_entry in self._index['locus_tags'].items():
+                    # Check gene name, locus tag, and description
+                    searchable_text = ' '.join([
+                        feature_entry['gene_name'].lower(),
+                        feature_entry['locus_tag'].lower(),
+                        feature_entry['description'].lower(),
+                        # Also search through qualifiers
+                        *[str(v).lower() for v in feature_entry['qualifiers'].values()]
+                    ])
+                    
+                    # Check if any query matches
+                    if any(query in searchable_text for query in queries):
+                        info = {
+                            'feature_id': feature_entry['locus_tag'],
+                            'feature_name': feature_entry['gene_name'],
+                            'feature_location': feature_entry['location'],
+                            'feature_description': feature_entry['description']
+                        }
+                        results_list.append((feature_entry['record_id'], info))
                         
-                        # Use cached feature info if available
-                        if cache_key not in self._feature_cache:
-                            self._feature_cache[cache_key] = self._get_feature_info(feature)
-                        
-                        feature_info = self._feature_cache[cache_key]
-                        
-                        # Combine searchable text for single comparison
-                        searchable_text = ' '.join([
-                            feature_info['feature_name'].lower(),
-                            feature_info['feature_id'].lower(),
-                            feature_info['feature_description'].lower()
-                        ])
-                        
-                        # Check if any query matches
-                        if any(query in searchable_text for query in queries):
-                            results_list.append((record.id, feature))
-            
-            self.logger.debug(f"Found {len(results_list)} results")
             return results_list
+            
         except Exception as e:
             self.logger.error(f"Error in genbank_search: {str(e)}")
             raise
+
+    def get_gene_data(self, gene_identifier):
+        """Get gene data using the index for faster retrieval"""
+        try:
+            if not gene_identifier:
+                return None
+                
+            # Ensure string conversion and proper formatting
+            gene_identifier = str(gene_identifier).strip().lower()
+            
+            if hasattr(self, '_index'):
+                # Try exact match first
+                if gene_identifier in self._index['locus_tags']:
+                    gene_info = self._index['locus_tags'][gene_identifier]
+                    record_id = gene_info['record_id']
+                    return {
+                        'sequence': self._index['sequences'][record_id],
+                        'info': gene_info
+                    }
+                    
+                # Try case-insensitive match
+                for key, value in self._index['locus_tags'].items():
+                    if str(key).lower() == gene_identifier:
+                        record_id = value['record_id']
+                        return {
+                            'sequence': self._index['sequences'][record_id],
+                            'info': value
+                        }
+                        
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error in get_gene_data: {str(e)}")
+            return None
+
+    @lru_cache(maxsize=1)
+    def _get_records(self):
+        """Cache and return all records from the annotation file"""
+        start_time = time.time()
+        if not self._record_cache:
+            try:
+                self.logger.debug("Loading records from file...")
+                self._record_cache = list(SeqIO.parse(self.annotation_file_name, "genbank"))
+                load_time = time.time() - start_time
+                self.logger.debug(f"Time to load records: {load_time:.2f} seconds")
+            except Exception as e:
+                self.logger.error(f"Error reading annotation file: {str(e)}")
+                return []
+        return self._record_cache
 
     def get_max_chrom(self):
         try:
@@ -153,59 +296,9 @@ class AnnotationParser:
     def get_available_genes(self):
         return self.available_genes
 
-    def get_gene_data(self, gene_identifier):
-        """
-        Get gene data using gene name or locus tag with optimized caching
-        """
-        try:
-            self.logger.debug(f"AnnotationParser.get_gene_data called with identifier: {gene_identifier}")
-            
-            if not gene_identifier:
-                self.logger.warning("Empty gene identifier provided")
-                return None
-                
-            # Handle numeric gene identifiers
-            if isinstance(gene_identifier, int) or str(gene_identifier).isdigit():
-                if self.available_genes:
-                    gene_identifier = self.available_genes[0]
-                else:
-                    return None
-
-            # Check main cache first
-            cache_key = f"gene_data_{gene_identifier}"
-            if cache_key in self._feature_cache:
-                return self._feature_cache[cache_key]
-
-            # Get cached records
-            records = self._get_records()
-            if not records:
-                return None
-
-            # Use gene index if available
-            if not hasattr(self, '_gene_index'):
-                self._build_gene_index(records)
-
-            # Try to get location from index
-            if gene_identifier in self._gene_index:
-                record_id, feature = self._gene_index[gene_identifier]
-                for record in records:
-                    if record.id == record_id:
-                        sequence = str(feature.extract(record.seq))
-                        feature_info = self._get_feature_info(feature)
-                        
-                        result = {
-                            'sequence': sequence,
-                            'info': feature_info
-                        }
-                        
-                        self._feature_cache[cache_key] = result
-                        return result
-
-            return None
-            
-        except Exception as e:
-            self.logger.error(f"Error in get_gene_data: {str(e)}")
-            return None
+    def get_full_gene_sequence(self):
+        # Implement this method if needed
+        pass
 
     def _build_gene_index(self, records):
         """Build an index of genes for faster lookup"""
@@ -233,6 +326,3 @@ class AnnotationParser:
         except Exception as e:
             self.logger.error(f"Error parsing available genes: {str(e)}")
 
-    def get_full_gene_sequence(self):
-        # Implement this method if needed
-        pass

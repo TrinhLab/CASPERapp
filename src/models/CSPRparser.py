@@ -2,101 +2,193 @@ from utils.sequence_utils import SeqTranslate
 import logging
 from multiprocessing import Pool, cpu_count
 from functools import partial
+import time
+import pickle
+import os
+import traceback
 
 class CSPRparser:
     def __init__(self, inputFileName, casper_info_path):
         self.fileName = inputFileName
-        self.filename = inputFileName
         self.seqTrans = SeqTranslate(casper_info_path)
         self.logger = logging.getLogger(__name__)
-        self._line_buffer = []  # Pre-allocate buffer for lines
         self._cached_results = {}
+        self.index_file = f"{inputFileName}.index"
 
-    def read_targets_batch(self, chromosome, targets, endonuclease):
-        """Ultra-fast target reading using direct tuple creation"""
+    def _create_index(self):
+        """Create an index file for faster searching"""
         try:
-            # Pre-process targets into a sorted list of ranges for faster lookup
-            target_ranges = []
-            for t in targets:
-                start = t['start']
-                end = t['end']
-                target_ranges.append((start, end, t['feature_name']))
-            target_ranges.sort()  # Sort by start position
+            start_time = time.time()
+            self.logger.debug("Creating CSPR index file...")
             
-            # Pre-allocate results list
-            results = []
-            results_append = results.append
+            # Initialize index structure
+            index_data = {}
             
-            # Read file in binary mode for speed
             with open(self.fileName, 'rb') as f:
-                # Skip header
+                # Skip header lines
                 for _ in range(3):
                     f.readline()
                 
-                # Find chromosome section
-                header = False
-                for line in f:
-                    if b'>' in line and str(chromosome).encode() in line:
-                        header = True
-                        break
+                current_chrom = None
+                chrom_data = []
                 
-                # Read targets
-                if header:
-                    current_range_idx = 0
-                    max_ranges = len(target_ranges)
+                # Process file line by line
+                for line in f:
+                    if line.startswith(b'>'):
+                        # Save previous chromosome data if exists
+                        if current_chrom and chrom_data:
+                            index_data[current_chrom] = chrom_data
+                            
+                        # Start new chromosome
+                        current_chrom = line.decode().split()[0][1:]  # Remove '>' and get chromosome id
+                        chrom_data = []
+                        continue
                     
-                    while current_range_idx < max_ranges:
-                        line = f.readline()
-                        if not line or line.startswith(b'>'):
-                            break
-                            
-                        if not line.strip():
-                            continue
-                            
-                        # Fast string splitting without decode
-                        parts = line.strip().split(b',')
-                        if not parts:
-                            continue
-                            
-                        try:
-                            pos = int(parts[0])
+                    if not line.strip():
+                        continue
+                        
+                    try:
+                        # Parse position and store line offset
+                        first_comma = line.find(b',')
+                        if first_comma != -1:
+                            pos = int(line[:first_comma])
                             abs_pos = abs(pos)
+                            chrom_data.append((abs_pos, line))
+                    except ValueError:
+                        continue
+                
+                # Save last chromosome data
+                if current_chrom and chrom_data:
+                    index_data[current_chrom] = chrom_data
+
+            # Save index to file
+            with open(self.index_file, 'wb') as f:
+                pickle.dump(index_data, f)
+
+            self._index = index_data
+            
+            create_time = time.time() - start_time
+            self.logger.debug(f"Index creation time: {create_time:.2f} seconds")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error creating index: {str(e)}")
+            return False
+
+    def _load_index(self):
+        try:
+            if not os.path.exists(self.index_file):
+                return False
+                
+            if os.path.getmtime(self.index_file) < os.path.getmtime(self.fileName):
+                return False
+                
+            with open(self.index_file, 'rb') as f:
+                self._index = pickle.load(f)
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error loading index: {str(e)}")
+            return False
+
+    def read_targets_batch(self, chromosome, targets, endonuclease):
+        try:
+            start_time = time.time()
+            
+            # Load or create index
+            if not hasattr(self, '_index'):
+                if not self._load_index():
+                    self._create_index()
+            
+            # Sort targets by start position
+            sorted_targets = sorted(targets, key=lambda x: x['start'])
+            min_start = sorted_targets[0]['start']
+            max_end = max(t['end'] for t in sorted_targets)
+            
+            self.logger.debug(f"Processing targets from {min_start} to {max_end}")
+            self.logger.debug(f"Looking for chromosome number: {chromosome}")
+            
+            results = []
+            lines_processed = 0
+            lines_skipped = 0
+            
+            # Find chromosome in index by counting carets
+            found_chrom = None
+            chrom_count = 0
+            target_chrom_num = int(chromosome)  # Convert chromosome to integer
+            
+            # Debug available chromosomes
+            self.logger.debug(f"Available chromosomes: {list(self._index.keys())}")
+            
+            for chrom_id in self._index:
+                # Decode bytes to string if necessary
+                chrom_str = chrom_id.decode() if isinstance(chrom_id, bytes) else chrom_id
+                
+                # Count carets ('>') to find the right chromosome
+                chrom_count += 1
+                if chrom_count == target_chrom_num:
+                    found_chrom = chrom_id
+                    self.logger.debug(f"Found matching chromosome: {chrom_str}")
+                    break
+                    
+            if found_chrom:
+                chrom_data = self._index[found_chrom]
+                
+                # Binary search for start position
+                start_idx = 0
+                end_idx = len(chrom_data)
+                
+                for target in sorted_targets:
+                    target_start = target['start']
+                    target_end = target['end']
+                    feature_id = target.get('feature_id', '')
+                    feature_name = target.get('feature_name', '')
+                    
+                    # Find relevant positions for this target
+                    while start_idx < end_idx and chrom_data[start_idx][0] < target_start:
+                        start_idx += 1
+                    
+                    current_idx = start_idx
+                    while current_idx < end_idx and chrom_data[current_idx][0] < target_end:
+                        try:
+                            pos, line = chrom_data[current_idx]
+                            parts = line.split(b',')
                             
-                            # Get current target range
-                            start, end, feature_name = target_ranges[current_range_idx]
-                            
-                            # Skip if position is past current range
-                            if abs_pos >= end:
-                                current_range_idx += 1
-                                continue
-                                
-                            # Check if position is in range
-                            if start <= abs_pos < end:
-                                sequence = parts[1].decode()
-                                pam = sequence[-3:]
-                                target_seq = sequence[:-3]
-                                
-                                results_append({
+                            if len(parts) >= 4:
+                                pos = int(parts[0])
+                                results.append({
                                     'feature_name': feature_name,
-                                    'chromosome': chromosome,
-                                    'position': abs_pos,
-                                    'location': f"{abs_pos}-{abs_pos + 23}",
-                                    'sequence': target_seq,
-                                    'pam': pam,
+                                    'feature_id': feature_id,
+                                    'chromosome': found_chrom,
+                                    'position': abs(pos),
+                                    'location': f"{abs(pos)}-{abs(pos) + 23}",
+                                    'sequence': parts[1].decode(),
+                                    'pam': parts[2].decode(),
                                     'strand': "-" if pos < 0 else "+",
-                                    'score': float(parts[3]) if len(parts) > 3 else 0.0,
+                                    'score': float(parts[3]),
                                     'endonuclease': endonuclease
                                 })
-                                
-                        except (ValueError, IndexError):
-                            continue
+                                lines_processed += 1
+                            
+                        except (ValueError, IndexError) as e:
+                            self.logger.error(f"Error processing line: {str(e)}")
+                            lines_skipped += 1
+                            
+                        current_idx += 1
+            else:
+                self.logger.error(f"Chromosome {chromosome} not found in index")
+                self.logger.debug(f"Available chromosomes: {list(self._index.keys())}")
+            
+            total_time = time.time() - start_time
+            self.logger.debug(f"Processed {lines_processed} lines, skipped {lines_skipped}")
+            self.logger.debug(f"Found {len(results)} targets in {total_time:.2f} seconds")
             
             return results
-                
+            
         except Exception as e:
             self.logger.error(f"Error in read_targets_batch: {str(e)}")
+            self.logger.error(f"Stack trace: {traceback.format_exc()}")
             return []
-
     def parse_targets(self, file_path, region):
         """Parse targets with parallel processing and caching"""
         cache_key = f"{file_path}:{region}"
@@ -127,3 +219,4 @@ class CSPRparser:
             chunk_end = chunk_start + chunk_size if i < cpu_count()-1 else end
             chunks.append((chunk_start, chunk_end))
         return chunks
+

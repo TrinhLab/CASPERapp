@@ -7,6 +7,7 @@ class HomeWindowView(QWidget):
     def __init__(self, global_settings):
         super().__init__()
         self.global_settings = global_settings
+        self.logger = self.global_settings.logger
         self._init_ui()
 
     def _init_ui(self) -> None:
@@ -96,9 +97,9 @@ class HomeWindowView(QWidget):
         self.combo_box_organism.clear()
         self.combo_box_organism.addItems(organisms)
 
-    def update_combo_box_annotation_files(self, annotation_files: list) -> None:
-        self.combo_box_local_annotation_files.clear()
-        self.combo_box_local_annotation_files.addItems(annotation_files)
+    # def update_combo_box_annotation_files(self, annotation_files: list) -> None:
+    #     self.combo_box_local_annotation_files.clear()
+    #     self.combo_box_local_annotation_files.addItems(annotation_files)
 
     def set_progress_bar(self, value: int) -> None:
         self.progress_bar_find_targets.setValue(value)
@@ -127,3 +128,23 @@ class HomeWindowView(QWidget):
         
     def get_annotation_file(self) -> str:
         return self.combo_box_local_annotation_files.currentText()
+
+    def update_combo_box_annotation_files(self, files):
+        """Update local annotation files combo box, excluding .index files"""
+        try:
+            # Clear existing items
+            self.combo_box_local_annotation_files.clear()
+            
+            # Filter out .index files
+            filtered_files = [f for f in files if not f.endswith('.index')]
+            
+            # Add filtered files to combo box
+            if filtered_files:
+                self.combo_box_local_annotation_files.addItems(filtered_files)
+                self.combo_box_local_annotation_files.setCurrentIndex(0)
+                self.logger.debug(f"Added {len(filtered_files)} local annotation files to combo box")
+            else:
+                self.logger.debug("No local annotation files found")
+                
+        except Exception as e:
+            self.logger.error(f"Error updating local annotation files: {str(e)}")

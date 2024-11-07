@@ -285,5 +285,10 @@ class GlobalSettings(QObject):
             self._current_annotation_file = self._current_home_window.get_annotation_file()
         return self._current_annotation_file
 
+    def get_scoring_options_window(self, view_targets_controller):
+        """Create and return ScoringOptionsController instance"""
+        from controllers.ScoringOptionsController import ScoringOptionsController
+        return ScoringOptionsController(self, view_targets_controller)
+
 # Global instance
 global_settings = None

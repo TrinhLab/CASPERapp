@@ -5,7 +5,7 @@ from matplotlib.figure import Figure
 import mplcursors
 import numpy as np
 import matplotlib.patches as patches
-from utils.ui import show_error, scale_ui
+from utils.ui import show_error
 
 class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
     def __init__(self, global_settings):

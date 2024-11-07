@@ -1,12 +1,11 @@
 from typing import Optional
 from PyQt6 import QtWidgets, uic, QtGui
 from PyQt6.QtWidgets import QTableWidgetItem, QAbstractItemView
-from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
-from utils.ui import show_error, scale_ui
+from utils.ui import show_error
 
 class MultitargetingWindowView(QtWidgets.QMainWindow):
     def __init__(self, global_settings):

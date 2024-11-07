@@ -40,6 +40,17 @@ class ViewTargetsModel(HomeWindowModel):
         self._chromosome_seqs = {}
         self._cached_targets = {}  # Add cache for targets
 
+        # Connect to annotation file changes
+        self.global_settings.annotation_file_changed.connect(self._on_annotation_file_changed)
+        
+        # Initialize annotation path
+        self.annotation_path = os.path.join(
+            self.global_settings.get_db_path(),
+            'GBFF',
+            self.global_settings.get_current_annotation_file()
+        )
+        self.logger.debug(f"Initialized annotation path: {self.annotation_path}")
+
     def cleanup(self):
         """Cleanup method to be called when the view is closed"""
         try:
@@ -59,7 +70,7 @@ class ViewTargetsModel(HomeWindowModel):
     def _on_annotation_file_changed(self, new_annotation_file):
         """Clear all caches when annotation file changes"""
         try:
-            self.global_settings.logger.debug(f"ViewTargetsModel clearing caches for new annotation file: {new_annotation_file}")
+            self.logger.debug(f"ViewTargetsModel clearing caches for new annotation file: {new_annotation_file}")
             self._gene_data_cache.clear()
             self._sequence_cache.clear()
             self._parser_cache.clear()
@@ -77,98 +88,91 @@ class ViewTargetsModel(HomeWindowModel):
             self._chromosome_seqs = {}
             
         except Exception as e:
-            self.global_settings.logger.error(f"Error in _on_annotation_file_changed: {str(e)}")
+            self.logger.error(f"Error in _on_annotation_file_changed: {str(e)}")
 
     def load_targets(self, selected_targets, organism, endonuclease):
         """Fast target loading with minimal file operations"""
-        start_time = time.time()
+        total_start = time.time()
         
         try:
-            self.global_settings.logger.debug(f"Starting load_targets with {len(selected_targets)} targets")
+            self.logger.debug(f"Starting load_targets with {len(selected_targets)} targets")
             
             # Store organism and endonuclease for potential reloading
             self.organism = organism
             self.endonuclease = endonuclease
-            
+
             # Get CSPR parser from cache or create new one
             parser_start = time.time()
             cspr_key = f"{organism}_{endonuclease}"
             if cspr_key in self._parser_cache:
                 self.cspr_parser = self._parser_cache[cspr_key]
+                self.logger.debug("Using cached CSPR parser")
             else:
                 org_files = self.get_organism_to_files()
                 if organism not in org_files or endonuclease not in org_files[organism]:
-                    self.global_settings.logger.error(f"No CSPR file found for {organism} and {endonuclease}")
+                    self.logger.error(f"No CSPR file found for {organism} and {endonuclease}")
                     return
 
                 cspr_file = org_files[organism][endonuclease][0]
                 cspr_path = os.path.join(self.global_settings.get_db_path(), cspr_file)
                 self.cspr_parser = CSPRparser(cspr_path, self.global_settings.get_casper_info_path())
                 self._parser_cache[cspr_key] = self.cspr_parser
+                self.logger.debug("Created new CSPR parser")
             parser_time = time.time() - parser_start
+            self.logger.debug(f"CSPR parser initialization time: {parser_time:.2f} seconds")
 
             # Initialize targets and genes
+            init_start = time.time()
             self.targets = []
             self.available_genes = set()
+            init_time = time.time() - init_start
+            self.logger.debug(f"Initialization time: {init_time:.2f} seconds")
             
-            # Set up annotation parser if needed
-            if self.annotation_parser is None:
-                annotation_start = time.time()
-                self.annotation_parser = AnnotationParser(self.global_settings)
-                annotation_files = self.get_annotation_files()
-                if annotation_files:
-                    self.annotation_path = os.path.join(self.global_settings.get_db_path(), 'GBFF', annotation_files[0])
-                    self.annotation_parser.set_annotation_file(self.annotation_path)
-                annotation_time = time.time() - annotation_start
-            else:
-                annotation_time = 0
-
-            # Process targets in batches by chromosome
-            processing_start = time.time()
-            
-            # Group targets by chromosome and prepare batch reading
+            # Group targets by chromosome
+            group_start = time.time()
             batch_targets = defaultdict(list)
             for target in selected_targets:
                 chrom = target['chromosome']
                 start, end = map(int, target['location'].split('-'))
                 batch_targets[chrom].append({
                     'feature_name': target['feature_name'],
+                    'feature_id': target['feature_id'],  # Include feature_id (locus_tag)
                     'start': start,
                     'end': end
                 })
-                self.available_genes.add(target['feature_name'])
+                # Store both feature_id and feature_name
+                self.available_genes.add((target['feature_id'], target['feature_name']))
+            group_time = time.time() - group_start
+            self.logger.debug(f"Target grouping time: {group_time:.2f} seconds")
 
-            # Batch process targets for each chromosome
+            # Process targets by chromosome
+            process_start = time.time()
             target_count = 0
             for chrom, targets in batch_targets.items():
-                self.chromosome = chrom
-                
-                # Sort targets by start position for more efficient reading
-                targets.sort(key=lambda x: x['start'])
-                
-                # Read targets in a single batch per chromosome
-                batch_results = self.cspr_parser.read_targets_batch(
-                    chromosome=chrom,
-                    targets=targets,
-                    endonuclease=endonuclease
-                )
-                
-                if batch_results:
-                    self.targets.extend(batch_results)
-                    target_count += len(batch_results)
+                batch_start = time.time()
+                results = self.cspr_parser.read_targets_batch(chrom, targets, endonuclease)
+                # Add feature_id to each result
+                for result in results:
+                    # Find matching target to get feature_id
+                    for target in targets:
+                        if (target['start'] <= result['position'] <= target['end'] and 
+                            target['feature_name'] == result['feature_name']):
+                            result['feature_id'] = target['feature_id']
+                            break
+                self.targets.extend(results)
+                target_count += len(results)
+                batch_time = time.time() - batch_start
+                self.logger.debug(f"Chromosome {chrom} processing time: {batch_time:.2f} seconds")
+            process_time = time.time() - process_start
+            self.logger.debug(f"Total target processing time: {process_time:.2f} seconds")
 
-            processing_time = time.time() - processing_start
-
-            # Convert genes to sorted list
-            self.available_genes = sorted(list(self.available_genes))
+            total_time = time.time() - total_start
+            self.logger.debug(f"Total load_targets execution time: {total_time:.2f} seconds")
+            self.logger.debug(f"Found {target_count} total CSPR targets")
             
-            total_time = time.time() - start_time
-            self.global_settings.logger.debug(f"Total load_targets execution time: {total_time:.2f} seconds")
-            self.global_settings.logger.debug(f"Found {target_count} total CSPR targets")
-
         except Exception as e:
-            self.global_settings.logger.error(f"Error in load_targets: {str(e)}\n{traceback.format_exc()}")
-            raise
+            self.logger.error(f"Error in load_targets: {str(e)}")
+            self.logger.error(f"Stack trace: {traceback.format_exc()}")
 
     def _get_chromosome_sequence(self, chromosome):
         """Get chromosome sequence on demand"""
@@ -190,118 +194,60 @@ class ViewTargetsModel(HomeWindowModel):
             if self.annotation_path:
                 self.annotation_parser.set_annotation_file(self.annotation_path)
 
-    def get_gene_data(self, gene_name):
-        """Get gene data with caching"""
+    def get_gene_data(self, locus_tag):
+        """Get gene data with proper error handling"""
         try:
-            if not gene_name:
-                self.global_settings.logger.error("No gene name provided")
+            if not locus_tag:
+                self.logger.debug("No locus tag provided")
                 return None
                 
             # Check model cache first
-            if gene_name in self._gene_data_cache:
-                return self._gene_data_cache[gene_name]
+            if locus_tag in self._gene_data_cache:
+                return self._gene_data_cache[locus_tag]
             
-            # Make sure annotation parser is initialized
-            if self.annotation_parser is None:
-                self._initialize_annotation_parser()
+            # Initialize annotation parser if not already done
+            if not hasattr(self, 'annotation_parser') or self.annotation_parser is None:
+                self.annotation_parser = AnnotationParser(self.global_settings)
+                annotation_file = self.global_settings.get_current_annotation_file()
+                annotation_path = os.path.join(self.global_settings.get_db_path(), 'GBFF', annotation_file)
+                self.annotation_parser.set_annotation_file(annotation_path)
+                self.logger.debug(f"Initialized annotation parser with file: {annotation_path}")
+            
+            # Get gene data from parser with proper string conversion
+            gene_data = None
+            if isinstance(locus_tag, (str, int)):
+                locus_tag_str = str(locus_tag).strip()
+                self.logger.debug(f"Searching for locus tag: {locus_tag_str}")
+                # Look up by locus tag directly
+                gene_data = self.annotation_parser.get_gene_data(locus_tag_str.lower())
                 
-            # Get gene data from parser
-            gene_data = self.annotation_parser.get_gene_data(gene_name)
             if gene_data:
-                self._gene_data_cache[gene_name] = gene_data
+                self._gene_data_cache[locus_tag] = gene_data
+                self.logger.debug(f"Found gene data: {gene_data.keys()}")
+            else:
+                self.logger.debug(f"No gene data found for locus tag: {locus_tag}")
                 
             return gene_data
             
         except Exception as e:
-            self.global_settings.logger.error(f"Error getting gene data: {str(e)}")
+            self.logger.error(f"Error getting gene data: {str(e)}")
+            self.logger.error(f"Stack trace: {traceback.format_exc()}")
             return None
 
     def get_targets(self):
+        """Return all targets with their feature IDs"""
         return self.targets
 
-    def highlight_targets_in_gene_viewer(self, selected_targets):
-        """Highlight selected targets in gene viewer"""
-        try:
-            self.global_settings.logger.debug("Starting highlight_targets_in_gene_viewer")
-            sequence = self.extended_sequence
-            if not sequence:
-                self.global_settings.logger.error("No extended sequence available")
-                return sequence
-
-            self.global_settings.logger.debug(f"Extended sequence length: {len(sequence)}")
-            
-            # Sort targets by position for efficient highlighting
-            highlights = []
-            for target in selected_targets:
-                self.global_settings.logger.debug(f"Processing target: {target}")
-                sequence_to_find = target['sequence']
-                strand = target['strand']
-                
-                # For negative strand, we need to use reverse complement
-                if strand == '-':
-                    sequence_to_find = str(Seq(sequence_to_find).reverse_complement())
-                    self.global_settings.logger.debug(f"Reverse complemented sequence: {sequence_to_find}")
-                
-                # Search for the sequence in the gene viewer text
-                sequence_upper = sequence.upper()
-                target_upper = sequence_to_find.upper()
-                
-                self.global_settings.logger.debug(f"Searching for sequence: {target_upper}")
-                
-                # Find all occurrences
-                pos = sequence_upper.find(target_upper)
-                if pos != -1:
-                    self.global_settings.logger.debug(f"Found sequence at position: {pos}")
-                    color = 'red' if strand == '-' else 'green'
-                    highlights.append((pos, len(sequence_to_find), color))
-                else:
-                    self.global_settings.logger.warning(f"Sequence not found: {target_upper}")
-
-            if not highlights:
-                self.global_settings.logger.error("No sequences could be highlighted")
-                return sequence
-
-            self.global_settings.logger.debug(f"Found {len(highlights)} sequences to highlight")
-
-            # Build highlighted sequence
-            result = []
-            last_pos = 0
-            for pos, length, color in highlights:
-                result.append(sequence[last_pos:pos])
-                result.append(f"<span style='background-color: {color};'>")
-                result.append(sequence[pos:pos+length])
-                result.append("</span>")
-                last_pos = pos + length
-            
-            result.append(sequence[last_pos:])
-            final_sequence = ''.join(result)
-            
-            self.global_settings.logger.debug(f"Final highlighted sequence length: {len(final_sequence)}")
-            return final_sequence
-
-        except Exception as e:
-            self.global_settings.logger.error(f"Error highlighting targets: {str(e)}\n{traceback.format_exc()}")
-            return sequence
-
     def get_available_genes(self):
-        """Get list of available genes from the loaded targets"""
+        """Get list of available genes with format 'feature_id: feature_name'"""
         try:
-            # Return the available genes list that was populated during load_targets
             if hasattr(self, 'available_genes'):
-                return self.available_genes
-            
-            # If not already populated, get unique genes from targets
-            genes = set()
-            for target in self.targets:
-                if 'feature_name' in target:
-                    genes.add(target['feature_name'])
-            
-            # Store for future use
-            self.available_genes = sorted(list(genes))
-            return self.available_genes
-            
+                # Format as "feature_id: feature_name"
+                return [f"{feature_id}: {feature_name}" 
+                       for feature_id, feature_name in sorted(self.available_genes)]
+            return []
         except Exception as e:
-            self.global_settings.logger.error(f"Error getting available genes: {str(e)}")
+            self.logger.error(f"Error getting available genes: {str(e)}")
             return []
 
     # ... (other methods remain unchanged)
@@ -315,3 +261,90 @@ class ViewTargetsModel(HomeWindowModel):
         except Exception as e:
             logging.error(f"Error processing target: {e}")
             return None
+
+    def get_gene_sequence(self, locus_tag):
+        """Get gene sequence with optimized caching and minimal I/O"""
+        try:
+            # Check sequence cache first
+            cache_key = f"{locus_tag}_sequence"
+            if cache_key in self._sequence_cache:
+                self.logger.debug(f"Cache hit for gene sequence: {locus_tag}")
+                return self._sequence_cache[cache_key]
+                
+            # Get gene data which includes location information
+            print(f"Getting gene data for locus tag: {locus_tag}")
+            gene_data = self.get_gene_data(locus_tag)
+            if not gene_data or 'info' not in gene_data:
+                self.logger.warning(f"No gene data found for locus tag: {locus_tag}")
+                return None
+                
+            # Parse location string (format: "start:end(strand)")
+            location = gene_data['info']['location']
+            if ':' not in location:
+                self.logger.warning(f"Invalid location format: {location}")
+                return None
+                
+            # Extract start and end positions
+            start = int(location.split(':')[0])
+            end = int(location.split(':')[1].split('(')[0])
+            chromosome = gene_data['info']['chromosome']
+            
+            # Get sequence from gene_data directly if available
+            if 'sequence' in gene_data:
+                sequence = gene_data['sequence']
+                
+                # Add padding (30 bases on each side)
+                padding = 30
+                seq_start = max(0, start - padding)
+                seq_end = min(len(sequence), end + padding)
+                
+                # Get sequence with padding
+                five_prime_pad = sequence[seq_start:start].lower() if seq_start < start else ""
+                main_seq = sequence[start:end].upper()
+                three_prime_pad = sequence[end:seq_end].lower() if end < seq_end else ""
+                
+                full_sequence = five_prime_pad + main_seq + three_prime_pad
+                
+                # Cache the result
+                result = {
+                    'sequence': full_sequence,
+                    'chrom_length': len(sequence),
+                    'start': start,
+                    'end': end,
+                    'padded_start': seq_start,
+                    'padded_end': seq_end
+                }
+                self._sequence_cache[cache_key] = result
+                
+                self.logger.debug(f"Retrieved and cached sequence for locus tag {locus_tag} ({len(full_sequence)} bp)")
+                return result
+                
+        except Exception as e:
+            self.logger.error(f"Error getting gene sequence: {str(e)}")
+            self.logger.error(f"Stack trace: {traceback.format_exc()}")
+            return None
+
+    def get_scoring_options(self):
+        """Get current scoring options"""
+        try:
+            if not hasattr(self, 'scoring_options'):
+                self.scoring_options = {
+                    'algorithm': 'Azimuth 2.0',
+                    'fasta_file': '',
+                    'min_score': 0,
+                    'max_score': 100
+                }
+            return self.scoring_options
+            
+        except Exception as e:
+            self.logger.error(f"Error getting scoring options: {str(e)}")
+            return {}
+
+    def set_scoring_options(self, options):
+        """Set scoring options"""
+        try:
+            self.scoring_options = options
+            self.logger.debug(f"Updated scoring options: {options}")
+            
+        except Exception as e:
+            self.logger.error(f"Error setting scoring options: {str(e)}")

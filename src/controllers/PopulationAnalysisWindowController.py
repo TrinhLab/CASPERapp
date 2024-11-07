@@ -1,5 +1,5 @@
 from PyQt6 import QtWidgets
-from utils.ui import show_error, show_message, position_window
+from utils.ui import show_error, show_message
 from views.PopulationAnalysisWindowView import PopulationAnalysisWindowView
 from models.PopulationAnalysisWindowModel import PopulationAnalysisWindowModel
 import logging
