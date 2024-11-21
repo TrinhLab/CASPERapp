@@ -27,6 +27,9 @@ class PopulationAnalysisWindowController:
             # Tables sorting
             self.view.table_seed.horizontalHeader().sectionClicked.connect(self.seed_table_sorting)
             self.view.table_locations.horizontalHeader().sectionClicked.connect(self.loc_table_sorter)
+            
+            # Add new connection for export button
+            self.view.push_button_export_selected_gRNAs.clicked.connect(self.export_selected_seeds)
         except Exception as e:
             show_error(self.global_settings, "Error setting up connections in population analysis.", str(e))
 
@@ -100,26 +103,27 @@ class PopulationAnalysisWindowController:
 
     def fill_data(self):
         try:
+            # Get seeds shared between ALL organisms
             self.model.seeds = self.model.get_shared_seeds(self.model.db_files, True)
             
-            if len(self.model.seeds) == 0:
-                return
+            if len(self.model.seeds) > 0:
+                # Process seed data for the table
+                seed_data = []
+                for seed in self.model.seeds:
+                    data = self.model.get_seed_data(seed, self.model.db_files)
+                    processed_data = self.process_seed_data(seed, data)
+                    if processed_data:  # Only add if data was processed successfully
+                        seed_data.append(processed_data)
 
-            seed_data = []
-            for seed in self.model.seeds:
-                data = self.model.get_seed_data(seed, self.model.db_files)
-                processed_data = self.process_seed_data(seed, data)
-                if processed_data:  # Only add if data was processed successfully
-                    seed_data.append(processed_data)
-
-            if seed_data:  # Only update table if we have data
-                self.view.update_shared_seeds_table(seed_data)
-                
-                if len(self.model.db_files) > 1:
-                    heatmap_data = self.model.get_heatmap_data(self.model.db_files)
-                    self.view.plot_heatmap(heatmap_data, self.model.org_names)
+                if seed_data:  # Only update table if we have data
+                    self.view.update_shared_seeds_table(seed_data)
+            
+            # Always generate and display heatmap for 2 or more organisms
+            if len(self.model.db_files) > 1:
+                heatmap_data = self.model.get_heatmap_data(self.model.db_files)
+                self.view.plot_heatmap(heatmap_data, self.model.org_names)
             else:
-                self.logger.warning("No seed data was processed successfully")
+                self.logger.warning("Not enough organisms selected for heatmap")
 
         except Exception as e:
             show_error(self.global_settings, "Error in fill_data() in population analysis.", str(e))
@@ -302,3 +306,43 @@ class PopulationAnalysisWindowController:
             event.accept()
         except Exception as e:
             show_error(self.global_settings, "Error in closeEvent() in population analysis.", str(e))
+
+    def export_selected_seeds(self):
+        try:
+            selected_seeds = []
+            selected_rows = self.view.table_seed.selectionModel().selectedRows()
+            self.logger.debug(f"Selected rows: {selected_rows}")
+            
+            if not selected_rows:
+                show_message(
+                    fontSize=12,
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="Nothing Selected",
+                    message="No seeds were selected. Please select seeds to export."
+                )
+                return
+            
+            for row_idx in selected_rows:
+                seed_data = {
+                    # Seed, % Coverage, Total Repeats, Avg. Repeats/Scaffold, Consensus Sequence, Full Sequence, % Consensus, Score, PAM, Strand
+                    # ('TCCCTGGTTCGAATCC', 100.0, 4, 2.0, 'TTGGTCCCTGGTTCGAATCC', 50.0, '55', 'GGG', '-')
+                    'seed': self.view.table_seed.item(row_idx.row(), 0).text(),  # Seed column
+                    'percent_coverage': self.view.table_seed.item(row_idx.row(), 1).text(),  # % Coverage column
+                    'total_repeats': self.view.table_seed.item(row_idx.row(), 2).text(),  # Total Repeats column
+                    'avg_repeats_or_scaffold': self.view.table_seed.item(row_idx.row(), 3).text(),  # Avg. Repeats/Scaffold column
+                    'consensus_sequence': self.view.table_seed.item(row_idx.row(), 4).text(),  # Consensus Sequence column
+                    'full_sequence': self.view.table_seed.item(row_idx.row(), 4).text(),  # Full Sequence column
+                    'percent_consensus': self.view.table_seed.item(row_idx.row(), 5).text(),  # % Consensus column
+                    'score': self.view.table_seed.item(row_idx.row(), 6).text(),    # Score column
+                    'pam': self.view.table_seed.item(row_idx.row(), 7).text(),      # PAM column
+                    'strand': self.view.table_seed.item(row_idx.row(), 8).text(),   # Strand column
+                }
+                selected_seeds.append(seed_data)
+            
+            # Get export window from global settings and show dialog
+            export_window = self.global_settings.get_export_selected_grnas_window()
+            print(f"Selected seeds: {selected_seeds}")
+            export_window.show_dialog(selected_seeds, "Population Analysis")
+            
+        except Exception as e:
+            show_error(self.global_settings, "Error exporting selected seeds", str(e))

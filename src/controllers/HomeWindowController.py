@@ -1,11 +1,12 @@
 import os
 from PyQt6 import QtWidgets, QtCore, uic
-from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QMainWindow, QMessageBox
 from views.HomeWindowView import HomeWindowView
 from models.HomeWindowModel import HomeWindowModel
 from utils.ui import show_error, show_message
 from PyQt6.QtCore import QObject
 from controllers.FindTargetsController import FindTargetsController
+from models.DatabaseManager import FileChangeType
 
 class HomeWindowController:
     def __init__(self, global_settings):
@@ -16,41 +17,39 @@ class HomeWindowController:
             self.view = HomeWindowView(global_settings)
             self.init_ui()
             self.setup_connections()
-            self.global_settings.db_state_updated.connect(self.refresh_data)
-
-            main_window = self.global_settings.main_window
-            
-            # Ensure the model data is loaded
             self.model.load_data()
-            # self.find_targets_controller = FindTargetsController(global_settings)
+            self.global_settings.db_manager.db_files_changed.connect(self._handle_db_files_changed)
+            self.global_settings.db_manager.db_validation_changed.connect(self._handle_db_validation_changed)
+            self.global_settings.db_manager.db_state_changed.connect(self._handle_db_state_changed)
         except Exception as e:
             show_error(self.global_settings, "Error initializing HomeWindowController", str(e))
 
     def init_ui(self):
         try:
-            self.view.push_button_view_targets.setEnabled(False)
-            self.view.push_button_generate_library.setEnabled(False)
             self.load_combo_box_data()
-            self.view.reset_progress_bar()
+            self.handle_search_type_change()
         except Exception as e:
             show_error(self.global_settings, "Error initializing UI in HomeWindowController", str(e))
 
     def load_combo_box_data(self):
+        """Reload all combo box data"""
         try:
             self.model.load_data()
-
+            
             organism_to_endonuclease = self.model.get_organism_to_endonuclease()
             annotation_files = self.model.get_annotation_files()
-
-            self.logger.debug(f"Updating Organisms combo box with organisms: {organism_to_endonuclease.keys()} in Main window")
-            self.view.update_combo_box_organism(list(organism_to_endonuclease.keys()))
-
+            
+            # Update organisms combo box
+            self.view.update_combo_box_organism(sorted(organism_to_endonuclease.keys()))
+            
+            # Update endonuclease combo box
             self.update_combo_box_endonuclease()
-
-            self.logger.debug(f"Updating Annotation files combo box with annotation files: {annotation_files} in Main window")
+            
+            # Update annotation files combo box
             self.view.update_combo_box_annotation_files(annotation_files)
+            
         except Exception as e:
-            show_error(self.global_settings, "Error loading dropdown data in HomeWindowController", str(e))
+            show_error(self.global_settings, "Error loading dropdown data", str(e))
 
     def update_combo_box_endonuclease(self):
         selected_organism = self.view.combo_box_organism.currentText()
@@ -73,11 +72,12 @@ class HomeWindowController:
             self.view.push_button_ncbi_file_search.clicked.connect(self.open_ncbi_window)
 
             # grpStep3
-            self.view.radio_button_feature.clicked.connect(self.toggle_annotation)
-            self.view.radio_button_position.clicked.connect(self.toggle_annotation)
-            self.view.push_button_find_targets.clicked.connect(self.gather_settings)
-            self.view.push_button_view_targets.clicked.connect(self.view_results)
-            self.view.push_button_generate_library.clicked.connect(self.prep_gen_lib)
+            # self.view.radio_button_feature.clicked.connect(self.toggle_annotation)
+            # self.view.radio_button_position.clicked.connect(self.toggle_annotation)
+            self.view.radio_button_feature.clicked.connect(self.handle_search_type_change)
+            self.view.radio_button_position.clicked.connect(self.handle_search_type_change)
+            self.view.radio_button_sequence.clicked.connect(self.handle_search_type_change)
+            self.view.push_button_find_view_targets.clicked.connect(self.gather_settings)
 
             # Add connection for annotation file changes
             self.view.combo_box_local_annotation_files.currentTextChanged.connect(self._on_annotation_file_changed)
@@ -87,25 +87,97 @@ class HomeWindowController:
 
     # Event Handlers
     def gather_settings(self):
+        """Process input data and direct to appropriate view"""
         try:
-            # input_data = self.view.get_find_targets_input()
-            # self.find_targets_controller.find_targets(input_data)
-            # self.global_settings.main_window.open_new_tab("Find Targets", self.find_targets_controller)
-
-            self.open_find_targets_module()
+            input_data = self.view.get_find_targets_input()
+            
+            if input_data['search_type'] == 'sequence':
+                sequence = input_data['search_query'].strip()
+                if len(sequence) < 100:
+                    QMessageBox.warning(
+                        self.view,
+                        "Sequence Too Short",
+                        "The sequence given is too small. At least 100 characters are required."
+                    )
+                    return
+                self.open_view_targets(input_data)
+            elif input_data['search_type'] == 'position':
+                self.open_view_targets(input_data)
+            else:
+                self.open_find_targets_module()
+                
         except Exception as e:
-            show_error(self.global_settings, "Error in find_targets", str(e))
+            show_error(self.global_settings, "Error in gather_settings", str(e))
 
-    def view_results(self):
-        # Implementation for viewing results
-        pass
+    def open_view_targets(self, input_data):
+        try:
+            # Create find targets controller to use its model
+            find_targets_controller = self.global_settings.get_find_targets_window()
+            
+            # Get targets using the model
+            targets = find_targets_controller.model.find_targets(input_data)
+            
+            if targets:
+                self.logger.debug(f"Found {len(targets)} targets")
+                
+                # Close existing View Targets tab if it exists
+                main_window = self.global_settings.main_window
+                existing_tab = main_window.find_tab_by_title("View Targets")
+                if existing_tab:
+                    tab_index = main_window.view.tab_widget.indexOf(existing_tab)
+                    main_window._close_tab(tab_index)
+                    self.logger.debug("Closed existing View Targets tab")
+                
+                # Create view targets controller
+                view_targets_controller = self.global_settings.get_view_targets_window()
+                
+                view_targets_controller.load_guides(
+                    targets,  # Pass the targets directly
+                    input_data['organism'],
+                    input_data['endonuclease']
+                )
+                
+                # Open new view targets tab
+                main_window.open_new_tab(
+                    "View Targets", 
+                    view_targets_controller
+                )
+                
+            else:
+                QMessageBox.warning(
+                    self.view,
+                    "No Targets Found",
+                    "No targets were found for the specified search."
+                )
+                
+        except Exception as e:
+            self.global_settings.logger.error(f"Error opening view targets directly: {str(e)}")
+            show_error(self.global_settings, "Error", f"Could not open view targets: {str(e)}")
+
+    def open_find_targets_module(self):
+        """Open find targets module for non-position searches"""
+        try:
+            # Close existing Find Targets tab if it exists
+            main_window = self.global_settings.main_window
+            existing_tab = main_window.find_tab_by_title("Find Targets")
+            if existing_tab:
+                tab_index = main_window.view.tab_widget.indexOf(existing_tab)
+                main_window._close_tab(tab_index)
+                self.logger.debug("Closed existing Find Targets tab")
+            
+            # Create new find targets controller and load data
+            find_targets_controller = self.global_settings.get_find_targets_window()
+            input_data = self.view.get_find_targets_input()
+            find_targets_controller.find_targets(input_data)
+            
+            # Open new Find Targets tab
+            self.global_settings.main_window.open_new_tab("Find Targets", find_targets_controller)
+            
+        except Exception as e:
+            show_error(self.global_settings, "Error in open_find_targets_module() in Home", str(e))
 
     def toggle_annotation(self):
         # Implementation for toggling annotation
-        pass
-
-    def prep_gen_lib(self):
-        # Implementation for preparing gene library
         pass
 
     def open_new_genome_module(self):
@@ -172,33 +244,51 @@ class HomeWindowController:
         except Exception as e:
             show_error(self.global_settings, "Error in open_ncbi_window() in main", str(e))
 
-    def open_find_targets_module(self):
+    def _handle_db_files_changed(self, changes):
+        """Handle database file changes"""
         try:
-            find_targets_controller = self.global_settings.get_find_targets_window()
-            input_data = self.view.get_find_targets_input()
-            find_targets_controller.find_targets(input_data)
-            self.global_settings.main_window.open_new_tab("Find Targets", find_targets_controller)
+            # Reload model data if necessary
+            self.model.update_for_file_changes(changes)
+            
+            # Update UI if needed
+            if (FileChangeType.CSPR_ADDED in changes or 
+                FileChangeType.CSPR_REMOVED in changes):
+                # Update both organism and endonuclease combo boxes
+                organism_to_endonuclease = self.model.get_organism_to_endonuclease()
+                self.view.update_combo_box_organism(sorted(organism_to_endonuclease.keys()))
+                self.update_combo_box_endonuclease()
+                
+            if (FileChangeType.GBFF_ADDED in changes or 
+                FileChangeType.GBFF_REMOVED in changes):
+                self.view.update_combo_box_annotation_files(self.model.get_annotation_files())
+                
         except Exception as e:
-            show_error(self.global_settings, "Error in open_find_targets_module() in Home", str(e))
+            show_error(self.global_settings, "Error handling database changes", str(e))
 
-    def open_view_targets_module(self):
+    def _handle_db_validation_changed(self, is_valid, message):
+        """Handle database validation state changes"""
+        if not is_valid:
+            self.view.show_warning("Database Warning", message)
+        self._update_validation_state(is_valid)
+
+    def _handle_db_state_changed(self, is_valid, message, changes):
+        """Handle database state changes"""
         try:
-            view_targets_controller = self.global_settings.get_view_targets_window()
-            self.global_settings.main_window.open_new_tab("View Targets", view_targets_controller)
+            if not is_valid:
+                show_error(self.global_settings, "Database Warning", message)
+                return
+            
+            # Always reload model data when database state changes
+            self.model.load_data()
+            
+            # Update all combo boxes
+            organism_to_endonuclease = self.model.get_organism_to_endonuclease()
+            self.view.update_combo_box_organism(sorted(organism_to_endonuclease.keys()))
+            self.update_combo_box_endonuclease()
+            self.view.update_combo_box_annotation_files(self.model.get_annotation_files())
+                
         except Exception as e:
-            show_error(self.global_settings, "Error in open_view_targets_module() in Home", str(e))
-
-    def refresh_data(self, is_valid, message, cspr_files):
-        self.logger.info(f"Refreshing Home Window data after database state update. Valid: {is_valid}, Message: {message}")
-        if is_valid:
-            self.load_combo_box_data()
-            # If the current tab is not Home, we need to update it when it becomes visible
-            main_window = self.global_settings.main_window
-            current_tab_text = main_window.view.tab_widget.tabText(main_window.view.tab_widget.currentIndex())
-            if current_tab_text != "Home":
-                main_window.view.tab_widget.currentChanged.connect(self._check_and_update_home_tab)
-        else:
-            self.logger.warning(f"Database state update received, but it's not valid. Message: {message}")
+            show_error(self.global_settings, "Error handling database state change", str(e))
 
     def _check_and_update_home_tab(self, index):
         if self.global_settings.main_window.view.tab_widget.tabText(index) == "Home":
@@ -218,4 +308,30 @@ class HomeWindowController:
     def _on_annotation_file_changed(self, new_file):
         """Handle changes to the annotation file selection"""
         self.global_settings.set_current_annotation_file(new_file)
+
+    def _update_cspr_related_ui(self):
+        # Implementation to update UI elements that depend on CSPR files
+        pass
+
+    def _update_gbff_related_ui(self):
+        # Implementation to update UI elements that depend on GBFF files
+        pass
+
+    def _update_validation_state(self, is_valid):
+        # Implementation to update UI elements based on validation state
+        pass
+
+    def handle_search_type_change(self):
+        """Update UI elements based on search type"""
+        try:
+            search_type = self.view.get_search_type()
+            
+            # Update button text
+            if search_type in ['position', 'sequence']:
+                self.view.push_button_find_view_targets.setText("View Targets")
+            else:  # 'feature'
+                self.view.push_button_find_view_targets.setText("Find Targets")
+
+        except Exception as e:
+            self.logger.error(f"Error updating search type UI: {str(e)}")
 

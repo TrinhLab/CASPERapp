@@ -8,20 +8,19 @@ from PyQt6.QtCore import QSettings, QObject, pyqtSignal
 from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtWidgets import QApplication
 
-from models.DatabaseManager import DatabaseManager
+from models.DatabaseManager import DatabaseManager, FileChangeType
 from models.ConfigManager import ConfigManager
 
 class GlobalSettings(QObject):
-    db_state_updated = pyqtSignal(bool, str, list)  # Combined signal
-    first_time_startup = pyqtSignal()  # New signal
+    first_time_startup = pyqtSignal()
     endonuclease_updated = pyqtSignal()
-    annotation_file_changed = pyqtSignal(str)  # New signal for annotation file changes
+    annotation_file_changed = pyqtSignal(str)
+    theme_changed = pyqtSignal(str)
 
     def __init__(self, app_dir_path):
         super().__init__()
         
         self.app_dir_path = app_dir_path
-        
         self.logger = self._setup_logging()
         
         self.config_manager = ConfigManager(app_dir_path=self.app_dir_path, logger=self.logger)
@@ -29,10 +28,13 @@ class GlobalSettings(QObject):
         
         self.is_first_time_startup = self.config_manager.get_env_value('FIRST_TIME_START', 'TRUE').upper() == 'TRUE'
         
-        self._initialize_directories()  # Add this line
+        self._initialize_directories()
         
         self.db_manager = DatabaseManager(self.logger, self.config_manager)
-        self.db_manager.db_state_updated.connect(self._on_db_state_updated)
+        
+        self.db_manager.db_files_changed.connect(self._on_db_files_changed)
+        self.db_manager.db_validation_changed.connect(self._on_db_validation_changed)
+        self.db_manager.db_state_changed.connect(self._on_db_state_changed)
         
         self.CSPR_DB = self.db_manager.get_db_path()
         self.algorithms = self.config_manager.get_config_value('algorithms', ["Azimuth 2.0"])
@@ -45,19 +47,65 @@ class GlobalSettings(QObject):
         self.initialize_palettes()
 
         self.main_window = None 
-
         self._current_annotation_file = None
 
+    def _on_db_files_changed(self, changes):
+        """Handle database file changes"""
+        self.logger.debug(f"Database files changed: {changes}")
+        # Components should connect directly to db_manager signals
+        # This method is for global-level handling if needed
+
+    def _on_db_validation_changed(self, is_valid, message):
+        """Handle database validation state changes"""
+        self.logger.debug(f"Database validation changed - Valid: {is_valid}, Message: {message}")
+        # Handle any global-level validation state changes
+
+    def _on_db_state_changed(self, is_valid, message, changes):
+        """Handle combined database state changes"""
+        self.logger.debug(f"Database state changed - Valid: {is_valid}, Message: {message}, Changes: {changes}")
+        # Handle any global-level state changes
+
+    def get_db_path(self):
+        """Get the current database path"""
+        return self.db_manager.get_db_path()
+
+    def validate_db_path(self, path):
+        """Validate the given database path"""
+        return self.db_manager.validate_db_path(path)
+
+    def save_db_path(self, path):
+        """Save the database path"""
+        return self.db_manager.save_db_path(path)
+
+    def ensure_db_path_exists(self):
+        """Ensure the database path exists"""
+        self.db_manager.ensure_db_path_exists()
+
+    def update_db_state(self):
+        """Check and update the database state"""
+        self.db_manager.check_db_state()
+
     def _initialize_directories(self):
+        """Initialize application directories"""
+        # app_dir_path is already set in __init__
+        
+        # Set up source directory paths
         self.src_dir_path = os.path.join(self.app_dir_path, 'src')
-        self.ui_dir_path = os.path.join(self.src_dir_path, self.config_manager.get_config_value('paths.ui'))
-        self.controllers_dir_path = os.path.join(self.src_dir_path, self.config_manager.get_config_value('paths.controllers'))
-        self.assets_dir_path = os.path.join(self.app_dir_path, self.config_manager.get_config_value('paths.assets'))
+        self.ui_dir_path = os.path.join(self.src_dir_path, 'ui')
+        self.controllers_dir_path = os.path.join(self.src_dir_path, 'controllers')
         self.models_dir_path = os.path.join(self.src_dir_path, 'models')
         self.views_dir_path = os.path.join(self.src_dir_path, 'views')
         self.utils_dir_path = os.path.join(self.src_dir_path, 'utils')
         self.SeqFinder_dir_path = os.path.join(self.src_dir_path, 'SeqFinder')
-        self.casper_info_path = os.path.join(self.config_manager.config_dir_path, 'CASPERinfo')
+        
+        # Set up other resource paths
+        self.assets_dir_path = os.path.join(self.app_dir_path, 'assets')
+        self.config_dir_path = os.path.join(self.app_dir_path, 'config')
+        self.casper_info_path = os.path.join(self.config_dir_path, 'CASPERinfo')
+        self.off_target_dir_path = os.path.join(self.models_dir_path, 'OffTarget')
+
+        # Ensure critical directories exist
+        os.makedirs(self.config_dir_path, exist_ok=True)
 
     def _setup_logging(self):
         logger = logging.getLogger(__name__)
@@ -80,24 +128,6 @@ class GlobalSettings(QObject):
             logger.info("Running a non-packaged version of CASPER.")
 
         return logger
-
-    def get_db_path(self):
-        return self.db_manager.get_db_path()
-
-    def validate_db_path(self, path):
-        return self.db_manager.validate_db_path(path)
-
-    def save_db_path(self, path):
-        return self.db_manager.save_db_path(path)
-
-    def _on_db_state_updated(self, is_valid, message, cspr_files):
-        self.db_state_updated.emit(is_valid, message, cspr_files)
-
-    def ensure_db_path_exists(self):
-        self.db_manager.ensure_db_path_exists()
-
-    def adjust_path_for_os(self, path):
-        return self.db_manager.adjust_path_for_os(path)
 
     def get_app_dir_path(self):
         return self.app_dir_path
@@ -122,6 +152,9 @@ class GlobalSettings(QObject):
     
     def get_casper_info_path(self):
         return self.casper_info_path
+    
+    def get_off_target_dir_path(self):
+        return self.off_target_dir_path
     
     def get_theme(self):
         return self.theme
@@ -180,15 +213,77 @@ class GlobalSettings(QObject):
 
     @lru_cache(maxsize=None)
     def _get_window_class(self, window_name):
-        module_name = f"controllers.{window_name}Controller"
-        class_name = f"{window_name}Controller"
-        module = importlib.import_module(module_name)
-        return getattr(module, class_name)
+        """Get the controller class with better error handling and dynamic imports"""
+        try:
+            # Get the application root directory
+            if hasattr(sys, 'frozen'):
+                root_dir = os.path.join(os.path.dirname(sys.executable), 'src')
+                if platform.system() == 'Darwin':  # macOS
+                    root_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(sys.executable))), 
+                                          'Contents', 'Resources', 'src')
+            else:
+                root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+            # Add root directory to Python path if not already there
+            if root_dir not in sys.path:
+                sys.path.insert(0, root_dir)
+
+            # Import model (optional)
+            try:
+                model_name = f"{window_name}Model"
+                model_file = os.path.join(root_dir, 'models', f"{model_name}.py")
+                
+                if os.path.exists(model_file):
+                    spec = importlib.util.spec_from_file_location(
+                        f"models.{model_name}", 
+                        model_file
+                    )
+                    model_module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(model_module)
+                    sys.modules[f"models.{model_name}"] = model_module
+                    self.logger.debug(f"Successfully imported model from {model_file}")
+            except Exception as e:
+                self.logger.warning(f"Could not find model for {window_name}: {str(e)}")
+
+            # Import controller (required)
+            controller_name = f"{window_name}Controller"
+            controller_file = os.path.join(root_dir, 'controllers', f"{controller_name}.py")
+            
+            if not os.path.exists(controller_file):
+                raise ImportError(f"Controller file not found: {controller_file}")
+
+            spec = importlib.util.spec_from_file_location(
+                f"controllers.{controller_name}", 
+                controller_file
+            )
+            controller_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(controller_module)
+            sys.modules[f"controllers.{controller_name}"] = controller_module
+
+            class_name = f"{window_name}Controller"
+            if not hasattr(controller_module, class_name):
+                raise AttributeError(f"Controller module does not contain class {class_name}")
+
+            self.logger.debug(f"Successfully imported controller from {controller_file}")
+            return getattr(controller_module, class_name)
+
+        except Exception as e:
+            self.logger.error(f"Failed to load controller {window_name}: {str(e)}")
+            raise ImportError(f"Could not load controller for {window_name}") from e
 
     def _create_window(self, window_name):
-        WindowClass = self._get_window_class(window_name)
-        controller = WindowClass(self)
-        return controller
+        """Create a window instance with dynamic module loading"""
+        try:
+            WindowClass = self._get_window_class(window_name)
+            controller = WindowClass(self)
+            
+            # Store the reference to prevent garbage collection
+            setattr(self, f'_current_{window_name.lower()}_window', controller)
+            
+            return controller
+        except Exception as e:
+            self.logger.error(f"Error creating window {window_name}: {str(e)}")
+            raise
     
     def get_startup_window(self):
         if not hasattr(self, '_startup_window'):
@@ -239,9 +334,6 @@ class GlobalSettings(QObject):
     def set_main_window(self, main_window):
         self.main_window = main_window
 
-    def update_db_state(self):
-        self.db_manager.check_db_state()
-
     def _on_env_file_created(self):
         self.logger.info("GlobalSettings: _on_env_file_created")
         self.is_first_time_startup = True
@@ -289,6 +381,49 @@ class GlobalSettings(QObject):
         """Create and return ScoringOptionsController instance"""
         from controllers.ScoringOptionsController import ScoringOptionsController
         return ScoringOptionsController(self, view_targets_controller)
+
+    def get_stylesheet(self):
+        """Return the base stylesheet for the application"""
+        # Implement this method to return a base stylesheet
+        pass
+
+    def get_groupbox_style(self):
+        """Return the style for group boxes"""
+        # Implement this method to return the group box style
+        pass
+
+    def get_dark_stylesheet(self):
+        """Return the dark theme stylesheet"""
+        # Implement this method to return the dark theme stylesheet
+        pass
+
+    def get_light_stylesheet(self):
+        """Return the light theme stylesheet"""
+        # Implement this method to return the light theme stylesheet
+        pass
+
+    def set_theme(self, theme):
+        """Set the current theme and notify listeners"""
+        self.theme = theme
+        self.theme_changed.emit(theme)
+
+    def get_theme(self):
+        """Get the current theme"""
+        return self.theme
+
+    def get_cotargeting_window(self, view_targets_controller=None):
+        """Create and return CoTargetingController instance"""
+        if not hasattr(self, '_cotargeting_controller'):
+            from controllers.CoTargetingController import CoTargetingController
+            self._cotargeting_controller = CoTargetingController(self, view_targets_controller)
+        return self._cotargeting_controller
+
+    def get_export_selected_grnas_window(self):
+        """Get or create ExportSelectedgRNAs window"""
+        if not hasattr(self, '_export_selected_grnas_controller'):
+            from controllers.ExportSelectedgRNAsController import ExportSelectedgRNAsController
+            self._export_selected_grnas_controller = ExportSelectedgRNAsController(self)
+        return self._export_selected_grnas_controller
 
 # Global instance
 global_settings = None

@@ -1,5 +1,5 @@
 from PyQt6 import QtWidgets, QtCore, QtGui
-from utils.ui import show_error, show_message, position_window
+from utils.ui import show_error, show_message
 from models.NCBIWindowModel import NCBIWindowModel, PandasModel, CustomProxyModel
 from views.NCBIWindowView import NCBIWindowView
 import os

@@ -1,4 +1,5 @@
 from models.FindTargetsModel import FindTargetsModel
+from utils.ui import show_error
 from views.FindTargetsView import FindTargetsView
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import QTimer
@@ -103,20 +104,84 @@ class FindTargetsController:
         try:
             if not self.view:
                 return
-                
+            
             selected_targets = self.view.get_selected_targets()
-            print(f"Selected targets: {selected_targets}")
-            print(f"Organism: {self.organism}")
-            print(f"Endonuclease: {self.endonuclease}")
             if not selected_targets:
                 QMessageBox.warning(self.view, "No Selection", "Please select targets to view.")
                 return
+
+            # Find existing View Targets tab
+            main_window = self.global_settings.main_window
+            existing_tab = main_window.find_tab_by_title("View Targets")
             
-            view_targets_controller = self.global_settings.get_view_targets_window()
-            view_targets_controller.load_targets(selected_targets, self.organism, self.endonuclease)
-            self.global_settings.main_window.open_new_tab("View Targets", view_targets_controller)
-            
+            if existing_tab:
+                # Get the existing controller from main window's tab_widgets
+                view_targets_controller = main_window.tab_widgets['controllers'].get("View Targets")
+                if view_targets_controller:
+                    # Update existing view with new targets
+                    view_targets_controller.load_targets(selected_targets, self.organism, self.endonuclease)
+                    # Switch to the existing tab
+                    main_window.view.tab_widget.setCurrentWidget(existing_tab)
+                else:
+                    self.logger.error("View Targets controller not found for existing tab")
+            else:
+                # Create new View Targets tab if none exists
+                view_targets_controller = self.global_settings.get_view_targets_window()
+                view_targets_controller.load_guides(selected_targets, self.organism, self.endonuclease)
+                main_window.open_new_tab("View Targets", view_targets_controller)
+                
         except Exception as e:
             self.global_settings.logger.error(f"Error in view_targets: {str(e)}")
             if self.view:
                 QMessageBox.critical(self.view, "Error", f"An error occurred while viewing targets: {str(e)}")
+
+    def gather_settings(self):
+        """Process input data and direct to appropriate view"""
+        try:
+            input_data = self.view.get_find_targets_input()
+            
+            # For position-based searches, go directly to view targets
+            if input_data['search_type'] == 'position':
+                self.open_view_targets_directly(input_data)
+            else:
+                # For other search types, show find targets view first
+                self.find_targets(input_data)
+                
+        except Exception as e:
+            show_error(self.global_settings, "Error in find_targets", str(e))
+
+    def open_view_targets_directly(self, input_data):
+        """Open view targets directly for position-based searches"""
+        try:
+            # Get targets using the model
+            targets = self.model.find_targets_by_position(
+                self.model._get_parser(self.model.get_cspr_file_path(input_data)), 
+                input_data
+            )
+            
+            if targets:
+                # Create view targets controller
+                view_targets_controller = self.global_settings.get_view_targets_window()
+                
+                # Load targets directly
+                view_targets_controller.load_targets(
+                    targets,
+                    input_data['organism'],
+                    input_data['endonuclease']
+                )
+                
+                # Open view targets tab
+                self.global_settings.main_window.open_new_tab(
+                    "View Targets", 
+                    view_targets_controller
+                )
+            else:
+                QMessageBox.warning(
+                    self.view,
+                    "No Targets Found",
+                    "No targets were found in the specified position range."
+                )
+                
+        except Exception as e:
+            self.global_settings.logger.error(f"Error opening view targets directly: {str(e)}")
+            show_error(self.global_settings, "Error", f"Could not open view targets: {str(e)}")

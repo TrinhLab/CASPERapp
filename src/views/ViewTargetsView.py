@@ -13,7 +13,7 @@ class ViewTargetsView(QtWidgets.QMainWindow):
     
     def __init__(self, global_settings):
         super().__init__()
-        self.settings = global_settings
+        self.settings = global_settings 
         self.logger = self.settings.get_logger()
 
         self.init_ui()
@@ -30,25 +30,42 @@ class ViewTargetsView(QtWidgets.QMainWindow):
         self._init_grpGuideAnalysis()
         self._init_grpGeneViewer()
 
-        self.push_button_export_grna = self._find_widget('pbtnExportgRNA', QtWidgets.QPushButton)
-
-        # Connect gene selection change with direct signal
-        self.combo_box_gene.currentTextChanged.connect(self._on_gene_changed)
+        self.push_button_export_selected_grnas = self._find_widget('pbtnExportSelectedgRNAs', QtWidgets.QPushButton)
 
     def _init_grpGuideViewer(self):
         self.combo_box_gene = self._find_widget('cmbGene', QtWidgets.QComboBox)
         self.combo_box_endonuclease = self._find_widget('cmbEndonuclease', QtWidgets.QComboBox)
+        self.check_box_filter_5_prime_g_sequences = self._find_widget('chkFilter5PrimeG', QtWidgets.QCheckBox)
+        self.spin_box_minimum_on_target_score = self._find_widget('spnMinOTScore', QtWidgets.QSpinBox)
         self.check_box_select_all = self._find_widget('chkSelectAll', QtWidgets.QCheckBox)
-        self.push_button_filter_options = self._find_widget('pbtnFilterOptions', QtWidgets.QPushButton)
         self.push_button_scoring_options = self._find_widget('pbtnScoringOptions', QtWidgets.QPushButton)
-        self.table_targets = self._find_widget('tblTargets', QtWidgets.QTableWidget)
+        self.table_guides = self._find_widget('tblGuides', QtWidgets.QTableWidget)
 
-        self.table_targets.setColumnCount(8)
-        self.table_targets.setHorizontalHeaderLabels(["Location", "Endonuclease", "Sequence", "Strand", "PAM", "Score", "Off-Target", "Details"])
-        self.table_targets.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table_targets.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table_targets.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
-        self.table_targets.horizontalHeader().setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.combo_box_gene.currentTextChanged.connect(self._on_gene_changed)
+
+        self.table_guides.setColumnCount(8)
+        self.table_guides.setHorizontalHeaderLabels(["Location", "Endonuclease", "Sequence", "Strand", "PAM", "Score", "Off-Target", "Details"])
+        self.table_guides.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.table_guides.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table_guides.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+        
+        # Enable horizontal scrolling
+        self.table_guides.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.table_guides.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        
+        # Set size policy to allow table to shrink and expand
+        self.table_guides.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding
+        )
+        
+        # Set resize mode for header
+        header = self.table_guides.horizontalHeader()
+        header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Interactive)
+        header.setStretchLastSection(False)  # Don't stretch the last section
+        
+        # Set minimum section size to prevent columns from becoming too narrow
+        header.setMinimumSectionSize(80)
 
     def _init_grpGuideAnalysis(self):
         self.push_button_off_target = self._find_widget('pbtnOffTarget', QtWidgets.QPushButton)
@@ -63,52 +80,71 @@ class ViewTargetsView(QtWidgets.QMainWindow):
         self.text_edit_gene_viewer = self._find_widget('txtedGeneViewer', QtWidgets.QTextEdit)
         self.push_button_reset_location = self._find_widget('pbtnResetLocation', QtWidgets.QPushButton)
 
+        self.text_edit_gene_viewer.setReadOnly(True)
+
     def _find_widget(self, name: str, widget_type: type) -> Optional[QtWidgets.QWidget]:
         widget = self.findChild(widget_type, name)
         if widget is None:
             self.logger.warning(f"Widget '{name}' not found in UI file.")
         return widget 
 
-    def display_targets_in_table(self, targets):
-        """Ultra-fast target display using virtual table and minimal UI updates"""
+    def display_guides_in_table(self, guides):
+        """Ultra-fast guide display with virtual table and minimal UI updates"""
         try:
-            start_time = time.time()
+            # Store complete set of guides
+            self._all_guides = guides
             
-            # Store complete set of targets if not already stored
-            if not hasattr(self, '_complete_targets'):
-                self._complete_targets = targets
-            
-            # Filter targets for currently selected gene
             selected_text = self.combo_box_gene.currentText()
-            # Extract locus tag from "locus_tag: gene_name" format
-            selected_locus = selected_text.split(': ')[0] if ': ' in selected_text else selected_text
             
-            if selected_locus:
-                # Filter targets with more robust comparison
-                filtered_targets = []
-                for target in self._complete_targets:
-                    target_locus = str(target.get('feature_id', '')).strip()
-                    if target_locus.lower() == selected_locus.lower():
-                        filtered_targets.append(target)
-                
-                # Store filtered results
-                self._all_results = filtered_targets
+            # First filter by position/feature
+            if selected_text and "chrom" in selected_text and "start:" in selected_text:
+                filtered_guides = []
+                for guide in self._all_guides:
+                    if guide.get('feature_id') == selected_text:
+                        filtered_guides.append(guide)
+                self.logger.debug(f"Filtered to {len(filtered_guides)} guides for position {selected_text}")
             else:
-                filtered_targets = self._complete_targets
-                self._all_results = filtered_targets
+                selected_locus = selected_text.split(': ')[0] if ': ' in selected_text else selected_text
                 
-            total_rows = len(filtered_targets)
+                if selected_locus:
+                    filtered_guides = []
+                    for guide in self._all_guides:
+                        guide_locus = str(guide.get('feature_id', '')).strip()
+                        if guide_locus.lower() == selected_locus.lower():
+                            filtered_guides.append(guide)
+                else:
+                    filtered_guides = self._all_guides
+            
+            # Apply additional filters
+            final_guides = []
+            for guide in filtered_guides:
+                # Filter by minimum score
+                min_score = self.spin_box_minimum_on_target_score.value()
+                if float(guide.get('score', 0)) < min_score:
+                    continue
+                    
+                # Filter by 5' G sequences
+                if self.check_box_filter_5_prime_g_sequences.isChecked():
+                    sequence = guide.get('sequence', '')
+                    if not sequence or not sequence.startswith('G'):
+                        continue
+                        
+                final_guides.append(guide)
+                
+            # Update table with new guides
+            total_rows = len(final_guides)
+            self.logger.debug(f"Processing {total_rows} rows for display after filtering")
             
             # Completely freeze UI
             self.setUpdatesEnabled(False)
-            self.table_targets.setUpdatesEnabled(False)
-            self.table_targets.setSortingEnabled(False)
-            self.table_targets.setVisible(False)
+            self.table_guides.setUpdatesEnabled(False)
+            self.table_guides.setSortingEnabled(False)
+            self.table_guides.setVisible(False)
             
             try:
-                # Pre-allocate table
-                self.table_targets.clearContents()
-                self.table_targets.setRowCount(total_rows)
+                # Clear and resize table
+                self.table_guides.clearContents()
+                self.table_guides.setRowCount(total_rows)
                 
                 # Get current headers to check for Azimuth column
                 headers = self.get_table_headers()
@@ -119,63 +155,80 @@ class ViewTargetsView(QtWidgets.QMainWindow):
                 
                 # Load ALL rows at once
                 for row in range(total_rows):
-                    target = filtered_targets[row]
+                    guide = final_guides[row]
+                    
+                    # Extract start position from location (format: "start-end")
+                    location = guide['location']
+                    start_pos = location.split('-')[0] if '-' in location else location
                     
                     # Create and set basic items
-                    for col, value in enumerate([
-                        target['location'], target['endonuclease'],
-                        target['sequence'], target['strand'], target['pam']
-                    ]):
-                        item = QTableWidgetItem(str(value))
+                    items = [
+                        (0, QTableWidgetItem(start_pos)),  # Only show start position
+                        (1, QTableWidgetItem(guide['endonuclease'])),
+                        (2, QTableWidgetItem(guide['sequence'])),
+                        (3, QTableWidgetItem(guide['strand'])),
+                        (4, QTableWidgetItem(guide['pam'])),
+                        (5, QTableWidgetItem(str(guide['score']))),
+                        (6, QTableWidgetItem("--.--"))  # Off-target placeholder
+                    ]
+                    
+                    for col, item in items:
                         item.setFlags(flags)
-                        self.table_targets.setItem(row, col, item)
+                        self.table_guides.setItem(row, col, item)
                     
-                    # Handle score separately for numeric sorting
-                    score_item = QTableWidgetItem()
-                    score_item.setData(QtCore.Qt.ItemDataRole.EditRole, float(target['score']))
-                    self.table_targets.setItem(row, 5, score_item)
-                    
-                    # Add off-target placeholder
-                    ot_item = QTableWidgetItem("--.--")
-                    self.table_targets.setItem(row, 6, ot_item)
-                    
-                    # Create details button
-                    details_button = QtWidgets.QPushButton("Details")
-                    self.table_targets.setCellWidget(row, 7, details_button)
+                    # Only add details button if sequence has off-target details
+                    sequence = guide['sequence']
+                    if hasattr(self, '_off_target_details') and sequence in self._off_target_details:
+                        details_button = QtWidgets.QPushButton("Details")
+                        details_button.clicked.connect(self._show_details)
+                        self.table_guides.setCellWidget(row, 7, details_button)
                     
                     # Add Azimuth score if column exists
-                    if azimuth_index is not None and 'azimuth_score' in target:
-                        azimuth_item = QTableWidgetItem()
-                        azimuth_item.setData(QtCore.Qt.ItemDataRole.EditRole, float(target['azimuth_score']))
-                        self.table_targets.setItem(row, azimuth_index, azimuth_item)
+                    if azimuth_index is not None and 'azimuth_score' in guide:
+                        azimuth_item = QTableWidgetItem(str(guide.get('azimuth_score', 0)))
+                        self.table_guides.setItem(row, azimuth_index, azimuth_item)
                 
-                # Set column widths
-                column_widths = [100, 100, 200, 80, 80, 80, 80, 100]
+                # Updated column widths
+                column_widths = [
+                    80,  # Location
+                    100,  # Endonuclease
+                    200,  # Sequence
+                    10,   # Strand
+                    80,  # PAM
+                    10,   # Score
+                    30,   # Off-Target
+                    80   # Details
+                ]
+                
+                # Set the column widths
                 for col, width in enumerate(column_widths):
-                    self.table_targets.setColumnWidth(col, width)
+                    self.table_guides.setColumnWidth(col, width)
+                
+                essential_columns_width = sum(column_widths[:8])  # First 6 columns
+                self.table_guides.setMinimumWidth(essential_columns_width)
+                
+                # Update the group box to properly handle scrolling
+                guide_viewer_group = self.findChild(QtWidgets.QGroupBox, 'grpGuideViewer')
+                guide_viewer_group.setMinimumWidth(essential_columns_width + 50)  # Add some padding for scrollbar
                 
             finally:
                 # Re-enable UI
-                self.table_targets.setVisible(True)
-                self.table_targets.setUpdatesEnabled(True)
+                self.table_guides.setVisible(True)
+                self.table_guides.setUpdatesEnabled(True)
                 self.setUpdatesEnabled(True)
-                self.table_targets.setSortingEnabled(True)
-                
-                total_time = time.time() - start_time
-                self.logger.debug(f"Display time: {total_time:.2f} seconds for {total_rows} rows")
+                self.table_guides.setSortingEnabled(True)
                 
         except Exception as e:
-            self.logger.error(f"Error in display_results: {str(e)}")
-            show_error(self.settings, "Error displaying targets", str(e))
+            self.logger.error(f"Error in display_guides: {str(e)}")
+            show_error(self.settings, "Error displaying guides", str(e))
 
     def _handle_scroll_virtual(self, value, total_rows, row_height, buffer_rows):
-        """Handle virtual scrolling with minimal updates"""
         try:
-            if not hasattr(self, '_all_results') or not self._all_results:
+            if not hasattr(self, '_all_guides') or not self._all_guides:
                 return
                 
             # Calculate visible range with safety checks
-            viewport_height = max(1, self.table_targets.viewport().height())
+            viewport_height = max(1, self.table_guides.viewport().height())
             row_height = max(1, row_height)  # Ensure non-zero
             visible_rows = viewport_height // row_height
             
@@ -186,31 +239,31 @@ class ViewTargetsView(QtWidgets.QMainWindow):
             
             # Only update rows that aren't already loaded
             for row in range(start_row, end_row):
-                if row < len(self._all_results) and not self.table_targets.item(row, 0):
-                    target = self._all_results[row]
+                if row < len(self._all_guides) and not self.table_guides.item(row, 0):
+                    guide = self._all_guides[row]
                     
                     # Create and set items efficiently
                     for col, value in enumerate([
-                        target['location'], target['endonuclease'],
-                        target['sequence'], target['strand'], target['pam'],
-                        target['score'], "--.--"
+                        guide['location'], guide['endonuclease'],
+                        guide['sequence'], guide['strand'], guide['pam'],
+                        guide['score'], "--.--"
                     ]):
                         item = QTableWidgetItem(str(value))
                         item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-                        self.table_targets.setItem(row, col, item)
+                        self.table_guides.setItem(row, col, item)
                     
-                    if not self.table_targets.cellWidget(row, 7):
+                    if not self.table_guides.cellWidget(row, 7):
                         details_button = QtWidgets.QPushButton("Details")
-                        self.table_targets.setCellWidget(row, 7, details_button)
+                        self.table_guides.setCellWidget(row, 7, details_button)
                         
         except Exception as e:
             self.logger.error(f"Error in _handle_scroll_virtual: {str(e)}")
 
-    def get_selected_targets(self):
-        """Get selected targets with all necessary data"""
+    def get_selected_guides(self):
+        """Get selected guides with all necessary data"""
         try:
-            selected_rows = set(index.row() for index in self.table_targets.selectedIndexes())
-            selected_targets = []
+            selected_rows = sorted(set(item.row() for item in self.table_guides.selectedItems()))
+            selected_guides = []
             
             # Get column indices once
             columns = {
@@ -219,54 +272,62 @@ class ViewTargetsView(QtWidgets.QMainWindow):
                 'sequence': 2,
                 'strand': 3,
                 'pam': 4,
-                'score': 5
+                'score': 5,
+                'off_target': 6
             }
             
-            for row in sorted(selected_rows):
-                # Verify all required cells have data
-                if all(self.table_targets.item(row, col) is not None 
-                      for col in columns.values()):
-                    
-                    target = {
-                        'location': self.table_targets.item(row, columns['location']).text(),
-                        'endonuclease': self.table_targets.item(row, columns['endonuclease']).text(),
-                        'sequence': self.table_targets.item(row, columns['sequence']).text(),
-                        'strand': self.table_targets.item(row, columns['strand']).text(),
-                        'pam': self.table_targets.item(row, columns['pam']).text(),
-                        'score': self.table_targets.item(row, columns['score']).text()
-                    }
-                    selected_targets.append(target)
-                else:
-                    self.logger.warning(f"Skipping row {row} due to missing data")
-                    
-            if not selected_targets:
-                self.logger.warning("No valid targets selected")
+            # Get current gene information from combo box
+            current_gene = self.combo_box_gene.currentText()
+            if ': ' in current_gene:  # Format is "locus_tag: gene_name"
+                locus_tag, gene_name = current_gene.split(': ', 1)
+            else:
+                locus_tag = current_gene
+                gene_name = current_gene
+            
+            for row in selected_rows:
+                # Create guide dictionary directly from table items
+                guide = {}
+                valid_row = True
                 
-            return selected_targets
+                for col_name, col_index in columns.items():
+                    item = self.table_guides.item(row, col_index)
+                    if item is None:
+                        valid_row = False
+                        self.logger.warning(f"Missing data in row {row}, column {col_name}")
+                        break
+                    guide[col_name] = item.text()
+                
+                if valid_row:
+                    # Add gene information
+                    guide['locus_tag'] = locus_tag.strip()
+                    guide['gene_name'] = gene_name.strip()
+                    selected_guides.append(guide)
+                    
+            if not selected_guides:
+                self.logger.warning("No valid guides selected")
+                
+            return selected_guides
             
         except Exception as e:
-            self.logger.error(f"Error getting selected targets: {str(e)}")
-            self.logger.error(f"Stack trace: {traceback.format_exc()}")
+            self.logger.error(f"Error getting selected guides: {str(e)}")
             return []
 
     def get_row_data(self, row):
         return {
-            'location': self.table_targets.item(row, 0).text(),
-            'endonuclease': self.table_targets.item(row, 1).text(),
-            'sequence': self.table_targets.item(row, 2).text(),
-            'strand': self.table_targets.item(row, 3).text(),
-            'pam': self.table_targets.item(row, 4).text(),
-            'score': self.table_targets.item(row, 5).text(),
-            'off_target': self.table_targets.item(row, 6).text()
+            'location': self.table_guides.item(row, 0).text(),
+            'endonuclease': self.table_guides.item(row, 1).text(),
+            'sequence': self.table_guides.item(row, 2).text(),
+            'strand': self.table_guides.item(row, 3).text(),
+            'pam': self.table_guides.item(row, 4).text(),
+            'score': self.table_guides.item(row, 5).text(),
+            'off_target': self.table_guides.item(row, 6).text()
         }
     
     def set_combo_box_endonuclease(self, endonucleases):
         self.combo_box_endonuclease.addItems(endonucleases)
 
     def set_combo_box_gene(self, genes):
-        """Set genes in combo box with optimized performance"""
         try:
-            start_time = time.time()
             
             # Disable UI updates
             self.combo_box_gene.blockSignals(True)
@@ -292,9 +353,6 @@ class ViewTargetsView(QtWidgets.QMainWindow):
             # Re-enable UI updates
             self.combo_box_gene.setUpdatesEnabled(True)
             self.combo_box_gene.blockSignals(False)
-            
-            total_time = time.time() - start_time
-            self.logger.debug(f"Combo box update time: {total_time:.2f} seconds")
             
         except Exception as e:
             self.logger.error(f"Error setting genes in combo box: {str(e)}")
@@ -322,33 +380,9 @@ class ViewTargetsView(QtWidgets.QMainWindow):
         doc.setHtml(sequence)
         self.text_edit_gene_viewer.setDocument(doc)
 
-    def select_all_targets(self, select):
-        for row in range(self.table_targets.rowCount()):
-            self.table_targets.selectRow(row) if select else self.table_targets.clearSelection()
-
-    def show_filter_options_dialog(self, options):
-        # Implement this method to show filter options dialog
-        pass
-
-    def filter_options_accepted(self):
-        # Implement this method to check if filter options were accepted
-        return True
-
-    def get_filter_options(self):
-        # Implement this method to return new filter options
-        return {}
-
-    def show_scoring_options_dialog(self, options):
-        # Implement this method to show scoring options dialog
-        pass
-
-    def scoring_options_accepted(self):
-        # Implement this method to check if scoring options were accepted
-        return True
-
-    def get_scoring_options(self):
-        # Implement this method to return new scoring options
-        return {}
+    def select_all_guides(self, select):
+        for row in range(self.table_guides.rowCount()):
+            self.table_guides.selectRow(row) if select else self.table_guides.clearSelection()
 
     def get_export_file_path(self):
         # Implement this method to get the export file path from the user
@@ -360,11 +394,11 @@ class ViewTargetsView(QtWidgets.QMainWindow):
             self.logger.debug(f"Gene selection changed to: {selected_text}")
             
             # Reset scroll position
-            self.table_targets.verticalScrollBar().setValue(0)
+            self.table_guides.verticalScrollBar().setValue(0)
             
             # Filter and display targets
             if hasattr(self, '_complete_targets'):
-                self.display_targets_in_table(self._complete_targets)
+                self.display_guides_in_table(self._complete_targets)
             
             # Emit signal for controller to update gene sequence
             self.gene_selected.emit(selected_text)
@@ -376,30 +410,85 @@ class ViewTargetsView(QtWidgets.QMainWindow):
     def get_table_headers(self):
         """Get current table headers"""
         headers = []
-        for i in range(self.table_targets.columnCount()):
-            headers.append(self.table_targets.horizontalHeaderItem(i).text())
+        for i in range(self.table_guides.columnCount()):
+            headers.append(self.table_guides.horizontalHeaderItem(i).text())
         return headers
 
     def add_scoring_column(self, algorithm_name, position=None):
         """Add a new column for alternative scoring method at specified position"""
         if position is None:
             # Add to end if no position specified
-            position = self.table_targets.columnCount()
+            position = self.table_guides.columnCount()
         
-        self.table_targets.insertColumn(position)
-        self.table_targets.setHorizontalHeaderItem(
+        self.table_guides.insertColumn(position)
+        self.table_guides.setHorizontalHeaderItem(
             position, 
             QtWidgets.QTableWidgetItem(algorithm_name)
         )
         
         # Shift any existing columns after the insertion point
-        for i in range(self.table_targets.columnCount() - 1, position, -1):
-            for row in range(self.table_targets.rowCount()):
-                self.table_targets.setItem(row, i, self.table_targets.takeItem(row, i-1))
+        for i in range(self.table_guides.columnCount() - 1, position, -1):
+            for row in range(self.table_guides.rowCount()):
+                self.table_guides.setItem(row, i, self.table_guides.takeItem(row, i-1))
                 
             # Move column header
-            header_item = self.table_targets.takeHorizontalHeaderItem(i-1)
+            header_item = self.table_guides.takeHorizontalHeaderItem(i-1)
             if header_item:
-                self.table_targets.setHorizontalHeaderItem(i, header_item)
+                self.table_guides.setHorizontalHeaderItem(i, header_item)
         
         return position
+
+    def update_off_target_details(self, off_target_results, detailed_results=None):
+        """Update off-target scores and details"""
+        try:
+            # Store detailed results if provided
+            if detailed_results:
+                self._off_target_details = detailed_results
+            
+            # Update off-target scores in table
+            for row in range(self.table_guides.rowCount()):
+                sequence = self.table_guides.item(row, 2).text()
+                if sequence in off_target_results:
+                    score = off_target_results[sequence]
+                    score_item = QTableWidgetItem(str(score))
+                    self.table_guides.setItem(row, 6, score_item)
+                    
+                    # Add details button if detailed results exist
+                    if detailed_results and sequence in detailed_results:
+                        details_button = QtWidgets.QPushButton("Details")
+                        details_button.clicked.connect(self._show_details)
+                        self.table_guides.setCellWidget(row, 7, details_button)
+                    
+            self.table_guides.resizeColumnsToContents()
+            
+        except Exception as e:
+            self.logger.error(f"Error updating off-target details: {str(e)}")
+            show_error(self.settings, "Error updating off-target details", str(e))
+
+    def _show_details(self):
+        """Show off-target details dialog"""
+        try:
+            button = self.sender()
+            index = self.table_guides.indexAt(button.pos())
+            sequence = self.table_guides.item(index.row(), 2).text()
+            
+            if sequence in self._off_target_details:
+                details = self._off_target_details[sequence]
+                
+                msg = QtWidgets.QMessageBox()
+                msg.setWindowTitle("Details")
+                
+                # Format details message
+                chromo_str = "<html><b>Reference gRNA:</b><br>Location, Sequence, Strand, PAM, On Score<br></html>"
+                input_str = (f"{self.table_guides.item(index.row(),0).text()}, {sequence}, "
+                            f"{self.table_guides.item(index.row(),3).text()}, "
+                            f"{self.table_guides.item(index.row(),4).text()}, "
+                            f"{self.table_guides.item(index.row(),5).text()}<br><br>")
+                detail_str = "<html><b>Off-Target Hits:</b><br>Off Score, Chromosome, Location, Sequence<br></html>"
+                
+                msg.setText(chromo_str + input_str + detail_str + "<br>".join(details))
+                msg.exec()
+                
+        except Exception as e:
+            self.logger.error(f"Error showing details: {str(e)}")
+            show_error(self.settings, "Error showing details", str(e))

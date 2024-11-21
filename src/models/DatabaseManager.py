@@ -3,19 +3,33 @@ from PyQt6.QtCore import QObject, pyqtSignal, QFileSystemWatcher
 import sqlite3
 from collections import Counter
 import statistics
+from enum import Enum
+from typing import Set, Dict, List, Tuple
+
+class FileChangeType(Enum):
+    CSPR_ADDED = "cspr_added"
+    CSPR_REMOVED = "cspr_removed"
+    GBFF_ADDED = "gbff_added"
+    GBFF_REMOVED = "gbff_removed"
+    OTHER = "other"
 
 class DatabaseManager(QObject):
-    db_state_updated = pyqtSignal(bool, str, list)  # Combined signal
+    db_files_changed = pyqtSignal(dict)  # Emits a dict of FileChangeType: List[str]
+    db_validation_changed = pyqtSignal(bool, str)  # Emits validation state and message
+    db_state_changed = pyqtSignal(bool, str, dict)  # Emits (is_valid, message, changes)
 
     def __init__(self, logger, config_manager):
         super().__init__()
         self.logger = logger
         self.config_manager = config_manager
         self.db_path = None
-        self.file_watcher = QFileSystemWatcher()  # Initialize file_watcher here
+        self.file_watcher = QFileSystemWatcher()
         self.file_watcher.directoryChanged.connect(self._on_directory_changed)
         self.load_database_path()
         self._update_watched_directory()
+        
+        self._last_cspr_files: Set[str] = set(self._get_cspr_files())
+        self._last_gbff_files: Set[str] = set(self._get_gbff_files())
 
     def load_database_path(self):
         """Load the database path from .env file or set default if empty."""
@@ -29,17 +43,20 @@ class DatabaseManager(QObject):
         return self.db_path
 
     def validate_db_path(self, path):
-        """Validate that the given path exists and contains CSPR files."""
+        """Validate that the given path exists and contains CSPR files"""
         self.logger.debug(f"Validating DB path: {path}")
+        
         if not os.path.isdir(path):
             self.logger.debug(f"Path is not a directory: {path}")
             return False, "The selected path is not a directory."
-        has_cspr_files = any(file.endswith(".cspr") for file in os.listdir(path))
-        if not has_cspr_files:
+            
+        cspr_files = self._get_cspr_files()
+        if not cspr_files:
             self.logger.debug(f"Path {path} does not contain CSPR files")
             return False, "The selected directory does not contain any CSPR files."
-        self.logger.debug(f"Path {path} is valid and contains CSPR files")
-        return True, "Valid database path selected."
+            
+        self.logger.debug(f"Path {path} is valid and contains {len(cspr_files)} CSPR files")
+        return True, f"Valid database path with {len(cspr_files)} CSPR files"
 
     def save_db_path(self, path):
         """Set and save the database path."""
@@ -54,7 +71,7 @@ class DatabaseManager(QObject):
         is_valid, message = self.validate_db_path(path)
         if not is_valid:
             self.logger.warning(f"Invalid database path: {path}")
-            self.db_state_updated.emit(False, message, [])
+            self.db_validation_changed.emit(False, message)
             self.db_path = path
             self.config_manager.set_env_value('CSPR_DB', path)
             self._update_watched_directory()
@@ -66,13 +83,13 @@ class DatabaseManager(QObject):
         try:
             self.config_manager.set_env_value('CSPR_DB', path)
             self.logger.info(f"Database path set and saved: {path}")
-            self.db_state_updated.emit(True, "Database path saved successfully.", [])
+            self.db_validation_changed.emit(True, "Database path saved successfully.")
             self._update_watched_directory()
             return True, "Database path saved successfully."
         except Exception as e:
             error_message = f"Error saving database path: {str(e)}"
             self.logger.error(error_message)
-            self.db_state_updated.emit(False, error_message, [])
+            self.db_validation_changed.emit(False, error_message)
             return False, error_message
 
     def get_db_path(self):
@@ -108,61 +125,112 @@ class DatabaseManager(QObject):
         return adjusted_path
 
     def _update_watched_directory(self):
-        """Update the directory being watched by QFileSystemWatcher."""
-        if self.file_watcher.directories():
-            self.file_watcher.removePaths(self.file_watcher.directories())
+        self.file_watcher.removePaths(self.file_watcher.directories())
+        
         if self.db_path and os.path.isdir(self.db_path):
             self.file_watcher.addPath(self.db_path)
-            self.logger.debug(f"Now watching directory: {self.db_path}")
+            
+            # Also watch GBFF subdirectory if it exists
+            gbff_path = os.path.join(self.db_path, 'GBFF')
+            if os.path.isdir(gbff_path):
+                self.file_watcher.addPath(gbff_path)
+                
+            self.logger.debug(f"Now watching directories: {self.file_watcher.directories()}")
+
+    def _detect_file_changes(self) -> Dict[FileChangeType, List[str]]:
+        """Detect what files have changed and categorize the changes"""
+        current_cspr_files = set(self._get_cspr_files())
+        current_gbff_files = set(self._get_gbff_files())
+        
+        changes = {}
+        
+        # Detect CSPR changes
+        cspr_added = current_cspr_files - self._last_cspr_files
+        cspr_removed = self._last_cspr_files - current_cspr_files
+        
+        if cspr_added:
+            changes[FileChangeType.CSPR_ADDED] = list(cspr_added)
+        if cspr_removed:
+            changes[FileChangeType.CSPR_REMOVED] = list(cspr_removed)
+            
+        # Detect GBFF changes
+        gbff_added = current_gbff_files - self._last_gbff_files
+        gbff_removed = self._last_gbff_files - current_gbff_files
+        
+        if gbff_added:
+            changes[FileChangeType.GBFF_ADDED] = list(gbff_added)
+        if gbff_removed:
+            changes[FileChangeType.GBFF_REMOVED] = list(gbff_removed)
+            
+        # Update last known state
+        self._last_cspr_files = current_cspr_files
+        self._last_gbff_files = current_gbff_files
+        
+        return changes
 
     def _on_directory_changed(self, path):
-        """Handle changes in the watched directory."""
-        self.logger.debug(f"Detected change in directory: {path}")
-        
-        # Get current state
-        is_valid, message = self.validate_db_path(path)
-        
-        # Get list of files
-        cspr_files = self._get_cspr_files()
-        gbff_files = self._get_gbff_files()  # Add method to get GBFF files
-        
-        # Emit the signal with updated state
-        self.db_state_updated.emit(is_valid, message, cspr_files)
-        
-        # Log the change
-        self.logger.info(f"Database state updated - Valid: {is_valid}, Files: {len(cspr_files)} CSPR, {len(gbff_files)} GBFF")
+        """Handle changes in the watched directory"""
+        try:
+            self.logger.debug(f"Detected change in directory: {path}")
+            
+            # Detect specific changes
+            changes = self._detect_file_changes()
+            
+            if changes:  # Only emit if there are actual changes
+                self.logger.debug(f"Detected file changes: {changes}")
+                
+                # Get validation state
+                is_valid, message = self.validate_db_path(path)
+                
+                # Emit separate signals
+                self.db_validation_changed.emit(is_valid, message)
+                self.db_files_changed.emit(changes)
+                
+                # Emit combined signal for components that want everything
+                self.db_state_changed.emit(is_valid, message, changes)
+                
+                self.logger.info(f"Database state updated - Valid: {is_valid}, Changes: {changes}")
+            else:
+                self.logger.debug("No relevant file changes detected")
+                
+        except Exception as e:
+            self.logger.error(f"Error handling directory change: {str(e)}")
 
     def _get_cspr_files(self):
-        """Get a list of CSPR files in the current database directory."""
+        """Get a list of CSPR files in the current database directory"""
         if not self.db_path or not os.path.isdir(self.db_path):
             return []
-        return [f for f in os.listdir(self.db_path) if f.endswith('.cspr')]
+        return [f for f in os.listdir(self.db_path) 
+                if f.endswith('.cspr')]
 
     def _get_gbff_files(self):
-        """Get a list of GBFF files in the database directory."""
+        """Get a list of GBFF files in the database directory"""
         if not self.db_path or not os.path.isdir(self.db_path):
             return []
         gbff_path = os.path.join(self.db_path, 'GBFF')
         if not os.path.exists(gbff_path):
             return []
-        return [f for f in os.listdir(gbff_path) if f.endswith('.gbff')]
+        return [f for f in os.listdir(gbff_path) 
+                if f.endswith('.gbff')]
 
     def check_db_state(self):
-        """Check the current state of the database and emit signals if changed."""
+        """Check the current state of the database and emit signals if needed."""
         self.logger.debug("Checking database state")
         if not self.db_path:
             self.load_database_path()
 
+        # Get validation state
         is_valid, message = self.validate_db_path(self.db_path)
-        self.logger.debug(f"Database state: valid={is_valid}, message={message}")
         
-        cspr_files = self._get_cspr_files()
-        gbff_files = self._get_gbff_files()
+        # Detect any changes since last check
+        changes = self._detect_file_changes()
         
-        message = f"Database is valid. Contains {len(cspr_files)} CSPR files and {len(gbff_files)} GBFF files."
-        
-        self.db_state_updated.emit(is_valid, message, cspr_files)
-        self.logger.info(f"Database state checked - Valid: {is_valid}, Files: {len(cspr_files)} CSPR, {len(gbff_files)} GBFF")
+        # Emit signals
+        self.db_validation_changed.emit(is_valid, message)
+        if changes:
+            self.db_files_changed.emit(changes)
+            
+        self.logger.info(f"Database state checked - Valid: {is_valid}, Changes: {changes}")
 
     def get_organisms_and_endos(self):
         """Get mapping of organisms to their endonucleases and files"""
@@ -180,8 +248,8 @@ class DatabaseManager(QObject):
             for file in cspr_files:
                 try:
                     # Parse filename
-                    newname = file[0:-5]  # Remove .cspr - changed from -4 to -5
-                    endo = newname[newname.rfind("_") + 1:]  # Get endonuclease name
+                    newname = file[0:-5] 
+                    endonuclease = newname[newname.rfind("_") + 1:] 
                     
                     # Read organism name from first line of CSPR file
                     file_path = os.path.join(self.db_path, file)
@@ -191,17 +259,17 @@ class DatabaseManager(QObject):
                     
                     # Store file mappings
                     if species in organisms_to_files:
-                        organisms_to_files[species][endo] = [file, file.replace(".cspr", "_repeats.db")]
+                        organisms_to_files[species][endonuclease] = [file, file.replace(".cspr", "_repeats.db")]
                     else:
                         organisms_to_files[species] = {}
-                        organisms_to_files[species][endo] = [file, file.replace(".cspr", "_repeats.db")]
+                        organisms_to_files[species][endonuclease] = [file, file.replace(".cspr", "_repeats.db")]
                     
                     # Store endonuclease mappings
                     if species in organisms_to_endos:
-                        if endo not in organisms_to_endos[species]:
-                            organisms_to_endos[species].append(endo)
+                        if endonuclease not in organisms_to_endos[species]:
+                            organisms_to_endos[species].append(endonuclease)
                     else:
-                        organisms_to_endos[species] = [endo]
+                        organisms_to_endos[species] = [endonuclease]
                         
                 except Exception as e:
                     self.logger.error(f"Error processing file {file}: {str(e)}")

@@ -12,7 +12,7 @@ class HomeWindowView(QWidget):
 
     def _init_ui(self) -> None:
         try:
-            uic.loadUi(os.path.join(self.global_settings.get_ui_dir_path(), "home_window_copy.ui"), self)
+            uic.loadUi(os.path.join(self.global_settings.get_ui_dir_path(), "home_window.ui"), self)
             self._init_ui_elements()
         except Exception as e:
             self._handle_init_error(e)
@@ -38,6 +38,10 @@ class HomeWindowView(QWidget):
         self._init_grpStep2()
         self._init_grpStep3()
 
+        # Connect to database manager signals
+        self.global_settings.db_manager.db_files_changed.connect(self._handle_db_files_changed)
+        self.global_settings.db_manager.db_state_changed.connect(self._handle_db_state_changed)
+
     def _init_grpNavigationMenu(self) -> None:
         self.push_button_new_genome = self._find_widget("pbtnNewGenome", QPushButton)
         self.push_button_new_endonuclease = self._find_widget("pbtnNewEndonuclease", QPushButton)
@@ -58,10 +62,7 @@ class HomeWindowView(QWidget):
         self.radio_button_position = self._find_widget("rbtnPosition", QRadioButton)
         self.radio_button_sequence = self._find_widget("rbtnSequence", QRadioButton)
         self.text_edit_gene_entry = self._find_widget("txtedGeneEntry", QPlainTextEdit)
-        self.push_button_find_targets = self._find_widget("pbtnFindTargets", QPushButton)
-        self.progress_bar_find_targets = self._find_widget("progBarFindTargets", QProgressBar)
-        self.push_button_view_targets = self._find_widget("pbtnViewTargets", QPushButton)
-        self.push_button_generate_library = self._find_widget("pbtnGenerateLibrary", QPushButton)
+        self.push_button_find_view_targets = self._find_widget("pbtnFindViewTargets", QPushButton)
 
         placeholder_text = ("Example Inputs: \n\n"
                             "Option 1: Feature (ID, Locus Tag, or Name)\n"
@@ -100,12 +101,6 @@ class HomeWindowView(QWidget):
     # def update_combo_box_annotation_files(self, annotation_files: list) -> None:
     #     self.combo_box_local_annotation_files.clear()
     #     self.combo_box_local_annotation_files.addItems(annotation_files)
-
-    def set_progress_bar(self, value: int) -> None:
-        self.progress_bar_find_targets.setValue(value)
-
-    def reset_progress_bar(self) -> None:
-        self.set_progress_bar(0)
 
     def get_find_targets_input(self) -> dict:
         return {
@@ -148,3 +143,82 @@ class HomeWindowView(QWidget):
                 
         except Exception as e:
             self.logger.error(f"Error updating local annotation files: {str(e)}")
+
+    def show_warning(self, title: str, message: str) -> None:
+        """Show a warning message dialog"""
+        QtWidgets.QMessageBox.warning(self, title, message)
+
+    def _update_cspr_related_ui(self) -> None:
+        """Update UI elements that depend on CSPR files"""
+        try:
+            # Store current selections
+            current_organism = self.combo_box_organism.currentText()
+            current_endo = self.combo_box_endonuclease.currentText()
+            
+            # Get fresh data from controller
+            controller = self.global_settings.main_window.controller
+            organism_to_endonuclease = controller.get_organism_to_endonuclease()
+            
+            # Update organism combo box
+            self.combo_box_organism.clear()
+            self.combo_box_organism.addItems(sorted(organism_to_endonuclease.keys()))
+            
+            # Restore organism selection if still valid
+            if current_organism in organism_to_endonuclease:
+                self.combo_box_organism.setCurrentText(current_organism)
+                # Restore endonuclease selection if still valid for this organism
+                if current_endo in organism_to_endonuclease[current_organism]:
+                    self.combo_box_endonuclease.setCurrentText(current_endo)
+                
+        except Exception as e:
+            self.logger.error(f"Error updating CSPR-related UI: {str(e)}")
+
+    def _update_gbff_related_ui(self) -> None:
+        """Update UI elements that depend on GBFF files"""
+        try:
+            # Store current selection
+            current_file = self.combo_box_local_annotation_files.currentText()
+            
+            # Update annotation files
+            annotation_files = self.global_settings.main_window.controller.get_annotation_files()
+            self.update_combo_box_annotation_files(annotation_files)
+            
+            # Restore selection if still valid
+            if current_file in annotation_files:
+                self.combo_box_local_annotation_files.setCurrentText(current_file)
+                
+        except Exception as e:
+            self.logger.error(f"Error updating GBFF-related UI: {str(e)}")
+
+    def _handle_db_files_changed(self, changes):
+        """Handle database file changes"""
+        try:
+            if (FileChangeType.CSPR_ADDED in changes or 
+                FileChangeType.CSPR_REMOVED in changes):
+                self._update_cspr_related_ui()
+                
+            if (FileChangeType.GBFF_ADDED in changes or 
+                FileChangeType.GBFF_REMOVED in changes):
+                self._update_gbff_related_ui()
+                
+        except Exception as e:
+            self.logger.error(f"Error handling database file changes: {str(e)}")
+
+    def _handle_db_state_changed(self, is_valid, message, changes):
+        """Handle database state changes"""
+        try:
+            if not is_valid:
+                self.show_warning("Database Warning", message)
+                return
+            
+            if changes:  # If there are any changes
+                if any(change in changes for change in 
+                      [FileChangeType.CSPR_ADDED, FileChangeType.CSPR_REMOVED]):
+                    self._update_cspr_related_ui()
+                    
+                if any(change in changes for change in 
+                      [FileChangeType.GBFF_ADDED, FileChangeType.GBFF_REMOVED]):
+                    self._update_gbff_related_ui()
+                    
+        except Exception as e:
+            self.logger.error(f"Error handling database state change: {str(e)}")

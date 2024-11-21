@@ -159,25 +159,24 @@ class ConfigManager(QObject):
         fields = line.strip().split(';')
         print(fields)
         if len(fields) == 10:
-            endonuclease_name = fields[0]
-            endonuclease_abbreviation = fields[1]
-            # pam_sequence = self._get_primary_pam(fields[1])
-            endonuclease_CRISPR_type = fields[2]
-            pam_sequence = fields[3]
-            five_prime_length, seed_length, three_prime_length, direction = fields[4:8]
+            endonuclease_abbreviation = fields[0]
+            pam_sequence = fields[1]
+            five_prime_length, seed_length, three_prime_length, direction = fields[2:6]
+            endonuclease_name = fields[6]
+            endonuclease_CRISPR_type = fields[7]
             endonuclease_on_target_matrix = fields[8]
             endonuclease_off_target_matrix = fields[9]
 
             endonuclease_key = f"{endonuclease_abbreviation} - PAM: {pam_sequence}"
             endonuclease_value = {
-                'endonuclease_organism': endonuclease_name,
                 'endonuclease_abbreviation': endonuclease_abbreviation,
-                'endonuclease_CRISPR_type': endonuclease_CRISPR_type,
                 'endonuclease_pam_sequence': pam_sequence,
                 'endonuclease_five_prime_length': five_prime_length,
                 'endonuclease_seed_length': seed_length,
                 'endonuclease_three_prime_length': three_prime_length,
                 'endonuclease_direction': direction,
+                'endonuclease_organism': endonuclease_name,
+                'endonuclease_CRISPR_type': endonuclease_CRISPR_type,
                 'endonuclease_on_target_scoring': endonuclease_on_target_matrix,
                 'endonuclease_off_target_scoring': endonuclease_off_target_matrix
             }

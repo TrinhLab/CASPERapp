@@ -2,14 +2,139 @@ from typing import Optional
 from PyQt6 import QtWidgets, QtGui, QtCore, uic
 from utils.ui import show_error
 import os
+import qdarktheme
 
 class NewEndonucleaseView(QtWidgets.QMainWindow):
     def __init__(self, settings):
         super().__init__()
         self.settings = settings
         self.logger = self.settings.get_logger()
-
+        
+        # Set window properties
+        self.setWindowTitle("New Endonuclease")
+        self.setMinimumSize(400, 500)  # Set minimum window size
+        
+        # Center the window on screen
+        screen = QtGui.QGuiApplication.primaryScreen()
+        screen_geometry = screen.geometry()
+        centerPoint = screen_geometry.center()
+        
         self.init_ui()
+        
+        # Calculate and set position to center
+        frame_geometry = self.frameGeometry()
+        frame_geometry.moveCenter(centerPoint)
+        self.move(frame_geometry.topLeft())
+
+        # Apply theme
+        self.apply_theme()
+
+    def apply_theme(self):
+        current_theme = self.settings.get_theme()
+        themes = {
+            "dark": {
+                "bg_color": "#2b2b2b",
+                "fg_color": "#ffffff",
+                "button_bg_color": "#3a3a3a",
+                "button_border_color": "#5a5a5a",
+                "button_hover_bg_color": "#4a4a4a",
+                "input_bg_color": "#3a3a3a",
+                "input_border_color": "#5a5a5a",
+                "menu_bg_color": "#2b2b2b",
+                "menu_item_hover_bg_color": "#3a3a3a",
+                "divider_color": "#444444"
+            },
+            "light": {
+                "bg_color": "#f0f0f0",
+                "fg_color": "#000000",
+                "button_bg_color": "#e0e0e0",
+                "button_border_color": "#c0c0c0",
+                "button_hover_bg_color": "#d0d0d0",
+                "input_bg_color": "#ffffff",
+                "input_border_color": "#c0c0c0",
+                "menu_bg_color": "#f0f0f0",
+                "menu_item_hover_bg_color": "#e0e0e0",
+                "divider_color": "#c0c0c0"
+            }
+        }
+
+        theme = themes["dark"] if current_theme == "dark" else themes["light"]
+        qdarktheme.setup_theme(current_theme)
+
+        self.setStyleSheet(f"""
+            QMainWindow {{
+                background-color: {theme['bg_color']};
+                color: {theme['fg_color']};
+            }}
+            QWidget {{
+                background-color: {theme['bg_color']};
+                color: {theme['fg_color']};
+            }}
+            QPushButton {{
+                background-color: {theme['button_bg_color']};
+                border: 1px solid {theme['button_border_color']};
+                padding: 5px;
+                min-width: 80px;
+            }}
+            QPushButton:hover {{
+                background-color: {theme['button_hover_bg_color']};
+            }}
+            QLineEdit {{
+                background-color: {theme['input_bg_color']};
+                border: 1px solid {theme['input_border_color']};
+                padding: 5px;
+            }}
+            QComboBox {{
+                background-color: {theme['input_bg_color']};
+                border: 1px solid {theme['input_border_color']};
+                padding: 5px;
+            }}
+            QComboBox:hover {{
+                background-color: {theme['button_hover_bg_color']};
+            }}
+            QComboBox::drop-down {{
+                border: none;
+            }}
+            QComboBox::down-arrow {{
+                image: none;
+                border: none;
+            }}
+            QGroupBox {{
+                border: 1px solid {theme['button_border_color']};
+                margin-top: 1em;
+                padding-top: 0.5em;
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 3px 0 3px;
+            }}
+            QRadioButton {{
+                color: {theme['fg_color']};
+            }}
+            QRadioButton::indicator {{
+                width: 13px;
+                height: 13px;
+            }}
+            QRadioButton::indicator:checked {{
+                background-color: {theme['button_hover_bg_color']};
+                border: 2px solid {theme['button_border_color']};
+                border-radius: 7px;
+            }}
+            QRadioButton::indicator:unchecked {{
+                background-color: {theme['bg_color']};
+                border: 2px solid {theme['button_border_color']};
+                border-radius: 7px;
+            }}
+            QLabel {{
+                color: {theme['fg_color']};
+            }}
+        """)
+
+    def showEvent(self, event):
+        """Override showEvent to apply theme when window is shown"""
+        super().showEvent(event)
+        self.apply_theme()
 
     def init_ui(self):
         try:

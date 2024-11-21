@@ -16,12 +16,12 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="1" column="1">
-     <layout class="QGridLayout" name="gridLayout" rowstretch="1,0,0,0,0" columnstretch="1,0">
+     <layout class="QGridLayout" name="gridLayout" rowstretch="1,0,0,0" columnstretch="1,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetDefaultConstraint</enum>
       </property>
-      <item row="4" column="1" alignment="Qt::AlignRight">
-       <widget class="QPushButton" name="submit_button">
+      <item row="3" column="1" alignment="Qt::AlignRight">
+       <widget class="QPushButton" name="pbtnSubmit">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -39,8 +39,8 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QGroupBox" name="Step4">
+      <item row="2" column="1">
+       <widget class="QGroupBox" name="grpOutputLocation">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -52,7 +52,7 @@
         </property>
         <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,0,0,0">
          <item row="2" column="2">
-          <widget class="QPushButton" name="BrowseButton">
+          <widget class="QPushButton" name="pbtnBrowse">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -84,7 +84,7 @@
           </spacer>
          </item>
          <item row="2" column="0">
-          <widget class="QLabel" name="label_14">
+          <widget class="QLabel" name="lblFilePath">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -95,12 +95,12 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This is the directory that CASPER will write the library CSV to.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Output path:</string>
+            <string>Output file path:</string>
            </property>
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QLabel" name="label_13">
+          <widget class="QLabel" name="lblFileName">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -116,7 +116,7 @@
           </widget>
          </item>
          <item row="1" column="1" colspan="2">
-          <widget class="QLineEdit" name="filename_input">
+          <widget class="QLineEdit" name="ledFileName">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -126,7 +126,7 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QLineEdit" name="output_path">
+          <widget class="QLineEdit" name="ledFilePath">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -154,8 +154,8 @@
         </layout>
        </widget>
       </item>
-      <item row="4" column="0" alignment="Qt::AlignLeft">
-       <widget class="QPushButton" name="cancel_button">
+      <item row="3" column="0" alignment="Qt::AlignLeft">
+       <widget class="QPushButton" name="pbtnCancel">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -176,21 +176,8 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="Line" name="line">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QGroupBox" name="Step3">
+      <item row="1" column="1">
+       <widget class="QGroupBox" name="grpTargetingGuidelines">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -205,7 +192,7 @@
           <enum>QLayout::SetDefaultConstraint</enum>
          </property>
          <item row="3" column="1">
-          <widget class="QCheckBox" name="modifyParamscheckBox">
+          <widget class="QCheckBox" name="chkModifyParameters">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -218,7 +205,7 @@
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QLabel" name="label_10">
+          <widget class="QLabel" name="lblSpaceBetweenGuides">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -234,7 +221,7 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QLineEdit" name="fiveprimeseq">
+          <widget class="QLineEdit" name="led5PrimeSpecificity">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -247,7 +234,7 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="space_line_edit">
+          <widget class="QLineEdit" name="ledSpaceBetweenGuides">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -276,7 +263,7 @@
           </spacer>
          </item>
          <item row="2" column="0">
-          <widget class="QLabel" name="label_11">
+          <widget class="QLabel" name="lbl5PrimeSpecificity">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -292,7 +279,7 @@
           </widget>
          </item>
          <item row="3" column="0">
-          <widget class="QLabel" name="label_12">
+          <widget class="QLabel" name="lblModifyParameters">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -327,7 +314,7 @@
        </widget>
       </item>
       <item row="0" column="0" colspan="2">
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="lblTitle">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -339,8 +326,8 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QGroupBox" name="Step2">
+      <item row="2" column="0">
+       <widget class="QGroupBox" name="grpQualityFiltering">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -352,7 +339,7 @@
         </property>
         <layout class="QGridLayout" name="gridLayout_9" rowstretch="0,0,0,0,0,0" columnstretch="0,0">
          <item row="1" column="0">
-          <widget class="QLabel" name="label_6">
+          <widget class="QLabel" name="lblFindOffTargets">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -384,7 +371,7 @@
           </spacer>
          </item>
          <item row="4" column="1">
-          <widget class="QProgressBar" name="progressBar">
+          <widget class="QProgressBar" name="progBar">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -397,7 +384,7 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QCheckBox" name="find_off_Checkbox">
+          <widget class="QCheckBox" name="chkFindOffTargets">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -410,7 +397,7 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QComboBox" name="minON_comboBox">
+          <widget class="QComboBox" name="cmbMinimumOnTargetScore">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -420,7 +407,7 @@
           </widget>
          </item>
          <item row="2" column="0">
-          <widget class="QLabel" name="label_7">
+          <widget class="QLabel" name="lblMinimumOnTargetScore">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -436,7 +423,7 @@
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QLineEdit" name="maxOFF_comboBox">
+          <widget class="QLineEdit" name="cmbMaximumOffTargetScore">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -449,7 +436,7 @@
           </widget>
          </item>
          <item row="4" column="0">
-          <widget class="QLabel" name="label_9">
+          <widget class="QLabel" name="lblOffTargetProgress">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -462,7 +449,7 @@
           </widget>
          </item>
          <item row="3" column="0">
-          <widget class="QLabel" name="label_8">
+          <widget class="QLabel" name="lblMaximumOffTargetScore">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -496,8 +483,8 @@
         </layout>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QGroupBox" name="Step1">
+      <item row="1" column="0">
+       <widget class="QGroupBox" name="grpLibrarySizeAndLocation">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -509,7 +496,7 @@
         </property>
         <layout class="QGridLayout" name="gridLayout_10">
          <item row="1" column="1" colspan="3">
-          <widget class="QComboBox" name="numGenescomboBox">
+          <widget class="QComboBox" name="cmbGuidesPerGene">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -519,7 +506,7 @@
           </widget>
          </item>
          <item row="2" column="0">
-          <widget class="QLabel" name="label_3">
+          <widget class="QLabel" name="lblTargetingRange">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -535,7 +522,7 @@
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QLabel" name="label_2">
+          <widget class="QLabel" name="lblGuidesPerGene">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -551,7 +538,7 @@
           </widget>
          </item>
          <item row="3" column="0" colspan="4">
-          <widget class="QLabel" name="label_4">
+          <widget class="QLabel" name="lblStartEndDescription">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -564,7 +551,7 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QLineEdit" name="start_target_range">
+          <widget class="QLineEdit" name="ledTargetRangeStart">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -577,7 +564,7 @@
           </widget>
          </item>
          <item row="2" column="2">
-          <widget class="QLabel" name="label_5">
+          <widget class="QLabel" name="lblTo">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -593,7 +580,7 @@
           </widget>
          </item>
          <item row="2" column="3">
-          <widget class="QLineEdit" name="end_target_range">
+          <widget class="QLineEdit" name="ledTargetRangeEnd">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -708,23 +695,22 @@
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <tabstops>
-  <tabstop>numGenescomboBox</tabstop>
-  <tabstop>start_target_range</tabstop>
-  <tabstop>end_target_range</tabstop>
-  <tabstop>find_off_Checkbox</tabstop>
-  <tabstop>minON_comboBox</tabstop>
-  <tabstop>maxOFF_comboBox</tabstop>
-  <tabstop>space_line_edit</tabstop>
-  <tabstop>fiveprimeseq</tabstop>
-  <tabstop>modifyParamscheckBox</tabstop>
-  <tabstop>filename_input</tabstop>
-  <tabstop>output_path</tabstop>
-  <tabstop>BrowseButton</tabstop>
-  <tabstop>cancel_button</tabstop>
-  <tabstop>submit_button</tabstop>
+  <tabstop>cmbGuidesPerGene</tabstop>
+  <tabstop>ledTargetRangeStart</tabstop>
+  <tabstop>ledTargetRangeEnd</tabstop>
+  <tabstop>chkFindOffTargets</tabstop>
+  <tabstop>cmbMinimumOnTargetScore</tabstop>
+  <tabstop>cmbMaximumOffTargetScore</tabstop>
+  <tabstop>ledSpaceBetweenGuides</tabstop>
+  <tabstop>led5PrimeSpecificity</tabstop>
+  <tabstop>chkModifyParameters</tabstop>
+  <tabstop>ledFileName</tabstop>
+  <tabstop>ledFilePath</tabstop>
+  <tabstop>pbtnBrowse</tabstop>
+  <tabstop>pbtnCancel</tabstop>
+  <tabstop>pbtnSubmit</tabstop>
  </tabstops>
  <resources/>
  <connections/>

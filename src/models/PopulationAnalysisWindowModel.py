@@ -65,6 +65,9 @@ class PopulationAnalysisWindowModel:
             # Get organism mappings from database manager
             organisms_to_files, organisms_to_endos = self.settings.db_manager.get_organisms_and_endos()
             
+            # Create a list to sort alphabetically
+            sorted_organisms = []
+            
             # Process each organism that has this endonuclease
             for organism, endos in organisms_to_endos.items():
                 if endo in endos:
@@ -75,12 +78,18 @@ class PopulationAnalysisWindowModel:
                         self.logger.warning(f"Database file not found: {db_file}")
                         continue
                     
-                    org_files.append((organism, cspr_file, db_file))
-                    
-                    # Store the mapping for later use
-                    index = len(org_files) - 1
-                    self.index_to_cspr[index] = cspr_file
-                    self.index_to_db[index] = db_file
+                    sorted_organisms.append((organism, cspr_file, db_file))
+            
+            # Sort organisms alphabetically by organism name
+            sorted_organisms.sort(key=lambda x: x[0].lower())
+            
+            # Store the sorted results
+            for index, (organism, cspr_file, db_file) in enumerate(sorted_organisms):
+                org_files.append((organism, cspr_file, db_file))
+                
+                # Store the mapping for later use
+                self.index_to_cspr[index] = cspr_file
+                self.index_to_db[index] = db_file
             
             self.logger.info(f"Found {len(org_files)} organism files")
         except Exception as e:
@@ -89,43 +98,79 @@ class PopulationAnalysisWindowModel:
         return org_files
 
     def get_shared_seeds(self, db_files, limit=False):
+        """Get shared seeds between organisms"""
         try:
-            aliases = [f"main{i}" for i in range(1, len(db_files) + 1)]
+            self.logger.debug(f"Getting shared seeds for {len(db_files)} organisms")
             
-            new_conn = sqlite3.connect(os.path.join(self.app_dir, "temp_join.db"))
+            # Create temporary database for join operations
+            temp_db_path = os.path.join(self.app_dir, "temp_join.db")
+            new_conn = sqlite3.connect(temp_db_path)
             new_c = new_conn.cursor()
-            new_c.execute("PRAGMA synchronous = OFF;")
-            new_c.execute("PRAGMA journal_mode = OFF;")
-            new_c.execute("PRAGMA locking_mode = EXCLUSIVE;")
-            new_c.execute("DROP TABLE IF EXISTS repeats;")
-            new_c.execute("VACUUM;")
-            new_c.execute("DROP TABLE IF EXISTS join_results;")
-            new_c.execute("CREATE table join_results (seed TEXT PRIMARY KEY);")
-
-            for i, db_file in enumerate(db_files):
-                new_c.execute(f"ATTACH DATABASE '{db_file}' AS {aliases[i]};")
-
-            new_c.execute("BEGIN TRANSACTION;")
-
-            sql_inner_join = "INSERT into main.join_results select main1.repeats.seed from main1.repeats "
-            for i in range(len(aliases[:-1])):
-                sql_inner_join += f"inner join {aliases[i + 1]}.repeats on {aliases[i]}.repeats.seed = {aliases[i + 1]}.repeats.seed "
-
-            new_c.execute(sql_inner_join)
-
-            if limit:
-                shared_seeds = new_c.execute("select * from join_results limit 0,1000").fetchall()
-            else:
-                shared_seeds = new_c.execute("select count(*) from join_results").fetchall()
-
-            new_c.execute("END TRANSACTION;")
-            new_c.close()
-            new_conn.close()
-
-            return [seed[0] for seed in shared_seeds] if limit else shared_seeds[0][0]
-
+            
+            # Set pragmas for better performance
+            new_c.execute("PRAGMA synchronous = OFF")
+            new_c.execute("PRAGMA journal_mode = OFF")
+            new_c.execute("PRAGMA locking_mode = EXCLUSIVE")
+            
+            # Clean up any existing tables
+            new_c.execute("DROP TABLE IF EXISTS repeats")
+            new_c.execute("DROP TABLE IF EXISTS join_results")
+            new_c.execute("VACUUM")
+            
+            # Create results table
+            new_c.execute("CREATE TABLE join_results (seed TEXT)")
+            
+            try:
+                # Attach all databases
+                for i, db_file in enumerate(db_files, 1):
+                    new_c.execute(f"ATTACH DATABASE '{db_file}' AS main{i}")
+                
+                # Start transaction
+                new_c.execute("BEGIN TRANSACTION")
+                
+                # Build query to find seeds shared across all organisms
+                base_sql = """INSERT into main.join_results 
+                            select main1.repeats.seed from main1.repeats"""
+                
+                joins = []
+                for i in range(2, len(db_files) + 1):
+                    joins.append(
+                        f"inner join main{i}.repeats on "
+                        f"main{i-1}.repeats.seed = main{i}.repeats.seed"
+                    )
+                
+                full_sql = base_sql + " " + " ".join(joins)
+                self.logger.debug(f"Executing SQL for shared seeds: {full_sql}")
+                new_c.execute(full_sql)
+                
+                # Get results based on limit parameter
+                if limit:
+                    shared_seeds = new_c.execute("SELECT DISTINCT seed FROM join_results LIMIT 1000").fetchall()
+                    result = [seed[0] for seed in shared_seeds]
+                else:
+                    result = new_c.execute("SELECT COUNT(DISTINCT seed) FROM join_results").fetchone()[0]
+                
+                # Commit and cleanup
+                new_c.execute("END TRANSACTION")
+                new_c.close()
+                new_conn.close()
+                
+                try:
+                    os.remove(temp_db_path)
+                except:
+                    self.logger.warning("Could not remove temporary database file")
+                
+                self.logger.debug(f"Found {len(result) if limit else result} shared seeds")
+                return result
+                
+            except Exception as e:
+                new_c.execute("ROLLBACK")
+                raise e
+                
         except Exception as e:
-            show_error(self.global_settings, "Error in get_shared_seeds()", str(e))
+            self.logger.error(f"Error getting shared seeds: {str(e)}")
+            self.logger.exception("Full traceback:")
+            show_error(self.settings, "Error getting shared seeds", str(e))
             return [] if limit else 0
 
     def get_seed_data(self, seed, db_files):
@@ -148,22 +193,52 @@ class PopulationAnalysisWindowModel:
         return data
 
     def get_heatmap_data(self, db_files):
+        """Get data for heatmap visualization"""
         try:
             size = len(db_files)
             arr = [[0 for _ in range(size)] for _ in range(size)]
 
+            # Get shared seeds between pairs of organisms
             for i, j in itertools.combinations(range(size), 2):
-                shared_seeds = self.get_shared_seeds([db_files[i], db_files[j]])
-                arr[i][j] = arr[j][i] = shared_seeds
+                # Create temporary database for join operations
+                temp_db_path = os.path.join(self.app_dir, "temp_join.db")
+                new_conn = sqlite3.connect(temp_db_path)
+                new_c = new_conn.cursor()
+                
+                try:
+                    # Attach databases
+                    new_c.execute(f"ATTACH DATABASE '{db_files[i]}' AS main1")
+                    new_c.execute(f"ATTACH DATABASE '{db_files[j]}' AS main2")
+                    
+                    # Count shared seeds
+                    sql = """SELECT COUNT(DISTINCT main1.repeats.seed) 
+                            FROM main1.repeats 
+                            INNER JOIN main2.repeats 
+                            ON main1.repeats.seed = main2.repeats.seed"""
+                            
+                    shared_count = new_c.execute(sql).fetchone()[0]
+                    arr[i][j] = arr[j][i] = shared_count
+                    
+                finally:
+                    new_c.close()
+                    new_conn.close()
+                    try:
+                        os.remove(temp_db_path)
+                    except:
+                        pass
 
+            # Get individual organism seed counts
             for i in range(size):
                 with sqlite3.connect(db_files[i]) as conn:
                     c = conn.cursor()
                     arr[i][i] = c.execute("SELECT COUNT(*) FROM repeats").fetchone()[0]
 
             return arr
+            
         except Exception as e:
-            show_error(self.global_settings, "Error generating heatmap data", str(e))
+            self.logger.error(f"Error generating heatmap data: {str(e)}")
+            self.logger.exception("Full traceback:")
+            show_error(self.settings, "Error generating heatmap data", str(e))
             return []
 
     def get_seed_locations(self, seeds, db_files):

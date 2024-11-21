@@ -27,29 +27,28 @@ class FindTargetsView(QtWidgets.QMainWindow):
         self.results_table.setVerticalScrollMode(QTableWidget.ScrollMode.ScrollPerPixel)
         self.results_table.setHorizontalScrollMode(QTableWidget.ScrollMode.ScrollPerPixel)
         
-        # Optimize viewport updates
         self.results_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.results_table.viewport().setProperty("cursor", Qt.CursorShape.ArrowCursor)
         
-        # Set table properties for better performance
-        self.results_table.setColumnCount(5)  # Reduced from 7 to 5 columns
+        self.results_table.setColumnCount(5) 
         headers = [
             "Feature Type", "Chromosome/Scaffold #", "Feature ID/Locus Tag", 
             "Feature Name", "Feature Description"
         ]
         self.results_table.setHorizontalHeaderLabels(headers)
         
-        # Set optimized column widths
-        column_widths = [100, 150, 150, 150, 300]  # Adjusted widths
+        column_widths = [100, 150, 150, 150, 300]
         for i, width in enumerate(column_widths):
             self.results_table.setColumnWidth(i, width)
         
         self.results_table.horizontalHeader().setStretchLastSection(True)
         
-        # Connect scroll events for virtual scrolling
         self.results_table.verticalScrollBar().valueChanged.connect(self._handle_scroll)
-        
+
+        self.push_button_generate_library = self.findChild(QPushButton, 'pbtnGenerateLibrary')
         self.push_button_view_targets = self.findChild(QPushButton, 'pbtnViewTargets')
+
+        self.push_button_generate_library.clicked.connect(self._on_generate_library_clicked)
 
     def _create_table_item(self, text):
         """Optimized item creation"""
@@ -146,3 +145,35 @@ class FindTargetsView(QtWidgets.QMainWindow):
         self._all_results = []
         self._loaded_rows = 0
         self.results_table.setUpdatesEnabled(True)
+
+    def _on_generate_library_clicked(self):
+        """Handle generate library button click"""
+        try:
+            selected_targets = self.get_selected_targets()
+            self.global_settings.logger.debug(f"Selected {len(selected_targets)} targets for library generation")
+            
+            if not selected_targets:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "No Selection",
+                    "Please select targets to generate library."
+                )
+                return
+            
+            # Create and show generate library window
+            self.global_settings.logger.debug("Creating GenerateLibraryController")
+            from controllers.GenerateLibraryController import GenerateLibraryController
+            generate_library_controller = GenerateLibraryController(
+                self.global_settings,
+                selected_targets
+            )
+            self.global_settings.logger.debug("Showing generate library window")
+            generate_library_controller.show()
+            
+        except Exception as e:
+            self.global_settings.logger.error(f"Error in generate library: {str(e)}")
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"An error occurred while opening the generate library window: {str(e)}"
+            )

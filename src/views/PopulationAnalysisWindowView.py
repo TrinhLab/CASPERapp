@@ -2,16 +2,22 @@ from PyQt6 import QtWidgets, uic, QtGui, QtCore
 from PyQt6.QtWidgets import QHeaderView, QAbstractItemView
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import mplcursors
 import numpy as np
 import matplotlib.patches as patches
 from utils.ui import show_error
+import copy
 
 class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
     def __init__(self, global_settings):
         super().__init__()
         self.settings = global_settings
         self.logger = self.settings.get_logger()
+        
+        # Connect to theme change signal
+        self.settings.theme_changed.connect(self._on_theme_changed)
+        
         self.init_ui()
 
     def init_ui(self):
@@ -24,26 +30,50 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
     def _init_ui_components(self):
         self._init_grpSelectOrganisms()
         self._init_grpSeedAnalysis()
-        # self._init_colormap()
+
+        self.push_button_export_selected_gRNAs = self._find_widget('pbtnExportSelectedgRNAs', QtWidgets.QPushButton)
 
     def _init_grpSelectOrganisms(self):
-        self.combo_box_endonuclease = self._find_widget('cmbEndonuclease', QtWidgets.QComboBox)
-        print(self.combo_box_endonuclease)
-        self.table_organism = self._find_widget('tblOrganism', QtWidgets.QTableWidget)
-        self.push_button_analyze_organism = self._find_widget('pbtnAnalyzeOrganism', QtWidgets.QPushButton)
+        try:
+            self.logger.debug("Starting _init_grpSelectOrganisms")
+            
+            self.combo_box_endonuclease = self._find_widget('cmbEndonuclease', QtWidgets.QComboBox)
+            self.table_organism = self._find_widget('tblOrganism', QtWidgets.QTableWidget)
+            self.push_button_analyze_organism = self._find_widget('pbtnAnalyzeOrganism', QtWidgets.QPushButton)
 
-        self.tab_widget_shared_seeds_heatmap = self._find_widget('tabsSharedSeedHeatmap', QtWidgets.QTabWidget)
-        self.tab_shared_seed_heatmap = self._find_widget('tabSharedSeedHeatmap', QtWidgets.QWidget)
-        self.heatmap_seed = self._find_widget('heatmapSeed', QtWidgets.QWidget)
+            # Find the tab widget and heatmap widget
+            self.tab_widget_shared_seeds_heatmap = self._find_widget('tabsSharedSeedHeatmap', QtWidgets.QTabWidget)
+            self.tab_shared_seed_heatmap = self._find_widget('tabSharedSeedHeatmap', QtWidgets.QWidget)
+            self.heatmap_seed = self._find_widget('heatmapSeed', QtWidgets.QWidget)
+            
+            self.logger.debug(f"Tab widget found: {self.tab_widget_shared_seeds_heatmap is not None}")
+            self.logger.debug(f"Heatmap widget found: {self.heatmap_seed is not None}")
+            
+            # Create layout for heatmap
+            self.colormap_layout = QtWidgets.QVBoxLayout(self.heatmap_seed)
+            self.colormap_layout.setContentsMargins(0, 0, 0, 0)
+            
+            # Create the matplotlib canvas
+            self.colormap_canvas = MplCanvas(self)
+            self.colormap_layout.addWidget(self.colormap_canvas)
 
-        self.table_organism.setColumnCount(1)
-        self.table_organism.setShowGrid(False)
-        self.table_organism.setHorizontalHeaderLabels(["Organism"])
-        self.table_organism.horizontalHeader().setSectionsClickable(True)
-        self.table_organism.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.table_organism.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table_organism.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table_organism.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+            # Set up the organism table
+            self.logger.debug("Setting up organism table")
+            self.table_organism.setColumnCount(1)
+            self.table_organism.setShowGrid(False)
+            self.table_organism.setHorizontalHeaderLabels(["Organism"])
+            self.table_organism.horizontalHeader().setSectionsClickable(True)
+            self.table_organism.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            self.table_organism.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+            self.table_organism.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+            self.table_organism.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+            
+            self.logger.debug("Completed _init_grpSelectOrganisms")
+            
+        except Exception as e:
+            self.logger.error(f"Error in _init_grpSelectOrganisms: {str(e)}")
+            self.logger.exception("Full traceback:")
+            show_error(self.settings, "Error initializing select organisms group", str(e))
 
     def _init_grpSeedAnalysis(self):
         self.line_edit_seed = self._find_widget('ledSeed', QtWidgets.QLineEdit)
@@ -75,15 +105,6 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
         self.table_locations.horizontalHeader().setSectionsClickable(True)
         self.table_locations.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.table_locations.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-
-    # def _init_colormap(self):
-    #     self.colormap_figure = self._find_widget('wgtColormap', QtWidgets.QWidget)
-    #     if self.colormap_figure:
-    #         self.colormap_layout = QtWidgets.QVBoxLayout()
-    #         self.colormap_layout.setContentsMargins(0, 0, 0, 0)
-    #         self.colormap_canvas = MplCanvas(self)
-    #         self.colormap_layout.addWidget(self.colormap_canvas)
-    #         self.colormap_figure.setLayout(self.colormap_layout)
 
     def _find_widget(self, name: str, widget_type: type) -> QtWidgets.QWidget:
         widget = self.findChild(widget_type, name)
@@ -135,36 +156,98 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
         self.table_locations.resizeColumnsToContents()
 
     def plot_heatmap(self, data, labels):
-        self.colormap_canvas.axes.clear()
-        im = self.colormap_canvas.axes.imshow(data, cmap='summer')
-        self.colormap_canvas.cbar = self.colormap_canvas.axes.figure.colorbar(im, ax=self.colormap_canvas.axes)
-        self.colormap_canvas.cbar.ax.set_ylabel("", rotation=-90, va="bottom", fontsize=8)
+        """Plot heatmap of shared seeds between organisms"""
+        try:
+            self.logger.debug("Starting plot_heatmap")
+            self.logger.debug(f"Data shape: {np.array(data).shape}")
+            self.logger.debug(f"Data: {data}")
+            self.logger.debug(f"Labels: {labels}")
+            
+            # Clear the previous plot and colorbar safely
+            self.colormap_canvas.axes.clear()
+            if hasattr(self.colormap_canvas, 'cbar'):
+                try:
+                    self.colormap_canvas.cbar.remove()
+                except:
+                    self.logger.debug("Could not remove old colorbar, creating new figure")
+                    # If colorbar removal fails, create new figure and canvas
+                    self.colormap_canvas.fig.clear()
+                    self.colormap_canvas.axes = self.colormap_canvas.fig.add_subplot(111)
+            
+            # Create a copy of data for labels
+            labels_data = copy.deepcopy(data)
+            
+            # Set diagonal elements to 0 for visualization
+            for i in range(len(data)):
+                data[i][i] = 0
+            
+            # Create the heatmap
+            self.logger.debug("Creating heatmap")
+            im = self.colormap_canvas.axes.imshow(data, cmap='summer')
+            
+            # Add colorbar
+            self.logger.debug("Adding colorbar")
+            self.colormap_canvas.cbar = self.colormap_canvas.fig.colorbar(im, ax=self.colormap_canvas.axes)
+            
+            # Determine text color based on theme
+            text_color = 'white' if self.settings.get_theme() == 'dark' else 'black'
+            
+            self.colormap_canvas.cbar.ax.set_ylabel("", rotation=-90, va="bottom", fontsize=8, color=text_color)
+            self.colormap_canvas.cbar.ax.tick_params(colors=text_color)
 
-        cursor = mplcursors.cursor(im, hover=True)
-        @cursor.connect("add")
-        def on_add(sel):
-            sel.annotation.arrow_patch.set(arrowstyle="simple", fc="white", alpha=.5)
-            sel.annotation.set_bbox(None)
-            i, j = sel.target.index
-            sel.annotation.set_text(labels[i][j])
+            # Add hover annotations
+            self.logger.debug("Setting up hover annotations")
+            cursor = mplcursors.cursor(im, hover=True)
+            @cursor.connect("add")
+            def on_add(sel):
+                sel.annotation.arrow_patch.set(arrowstyle="simple", fc="white", alpha=.5)
+                sel.annotation.set_bbox(None)
+                i, j = sel.target.index
+                # Show the actual number of shared seeds
+                sel.annotation.set_text(str(labels_data[i][j]))
 
-        ax = self.colormap_canvas.axes
-        ax.set_xticks(np.arange(len(data)))
-        ax.set_yticks(np.arange(len(data)))
-        ax.set_xticklabels(range(1, len(data) + 1))
-        ax.set_yticklabels(range(1, len(data) + 1))
-        ax.set_xlabel("Organism", fontsize=10)
-        ax.set_ylabel("Organism", fontsize=10)
-        ax.tick_params(axis='both', which='major', labelsize=8)
-
-        def plot_cell_grid(data, ax=None, **kwargs):
-            for x in range(data[0]):
-                for y in range(data[1]):
-                    rect = patches.Rectangle((x - .5, y - .5), 1, 1, fill=False, **kwargs)
-                    ax.add_patch(rect)
-
-        plot_cell_grid([len(data), len(data)], ax, color="black", linewidth=1)
-        self.colormap_canvas.draw()
+            # Set up axes
+            self.logger.debug("Setting up axes")
+            ax = self.colormap_canvas.axes
+            ax.set_xticks(np.arange(len(data)))
+            ax.set_yticks(np.arange(len(data)))
+            
+            # Use numbers for both x-axis and y-axis
+            x_labels = [str(i+1) for i in range(len(data))]
+            y_labels = [str(i+1) for i in range(len(data))]  # Removed "Organism" prefix
+            ax.set_xticklabels(x_labels, color=text_color)
+            ax.set_yticklabels(y_labels, color=text_color)
+            
+            # Rotate labels
+            self.logger.debug("Rotating labels")
+            plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
+            
+            # Add grid
+            self.logger.debug("Adding grid")
+            for i in range(len(data)):
+                for j in range(len(data)):
+                    ax.add_patch(patches.Rectangle(
+                        (j - 0.5, i - 0.5), 1, 1, 
+                        fill=False, color="black", linewidth=1
+                    ))
+            
+            ax.set_xlabel("Organism", fontsize=10, color=text_color)
+            ax.set_ylabel("Organism", fontsize=10, color=text_color)
+            ax.tick_params(axis='both', which='major', labelsize=8, colors=text_color)
+            
+            # Adjust layout and draw
+            self.logger.debug("Adjusting layout")
+            self.colormap_canvas.fig.tight_layout()
+            
+            self.logger.debug("Drawing canvas")
+            self.colormap_canvas.draw()
+            
+            self.logger.debug("Completed plot_heatmap")
+            
+        except Exception as e:
+            self.logger.error(f"Error plotting heatmap: {str(e)}")
+            self.logger.exception("Full traceback:")
+            show_error(self.settings, "Error plotting heatmap", str(e))
 
     def clear_shared_seeds_table(self):
         self.table_seed.setRowCount(0)
@@ -200,12 +283,47 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
     def sort_loc_finder_table(self, column):
         self.loc_finder_table.sortItems(column)
 
-class MplCanvas(FigureCanvasQTAgg):
-    def __init__(self, parent=None, width=400, height=250, dpi=100):
+    def _on_theme_changed(self, theme):
+        """Handle theme changes by updating the plot"""
         try:
-            fig = Figure(dpi=dpi, tight_layout=True)
-            self.axes = fig.add_subplot(111)
-            self.axes.clear()
-            super(MplCanvas, self).__init__(fig)
+            if hasattr(self, 'colormap_canvas') and hasattr(self.colormap_canvas, 'axes'):
+                text_color = 'white' if theme == 'dark' else 'black'
+                
+                # Update axis labels
+                self.colormap_canvas.axes.xaxis.label.set_color(text_color)
+                self.colormap_canvas.axes.yaxis.label.set_color(text_color)
+                
+                # Update tick labels
+                self.colormap_canvas.axes.tick_params(colors=text_color)
+                
+                # Update colorbar if it exists
+                if hasattr(self.colormap_canvas, 'cbar'):
+                    self.colormap_canvas.cbar.ax.set_ylabel("", rotation=-90, va="bottom", fontsize=8, color=text_color)
+                    self.colormap_canvas.cbar.ax.tick_params(colors=text_color)
+                
+                # Redraw the canvas
+                self.colormap_canvas.draw()
+                
         except Exception as e:
-            show_error("Error initializing MplCanvas class in population analysis.", e)
+            self.logger.error(f"Error updating plot theme: {str(e)}")
+
+class MplCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=8, height=6, dpi=100):
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = self.fig.add_subplot(111)
+        super().__init__(self.fig)
+        
+        # Set background colors based on current theme
+        self.update_colors(parent.settings.get_theme() if parent else 'light')
+        
+        # Enable tight layout
+        self.fig.tight_layout()
+        
+    def update_colors(self, theme):
+        """Update figure and axes colors based on theme"""
+        if theme == 'dark':
+            self.fig.patch.set_facecolor('none')
+            self.axes.set_facecolor('#2d2d2d')  # Dark background for plot area
+        else:
+            self.fig.patch.set_facecolor('none')
+            self.axes.set_facecolor('white')

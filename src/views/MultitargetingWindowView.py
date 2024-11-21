@@ -27,20 +27,34 @@ class MultitargetingWindowView(QtWidgets.QMainWindow):
         self._init_grpSeedAnalysis()
         self._init_grpGlobalAnalysis()
 
+        self.push_button_export_selected_gRNAs = self._find_widget('pbtnExportSelectedgRNAs', QtWidgets.QPushButton)
+
     def _init_grpSelectOrganism(self):
         self.combo_box_organism = self._find_widget('cmbOrganism', QtWidgets.QComboBox)
         self.combo_box_endonuclease = self._find_widget('cmbEndonuclease', QtWidgets.QComboBox)
+        self.line_edit_max_results = self._find_widget('ledMaxResults', QtWidgets.QLineEdit)
         self.push_button_analyze = self._find_widget('pbtnAnalyze', QtWidgets.QPushButton)
         self.check_box_select_all = self._find_widget('chkSelectAll', QtWidgets.QCheckBox)
-        self.tool_button_sql_settings = self._find_widget('tbtnSQLSettings', QtWidgets.QToolButton)
         self.table_seeds = self._find_widget('tblSeeds', QtWidgets.QTableWidget)
 
+        # Set up table columns
         self.table_seeds.setColumnCount(8)
-        self.table_seeds.setHorizontalHeaderLabels(["Seed", "Total Repeats", "Avg. Repeats/Scaffold", "Consensus Sequence", "% Consensus", "Score", "PAM", "Strand"])
+        self.table_seeds.setHorizontalHeaderLabels([
+            "Seed", "Total Repeats", "Avg. Repeats/Scaffold", 
+            "Consensus Sequence", "% Consensus", "Score", "PAM", "Strand"
+        ])
+        
+        # Set table properties
         self.table_seeds.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_seeds.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table_seeds.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.table_seeds.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.table_seeds.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        # Set minimum width for the table
+        self.table_seeds.setMinimumWidth(650)
+
+        # Add validation for max results line edit
+        self.line_edit_max_results.setValidator(QtGui.QIntValidator())
+        # Set default value
+        self.line_edit_max_results.setText("1000")
 
     def _init_grpSeedAnalysis(self):
         # Get the tab widget
@@ -77,11 +91,10 @@ class MultitargetingWindowView(QtWidgets.QMainWindow):
         self.scroll_chromosome.viewport().installEventFilter(self)
         self.graphical_view_chromosome.viewport().installEventFilter(self)
 
-        # Dictionary to map canvases to chromosomes
         self.canvas_chromosome_map = {}
 
     def _init_grpGlobalAnalysis(self):
-        self.push_button_statistics_overview = self._find_widget('pbtnStatisticsOverview', QtWidgets.QPushButton)
+        self.tab_statistics_overview = self._find_widget('tabStatisticsOverview', QtWidgets.QWidget)
 
         self.tab_repeats_vs_seed = self._find_widget('tabRepeatsVsSeed', QtWidgets.QWidget)
         self.plot_repeats_vs_seed = self._find_widget('plotRepeatsVsSeed', QtWidgets.QWidget)
@@ -96,7 +109,6 @@ class MultitargetingWindowView(QtWidgets.QMainWindow):
         return widget
 
     def update_seeds_table(self, data):
-        """Update the seeds table with the provided data"""
         self.table_seeds.setRowCount(len(data))
         for row, row_data in enumerate(data):
             # Unpack the data
@@ -155,18 +167,11 @@ class MultitargetingWindowView(QtWidgets.QMainWindow):
                 y1 = data['counts']
                 x = range(len(y1))
                 
-                # Plot with larger markers and line width for better visibility
                 self.repeats_vs_seed_canvas.axes.plot(x, y1, linewidth=1.5, marker='.', markersize=3)
-                
-                # Set labels and title with larger font sizes
-                self.repeats_vs_seed_canvas.axes.set_xlabel('Seed ID Number', fontsize=12)
-                self.repeats_vs_seed_canvas.axes.set_ylabel('Number of Repeats', fontsize=12)
-                self.repeats_vs_seed_canvas.axes.set_title('Number of Repeats per Seed ID Number', fontsize=14)
-                
-                # Set tick label size
-                self.repeats_vs_seed_canvas.axes.tick_params(axis='both', which='major', labelsize=10)
-                
-                # Add grid for better readability
+                self.repeats_vs_seed_canvas.axes.set_xlabel('Seed ID Number', fontsize=10)
+                self.repeats_vs_seed_canvas.axes.set_ylabel('Number of Repeats', fontsize=10)
+                self.repeats_vs_seed_canvas.axes.set_title('Number of Repeats per Seed ID Number', fontsize=10)
+                self.repeats_vs_seed_canvas.axes.tick_params(axis='both', which='major', labelsize=8)
                 self.repeats_vs_seed_canvas.axes.grid(True, linestyle='--', alpha=0.7)
                 
                 # Store statistics if needed
@@ -192,32 +197,19 @@ class MultitargetingWindowView(QtWidgets.QMainWindow):
             self.sequences_vs_repeats_canvas.axes.clear()
             
             if data and 'x_vals' in data and 'y_vals' in data:
-                x = data['x_vals']
-                y = data['y_vals']
+                x = data['x_vals']  # Number of repeats
+                y = data['y_vals']  # Number of sequences
                 
-                # Create scatter plot with specific style
-                self.sequences_vs_repeats_canvas.axes.scatter(x, y, s=15, color='blue')
-                
-                # Set y-axis to log scale
+                self.sequences_vs_repeats_canvas.axes.scatter(x, y, s=10)
                 self.sequences_vs_repeats_canvas.axes.set_yscale('log')
-                
-                # Set labels and title
-                self.sequences_vs_repeats_canvas.axes.set_xlabel('Number of Repeats', fontsize=12)
-                self.sequences_vs_repeats_canvas.axes.set_ylabel('Number of Sequences', fontsize=12)
-                self.sequences_vs_repeats_canvas.axes.set_title('Number of Sequences per Number of Repeats', fontsize=14)
-                
-                # Set tick label size
-                self.sequences_vs_repeats_canvas.axes.tick_params(axis='both', which='major', labelsize=10)
-                
-                # Add grid for better readability
+                self.sequences_vs_repeats_canvas.axes.set_xlabel('Number of Repeats', fontsize=10)
+                self.sequences_vs_repeats_canvas.axes.set_ylabel('Number of Sequences', fontsize=10)
+                self.sequences_vs_repeats_canvas.axes.set_title('Number of Sequences per Number of Repeats', fontsize=10)
+                self.sequences_vs_repeats_canvas.axes.tick_params(axis='both', which='major', labelsize=8)
                 self.sequences_vs_repeats_canvas.axes.grid(True, linestyle='--', alpha=0.7)
                 
-                # Force integer ticks on x-axis
-                self.sequences_vs_repeats_canvas.axes.xaxis.set_major_locator(MaxNLocator(integer=True))
-                
-                # Set axis ranges to match the image
-                self.sequences_vs_repeats_canvas.axes.set_xlim(0, max(x) + 5)  # Add some padding
-                self.sequences_vs_repeats_canvas.axes.set_ylim(1, 10**4)  # Log scale from 1 to 10^4
+                if x:  
+                    self.sequences_vs_repeats_canvas.axes.set_xlim(x[0] - 0.5, x[-1] + 0.5)
                 
             self.sequences_vs_repeats_canvas.draw()
             
@@ -274,7 +266,6 @@ class MultitargetingWindowView(QtWidgets.QMainWindow):
             self.logger.error(f"Error updating repeat vs chromosome plot: {str(e)}")
 
     def fill_chromosome_viewer(self, seed_data, event_data):
-        """Fill the chromosome viewer with visualization"""
         try:
             # Clear out old widgets in layout
             for i in reversed(range(self.chromosome_layout.count())):
@@ -361,6 +352,27 @@ class MultitargetingWindowView(QtWidgets.QMainWindow):
 
         except Exception as e:
             self.logger.error(f"Error in chromosome event handler: {str(e)}")
+
+    def update_statistics_labels(self, total_repeats, avg_repeats, median_repeats, mode_repeats):
+        """Update the statistics overview labels with new values"""
+        try:
+            # Find and update the statistics labels
+            total_label = self._find_widget('lblTotalRepeatsValue', QtWidgets.QLabel)
+            avg_label = self._find_widget('lblAverageRepeatsValue', QtWidgets.QLabel)
+            median_label = self._find_widget('lblMedianRepeatsValue', QtWidgets.QLabel)
+            mode_label = self._find_widget('lblModeRepeatsValue', QtWidgets.QLabel)
+            
+            if total_label:
+                total_label.setText(str(round(float(total_repeats), 1)))
+            if avg_label:
+                avg_label.setText(str(round(float(avg_repeats), 1)))
+            if median_label:
+                median_label.setText(str(round(float(median_repeats), 1)))
+            if mode_label:
+                mode_label.setText(str(round(float(mode_repeats), 1)))
+            
+        except Exception as e:
+            self.logger.error(f"Error updating statistics labels: {str(e)}")
 
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=8, height=6, dpi=100):

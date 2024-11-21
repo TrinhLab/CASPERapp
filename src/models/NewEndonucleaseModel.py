@@ -71,14 +71,14 @@ class NewEndonucleaseModel(QObject):
             pam = ','.join([x.strip() for x in pam.split(',')])
 
         argument_list = [
-            form_data['endonuclease_organism'],
             form_data['endonuclease_abbreviation'],
-            form_data['endonuclease_CRISPR_type'],
             pam,
             form_data['endonuclease_five_prime_length'],
             form_data['endonuclease_seed_length'],
             form_data['endonuclease_three_prime_length'],
             form_data['endonuclease_direction'],
+            form_data['endonuclease_organism'],
+            form_data['endonuclease_CRISPR_type'],
             form_data['endonuclease_on_target_scoring'],
             form_data['endonuclease_off_target_scoring']
         ]

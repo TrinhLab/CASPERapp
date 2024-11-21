@@ -8,8 +8,8 @@ class StartupWindowModel(QObject):
         self.settings = global_settings
         self.logger = global_settings.get_logger()
         
-        # Connect to the combined signal from GlobalSettings
-        self.settings.db_state_updated.connect(self.on_db_state_updated)
+        # Connect to the DatabaseManager's signals instead of GlobalSettings
+        self.settings.db_manager.db_state_changed.connect(self.on_db_state_updated)
 
     def get_db_path(self):
         return self.settings.get_db_path()

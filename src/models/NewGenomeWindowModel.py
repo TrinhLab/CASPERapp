@@ -88,7 +88,7 @@ class NewGenomeWindowModel(QObject):
             f'{db_path}',
             f'{self.settings.get_casper_info_path()}',
             f'{file_path}',
-            f'"{organism_name} {strain}"',
+            f'{organism_name} {strain}',
             'notes',
             f'DATA:{endonuclease_data["endonuclease_on_target_scoring"]}' 
         ]
@@ -135,7 +135,6 @@ class NewGenomeWindowModel(QObject):
         self.completed_jobs += 1
         self.current_job_progress = 0
         return self.update_total_progress()
-
 
     def validate_fasta_file(self, file_path):
         return file_path.lower().endswith(('.fa', '.fna', '.fasta'))

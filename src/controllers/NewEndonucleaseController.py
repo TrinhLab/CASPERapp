@@ -12,6 +12,7 @@ class NewEndonucleaseController:
             self.model = NewEndonucleaseModel(self.settings)
             self.view = NewEndonucleaseView(self.settings)
             self.model.endonuclease_updated.connect(self._on_endonuclease_updated)
+            self.settings.theme_changed.connect(self.view.apply_theme)
         
             self._setup_connections()
             self._init_ui()

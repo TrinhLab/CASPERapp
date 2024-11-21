@@ -1,7 +1,7 @@
-from PyQt6 import QtWidgets, QtGui, QtCore
+from PyQt6 import QtWidgets 
 import traceback
-import models.GlobalSettings as GlobalSettings
-
+import sys
+from PyQt6.QtWidgets import QMessageBox
 
 def show_message(title, message, fontSize=12, icon=QtWidgets.QMessageBox.Icon.Information, button=QtWidgets.QMessageBox.StandardButton.Close):
     try:
@@ -15,20 +15,27 @@ def show_message(title, message, fontSize=12, icon=QtWidgets.QMessageBox.Icon.In
     except Exception as e:
         print(f"Error showing message: {e}") 
 
-def show_error(settings, message, e):
-    try:
-        logger = settings.get_logger()
+def show_error(global_settings, message, exception=None):
+    """Show error dialog and log the error"""
+    logger = global_settings.get_logger() if global_settings else None
+    
+    if logger:
         logger.critical(message)
-        logger.critical(e)
-        logger.critical(traceback.format_exc())
+        if exception:
+            if isinstance(exception, str):
+                logger.critical(exception)
+            else:
+                logger.critical(str(exception))
+                logger.critical(''.join(traceback.format_tb(exception.__traceback__)))
 
-        show_message(
-            fontSize=12,
-            icon=QtWidgets.QMessageBox.Icon.Critical,
-            title="Fatal Error",
-            message=f"Fatal Error:\n{str(e)}\n\nFor more information on this error, look at CASPER.log in the application folder."
-        )
-    except Exception as e:
-        print(f"Error showing error message: {e}") 
-
-    exit(-1)
+    error_box = QMessageBox()
+    error_box.setIcon(QMessageBox.Icon.Critical)
+    error_box.setText(message)
+    if exception:
+        if isinstance(exception, str):
+            error_box.setDetailedText(exception)
+        else:
+            error_box.setDetailedText(f"{str(exception)}\n\n{''.join(traceback.format_tb(exception.__traceback__))}")
+    error_box.exec()
+    
+    sys.exit(1) 

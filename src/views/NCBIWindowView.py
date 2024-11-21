@@ -18,7 +18,7 @@ class NCBIWindowView(QtWidgets.QMainWindow):
     def _setup_basic_ui(self):
         """Initial minimal setup to show the window quickly"""
         try:
-            uic.loadUi(os.path.join(self.settings.get_ui_dir_path(), "ncbi_window_v2.ui"), self)
+            uic.loadUi(os.path.join(self.settings.get_ui_dir_path(), "ncbi.ui"), self)
             
             QtCore.QTimer.singleShot(100, self._complete_initialization)
             

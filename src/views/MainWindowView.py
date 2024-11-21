@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QMainWindow, QPushButton, QWidget, QVBoxLayout,
-    QHBoxLayout, QLabel, QFrame, 
+    QHBoxLayout, QLabel, QFrame, QMenu, 
 )
 from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtCore import Qt
@@ -17,6 +17,7 @@ class MainWindowView(QMainWindow, LoggingMixin):
         QMainWindow.__init__(self)
         LoggingMixin.__init__(self)
         self.settings = global_settings
+        self.action_toggle_theme = QAction("Toggle Theme", self)
         self._init_ui()
         self.oldPos = None
 
@@ -149,22 +150,76 @@ class MainWindowView(QMainWindow, LoggingMixin):
         left_layout.addWidget(self.minimize_window_button)
         left_layout.addWidget(self.maximize_window_button)
 
-        # ----- Theme Toggle Button -----
-        self.theme_toggle_button = QPushButton(self.title_bar)
-        self.theme_toggle_button.setObjectName("theme_toggle_button")
-        self.theme_toggle_button.setFixedSize(20, 20) 
-        self.theme_toggle_button.setStyleSheet("border: none;")
-        self.update_theme_icon()
+        # ----- Add Button with Dropdown -----
+        self.add_button = QPushButton(self.title_bar)
+        self.add_button.setObjectName("add_button")
+        self.add_button.setFixedSize(20, 20)
+        
+        # Create the dropdown menu
+        self.add_menu = QMenu(self.add_button)
+        self.add_menu.setObjectName("add_menu")
+        
+        # Add actions to the menu
+        self.action_new_genome = self.add_menu.addAction("New Genome")
+        self.action_new_endonuclease = self.add_menu.addAction("New Endonuclease")
+        
+        # Set the menu for the button
+        self.add_button.setMenu(self.add_menu)
+        self.add_button.setStyleSheet("""
+            QPushButton {
+                padding: 0px;
+                margin: 0px;
+                text-align: center;
+                border: none;
+            }
+            QPushButton::menu-indicator { 
+                width: 0px; 
+            }
+        """)
+        
+        # Initial icon will be set in update_plus_icon method
+        self.update_plus_icon()
 
-        # ----- Right Widget (Theme Toggle + Stretch) -----
+        # ----- Settings Button with Dropdown -----
+        self.settings_button = QPushButton(self.title_bar)
+        self.settings_button.setObjectName("settings_button")
+        self.settings_button.setFixedSize(20, 20)
+        
+        # Create the settings dropdown menu
+        self.settings_menu = QMenu(self.settings_button)
+        self.settings_menu.setObjectName("settings_menu")
+        
+        # Update the theme icon and add the action to the menu
+        self.update_theme_icon()
+        self.settings_menu.addAction(self.action_toggle_theme)
+        
+        # Set the menu for the button
+        self.settings_button.setMenu(self.settings_menu)
+        self.settings_button.setStyleSheet("""
+            QPushButton {
+                padding: 0px;
+                margin: 0px;
+                text-align: center;
+                border: none;
+            }
+            QPushButton::menu-indicator { 
+                width: 0px; 
+            }
+        """)
+        
+        # Initial icon will be set in update_settings_icon method
+        self.update_settings_icon()
+
+        # ----- Right Widget (Add Button + Settings Button + Stretch) -----
         right_widget = QWidget()
         right_layout = QHBoxLayout(right_widget)
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(5)
 
-        # Add a stretch to push the toggle button to the far right within right_widget
+        # Add a stretch to push the buttons to the far right within right_widget
         right_layout.addStretch()
-        right_layout.addWidget(self.theme_toggle_button)
+        right_layout.addWidget(self.add_button)
+        right_layout.addWidget(self.settings_button)
 
         # Adjust left_widget to calculate its required width
         left_widget.adjustSize()
@@ -205,14 +260,37 @@ class MainWindowView(QMainWindow, LoggingMixin):
 
     def update_theme_icon(self) -> None:
         try:
+            # Update the theme action icon
             icon_name = "dark_mode.png" if self.settings.get_theme() == "dark" else "light_mode.png"
             icon_path = os.path.join(self.settings.get_assets_dir_path(), icon_name)
-            icon = QIcon(icon_path)
-            self.theme_toggle_button.setIcon(icon)
-            self.theme_toggle_button.setIconSize(QtCore.QSize(16, 16))
+            self.action_toggle_theme.setIcon(QIcon(icon_path))
         except Exception as e:
             self.log_error("update_theme_icon", e)
             show_error(self.settings, "Theme Error", "Failed to update theme icon")
+
+    def update_plus_icon(self) -> None:
+        """Update the plus icon based on current theme"""
+        try:
+            icon_name = "plus_white.png" if self.settings.get_theme() == "dark" else "plus_dark.png"
+            icon_path = os.path.join(self.settings.get_assets_dir_path(), icon_name)
+            icon = QIcon(icon_path)
+            self.add_button.setIcon(icon)
+            self.add_button.setIconSize(QtCore.QSize(14, 14))
+        except Exception as e:
+            self.log_error("update_plus_icon", e)
+            show_error(self.settings, "Theme Error", "Failed to update plus icon")
+
+    def update_settings_icon(self) -> None:
+        """Update the settings icon based on current theme"""
+        try:
+            icon_name = "settings_light.png" if self.settings.get_theme() == "dark" else "settings_dark.png"
+            icon_path = os.path.join(self.settings.get_assets_dir_path(), icon_name)
+            icon = QIcon(icon_path)
+            self.settings_button.setIcon(icon)
+            self.settings_button.setIconSize(QtCore.QSize(16, 16))
+        except Exception as e:
+            self.log_error("update_settings_icon", e)
+            show_error(self.settings, "Theme Error", "Failed to update settings icon")
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -234,7 +312,9 @@ class MainWindowView(QMainWindow, LoggingMixin):
                 "tab_border_color": "#444444",
                 "tab_selected_border_color": "#51b85e",
                 "tab_hover_bg_color": "#3b3b3b",
-                "divider_color": "#444444"
+                "divider_color": "#444444",
+                "menu_text_color": "#ffffff",
+                "menu_hover_text_color": "#ffffff",
             },
             "light": {
                 "bg_color": "#f0f0f0",
@@ -250,7 +330,9 @@ class MainWindowView(QMainWindow, LoggingMixin):
                 "tab_border_color": "#c0c0c0",
                 "tab_selected_border_color": "#51b85e",
                 "tab_hover_bg_color": "#e0e0e0",
-                "divider_color": "#c0c0c0"
+                "divider_color": "#c0c0c0",
+                "menu_text_color": "#000000",
+                "menu_hover_text_color": "#000000",
             }
         }
 
@@ -258,7 +340,7 @@ class MainWindowView(QMainWindow, LoggingMixin):
         theme = themes["dark"] if current_theme == "dark" else themes["light"]
         qdarktheme.setup_theme(current_theme)
 
-        # Set the stylesheet
+        # Update the existing stylesheet with menu styling
         self.setStyleSheet(f"""
             QWidget {{ background-color: {theme['bg_color']}; color: {theme['fg_color']}; }}
             QPushButton {{ background-color: {theme['button_bg_color']}; border: 1px solid {theme['button_border_color']}; }}
@@ -270,6 +352,31 @@ class MainWindowView(QMainWindow, LoggingMixin):
             QMenu {{ background-color: {theme['menu_bg_color']}; }}
             QMenu::item:selected {{ background-color: {theme['menu_item_hover_bg_color']}; }}
             QFrame#custom_divider {{ border-bottom: 1px solid {theme['divider_color']}; }}
+            
+            QPushButton#add_button {{
+                background-color: {theme['button_bg_color']};
+                color: {theme['fg_color']};
+                border: 1px solid {theme['button_border_color']};
+                padding: 0px;
+                font-size: 16px;
+                line-height: 20px;
+            }}
+            
+            QPushButton#add_button:hover {{
+                background-color: {theme['button_hover_bg_color']};
+            }}
+            
+            QMenu {{
+                background-color: {theme['menu_bg_color']};
+                color: {theme['menu_text_color']};
+                border: 1px solid {theme['button_border_color']};
+                padding: 5px;
+            }}
+            
+            QMenu::item:selected {{
+                background-color: {theme['menu_item_hover_bg_color']};
+                color: {theme['menu_hover_text_color']};
+            }}
         """)
 
         # Set the tab widget stylesheet
@@ -304,6 +411,50 @@ class MainWindowView(QMainWindow, LoggingMixin):
                 background: {theme['tab_hover_bg_color']};
             }}
         """)
+
+        # Update the add button styling in the theme
+        self.add_button.setStyleSheet(f"""
+            QPushButton {{
+                padding: 0px;
+                margin: 0px;
+                line-height: 0px;
+                text-align: center;
+                border: none;
+                font-size: 14px;
+                color: {theme['fg_color']};
+            }}
+            QPushButton:hover {{
+                background-color: {theme['button_hover_bg_color']};
+            }}
+            QPushButton::menu-indicator {{ 
+                width: 0px; 
+            }}
+        """)
+
+        # Update the settings button styling
+        self.settings_button.setStyleSheet(f"""
+            QPushButton {{
+                padding: 0px;
+                margin: 0px;
+                line-height: 0px;
+                text-align: center;
+                border: none;
+                font-size: 14px;
+                color: {theme['fg_color']};
+                background-color: transparent;
+            }}
+            QPushButton:hover {{
+                background-color: {theme['button_hover_bg_color']};
+            }}
+            QPushButton::menu-indicator {{ 
+                width: 0px; 
+            }}
+        """)
+
+        # Update icons
+        self.update_theme_icon()
+        self.update_plus_icon()
+        self.update_settings_icon()
 
     def mousePressEvent(self, event):
         """Handle mouse press events for window dragging"""

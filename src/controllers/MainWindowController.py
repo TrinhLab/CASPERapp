@@ -11,25 +11,26 @@ from utils.LoggingMixin import LoggingMixin
 class MainWindowController(LoggingMixin):
     def __init__(self, global_settings):
         LoggingMixin.__init__(self)
-        self.global_settings = global_settings
+        self.settings = global_settings
         self.tab_widgets = {
             'widgets': {},  
             'controllers': {}  
         }
         self.startup_controller = None
-        self.is_first_time_startup = self.global_settings.is_first_time_startup
+        self.is_first_time_startup = self.settings.is_first_time_startup
         self.shared_tab_size = QSize(850, 850)
         self.startup_size = QSize(750, 550)
         self.current_tab = None
+        self.previous_size = None
 
         try:
-            self.view = MainWindowView(global_settings)
+            self.view = MainWindowView(self.settings)
             self._setup_connections()
             self._init_ui()
-            self.global_settings.check_and_emit_first_time_startup()
+            self.settings.check_and_emit_first_time_startup()
         except Exception as e:
             self.log_error("__init__", e)
-            show_error(self.global_settings, "Error initializing MainWindowController", str(e))
+            show_error(self.settings, "Error initializing MainWindowController", str(e))
 
     def _setup_connections(self):
         self.log_method_call("_setup_connections")
@@ -44,13 +45,20 @@ class MainWindowController(LoggingMixin):
         self.view.close_window_button.clicked.connect(self._close_window)
         self.view.minimize_window_button.clicked.connect(self._minimize_window)
         self.view.maximize_window_button.clicked.connect(self._maximize_window)
-        self.view.theme_toggle_button.clicked.connect(self._toggle_theme)
 
         # Tab bar
         self.view.tab_widget.tab_closed.connect(self._on_tab_closed)
         self.view.tab_widget.tabCloseRequested.connect(self._close_tab)
+        self.view.tab_widget.currentChanged.connect(self._on_current_tab_changed)
 
-        self.global_settings.first_time_startup.connect(self._handle_first_time_startup)
+        self.settings.first_time_startup.connect(self._handle_first_time_startup)
+
+        # Add Button Menu
+        self.view.action_new_genome.triggered.connect(self.open_new_genome_tab)
+        self.view.action_new_endonuclease.triggered.connect(self.open_new_endonuclease_tab)
+
+        # Settings Menu
+        self.view.action_toggle_theme.triggered.connect(self._toggle_theme)
 
     def _init_ui(self):
         self.log_method_call("_init_ui")
@@ -60,8 +68,8 @@ class MainWindowController(LoggingMixin):
             self._open_startup_tab()
             return
 
-        db_path = self.global_settings.get_db_path()
-        is_valid, message = self.global_settings.validate_db_path(db_path)
+        db_path = self.settings.get_db_path()
+        is_valid, message = self.settings.validate_db_path(db_path)
         
         if db_path and is_valid:
             self.log_info(f"Database path is valid: {db_path}")
@@ -77,11 +85,11 @@ class MainWindowController(LoggingMixin):
 
     def _open_startup_tab(self):
         try:
-            self.startup_controller = self.global_settings.get_startup_window()
+            self.startup_controller = self.settings.get_startup_window()
             self.open_new_tab("Startup", self.startup_controller)
         except Exception as e:
             self.log_error("_open_startup_tab", e)
-            show_error(self.global_settings, "Error opening startup tab", str(e))
+            show_error(self.settings, "Error opening startup tab", str(e))
 
     def _switch_to_home_from_startup(self):
         self.log_method_call("_switch_to_home_from_startup")
@@ -109,20 +117,20 @@ class MainWindowController(LoggingMixin):
             self.log_debug(f"Window centered at {self.view.pos()}")
         except Exception as e:
             self.log_error("_center_window", e)
-            show_error(self.global_settings, "Error centering window", str(e))
+            show_error(self.settings, "Error centering window", str(e))
 
     def _change_database_directory(self):
         try:
             new_directory = QtWidgets.QFileDialog.getExistingDirectory(
                 self.view, "Select Database Directory", 
-                self.global_settings.get_db_path(),
+                self.settings.get_db_path(),
                 QtWidgets.QFileDialog.Option.ShowDirsOnly
             )
             
             if not new_directory:
                 return
 
-            is_valid, message = self.global_settings.validate_db_path(new_directory)
+            is_valid, message = self.settings.validate_db_path(new_directory)
             if is_valid:
                 self._process_valid_directory(new_directory)
             else:
@@ -130,7 +138,7 @@ class MainWindowController(LoggingMixin):
                 
         except Exception as e:
             self.log_error("_change_database_directory", e)
-            show_error(self.global_settings, "Error changing database directory", str(e))
+            show_error(self.settings, "Error changing database directory", str(e))
 
     def _handle_invalid_directory(self, new_directory, message):
         reply = QtWidgets.QMessageBox.question(
@@ -143,16 +151,16 @@ class MainWindowController(LoggingMixin):
         )
         
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-            self.global_settings.save_db_path(new_directory)
-            self.global_settings.update_db_state()
+            self.settings.save_db_path(new_directory)
+            self.settings.update_db_state()
             self.open_new_genome_tab()
         else:
             show_message("Operation Cancelled", "Database directory change cancelled.")
 
     def _process_valid_directory(self, new_directory):
         try:
-            self.global_settings.save_db_path(new_directory)
-            self.global_settings.update_db_state()
+            self.settings.save_db_path(new_directory)
+            self.settings.update_db_state()
             show_message("Success", "Database directory changed successfully.")
             
             if (self.startup_controller and 
@@ -160,7 +168,7 @@ class MainWindowController(LoggingMixin):
                 self._switch_to_home_from_startup()
         except Exception as e:
             self.log_error("_process_valid_directory", e)
-            show_error(self.global_settings, "Error processing directory", str(e))
+            show_error(self.settings, "Error processing directory", str(e))
 
     def _open_ncbi_website(self):
         ncbi_page()
@@ -202,12 +210,12 @@ class MainWindowController(LoggingMixin):
     def _open_home_tab(self):
         """Opens the home tab"""
         try:
-            home_controller = self.global_settings.get_home_window()
+            home_controller = self.settings.get_home_window()
             self.open_new_tab("Home", home_controller)
             self.log_info("Home tab opened successfully")
         except Exception as e:
             self.log_error("_open_home_tab", e)
-            show_error(self.global_settings, "Error opening home tab", str(e))
+            show_error(self.settings, "Error opening home tab", str(e))
 
     def open_new_tab(self, title, content):
         """Opens a new tab with the given title and content"""
@@ -246,40 +254,69 @@ class MainWindowController(LoggingMixin):
             
         except Exception as e:
             self.log_error("open_new_tab", e)
-            show_error(self.global_settings, f"Error opening tab '{title}'", str(e))
+            show_error(self.settings, f"Error opening tab '{title}'", str(e))
 
     def _resize_for_tab(self, title):
-        if title == "Startup":
-            # For Startup tab, set fixed size and disable maximize button
-            self.view.setFixedSize(self.startup_size)
-            self.view.setWindowFlags(self.view.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
-        else:
-            # For all other tabs, use the shared size and allow resizing
-            self.view.setMinimumSize(QSize(400, 300))
-            self.view.setMaximumSize(QtCore.QSize(16777215, 16777215))
-            self.view.setWindowFlags(self.view.windowFlags() | Qt.WindowType.WindowMaximizeButtonHint)
+        try:
+            if title == "Startup":
+                # For Startup tab, set fixed size and disable maximize button
+                self.view.setFixedSize(self.startup_size)
+                self.view.setWindowFlags(self.view.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
+            elif title in ["View Targets", "Multitargeting Analysis"]:
+                # Store current size before applying constraints
+                if self.current_tab not in ["View Targets", "Multitargeting Analysis"]:
+                    self.previous_size = self.view.size()
+                
+                # Set minimum dimensions for these tabs
+                min_width = 1300
+                min_height = 800
+                
+                # Calculate new dimensions
+                new_width = max(self.view.width(), min_width)
+                new_height = max(self.view.height(), min_height)
+                
+                # Only resize if dimensions need to increase
+                if new_width > self.view.width() or new_height > self.view.height():
+                    self.view.resize(QSize(new_width, new_height))
+                
+                # Set minimum size constraints
+                self.view.setMinimumSize(QSize(min_width, min_height))
+                self.view.setMaximumSize(QtCore.QSize(16777215, 16777215))
+                self.view.setWindowFlags(self.view.windowFlags() | Qt.WindowType.WindowMaximizeButtonHint)
+            else:
+                # For all other tabs
+                self.view.setMinimumSize(QSize(400, 300))
+                self.view.setMaximumSize(QtCore.QSize(16777215, 16777215))
+                self.view.setWindowFlags(self.view.windowFlags() | Qt.WindowType.WindowMaximizeButtonHint)
+                
+                # Restore previous size if available and coming from View Targets or Multi-targeting Analysis
+                if self.current_tab in ["View Targets", "Multitargeting Analysis"] and self.previous_size:
+                    self.view.resize(self.previous_size)
+                elif self.current_tab == "Startup" or self.view.size() == self.startup_size:
+                    self.view.resize(self.shared_tab_size)
             
-            # Only resize if coming from Startup tab or if no current size is set
-            if self.current_tab == "Startup" or self.view.size() == self.startup_size:
-                self.view.resize(self.shared_tab_size)
-        
-        # Ensure window flags are updated
-        self.view.show()
-        
-        # Update the current tab
-        self.current_tab = title
+            # Ensure window flags are updated
+            self.view.show()
+            
+            # Update the current tab
+            self.current_tab = title
+            
+        except Exception as e:
+            self.log_error("_resize_for_tab", e)
 
     def _close_tab(self, index):
-        """
-        Handle tab closure using CloseableTabWidget
-        """
+        """Handle tab closure using CloseableTabWidget"""
         if 0 <= index < self.view.tab_widget.count():
             title = self.view.tab_widget.tabText(index)
+            
+            # Store size before closing View Targets tab
+            if title == "View Targets":
+                self.previous_size = self.view.size()
             
             # Let CloseableTabWidget handle the widget cleanup
             self.view.tab_widget.closeTab(index)
             
-            # Clean up our references
+            # Clean up references
             if title in self.tab_widgets['widgets']:
                 del self.tab_widgets['widgets'][title]
             if title in self.tab_widgets['controllers']:
@@ -302,15 +339,15 @@ class MainWindowController(LoggingMixin):
 
     def _toggle_theme(self):
         try:
-            self.global_settings.set_theme("dark" if self.global_settings.get_theme() == "light" else "light")
+            self.settings.set_theme("dark" if self.settings.get_theme() == "light" else "light")
             self.view.update_theme_icon()
             self.view.apply_theme()
         except Exception as e:
-            show_error(self.global_settings, "Error toggling theme", str(e))
+            show_error(self.settings, "Error toggling theme", str(e))
 
     def show(self):
         try:
-            saved_position = self.global_settings.load_window_position("main_window")
+            saved_position = self.settings.load_window_position("main_window")
             if saved_position:
                 self.view.move(saved_position)
             else:
@@ -319,8 +356,8 @@ class MainWindowController(LoggingMixin):
             self.view.show()
             self.view.apply_theme()
         except Exception as e:
-            self.global_settings.logger.error(f"Error showing main window: {str(e)}", exc_info=True)
-            show_error(self.global_settings, "Error showing main window", e)
+            self.log_error("show", e)
+            show_error(self.settings, "Error showing main window", e)
 
     def open_new_genome_tab(self):
         # Check if the New Genome tab already exists
@@ -377,8 +414,33 @@ class MainWindowController(LoggingMixin):
             self._resize_for_tab("Home")
 
         except Exception as e:
-            self.logger.error(f"Error in close_new_genome_and_switch_to_home: {str(e)}", exc_info=True)
-            show_error(self.global_settings, "Error switching to Home tab", str(e))
+            self.log_error("close_new_genome_and_switch_to_home", e)
+            show_error(self.settings, "Error switching to Home tab", str(e))
+
+    def _on_current_tab_changed(self, index):
+        """Handle tab change events"""
+        try:
+            if index >= 0:
+                new_tab_title = self.view.tab_widget.tabText(index)
+                old_tab_title = self.current_tab
+                
+                # Store current size if coming from a non-Startup tab
+                if old_tab_title and old_tab_title != "Startup":
+                    self.previous_size = self.view.size()
+                
+                self._resize_for_tab(new_tab_title)
+                
+        except Exception as e:
+            self.log_error("_on_current_tab_changed", e)
+
+    def open_new_endonuclease_tab(self):
+        """Opens the new endonuclease window"""
+        try:
+            new_endonuclease_controller = self.settings.get_new_endonuclease_window()
+            new_endonuclease_controller.view.show()  # Show as window instead of tab
+        except Exception as e:
+            self.log_error("open_new_endonuclease_tab", e)
+            show_error(self.settings, "Error opening new endonuclease window", str(e))
 
 
 

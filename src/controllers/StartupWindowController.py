@@ -3,6 +3,7 @@ from PyQt6 import QtWidgets
 from models.StartupWindowModel import StartupWindowModel
 from utils.ui import show_message, show_error
 from views.StartupWindowView import StartupWindowView
+import sys
 
 class StartupWindowController:
     def __init__(self, global_settings):
@@ -66,11 +67,23 @@ class StartupWindowController:
         self.logger.debug(f"Handle go to home or new genome: {self.model.get_db_path()}")
         is_valid, message = self.settings.validate_db_path(self.model.get_db_path())
         if is_valid:
-            self.settings.set_first_time_startup_completed()  # New method call
-            self.settings.main_window._switch_to_home_from_startup()
+            self.settings.set_first_time_startup_completed()
+            self.restart_application()
         else:
             self.logger.warning(f"Invalid database path: {message}")
             self.open_new_genome_tab()
+
+    def restart_application(self):
+        """Restart the entire application"""
+        try:
+            self.logger.info("Restarting application...")
+            # Get the current application instance
+            app = QtWidgets.QApplication.instance()
+            # Use a custom exit code for restart (e.g., 1000)
+            app.exit(1000)  # Changed from QApplication.Exit.ExitCode.Restart
+        except Exception as e:
+            self.logger.error(f"Error restarting application: {str(e)}", exc_info=True)
+            show_error(self.settings, "Error restarting application", str(e))
 
     def open_new_genome_tab(self):
         try:

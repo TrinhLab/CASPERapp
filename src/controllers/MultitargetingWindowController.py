@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow
 from views.MultitargetingWindowView import MultitargetingWindowView
 from models.MultitargetingWindowModel import MultitargetingWindowModel
-from utils.ui import show_error
+from utils.ui import show_error, show_message
 
 class MultitargetingWindowController(QMainWindow):
     def __init__(self, global_settings):
@@ -35,6 +35,9 @@ class MultitargetingWindowController(QMainWindow):
             # Initialize plots
             self._view.setup_plots()
             
+            # Connect max results line edit
+            self._view.line_edit_max_results.textChanged.connect(self._on_max_results_changed)
+            
         except Exception as e:
             self.logger.error(f"Error in _init_ui: {str(e)}")
             show_error(self.settings, "Error", f"Failed to initialize UI: {str(e)}")
@@ -47,12 +50,14 @@ class MultitargetingWindowController(QMainWindow):
         
         # Buttons
         self._view.push_button_analyze.clicked.connect(self._on_analyze_clicked)
-        self._view.push_button_statistics_overview.clicked.connect(self._on_statistics_overview_clicked)
-        self._view.tool_button_sql_settings.clicked.connect(self._on_sql_settings_clicked)
+        # self._view.push_button_statistics_overview.clicked.connect(self._on_statistics_overview_clicked)
+        # self._view.tool_button_sql_settings.clicked.connect(self._on_sql_settings_clicked)
         
         # Table selection
         self._view.table_seeds.itemSelectionChanged.connect(self._on_seed_selected)
         self._view.check_box_select_all.stateChanged.connect(self._on_select_all_changed)
+
+        self._view.push_button_export_selected_gRNAs.clicked.connect(self._handle_export)
 
     def _on_organism_changed(self, index):
         """Handle organism selection change"""
@@ -215,7 +220,7 @@ class MultitargetingWindowController(QMainWindow):
 
     def _update_analysis_button_state(self):
         """Update analyze button enabled state"""
-        has_organism = bool(self._view.organism_drop.currentText())
+        has_organism = bool(self._view.combo_box_organism.currentText())
         has_endo = bool(self._view.combo_box_endonuclease.currentText())
         self._view.push_button_analyze.setEnabled(has_organism and has_endo)
         
@@ -225,13 +230,21 @@ class MultitargetingWindowController(QMainWindow):
             self._view.update_plots(None, None, None)
 
     def _update_plots(self):
-        """Update all plots with current data"""
         try:
-            # Get repeats vs seeds data first
             repeats_data = self._model.get_repeats_vs_seeds_data()
-            
-            # Get sequences vs repeats data
             sequences_data = self._model.get_seeds_vs_repeats_data()
+
+            # Get statistics for overview tab
+            stats = self._model.calculate_statistics()
+            
+            # Update statistics labels
+            if stats:
+                self._view.update_statistics_labels(
+                    total_repeats=stats.get('repeat_count', 0),
+                    avg_repeats=stats.get('average', 0),
+                    median_repeats=stats.get('median', 0),
+                    mode_repeats=stats.get('mode', 0)
+                )
 
             # Update all plots at once
             self._view.update_plots(repeats_data, sequences_data, None)  # chromosome_data will be updated on seed selection
@@ -254,3 +267,61 @@ class MultitargetingWindowController(QMainWindow):
         """Get settings from SQL settings dialog"""
         # Implement getting settings from dialog
         return {}
+
+    def _on_max_results_changed(self, value):
+        """Handle changes to max results setting"""
+        try:
+            if value == "":  # Handle empty input
+                self._model.set_row_limit(1000)  # Reset to default
+                return
+            
+            # Convert to int and update model
+            limit = int(value)
+            if limit <= 0:  # Handle negative or zero values
+                limit = -1  # Use -1 to indicate no limit
+            self._model.set_row_limit(limit)
+            
+        except ValueError:
+            # Reset to default if invalid input
+            self._model.set_row_limit(1000)
+            self._view.line_edit_max_results.setText("1000")
+
+    def _handle_export(self):
+        """Handle export button click"""
+        try:
+            selected_items = []
+            selected_rows = self._view.table_seeds.selectedItems()
+            
+            if not selected_rows:
+                show_message(
+                    "Warning",
+                    "Please select at least one row to export."
+                )
+                return
+
+            # Get unique rows (since selecting one row selects all its columns)
+            selected_row_numbers = set()
+            for item in selected_rows:
+                selected_row_numbers.add(item.row())
+
+            # For each selected row, create a dictionary with the row data
+            for row in selected_row_numbers:
+                item_data = {
+                    'seed': self._view.table_seeds.item(row, 0).text(),
+                    'total_repeats': self._view.table_seeds.item(row, 1).text(),
+                    'avg_repeats_or_scaffold': self._view.table_seeds.item(row, 2).text(),
+                    'consensus_sequence': self._view.table_seeds.item(row, 3).text(),
+                    'percent_consensus': self._view.table_seeds.item(row, 4).text(),
+                    'score': self._view.table_seeds.item(row, 5).text(),
+                    'pam': self._view.table_seeds.item(row, 6).text(),
+                    'strand': self._view.table_seeds.item(row, 7).text()
+                }
+                selected_items.append(item_data)
+
+            # Get export window controller and show dialog
+            export_controller = self.settings.get_export_selected_grnas_window()
+            export_controller.show_dialog(selected_items, "Multitargeting")
+
+        except Exception as e:
+            self.logger.error(f"Error handling export: {str(e)}")
+            show_error(self.settings, "Export Error", str(e))
