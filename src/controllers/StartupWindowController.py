@@ -30,12 +30,18 @@ class StartupWindowController:
         self.view.push_button_go_to_home_or_new_genome.clicked.connect(self._handle_go_to_home_or_new_genome)
         self.view.db_path_text_changed.connect(self._on_db_path_text_changed)
         self.model.db_state_updated.connect(self._on_db_state_updated)
+        self.settings.db_manager.db_validation_changed.connect(self._on_db_validation_changed)
         self.view.open_new_genome_requested.connect(self.open_new_genome_tab)
 
     def _on_db_path_text_changed(self, new_path):
         self.model.save_db_path(new_path)
 
     def _on_db_state_updated(self, is_valid, message, cspr_files):
+        if self.is_active and hasattr(self, 'view'):
+            self.view.set_db_status(is_valid, message)
+
+    def _on_db_validation_changed(self, is_valid, message):
+        """Handle database validation state changes"""
         if self.is_active and hasattr(self, 'view'):
             self.view.set_db_status(is_valid, message)
 
@@ -74,13 +80,11 @@ class StartupWindowController:
             self.open_new_genome_tab()
 
     def restart_application(self):
-        """Restart the entire application"""
         try:
             self.logger.info("Restarting application...")
             # Get the current application instance
             app = QtWidgets.QApplication.instance()
-            # Use a custom exit code for restart (e.g., 1000)
-            app.exit(1000)  # Changed from QApplication.Exit.ExitCode.Restart
+            app.exit(1000)  
         except Exception as e:
             self.logger.error(f"Error restarting application: {str(e)}", exc_info=True)
             show_error(self.settings, "Error restarting application", str(e))
@@ -88,7 +92,8 @@ class StartupWindowController:
     def open_new_genome_tab(self):
         try:
             self.logger.debug("Opening New Genome tab")
-            self.settings.main_window.open_new_genome_tab()
+            if hasattr(self.settings, 'main_window'):
+                self.settings.main_window.open_new_genome_tab()
         except Exception as e:
             self.logger.error(f"Error opening New Genome tab: {str(e)}", exc_info=True)
             show_error(self.settings, "Error opening New Genome module", str(e))

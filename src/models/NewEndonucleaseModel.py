@@ -37,19 +37,30 @@ class NewEndonucleaseModel(QObject):
             return [], []  # Return empty lists if there's an error
 
     def create_new_endonuclease(self, new_endonuclease_str):
+        """Add a new endonuclease to CASPERinfo file"""
         try:
-            new_file_path = os.path.join(self.app_dir_path, "new_file")
-            with open(self.casper_info_path, 'r') as f, open(new_file_path, 'w+') as f1:
+            found_section = False
+            new_lines = []
+            
+            with open(self.casper_info_path, 'r') as f:
                 for line in f:
-                    f1.write(line)
-                    if 'ENDONUCLEASES' in line:
-                        f1.write(new_endonuclease_str + '\n')
-            os.remove(self.casper_info_path)
-            os.rename(new_file_path, self.casper_info_path)
+                    new_lines.append(line)
+                    if line.strip() == 'ENDONUCLEASES':
+                        found_section = True
+                        new_lines.append(new_endonuclease_str + '\n')
+            
+            if not found_section:
+                new_lines.append('ENDONUCLEASES\n')
+                new_lines.append(new_endonuclease_str + '\n')
+                
+            with open(self.casper_info_path, 'w') as f:
+                f.writelines(new_lines)
+                
             self.global_settings.config_manager.load_endonucleases_data()
             self.endonuclease_updated.emit()
+            
         except Exception as e:
-            show_error(self.global_settings, "Error in create_new_endonuclease() in New Endonuclease Model.", str(e))
+            show_error(self.global_settings, "Error in create_new_endonuclease()", str(e))
 
     def is_duplicate_abbreviation(self, abbr):
         try:
@@ -66,76 +77,90 @@ class NewEndonucleaseModel(QObject):
             return False
 
     def create_endonuclease_string(self, form_data):
-        pam = form_data['endonuclease_pam_sequence']
-        if ',' in pam:
-            pam = ','.join([x.strip() for x in pam.split(',')])
-
+        """Create a properly formatted endonuclease string for CASPERinfo"""
+        # Format: abbr;PAM;5_prime_length;seed_length;3_prime_length;direction;organism;CRISPR_type;on_target;off_target
         argument_list = [
             form_data['endonuclease_abbreviation'],
-            pam,
+            form_data['endonuclease_pam_sequence'],
             form_data['endonuclease_five_prime_length'],
             form_data['endonuclease_seed_length'],
             form_data['endonuclease_three_prime_length'],
-            form_data['endonuclease_direction'],
+            '3' if form_data['endonuclease_direction'] == '3' else '5',
             form_data['endonuclease_organism'],
             form_data['endonuclease_CRISPR_type'],
             form_data['endonuclease_on_target_scoring'],
             form_data['endonuclease_off_target_scoring']
         ]
-
         return ";".join(str(arg) for arg in argument_list)
 
     def update_endonuclease(self, selected, form_data):
+        """Update an existing endonuclease in CASPERinfo file"""
         try:
             new_endonuclease_str = self.create_endonuclease_string(form_data)
-            with open(self.casper_info_path, 'r') as f:
-                lines = f.readlines()
-            
+            new_lines = []
             updated = False
-            selected_abbr = selected.split(' - ')[0]
-            for i, line in enumerate(lines):
-                if line.startswith('ENDONUCLEASES'):
-                    continue
-                fields = line.strip().split(';')
-                if len(fields) >= 2 and fields[1] == selected_abbr:
-                    lines[i] = new_endonuclease_str + '\n'
-                    updated = True
-                    break
+            selected_abbr = selected.split(' - ')[0]  # Get abbreviation part
             
-            if updated:
-                with open(self.casper_info_path, 'w') as f:
-                    f.writelines(lines)
-                self.global_settings.config_manager.load_endonucleases_data()
-                self.endonuclease_updated.emit()
-            else:
-                raise ValueError(f"Endonuclease '{selected}' not found in CASPERinfo file")
+            with open(self.casper_info_path, 'r') as f:
+                in_endo_section = False
+                for line in f:
+                    if line.strip() == 'ENDONUCLEASES':
+                        in_endo_section = True
+                        new_lines.append(line)
+                        continue
+                        
+                    if in_endo_section and line.strip():
+                        fields = line.strip().split(';')
+                        if fields[0] == selected_abbr:
+                            new_lines.append(new_endonuclease_str + '\n')
+                            updated = True
+                        else:
+                            new_lines.append(line)
+                    else:
+                        new_lines.append(line)
+            
+            if not updated:
+                raise ValueError(f"Endonuclease '{selected}' not found")
+                
+            with open(self.casper_info_path, 'w') as f:
+                f.writelines(new_lines)
+                
+            self.global_settings.config_manager.load_endonucleases_data()
+            self.endonuclease_updated.emit()
+            
         except Exception as e:
             show_error(self.global_settings, "Error updating endonuclease", str(e))
 
     def delete_endonuclease(self, selected):
+        """Delete an endonuclease from CASPERinfo file"""
         try:
-            with open(self.casper_info_path, 'r') as f:
-                lines = f.readlines()
-            
-            deleted = False
             new_lines = []
+            deleted = False
             selected_abbr = selected.split(' - ')[0]
-            for line in lines:
-                if line.startswith('ENDONUCLEASES'):
-                    new_lines.append(line)
-                    continue
-                fields = line.strip().split(';')
-                if len(fields) >= 2 and fields[1] == selected_abbr:
-                    deleted = True
-                    continue  # Skip this line to delete it
-                new_lines.append(line)  # Keep all other lines
             
-            if deleted:
-                with open(self.casper_info_path, 'w') as f:
-                    f.writelines(new_lines)
-                self.global_settings.config_manager.load_endonucleases_data()
-                self.endonuclease_updated.emit()
-            else:
-                raise ValueError(f"Endonuclease '{selected}' not found in CASPERinfo file")
+            with open(self.casper_info_path, 'r') as f:
+                in_endo_section = False
+                for line in f:
+                    if line.strip() == 'ENDONUCLEASES':
+                        in_endo_section = True
+                        new_lines.append(line)
+                        continue
+                        
+                    if in_endo_section and line.strip():
+                        fields = line.strip().split(';')
+                        if fields[0] == selected_abbr:
+                            deleted = True
+                            continue
+                    new_lines.append(line)
+            
+            if not deleted:
+                raise ValueError(f"Endonuclease '{selected}' not found")
+                
+            with open(self.casper_info_path, 'w') as f:
+                f.writelines(new_lines)
+                
+            self.global_settings.config_manager.load_endonucleases_data()
+            self.endonuclease_updated.emit()
+            
         except Exception as e:
             show_error(self.global_settings, "Error deleting endonuclease", str(e))

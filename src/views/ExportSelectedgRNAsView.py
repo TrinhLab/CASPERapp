@@ -1,7 +1,6 @@
 from typing import Optional
 from PyQt6.QtWidgets import QMainWindow 
 from PyQt6 import uic, QtWidgets
-import os
 
 class ExportSelectedgRNAsView(QMainWindow):
     def __init__(self, global_settings):
@@ -14,6 +13,10 @@ class ExportSelectedgRNAsView(QMainWindow):
         try:
             uic.loadUi(self.settings.get_ui_dir_path() + '/export_selected_gRNAs.ui', self)
             self.setWindowTitle("Export Selected gRNAs")
+            
+            # Set fixed size for the window
+            self.setFixedSize(500, 300)  # Width: 500px, Height: 300px
+            
             self._init_ui_components()
         except Exception as e:
             self.logger.error(f"Error initializing ExportSelectedgRNAsView: {str(e)}", exc_info=True)
@@ -43,6 +46,13 @@ class ExportSelectedgRNAsView(QMainWindow):
         return widget 
 
     def show_dialog(self) -> None:
+        # Center the window on screen
+        screen = self.screen().availableGeometry()
+        self.move(
+            screen.center().x() - self.width() // 2,
+            screen.center().y() - self.height() // 2
+        )
+        
         self.show()
         self.activateWindow()
 

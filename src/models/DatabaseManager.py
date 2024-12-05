@@ -125,17 +125,34 @@ class DatabaseManager(QObject):
         return adjusted_path
 
     def _update_watched_directory(self):
-        self.file_watcher.removePaths(self.file_watcher.directories())
-        
-        if self.db_path and os.path.isdir(self.db_path):
-            self.file_watcher.addPath(self.db_path)
+        """Update the watched directory and validate the new path"""
+        try:
+            # Remove old watched directories
+            self.file_watcher.removePaths(self.file_watcher.directories())
             
-            # Also watch GBFF subdirectory if it exists
-            gbff_path = os.path.join(self.db_path, 'GBFF')
-            if os.path.isdir(gbff_path):
-                self.file_watcher.addPath(gbff_path)
+            if self.db_path and os.path.isdir(self.db_path):
+                # Add new directory to watch
+                self.file_watcher.addPath(self.db_path)
                 
-            self.logger.debug(f"Now watching directories: {self.file_watcher.directories()}")
+                # Add GBFF subdirectory if it exists
+                gbff_path = os.path.join(self.db_path, 'GBFF')
+                if os.path.isdir(gbff_path):
+                    self.file_watcher.addPath(gbff_path)
+                
+                self.logger.debug(f"Now watching directories: {self.file_watcher.directories()}")
+                
+                # Validate the new path and emit signals
+                is_valid, message = self.validate_db_path(self.db_path)
+                self.db_validation_changed.emit(is_valid, message)
+                
+                # Also check for any file changes
+                changes = self._detect_file_changes()
+                if changes:
+                    self.db_files_changed.emit(changes)
+                    self.db_state_changed.emit(is_valid, message, changes)
+                
+        except Exception as e:
+            self.logger.error(f"Error updating watched directory: {str(e)}")
 
     def _detect_file_changes(self) -> Dict[FileChangeType, List[str]]:
         """Detect what files have changed and categorize the changes"""
@@ -173,25 +190,23 @@ class DatabaseManager(QObject):
         try:
             self.logger.debug(f"Detected change in directory: {path}")
             
+            # Re-validate the path
+            is_valid, message = self.validate_db_path(self.db_path)
+            
             # Detect specific changes
             changes = self._detect_file_changes()
             
-            if changes:  # Only emit if there are actual changes
+            # Always emit validation signal on directory change
+            self.db_validation_changed.emit(is_valid, message)
+            
+            if changes:  # Only emit change signals if there are actual changes
                 self.logger.debug(f"Detected file changes: {changes}")
-                
-                # Get validation state
-                is_valid, message = self.validate_db_path(path)
-                
-                # Emit separate signals
-                self.db_validation_changed.emit(is_valid, message)
                 self.db_files_changed.emit(changes)
                 
-                # Emit combined signal for components that want everything
-                self.db_state_changed.emit(is_valid, message, changes)
-                
-                self.logger.info(f"Database state updated - Valid: {is_valid}, Changes: {changes}")
-            else:
-                self.logger.debug("No relevant file changes detected")
+            # Always emit combined state signal
+            self.db_state_changed.emit(is_valid, message, changes or {})
+            
+            self.logger.info(f"Database state updated - Valid: {is_valid}, Changes: {changes}")
                 
         except Exception as e:
             self.logger.error(f"Error handling directory change: {str(e)}")

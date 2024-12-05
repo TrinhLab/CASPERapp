@@ -32,8 +32,6 @@ class NCBIWindowController:
             self.view.push_button_download_files.clicked.connect(self.download_files_wrapper)
             self.view.check_box_select_all_rows.clicked.connect(self.select_all_rows_in_table)
             self.view.radio_button_collections_genbank.toggled.connect(self.is_checked_GenBank_radio_button)
-            
-            self.logger.debug("NCBI Window connections setup completed")
         except Exception as e:
             self.logger.error(f"Error setting up connections: {str(e)}", exc_info=True)
             show_error(self.settings, "Error setting up connections", str(e))
@@ -48,20 +46,25 @@ class NCBIWindowController:
             self.view.reset_progress()
             search_params = self.view.get_search_parameters()
             
-            # Set default values if fields are empty
+            # Set the current database in the model
+            self.model.current_database = search_params['database']
+            
+            # Check if organism and strain are provided, set defaults if empty
             if not search_params['organism'].strip():
                 search_params['organism'] = "Escherichia coli"
+                self.view.line_edit_organism.setText(search_params['organism'])
+                
             if not search_params['strain'].strip():
                 search_params['strain'] = "K-12"
+                self.view.line_edit_strain.setText(search_params['strain'])
 
-            self.logger.info(f"Querying NCBI with parameters: {search_params}")
-            
             self.df = self.model.search_ncbi(search_params)
             
             if self.df.empty:
                 print("No results found")
                 self.logger.warning("No results found for the given search parameters.")
-                show_message(12, QtWidgets.QMessageBox.Icon.Warning, "No Results", "No results found for the given search parameters.")
+                show_message(12, QtWidgets.QMessageBox.Icon.Warning, "No Results", 
+                            "No results found for the given search parameters.")
             else:
                 print(f"Query returned {len(self.df)} results")
                 self.logger.info(f"Query returned {len(self.df)} results")
@@ -69,7 +72,6 @@ class NCBIWindowController:
             
             self.view.activateWindow()
         except Exception as e:
-            print(f"Error in query_db: {str(e)}")
             self.logger.error(f"Error in query_db: {str(e)}", exc_info=True)
             show_error(self.settings, "Error in query_db", e)
 
@@ -117,7 +119,7 @@ class NCBIWindowController:
         try:
             self.view.reset_progress()
             self.total_files = len(selected_rows)
-            self.view.progress_bar_download_files.setMaximum(self.total_files)
+            self.view.progress_bar_download_files.setMaximum(self.total_files * 2)  # *2 for potential FNA and GBFF files
             self.view.set_download_files_status_label("Preparing to download...")
 
             self.model.clear_downloaded_files()
@@ -131,30 +133,36 @@ class NCBIWindowController:
                 strain = self.proxy_model.data(self.proxy_model.index(index.row(), 2))
                 self.logger.info(f"Processing ID: {id}")
                 
-                url = self.model.get_download_url(id, self.view.radio_button_collections_genbank.isChecked())
-                self.logger.info(f"Download URL for ID {id}: {url}")
-                if not url:
+                urls = self.model.get_download_url(id, self.view.radio_button_collections_genbank.isChecked())
+                self.logger.info(f"Download URLs for ID {id}: {urls}")
+                
+                if not urls:
                     self.logger.warning(f"No download URL found for ID: {id}")
                     self.unavailable_files.append((species_name, strain))
                     self.on_thread_completed()  # Increment completed threads for unavailable files
                     continue
 
-                downloader = self.model.DownloadThread(self, url, id, species_name, strain, 
-                                                     self.view.check_box_file_types_fna.isChecked(), 
-                                                     self.view.check_box_file_types_gbff.isChecked())
-                downloader.finished.connect(self.on_download_finished)
-                downloader.progress_updated.connect(self.update_progress)
-                downloader.status_updated.connect(self.update_status)
-                downloader.all_completed.connect(self.on_thread_completed)
-                self.download_threads.append(downloader)
-                downloader.start()
+                # Create a download thread for each URL
+                for url in urls:
+                    is_fna = '.fna.' in url.lower()
+                    downloader = self.model.DownloadThread(
+                        self, url, id, species_name, strain,
+                        download_fna=is_fna,
+                        download_gbff=not is_fna
+                    )
+                    downloader.finished.connect(self.on_download_finished)
+                    downloader.progress_updated.connect(self.update_progress)
+                    downloader.status_updated.connect(self.update_status)
+                    downloader.all_completed.connect(self.on_thread_completed)
+                    self.download_threads.append(downloader)
+                    downloader.start()
 
             if not self.download_threads and not self.unavailable_files:
                 show_message(12, QtWidgets.QMessageBox.Icon.Information, "No Downloads", "No valid files selected for download.")
                 return
 
         except Exception as e:
-            self.logger.error(f"Error in download_files: {str(e)}", exc_info=True)
+            self.logger.error(f"Error in download_files: {str(e)}")
             show_error(self.settings, "Error in download_files", e)
 
     def on_thread_completed(self):

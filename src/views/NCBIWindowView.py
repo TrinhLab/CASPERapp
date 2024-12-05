@@ -36,7 +36,6 @@ class NCBIWindowView(QtWidgets.QMainWindow):
             self._init_ui_components()
             
             self._is_initialized = True
-            self.logger.debug("NCBI Window initialization completed")
             
             # Emit signal after everything is initialized
             self.initialization_complete.emit()
@@ -61,9 +60,17 @@ class NCBIWindowView(QtWidgets.QMainWindow):
             self.line_edit_strain = self._find_widget("ledStrain", QtWidgets.QLineEdit)
             self.line_edit_max_results = self._find_widget("ledMaxResults", QtWidgets.QLineEdit)
             self.check_box_complete_genomes_only = self._find_widget("chkCompleteGenomesOnly", QtWidgets.QCheckBox)
+            self.combo_box_database = self._find_widget("cmbDatabase", QtWidgets.QComboBox)
+            
+            # Initialize database options
+            self.combo_box_database.addItems([
+                "NCBI GenBank",
+                "ENA (European Nucleotide Archive)"
+            ])
             
             # Set default values
             self.line_edit_max_results.setText("100")
+            self.combo_box_database.setCurrentText("NCBI GenBank")
             
         except Exception as e:
             self.logger.error(f"Error initializing Step 1: {str(e)}")
@@ -151,7 +158,8 @@ class NCBIWindowView(QtWidgets.QMainWindow):
             'refseq': self.radio_button_collections_refseq.isChecked(),
             'genbank': self.radio_button_collections_genbank.isChecked(),
             'fna': self.check_box_file_types_fna.isChecked(),
-            'gbff': self.check_box_file_types_gbff.isChecked()
+            'gbff': self.check_box_file_types_gbff.isChecked(),
+            'database': self.combo_box_database.currentText()
         }
 
     def get_selected_rows(self):

@@ -2,8 +2,8 @@ from models.FindTargetsModel import FindTargetsModel
 from utils.ui import show_error
 from views.FindTargetsView import FindTargetsView
 from PyQt6.QtWidgets import QMessageBox
-from PyQt6.QtCore import QTimer
-import time
+from views.LoadingDialog import LoadingDialog
+from PyQt6.QtWidgets import QApplication
 
 class FindTargetsController:
     def __init__(self, global_settings):
@@ -14,6 +14,7 @@ class FindTargetsController:
         self.endonuclease = None
         self._input_data = None
         self._current_annotation_file = None
+        self.logger = self.global_settings.logger
         
         # Connect to annotation file changes
         self.global_settings.annotation_file_changed.connect(self._on_annotation_file_changed)
@@ -45,13 +46,10 @@ class FindTargetsController:
     def find_targets(self, input_data):
         """Process input data and update existing view or create new one"""
         try:
-            start_time = time.time()
-            
-            # Get current annotation file
             current_annotation = self.global_settings.get_current_annotation_file()
             input_data['annotation_file'] = current_annotation
             self._current_annotation_file = current_annotation
-            self._input_data = input_data.copy()  # Store a copy of the input data
+            self._input_data = input_data.copy()
             
             # Process data and update view
             self._process_input_data(input_data)
@@ -62,9 +60,6 @@ class FindTargetsController:
             if not existing_tab:
                 main_window.open_new_tab("Find Targets", self)
             
-            total_time = time.time() - start_time
-            self.global_settings.logger.debug(f"Total time to process find targets: {total_time:.2f} seconds")
-            
         except Exception as e:
             self.global_settings.logger.error(f"Error in find_targets: {str(e)}")
             raise
@@ -72,28 +67,16 @@ class FindTargetsController:
     def _process_input_data(self, input_data):
         """Process input data and update view"""
         try:
-            start_time = time.time()
-            
             self.global_settings.logger.debug(f"FindTargetsController processing input data: {input_data}")
             self.organism = input_data['organism']
             self.endonuclease = input_data['endonuclease']
             
             # Get new results
-            search_start = time.time()
             results = self.model.find_targets(input_data)
-            search_time = time.time() - search_start
-            self.global_settings.logger.debug(f"Time to search: {search_time:.2f} seconds")
             self.global_settings.logger.debug(f"Found {len(results) if results else 0} targets")
             
-            # Update view with new results
-            view_start = time.time()
             if results:
                 self.view.display_results(results)
-            view_time = time.time() - view_start
-            self.global_settings.logger.debug(f"Time to update view: {view_time:.2f} seconds")
-            
-            total_time = time.time() - start_time
-            self.global_settings.logger.debug(f"Total time to process data: {total_time:.2f} seconds")
             
         except Exception as e:
             self.global_settings.logger.error(f"Error processing input data: {str(e)}")
@@ -110,28 +93,60 @@ class FindTargetsController:
                 QMessageBox.warning(self.view, "No Selection", "Please select targets to view.")
                 return
 
-            # Find existing View Targets tab
-            main_window = self.global_settings.main_window
-            existing_tab = main_window.find_tab_by_title("View Targets")
-            
-            if existing_tab:
-                # Get the existing controller from main window's tab_widgets
-                view_targets_controller = main_window.tab_widgets['controllers'].get("View Targets")
-                if view_targets_controller:
-                    # Update existing view with new targets
-                    view_targets_controller.load_targets(selected_targets, self.organism, self.endonuclease)
-                    # Switch to the existing tab
-                    main_window.view.tab_widget.setCurrentWidget(existing_tab)
+            # Create loading dialog
+            loading_dialog = LoadingDialog(self.view)
+            loading_dialog.show()
+            loading_dialog.set_progress(0)
+            QApplication.processEvents()
+
+            try:
+                # Find existing View Targets tab
+                main_window = self.global_settings.main_window
+                existing_tab = main_window.find_tab_by_title("View Targets")
+                
+                loading_dialog.set_message("Initializing view targets...", 25)
+                QApplication.processEvents()
+                
+                if existing_tab:
+                    view_targets_controller = main_window.tab_widgets['controllers'].get("View Targets")
+                    if view_targets_controller:
+                        loading_dialog.set_message("Loading guides...", 50)
+                        QApplication.processEvents()
+                        
+                        # Pass the loading dialog to load_guides
+                        view_targets_controller.load_guides(
+                            selected_targets, 
+                            self.organism, 
+                            self.endonuclease,
+                            loading_dialog=loading_dialog
+                        )
+                        
+                        # Switch to the existing tab
+                        main_window.view.tab_widget.setCurrentWidget(existing_tab)
+                    else:
+                        self.logger.error("View Targets controller not found for existing tab")
                 else:
-                    self.logger.error("View Targets controller not found for existing tab")
-            else:
-                # Create new View Targets tab if none exists
-                view_targets_controller = self.global_settings.get_view_targets_window()
-                view_targets_controller.load_guides(selected_targets, self.organism, self.endonuclease)
-                main_window.open_new_tab("View Targets", view_targets_controller)
+                    loading_dialog.set_message("Creating view targets...", 25)
+                    QApplication.processEvents()
+                    
+                    view_targets_controller = self.global_settings.get_view_targets_window()
+                    
+                    # Pass the loading dialog to load_guides
+                    view_targets_controller.load_guides(
+                        selected_targets, 
+                        self.organism, 
+                        self.endonuclease,
+                        loading_dialog=loading_dialog
+                    )
+                    
+                    main_window.open_new_tab("View Targets", view_targets_controller)
+                    
+            finally:
+                loading_dialog.close()
+                QApplication.processEvents()
                 
         except Exception as e:
-            self.global_settings.logger.error(f"Error in view_targets: {str(e)}")
+            self.logger.error(f"Error in view_targets: {str(e)}")
             if self.view:
                 QMessageBox.critical(self.view, "Error", f"An error occurred while viewing targets: {str(e)}")
 

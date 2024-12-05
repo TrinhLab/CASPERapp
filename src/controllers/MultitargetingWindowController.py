@@ -2,18 +2,17 @@ from PyQt6.QtWidgets import QMainWindow
 from views.MultitargetingWindowView import MultitargetingWindowView
 from models.MultitargetingWindowModel import MultitargetingWindowModel
 from utils.ui import show_error, show_message
+import time
 
 class MultitargetingWindowController(QMainWindow):
     def __init__(self, global_settings):
         super().__init__()
         self.settings = global_settings
         self.logger = global_settings.get_logger()
-        
         try:
             self._model = MultitargetingWindowModel(global_settings)
             self._view = MultitargetingWindowView(global_settings)
             self.setCentralWidget(self._view)
-            
             self._init_ui()
             self._setup_connections()
         except Exception as e:
@@ -32,32 +31,23 @@ class MultitargetingWindowController(QMainWindow):
             if organisms:
                 self._on_organism_changed(0)
             
-            # Initialize plots
-            self._view.setup_plots()
-            
-            # Connect max results line edit
-            self._view.line_edit_max_results.textChanged.connect(self._on_max_results_changed)
-            
         except Exception as e:
             self.logger.error(f"Error in _init_ui: {str(e)}")
             show_error(self.settings, "Error", f"Failed to initialize UI: {str(e)}")
 
     def _setup_connections(self):
         """Set up signal-slot connections"""
-        # Organism and endonuclease selection
         self._view.combo_box_organism.currentIndexChanged.connect(self._on_organism_changed)
         self._view.combo_box_endonuclease.currentIndexChanged.connect(self._on_endonuclease_changed)
         
-        # Buttons
         self._view.push_button_analyze.clicked.connect(self._on_analyze_clicked)
-        # self._view.push_button_statistics_overview.clicked.connect(self._on_statistics_overview_clicked)
-        # self._view.tool_button_sql_settings.clicked.connect(self._on_sql_settings_clicked)
         
-        # Table selection
         self._view.table_seeds.itemSelectionChanged.connect(self._on_seed_selected)
         self._view.check_box_select_all.stateChanged.connect(self._on_select_all_changed)
 
         self._view.push_button_export_selected_gRNAs.clicked.connect(self._handle_export)
+
+        self._view.line_edit_max_results.textChanged.connect(self._on_max_results_changed)
 
     def _on_organism_changed(self, index):
         """Handle organism selection change"""
@@ -87,7 +77,14 @@ class MultitargetingWindowController(QMainWindow):
 
     def _on_analyze_clicked(self):
         """Handle analyze button click"""
+        analyze_start = time.time()
         try:
+            # Initialize plots if not already done
+            if not hasattr(self._view, 'repeats_vs_seed_canvas'):
+                plot_init_start = time.time()
+                self._view.setup_plots()
+                self.logger.debug(f"Plot initialization took: {time.time() - plot_init_start:.2f} seconds")
+            
             organism = self._view.combo_box_organism.currentText()
             endo = self._view.combo_box_endonuclease.currentText()
             
@@ -98,6 +95,13 @@ class MultitargetingWindowController(QMainWindow):
             # Load data
             try:
                 self._model.set_files(organism, endo)
+                
+                seeds_data = self._model.get_repeats_data()
+                
+                self._view.update_seeds_table(seeds_data)
+                
+                self._update_plots()
+                
             except FileNotFoundError as e:
                 show_error(self.settings, "File Error", 
                           f"Could not find required files for {organism} with {endo}. Please ensure the files exist.")
@@ -106,32 +110,10 @@ class MultitargetingWindowController(QMainWindow):
                 show_error(self.settings, "Input Error", str(e))
                 return
                 
-            seeds_data = self._model.get_repeats_data()
-            
-            # Update UI
-            self._view.update_seeds_table(seeds_data)
-            self._update_plots()
+            self.logger.debug(f"Total analysis took: {time.time() - analyze_start:.2f} seconds")
             
         except Exception as e:
             show_error(self.settings, "Analysis Error", str(e))
-
-    def _on_statistics_overview_clicked(self):
-        """Handle statistics overview button click"""
-        try:
-            stats = self._model.calculate_statistics()
-            self._show_statistics_dialog(stats)
-        except Exception as e:
-            show_error(self.settings, "Statistics Error", str(e))
-
-    def _on_sql_settings_clicked(self):
-        """Handle SQL settings button click"""
-        try:
-            current_settings = self._model.get_sql_settings()
-            if self._show_sql_settings_dialog(current_settings):
-                new_settings = self._get_sql_settings_from_dialog()
-                self._model.update_sql_settings(new_settings)
-        except Exception as e:
-            show_error(self.settings, "SQL Settings Error", str(e))
 
     def _on_seed_selected(self):
         """Handle seed selection in table"""
@@ -253,32 +235,21 @@ class MultitargetingWindowController(QMainWindow):
             self.logger.error(f"Error in _update_plots: {str(e)}")
             show_error(self.settings, "Plot Update Error", str(e))
 
-    def _show_statistics_dialog(self, stats):
-        """Show statistics overview dialog"""
-        # Implement statistics dialog display
-        pass
-
-    def _show_sql_settings_dialog(self, current_settings):
-        """Show SQL settings dialog"""
-        # Implement SQL settings dialog display
-        return False
-
-    def _get_sql_settings_from_dialog(self):
-        """Get settings from SQL settings dialog"""
-        # Implement getting settings from dialog
-        return {}
-
     def _on_max_results_changed(self, value):
         """Handle changes to max results setting"""
         try:
-            if value == "":  # Handle empty input
+            if not value:  # Handle empty input
                 self._model.set_row_limit(1000)  # Reset to default
                 return
             
-            # Convert to int and update model
+            # Convert to int and validate
             limit = int(value)
-            if limit <= 0:  # Handle negative or zero values
-                limit = -1  # Use -1 to indicate no limit
+            if limit <= 0:  # Handle negative values
+                self._model.set_row_limit(1000)  # Reset to default
+                self._view.line_edit_max_results.setText("1000")
+                return
+            
+            # Update model
             self._model.set_row_limit(limit)
             
         except ValueError:

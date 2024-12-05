@@ -3,13 +3,8 @@ from models.HomeWindowModel import HomeWindowModel
 from models.AnnotationParser import AnnotationParser
 import os
 from Bio import SeqIO
-from Bio.Seq import Seq
-from functools import lru_cache
-import threading
 from collections import defaultdict
-import re
 import traceback
-import logging
 
 class ViewTargetsModel(HomeWindowModel):
     def __init__(self, global_settings):
@@ -110,28 +105,15 @@ class ViewTargetsModel(HomeWindowModel):
 
             # Initialize guides and genes
             self.guides = []
-            self.available_genes = set()
+            self.available_genes = set()  # Clear existing genes
             
             # Use a set to track unique guide positions
             seen_guides = set()
             
-            # Create chromosome mapping by counting carets
-            chrom_mapping = {}
-            chrom_count = 0
-            annotation_file = self.global_settings.get_current_annotation_file()
-            annotation_path = os.path.join(self.global_settings.get_db_path(), 'GBFF', annotation_file)
-            
-            for record in SeqIO.parse(annotation_path, "genbank"):
-                chrom_count += 1
-                chrom_mapping[record.id] = str(chrom_count)
-            
             batch_guides = defaultdict(list)
             for target in selected_targets:
-                # Get chromosome number from mapping if full_chromosome is available
-                if 'full_chromosome' in target:
-                    chrom = chrom_mapping.get(target['full_chromosome'], target['chromosome'])
-                else:
-                    chrom = target['chromosome']
+                # Use full_chromosome directly if available, otherwise use chromosome
+                chrom = target.get('full_chromosome', target['chromosome'])
                 
                 start, end = map(int, target['location'].split('-'))
                 
@@ -147,11 +129,13 @@ class ViewTargetsModel(HomeWindowModel):
                         'start': start,
                         'end': end
                     })
-                    self.available_genes.add((target['feature_id'], target['feature_name']))
+                    # Add only the feature_id from the original target
+                    self.available_genes.add(target['feature_id'])
 
             # Process guides by chromosome
             unique_guides = {}  # Use dict to track unique guides by sequence
             for chrom, guides in batch_guides.items():
+                # Use full chromosome ID for CSPR lookup
                 results = self.cspr_parser.read_targets_batch(chrom, guides, endonuclease)
                 
                 # Add feature_id to each result and deduplicate
@@ -172,6 +156,7 @@ class ViewTargetsModel(HomeWindowModel):
             self.guides = list(unique_guides.values())
             
             self.logger.debug(f"Found {len(self.guides)} unique guides")
+            self.logger.debug(f"Available genes: {self.available_genes}")
             
         except Exception as e:
             self.logger.error(f"Error in load_guides: {str(e)}")
@@ -252,79 +237,77 @@ class ViewTargetsModel(HomeWindowModel):
             self.logger.error(f"Error getting available genes: {str(e)}")
             return []
 
-    def _process_guide(self, guide):
-        """Process a single guide - moved to separate method for parallel processing"""
-        try:
-            # Your existing guide processing logic here
-            # Make sure to handle any shared resources thread-safely
-            pass
-        except Exception as e:
-            logging.error(f"Error processing guide: {e}")
-            return None
-
     def get_gene_sequence(self, identifier):
         """Get gene sequence with optimized caching and minimal I/O"""
         try:
-            print(f"Getting gene sequence for identifier: {identifier}")
-            # Check sequence cache first
-            cache_key = f"{identifier}_sequence"
-            if cache_key in self._sequence_cache:
-                self.logger.debug(f"Cache hit for sequence: {identifier}")
-                return self._sequence_cache[cache_key]
+            self.logger.debug(f"Getting gene sequence for identifier: {identifier}")
+            self.logger.debug(f"View exons only is: {getattr(self, '_view_exons_only', False)}")
             
-            # Check if this is a position-based search
-            if "chrom" in identifier and "start:" in identifier:
-                try:
-                    # Parse position from the text (format: "chrom X, start: Y, end: Z")
-                    parts = identifier.split(',')
-                    chrom = int(parts[0].split('chrom')[1].strip())
-                    start = int(parts[1].split('start:')[1].strip())
-                    end = int(parts[2].split('end:')[1].strip())
+            # Regular gene-based search
+            self.logger.debug(f"Getting gene data for locus tag: {identifier}")
+            gene_data = self.get_gene_data(identifier)
+            if not gene_data or 'info' not in gene_data:
+                self.logger.warning(f"No gene data found for locus tag: {identifier}")
+                return None
+            
+            # Check if we're in exons-only mode
+            if getattr(self, '_view_exons_only', False):
+                print(f"gene_data: {gene_data}")
+                full_location = gene_data['info'].get('full_location', '')
+                print(f"Full location: {full_location}")
+                if full_location and ',' in full_location:  # Multiple exons
+                    self.logger.debug(f"Processing exons from full location: {full_location}")
+                    exon_sequences = []
+                    full_sequence = gene_data['sequence']  # Use sequence from gene_data
                     
-                    # Get sequence directly using _get_sequence_for_position
-                    sequence = self._get_sequence_for_position(chrom, start, end)
-                    if sequence:
-                        result = {
-                            'sequence': sequence,
-                            'start': start,
-                            'end': end,
-                            'chrom_length': len(sequence)
-                        }
-                        self._sequence_cache[cache_key] = result
-                        self.logger.debug(f"Retrieved and cached position sequence ({len(sequence)} bp)")
-                        return result
-                        
-                    self.logger.warning(f"No sequence found for position {chrom}:{start}-{end}")
-                    return None
-                    
-                except Exception as e:
-                    self.logger.error(f"Error parsing position or getting sequence: {str(e)}")
-                    return None
-            else:
-                # Regular gene-based search
-                self.logger.debug(f"Getting gene data for locus tag: {identifier}")
-                gene_data = self.get_gene_data(identifier)
-                if not gene_data or 'info' not in gene_data:
-                    self.logger.warning(f"No gene data found for locus tag: {identifier}")
-                    return None
-                
-                # Parse location string (format: "start:end(strand)")
-                location = gene_data['info']['location']
-                if ':' not in location:
-                    self.logger.warning(f"Invalid location format: {location}")
-                    return None
-                
-                # Extract start and end positions
-                start = int(location.split(':')[0])
-                end = int(location.split(':')[1].split('(')[0])
-                
-                # Get sequence from gene_data directly if available
-                if 'sequence' in gene_data:
-                    sequence = gene_data['sequence']
-                    self.logger.debug(f"Got sequence of length: {len(sequence)}")
-                    
-                    # Format sequence with padding in lowercase
+                    # Calculate padding offset
                     padding = 30
+                    gene_start = gene_data['info']['start']
+                    padded_start = max(0, gene_start - padding)
+                    padding_offset = gene_start - padded_start
+                    
+                    print(f"gene_start: {gene_start}, padded_start: {padded_start}, padding_offset: {padding_offset}")
+                    
+                    # Process each exon location
+                    for exon in full_location.split(','):
+                        # Extract coordinates and strand
+                        coords = exon.split('(')[0]  # Get part before strand
+                        strand = exon.split('(')[1][0]  # Get + or - from (+ or (-
+                        start, end = map(int, coords.split('..'))
+
+                        print(f"coords: {coords}, strand: {strand}, start: {start}, end: {end}")
+                        
+                        # Adjust coordinates relative to gene start and account for padding
+                        relative_start = start - gene_start + padding_offset
+                        relative_end = end - gene_start + padding_offset
+                        print(f"relative_start: {relative_start}, relative_end: {relative_end}")
+                        
+                        # Get exon sequence from the padded sequence
+                        exon_seq = full_sequence[relative_start:relative_end]
+                        
+                        exon_sequences.append(exon_seq)
+                    
+                    # Join exon sequences
+                    sequence = ''.join(exon_sequences)
+                    self.logger.debug(f"Created concatenated exon sequence of length: {len(sequence)}")
+                    
+                    return {
+                        'sequence': sequence,
+                        'info': gene_data['info'],
+                        'start': gene_data['info']['start'],
+                        'end': gene_data['info']['end']
+                    }
+            
+            # If not in exons-only mode or no exons to process, return normal sequence
+            if 'sequence' in gene_data:
+                sequence = gene_data['sequence']
+                self.logger.debug(f"Got sequence of length: {len(sequence)}")
+                
+                # Format sequence with padding in lowercase (only if not in exons-only mode)
+                if not hasattr(self, '_view_exons_only') or not self._view_exons_only:
+                    padding = 30
+                    start = gene_data['info']['start']
+                    end = gene_data['info']['end']
                     padded_start = max(0, start - padding)
                     padded_end = min(len(sequence), end + padding)
                     
@@ -335,24 +318,23 @@ class ViewTargetsModel(HomeWindowModel):
                     
                     # Combine parts
                     formatted_sequence = five_prime_pad + main_sequence + three_prime_pad
-                    
-                    # Cache the result
-                    result = {
-                        'sequence': formatted_sequence,
-                        'chrom_length': len(sequence),
-                        'start': start,
-                        'end': end,
-                        'padded_start': padded_start,
-                        'padded_end': padded_end
-                    }
-                    self._sequence_cache[cache_key] = result
-                    
-                    self.logger.debug(f"Retrieved and cached sequence for locus tag {identifier} ({len(formatted_sequence)} bp)")
-                    return result
-                    
-                self.logger.warning(f"No sequence data found in gene_data for {identifier}")
-                return None
+                else:
+                    formatted_sequence = sequence
                 
+                result = {
+                    'sequence': formatted_sequence,
+                    'info': gene_data['info'],
+                    'start': gene_data['info']['start'],
+                    'end': gene_data['info']['end'],
+                    'full_location': gene_data['info'].get('full_location', '')
+                }
+                
+                self.logger.debug(f"Returning sequence of length: {len(formatted_sequence)}")
+                return result
+                
+            self.logger.warning(f"No sequence data found in gene_data for {identifier}")
+            return None
+            
         except Exception as e:
             self.logger.error(f"Error getting gene sequence: {str(e)}")
             self.logger.error(f"Stack trace: {traceback.format_exc()}")
@@ -367,28 +349,9 @@ class ViewTargetsModel(HomeWindowModel):
                 annotation_path = os.path.join(self.global_settings.get_db_path(), 'GBFF', annotation_file)
                 self.annotation_parser.set_annotation_file(annotation_path)
                 
-            # Get the full chromosome ID by counting carets in annotation file
-            full_chrom = None
-            chrom_count = 0
-            
-            try:
-                for record in SeqIO.parse(self.annotation_path, "genbank"):
-                    chrom_count += 1
-                    if chrom_count == int(chrom):  # Match based on position rather than ID number
-                        full_chrom = record.id
-                        self.logger.debug(f"Found chromosome {chrom} as {full_chrom}")
-                        break
-            except Exception as e:
-                self.logger.error(f"Error finding chromosome by position: {str(e)}")
-                return None
-
-            if not full_chrom:
-                self.logger.warning(f"Could not find chromosome at position {chrom}")
-                return None
-
             feature_info = {
-                'chromosome': full_chrom,
-                'start': start-1,
+                'chromosome': chrom,  # Use raw chromosome ID directly
+                'start': start-1,  # Convert to 0-based indexing
                 'end': end
             }
             
@@ -449,12 +412,13 @@ class ViewTargetsModel(HomeWindowModel):
             if not gene_data or 'info' not in gene_data:
                 self.logger.warning(f"No gene data found for identifier: {identifier}")
                 return None
-                
-            # Get chromosome from gene data
-            chrom = gene_data['info']['chromosome'].split('.')[-1]  # Extract chromosome number
+            
+            chrom = gene_data['info']['chromosome']  
+            
+            self.logger.debug(f"Getting sequence for chromosome: {chrom}, start: {start}, end: {end}")
             
             # Use _get_sequence_for_position to get sequence with padding
-            sequence = self._get_sequence_for_position(int(chrom), start, end)
+            sequence = self._get_sequence_for_position(chrom, start, end)
             if sequence:
                 result = {
                     'sequence': sequence,
@@ -470,3 +434,88 @@ class ViewTargetsModel(HomeWindowModel):
             self.logger.error(f"Error getting gene sequence for range: {str(e)}")
             self.logger.error(f"Stack trace: {traceback.format_exc()}")
             return None
+
+    def set_view_exons_only(self, enabled):
+        """Set whether to view exons only"""
+        try:
+            self.logger.debug(f"Setting view exons only to: {enabled}")
+            self._view_exons_only = enabled
+            # Clear cache when changing view mode
+            self._sequence_cache.clear()
+            self.logger.debug("Cleared sequence cache")
+        except Exception as e:
+            self.logger.error(f"Error setting view exons only: {str(e)}")
+
+    def get_features_for_gene(self, locus_tag):
+        """Get features for a specific gene"""
+        try:
+            if not self.annotation_parser:
+                self._initialize_annotation_parser()
+            
+            features = []
+            gene_data = self.get_gene_data(locus_tag)
+            
+            if gene_data and 'info' in gene_data:
+                info = gene_data['info']
+                
+                # Add the main gene feature
+                features.append({
+                    'type': info['feature_type'],
+                    'start': info['start'],
+                    'end': info['end'],
+                    'name': info['gene_name'],
+                    'id': locus_tag,
+                    'strand': '+' if '(+)' in info['location'] else '-'
+                })
+                
+                # Parse additional features from full location if available
+                if 'full_location' in info and ',' in info['full_location']:
+                    for i, part in enumerate(info['full_location'].split(',')):
+                        coords = part.split('(')[0]
+                        strand = part.split('(')[1][0]
+                        start, end = map(int, coords.split('..'))
+                        
+                        features.append({
+                            'type': 'exon',
+                            'start': start,
+                            'end': end,
+                            'name': f'Exon {i+1}',
+                            'id': f'{locus_tag}_exon_{i+1}',
+                            'strand': strand
+                        })
+                        
+            return features
+            
+        except Exception as e:
+            self.logger.error(f"Error getting features for gene: {str(e)}")
+            return []
+
+    def get_features_for_region(self, chromosome, start, end):
+        """Get features within a specific region"""
+        try:
+            if not self.annotation_parser:
+                self._initialize_annotation_parser()
+            
+            features = []
+            
+            # Search through index for features in this region
+            if hasattr(self, '_index') and 'locus_tags' in self._index:
+                for locus_tag, feature_info in self._index['locus_tags'].items():
+                    if (feature_info['chromosome'] == chromosome and
+                        feature_info['start'] <= end and
+                        feature_info['end'] >= start):
+                        
+                        features.append({
+                            'type': feature_info['feature_type'],
+                            'start': feature_info['start'],
+                            'end': feature_info['end'],
+                            'name': feature_info['gene_name'],
+                            'id': locus_tag,
+                            'strand': '+' if '(+)' in feature_info['location'] else '-'
+                        })
+                        
+            return features
+            
+        except Exception as e:
+            self.logger.error(f"Error getting features for region: {str(e)}")
+            return []

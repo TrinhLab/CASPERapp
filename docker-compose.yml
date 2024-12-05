@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  casperapp:
+    platform: linux/amd64
+    build: .
+    environment:
+      - DISPLAY=host.docker.internal:0
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - .:/app
+    network_mode: "bridge"
+    privileged: true 

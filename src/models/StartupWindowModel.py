@@ -15,9 +15,13 @@ class StartupWindowModel(QObject):
         return self.settings.get_db_path()
 
     def save_db_path(self, directory_path):
+        """Save the database path and trigger validation"""
+        self.logger.debug(f"Saving database path: {directory_path}")
+        # The db_manager will emit its own signals that we're now listening to
         success, message = self.settings.save_db_path(directory_path)
-        # Note: The actual db_state_updated signal will be emitted by the DatabaseManager
+        return success, message
 
     def on_db_state_updated(self, is_valid, message, cspr_files):
+        """Handle database state updates"""
         self.logger.debug(f"StartupWindowModel received db state update: valid={is_valid}, message={message}, cspr_files_count={len(cspr_files)}")
         self.db_state_updated.emit(is_valid, message, cspr_files)

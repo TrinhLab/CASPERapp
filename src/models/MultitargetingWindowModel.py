@@ -1,9 +1,12 @@
 import os
 import sqlite3
 import statistics
+from functools import lru_cache
+import time
 
 class MultitargetingWindowModel:
     def __init__(self, global_settings):
+        start_time = time.time()
         self.settings = global_settings
         self.logger = global_settings.get_logger()
         
@@ -12,14 +15,21 @@ class MultitargetingWindowModel:
         self.row_limit = 1000
         
         # Get organism and endo mappings from DatabaseManager
+        db_start = time.time()
         self.organisms_to_files, self.organisms_to_endos = self.settings.db_manager.get_organisms_and_endos()
+        self.logger.debug(f"Getting DB mappings took: {time.time() - db_start:.2f} seconds")
+        
+        self._cache = {}
+        self.logger.debug(f"Model initialization took: {time.time() - start_time:.2f} seconds")
 
+    @lru_cache(maxsize=32)
     def get_organisms(self):
-        """Get list of available organisms"""
+        """Get list of available organisms with caching"""
         return list(self.organisms_to_endos.keys())
 
+    @lru_cache(maxsize=32)
     def get_endos_for_organism(self, organism):
-        """Get available endonucleases for given organism"""
+        """Get available endonucleases for given organism with caching"""
         return self.organisms_to_endos.get(organism, [])
 
     def set_files(self, organism, endo):
@@ -36,6 +46,7 @@ class MultitargetingWindowModel:
 
     def get_repeats_data(self):
         """Get repeats data for the seeds table"""
+        start_time = time.time()
         if not self.db_file:
             raise ValueError("Database file not set. Please select an organism and endonuclease first.")
         
@@ -43,6 +54,7 @@ class MultitargetingWindowModel:
             conn = sqlite3.connect(self.db_file)
             c = conn.cursor()
             
+            query_start = time.time()
             # Use row limit in query
             if self.row_limit == -1:  # No limit
                 query = "SELECT * FROM repeats ORDER BY count DESC;"
@@ -107,9 +119,13 @@ class MultitargetingWindowModel:
                     pams[majority_index],    # PAM
                     strand             # Strand
                 ))
-                
+            
+            self.logger.debug(f"Query and processing took: {time.time() - query_start:.2f} seconds")
+            
             c.close()
             conn.close()
+            
+            self.logger.debug(f"Total get_repeats_data took: {time.time() - start_time:.2f} seconds")
             return results
             
         except Exception as e:
@@ -280,3 +296,9 @@ class MultitargetingWindowModel:
     def get_row_limit(self):
         """Get current row limit setting"""
         return self.row_limit
+
+    def _clear_cache(self):
+        """Clear the internal cache"""
+        self._cache.clear()
+        self.get_organisms.cache_clear()
+        self.get_endos_for_organism.cache_clear()

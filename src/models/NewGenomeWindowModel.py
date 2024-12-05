@@ -66,12 +66,11 @@ class NewGenomeWindowModel(QObject):
     def create_arguments_command_for_job(self, organism_name, strain, organism_code, file_path, endonuclease_data, multithreading_checked, generate_repeats_checked):
         db_path = self.settings.get_db_path()
         
-        # Preserve trailing slash if present
-        if db_path.endswith(os.path.sep):
-            db_path = db_path.rstrip(os.path.sep) + os.path.sep
-        # Add trailing slash for Darwin (macOS) machines
-        elif platform.system() == 'Darwin':
-            db_path = db_path.rstrip('/') + '/'
+        # Ensure db_path ends with a forward slash
+        if not db_path.endswith('/'):
+            db_path = f"{db_path}/"
+        
+        self.logger.debug(f"Using database path: {db_path}")  # Add logging
         
         print(f"The endonuclease data is {endonuclease_data}")
 
@@ -85,13 +84,17 @@ class NewGenomeWindowModel(QObject):
             endonuclease_data['endonuclease_seed_length'], 
             endonuclease_data['endonuclease_three_prime_length'], 
             organism_code,
-            f'{db_path}',
-            f'{self.settings.get_casper_info_path()}',
-            f'{file_path}',
+            db_path,  # This will now always end with a forward slash
+            self.settings.get_casper_info_path(),
+            file_path,
             f'{organism_name} {strain}',
             'notes',
             f'DATA:{endonuclease_data["endonuclease_on_target_scoring"]}' 
         ]
+        
+        # Add logging of the full command
+        self.logger.debug(f"Generated command arguments: {arguments}")
+        
         return arguments
     
     def get_arguments_command_for_job(self, job_index):
@@ -103,7 +106,7 @@ class NewGenomeWindowModel(QObject):
         if platform.system() == 'Windows':
             program = f'"{os.path.join(self.settings.get_SeqFinder_dir_path(), "Casper_Seq_Finder_Win.exe")}" '
         elif platform.system() == 'Linux':
-            program = f'"{os.path.join(self.settings.get_SeqFinder_dir_path(), "Casper_Seq_Finder_Lin")}" '
+            program = f'{os.path.join(self.settings.get_SeqFinder_dir_path(), "Casper_Seq_Finder_Lin")}'
         else:
             program = f'{os.path.join(self.settings.get_SeqFinder_dir_path(), "Casper_Seq_Finder_Mac")}'
         return program 
@@ -145,3 +148,10 @@ class NewGenomeWindowModel(QObject):
         if not endonuclease:
             return None
         return self.endonucleases.get(endonuclease, None)
+
+    def get_job_name(self, job_index):
+        """Get the name of the job at the given index"""
+        if 0 <= job_index < len(self.jobs):
+            job_entry = self.jobs[job_index]
+            return next(iter(job_entry))  # Returns the first (and only) key
+        return None

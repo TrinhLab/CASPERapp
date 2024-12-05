@@ -1,4 +1,3 @@
-import time
 from models.HomeWindowModel import HomeWindowModel
 from models.CSPRparser import CSPRparser
 from models.AnnotationParser import AnnotationParser
@@ -67,51 +66,60 @@ class FindTargetsModel(HomeWindowModel):
 
     def find_targets_by_feature(self, parser, input_data):
         try:
-            annotation_file = (input_data.get('annotation_file') or 
-                             self.global_settings.get_current_annotation_file())
+            # Get annotation file with proper validation
+            annotation_file = input_data.get('annotation_file')
             
-            search_query = input_data['search_query'].strip()
+            if not annotation_file:
+                self.global_settings.logger.error("No annotation file selected")
+                raise ValueError("No annotation file selected. Please select an annotation file.")
+            
+            # Construct proper path
+            annotation_file_path = os.path.normpath(os.path.join(
+                self.global_settings.get_db_path(), 
+                'GBFF', 
+                annotation_file
+            ))
+            
+            if not os.path.isfile(annotation_file_path):
+                self.global_settings.logger.error(f"Annotation file not found: {annotation_file_path}")
+                raise FileNotFoundError(f"Annotation file not found: {annotation_file_path}")
+            
+            self.global_settings.logger.debug(f"Using annotation file: {annotation_file_path}")
+            
+            # Split search queries by newlines and remove empty lines
+            search_queries = [q.strip() for q in input_data['search_query'].split('\n') if q.strip()]
             
             annotation_parser = AnnotationParser(self.global_settings)
-            annotation_file_path = os.path.join(self.global_settings.get_db_path(), 'GBFF', annotation_file)
             annotation_parser.set_annotation_file(annotation_file_path)
             
-            results_list = annotation_parser.genbank_search([search_query])
+            # Process each query and combine results
+            all_results = []
+            for search_query in search_queries:
+                results_list = annotation_parser.genbank_search([search_query])
+                
+                for record_id, feature_info in results_list:
+                    location = feature_info['feature_location']
+                    start_end = location.split('(')[0] 
+                    start, end = map(int, start_end.split(':'))
+                    
+                    target_info = {
+                        'feature_type': feature_info['feature_type'],
+                        'chromosome': record_id, 
+                        'feature_id': feature_info['feature_id'],
+                        'feature_name': feature_info['feature_name'],
+                        'feature_description': feature_info['feature_description'],
+                        'location': f"{start}-{end}",
+                        'full_location': feature_info.get('feature_full_location', ''),
+                        'start': start,
+                        'end': end,
+                        'strand': '+' if '(+)' in location else '-',
+                        'endonuclease': input_data['endonuclease'],
+                        'search_query': search_query
+                    }
+                    
+                    all_results.append(target_info)
             
-            formatted_results = []
-            
-            chrom_mapping = {}
-            chrom_count = 0
-            for record in SeqIO.parse(annotation_file_path, "genbank"):
-                chrom_count += 1
-                chrom_mapping[record.id] = str(chrom_count)
-            
-            for record_id, feature_info in results_list:
-                location = feature_info['feature_location']
-                start_end = location.split('(')[0]  # Get part before the strand
-                start, end = map(int, start_end.split(':'))
-                
-                chrom_num = chrom_mapping.get(record_id, '1')
-                
-                target_info = {
-                    'feature_type': 'CDS',
-                    'chromosome': chrom_num,
-                    'full_chromosome': record_id,
-                    'feature_id': feature_info['feature_id'],
-                    'feature_name': feature_info['feature_name'],
-                    'feature_description': feature_info['feature_description'],
-                    'location': f"{start}-{end}",
-                    'start': start,
-                    'end': end,
-                    'strand': '+' if '(+)' in location else '-',
-                    'endonuclease': input_data['endonuclease']
-                }
-                
-                self.global_settings.logger.debug(f"Created target info: {target_info}")
-                
-                formatted_results.append(target_info)
-                
-            return formatted_results
+            return all_results
             
         except Exception as e:
             self.global_settings.logger.error(f"Error in find_targets_by_feature: {str(e)}")
@@ -124,71 +132,66 @@ class FindTargetsModel(HomeWindowModel):
             
             for query in queries:
                 try:
-                    chrom, start, end = map(int, query.strip().split(','))
-                    
-                    # Get full chromosome ID by counting carets
-                    full_chrom = None
-                    chrom_count = 0
+                    # Parse the position query
+                    chrom_pos, start, end = map(int, query.strip().split(','))
                     
                     # Get annotation file path
                     annotation_file = self.global_settings.get_current_annotation_file()
                     annotation_path = os.path.join(self.global_settings.get_db_path(), 'GBFF', annotation_file)
                     
-                    # Find the full chromosome ID by position
+                    # Find the chromosome by its position in the file
+                    full_chrom = None
+                    chromosome_count = 0
+                    
                     for record in SeqIO.parse(annotation_path, "genbank"):
-                        chrom_count += 1
-                        if chrom_count == chrom:  # Match based on position
+                        chromosome_count += 1
+                        if chromosome_count == chrom_pos:
                             full_chrom = record.id
-                            self.logger.debug(f"Found chromosome {chrom} as {full_chrom}")
+                            self.logger.debug(f"Found chromosome at position {chrom_pos} with ID {full_chrom}")
                             break
                     
                     if not full_chrom:
-                        self.logger.warning(f"Could not find chromosome at position {chrom}")
+                        self.logger.warning(f"Could not find chromosome at position {chrom_pos}. Total chromosomes: {chromosome_count}")
                         continue
                     
-                    # Create target info with proper formatting
-                    position_name = f"chrom {chrom}, start: {start}, end: {end}"
+                    # Create position name using full chromosome ID
+                    position_name = f"chromosome {full_chrom}, start: {start}, end: {end}"
                     target_info = [{
                         'start': start,
                         'end': end,
-                        'feature_id': position_name,
+                        'feature_id': position_name,  # Use consistent format
                         'feature_name': position_name,
-                        'chromosome': str(chrom),  # Keep chromosome number for CSPR lookup
-                        'full_chromosome': full_chrom  # Store full ID for sequence lookup
+                        'chromosome': full_chrom,  # Use raw chromosome ID
+                        'feature_type': 'Position'  # Add feature type
                     }]
                     
                     # Get targets using batch processing
-                    self.logger.debug(f"Searching for targets in chromosome {chrom} from {start} to {end}")
-                    targets = parser.read_targets_batch(str(chrom), target_info, input_data['endonuclease'])
+                    self.logger.debug(f"Searching for targets in chromosome {full_chrom} from {start} to {end}")
+                    targets = parser.read_targets_batch(full_chrom, target_info, input_data['endonuclease'])
                     
                     if targets:
                         self.logger.debug(f"Found {len(targets)} raw targets")
                         filtered_targets = []
-                        guide_length = 23  # Length of guide RNA
+                        guide_length = 23
                         
                         for target in targets:
                             target_pos = int(target['position'])
-                            target_end = target_pos 
+                            target_end = target_pos + guide_length
                             
-                            # Include target if:
-                            # 1. Target start position is within range
-                            # 2. Target end position is within or equal to end position
+                            # Include target if within sequence bounds
                             if start <= target_pos and target_end <= end + 1:
                                 filtered_targets.append(target)
                         
                         self.logger.debug(f"Filtered to {len(filtered_targets)} targets within range")
                         
-                        # Get sequence for this region
-                        sequence = self._get_sequence_for_position(chrom, start, end)
-                        
                         # Format results
                         for target in filtered_targets:
                             result = {
                                 'feature_type': 'Position',
-                                'chromosome': str(chrom),
-                                'feature_id': position_name,
+                                'chromosome': full_chrom,  # Use raw chromosome ID
+                                'feature_id': position_name,  # Use consistent format
                                 'feature_name': position_name,
-                                'feature_description': position_name,
+                                'feature_description': f"Position match at {position_name}",
                                 'location': target['location'],
                                 'start': start,
                                 'end': end,
@@ -196,15 +199,10 @@ class FindTargetsModel(HomeWindowModel):
                                 'sequence': target['sequence'],
                                 'pam': target['pam'],
                                 'score': target['score'],
-                                'endonuclease': target['endonuclease'],
-                                'gene_sequence': sequence
+                                'endonuclease': target['endonuclease']
                             }
                             all_results.append(result)
                             
-                        self.logger.debug(f"Added {len(filtered_targets)} formatted results")
-                    else:
-                        self.logger.warning(f"No targets found for query: {query}")
-                        
                 except Exception as e:
                     self.logger.error(f"Error processing query {query}: {str(e)}")
                     self.logger.error(f"Stack trace: {traceback.format_exc()}")
@@ -261,11 +259,6 @@ class FindTargetsModel(HomeWindowModel):
         try:
             sequence = input_data['search_query'].strip().upper()
             
-            # Validate sequence length
-            if len(sequence) < 100:
-                self.logger.error("Sequence too short")
-                return []
-                
             # Get annotation file
             annotation_file = self.global_settings.get_current_annotation_file()
             if not annotation_file:
@@ -279,9 +272,7 @@ class FindTargetsModel(HomeWindowModel):
                 self.annotation_parser.set_annotation_file(annotation_path)
                 
             # Find sequence in genome
-            chrom_count = 0
             for record in SeqIO.parse(self.annotation_parser.annotation_file_name, "genbank"):
-                chrom_count += 1  # Count chromosome position by caret
                 record_seq = str(record.seq).upper()
                 pos = record_seq.find(sequence)
                 
@@ -290,8 +281,8 @@ class FindTargetsModel(HomeWindowModel):
                     start = pos + 1  # 1-based position
                     end = start + len(sequence) - 1
                     
-                    # Create position name
-                    position_name = f"chrom {chrom_count}, start: {start}, end: {end}"
+                    # Create position name using consistent format
+                    position_name = f"chromosome {record.id}, start: {start}, end: {end}"  # Match format used in position search
                     
                     # Create target info
                     target_info = [{
@@ -299,13 +290,13 @@ class FindTargetsModel(HomeWindowModel):
                         'end': end,
                         'feature_id': position_name,
                         'feature_name': position_name,
-                        'chromosome': str(chrom_count),  # Use caret-based chromosome number
-                        'full_chromosome': record.id  # Store full chromosome ID
+                        'chromosome': record.id,  # Use raw chromosome ID
+                        'feature_type': 'Position'
                     }]
                     
                     # Get targets in this region
-                    self.logger.debug(f"Found sequence in chromosome {chrom_count} from {start} to {end}")
-                    targets = parser.read_targets_batch(str(chrom_count), target_info, input_data['endonuclease'])
+                    self.logger.debug(f"Found sequence in chromosome {record.id} from {start} to {end}")
+                    targets = parser.read_targets_batch(record.id, target_info, input_data['endonuclease'])
                     
                     if targets:
                         self.logger.debug(f"Found {len(targets)} raw targets")
@@ -322,15 +313,12 @@ class FindTargetsModel(HomeWindowModel):
                         
                         self.logger.debug(f"Filtered to {len(filtered_targets)} targets within range")
                         
-                        # Get sequence with padding
-                        sequence_with_padding = self._get_sequence_for_position(chrom_count, start, end)
-                        
                         # Format results
                         all_results = []
                         for target in filtered_targets:
                             result = {
                                 'feature_type': 'Position',
-                                'chromosome': str(chrom_count),
+                                'chromosome': record.id,
                                 'feature_id': position_name,
                                 'feature_name': position_name,
                                 'feature_description': f"Sequence match at {position_name}",
@@ -341,8 +329,7 @@ class FindTargetsModel(HomeWindowModel):
                                 'sequence': target['sequence'],
                                 'pam': target['pam'],
                                 'score': target['score'],
-                                'endonuclease': target['endonuclease'],
-                                'gene_sequence': sequence_with_padding
+                                'endonuclease': target['endonuclease']
                             }
                             all_results.append(result)
                             

@@ -103,10 +103,11 @@ class HomeWindowView(QWidget):
     #     self.combo_box_local_annotation_files.addItems(annotation_files)
 
     def get_find_targets_input(self) -> dict:
+        current_annotation = self.combo_box_local_annotation_files.currentText()
         return {
             "organism": self.combo_box_organism.currentText(),
             "endonuclease": self.combo_box_endonuclease.currentText(),
-            "annotation_file": self.combo_box_local_annotation_files.currentText(),
+            "annotation_file": current_annotation,
             "search_type": self.get_search_type(),
             "search_query": self.text_edit_gene_entry.toPlainText()
         }
@@ -130,19 +131,37 @@ class HomeWindowView(QWidget):
             # Clear existing items
             self.combo_box_local_annotation_files.clear()
             
-            # Filter out .index files
-            filtered_files = [f for f in files if not f.endswith('.index')]
+            # Filter out .index files and ensure files are valid
+            filtered_files = [
+                f for f in files 
+                if not f.endswith('.index') and f.strip()
+            ]
             
             # Add filtered files to combo box
             if filtered_files:
                 self.combo_box_local_annotation_files.addItems(filtered_files)
+                # Set the first item as current
                 self.combo_box_local_annotation_files.setCurrentIndex(0)
+                # Emit the change signal to update the current annotation file
+                self._on_annotation_file_changed(self.combo_box_local_annotation_files.currentText())
                 self.logger.debug(f"Added {len(filtered_files)} local annotation files to combo box")
             else:
                 self.logger.debug("No local annotation files found")
                 
         except Exception as e:
             self.logger.error(f"Error updating local annotation files: {str(e)}")
+
+    def _on_annotation_file_changed(self, new_file):
+        """Handle annotation file changes"""
+        try:
+            if new_file:
+                self.logger.debug(f"Setting current annotation file to: {new_file}")
+                self.global_settings.set_current_annotation_file(new_file)
+                # Ensure the combo box reflects the current selection
+                if self.combo_box_local_annotation_files.currentText() != new_file:
+                    self.combo_box_local_annotation_files.setCurrentText(new_file)
+        except Exception as e:
+            self.logger.error(f"Error handling annotation file change: {str(e)}")
 
     def show_warning(self, title: str, message: str) -> None:
         """Show a warning message dialog"""

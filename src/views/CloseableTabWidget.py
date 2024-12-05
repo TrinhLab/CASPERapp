@@ -65,8 +65,8 @@ class CloseableTabWidget(QTabWidget):
                 # Add the tab
                 index = super().addTab(widget, label)
                 
-                if index != 0:
-                    # Create and setup close button
+                # Create and setup close button for all tabs except Home and Startup
+                if label not in ["Home", "Startup"]:
                     close_button = self._create_close_button(index, label)
                     self._tabs[tab_id]['close_button'] = close_button
                     self.tabBar().setTabButton(index, QTabBar.ButtonPosition.RightSide, close_button)
@@ -78,25 +78,37 @@ class CloseableTabWidget(QTabWidget):
 
     def _create_close_button(self, index, label):
         """Create a new close button for a tab"""
-        close_button = QToolButton(self.tabBar())
-        close_button.setObjectName(f"close_button_{label}")
-        close_icon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_TitleBarCloseButton)
-        close_button.setIcon(close_icon)
-        close_button.setIconSize(QSize(16, 16))
-        close_button.setAutoRaise(True)
-        close_button.setStyleSheet("""
-            QToolButton {
-                border: none;
-                padding: 0px;
-            }
-            QToolButton:hover {
-                background: #c42b1c;
-            }
-        """)
-        close_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        close_button.setFixedSize(18, 18)
-        close_button.clicked.connect(lambda checked, idx=index: self.safely_close_tab(idx))
-        return close_button
+        try:
+            close_button = QToolButton(self.tabBar())
+            close_button.setObjectName(f"close_button_{label}")
+            
+            # Always use a custom close icon style
+            close_button.setText("×")  # Using multiplication symbol as close icon
+            close_button.setStyleSheet("""
+                QToolButton {
+                    border: none;
+                    padding: 0px;
+                    color: #666666;
+                    background: transparent;
+                    font-size: 16px;
+                    font-weight: bold;
+                }
+                QToolButton:hover {
+                    color: #ffffff;
+                    background: #c42b1c;
+                }
+            """)
+            
+            close_button.setAutoRaise(True)
+            close_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+            close_button.setFixedSize(20, 20)
+            close_button.clicked.connect(lambda checked, idx=index: self.safely_close_tab(idx))
+            
+            return close_button
+            
+        except Exception as e:
+            self.logger.error(f"Error creating close button: {e}")
+            raise
 
     def safely_close_tab(self, index):
         """Safely handle tab closure with error checking"""
@@ -118,14 +130,15 @@ class CloseableTabWidget(QTabWidget):
     def _update_all_tabs(self):
         """Update all tabs and their close buttons"""
         try:
-            for i in range(1, self.count()):  # Skip index 0 (home tab)
+            for i in range(self.count()):
                 widget = self.widget(i)
                 if widget:
                     label = self.tabText(i)
                     tab_id = f"{label}_{id(widget)}"
                     
-                    # Create new close button if needed
-                    if tab_id not in self._tabs or not self._tabs[tab_id].get('close_button'):
+                    # Create new close button if needed and if not Home or Startup tab
+                    if (label not in ["Home", "Startup"] and 
+                        (tab_id not in self._tabs or not self._tabs[tab_id].get('close_button'))):
                         close_button = self._create_close_button(i, label)
                         self._tabs[tab_id] = {
                             'widget': widget,
@@ -133,7 +146,7 @@ class CloseableTabWidget(QTabWidget):
                             'close_button': close_button
                         }
                         self.tabBar().setTabButton(i, QTabBar.ButtonPosition.RightSide, close_button)
-                    else:
+                    elif label not in ["Home", "Startup"] and tab_id in self._tabs:
                         # Update existing close button's click connection
                         close_button = self._tabs[tab_id]['close_button']
                         close_button.clicked.disconnect()

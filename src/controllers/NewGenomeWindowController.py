@@ -2,6 +2,7 @@ from PyQt6 import QtWidgets, QtCore
 from models.NewGenomeWindowModel import NewGenomeWindowModel
 from views.NewGenomeWindowView import NewGenomeWindowView
 from utils.ui import show_message, show_error 
+import os
 
 class NewGenomeWindowController:
     def __init__(self, global_settings):
@@ -198,9 +199,30 @@ class NewGenomeWindowController:
         program = self.model.get_job_command()
         command_args = self.model.get_arguments_command_for_job(row_index)
         self.logger.debug(f"Executing command: {program} {' '.join(command_args)}")
+        self.logger.debug(f"Working directory: {os.getcwd()}")
 
         if self.job_process.state() == QtCore.QProcess.ProcessState.NotRunning:
+            # Set up process output handling
+            def handle_stdout():
+                output = self.job_process.readAllStandardOutput().data().decode()
+                self.logger.debug(f"Process stdout: {output}")
+
+            def handle_stderr():
+                error = self.job_process.readAllStandardError().data().decode()
+                self.logger.error(f"Process stderr: {error}")
+
+            self.job_process.readyReadStandardOutput.connect(handle_stdout)
+            self.job_process.readyReadStandardError.connect(handle_stderr)
+
+            # Start the process
             self.job_process.start(program, command_args)
+            
+            # Check if process started successfully
+            if not self.job_process.waitForStarted(3000):  # 3 second timeout
+                self.logger.error("Process failed to start")
+                self.logger.error(f"Process error: {self.job_process.errorString()}")
+                return
+            
             self.logger.debug("Job started")
         else:
             self.logger.warning("Process is still running, cannot start a new job.")
@@ -213,10 +235,26 @@ class NewGenomeWindowController:
         self.view.table_widget_jobs.viewport().update()
 
     def _handle_job_completion(self, exit_code=None, exit_status=None):
-        self.logger.debug("Process finished")
+        self.logger.debug(f"Process finished with exit code: {exit_code}")
+        
+        # Log any remaining output
+        remaining_output = self.job_process.readAllStandardOutput().data().decode()
+        if remaining_output:
+            self.logger.debug(f"Final process output: {remaining_output}")
+        
+        remaining_error = self.job_process.readAllStandardError().data().decode()
+        if remaining_error:
+            self.logger.error(f"Final process error output: {remaining_error}")
         
         if hasattr(self, 'job_indexes') and self.job_indexes:
             completed_row_index = self.job_indexes.pop(0)
+            
+            # Check if output files were created
+            expected_cspr_file = os.path.join(self.settings.get_db_path(), f"{self.model.get_job_name(completed_row_index)}.cspr")
+            if os.path.exists(expected_cspr_file):
+                self.logger.debug(f"CSPR file created successfully: {expected_cspr_file}")
+            else:
+                self.logger.error(f"Expected CSPR file not found: {expected_cspr_file}")
             
             # Set job as completed
             self.view.set_job_completed(completed_row_index)
@@ -246,8 +284,26 @@ class NewGenomeWindowController:
 
     def _open_ncbi_module(self):
         try:
+            # Get organism and strain values from the view
+            organism_name = self.view.get_organism_name()
+            strain_name = self.view.get_strain()
+            
+            # Get NCBI controller
             ncbi_controller = self.settings.get_ncbi_window()
+            
+            # Connect to the initialization complete signal
+            def on_init_complete():
+                if organism_name:
+                    ncbi_controller.view.line_edit_organism.setText(organism_name)
+                if strain_name:
+                    ncbi_controller.view.line_edit_strain.setText(strain_name)
+            
+            # Connect the signal
+            ncbi_controller.view.initialization_complete.connect(on_init_complete)
+            
+            # Open the NCBI tab
             self.settings.main_window.open_new_tab("NCBI Download Tool", ncbi_controller)
+            
         except Exception as e:
             show_error(self.settings, "Error opening NCBI module", str(e))
             self.logger.error(f"Failed to open NCBI module: {str(e)}")

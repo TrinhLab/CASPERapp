@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QMainWindow, QPushButton, QWidget, QVBoxLayout,
-    QHBoxLayout, QLabel, QFrame, QMenu, 
+    QHBoxLayout, QLabel, QFrame, QMenu, QToolBar, 
 )
 from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtCore import Qt
@@ -17,7 +17,20 @@ class MainWindowView(QMainWindow, LoggingMixin):
         QMainWindow.__init__(self)
         LoggingMixin.__init__(self)
         self.settings = global_settings
+        
+        # Initialize all actions
         self.action_toggle_theme = QAction("Toggle Theme", self)
+        self.action_new_genome = QAction("New Genome", self)
+        self.action_new_endonuclease = QAction("New Endonuclease", self)
+        self.action_change_database_directory = QAction("Change Database Directory", self)
+        self.action_open_repository = QAction("Open Repository", self)
+        self.action_open_NCBI = QAction("Open NCBI", self)
+        self.action_open_NCBI_BLAST = QAction("Open NCBI BLAST", self)
+        
+        # Add keyboard shortcuts
+        self.action_new_genome.setShortcut("Ctrl+N")  # Will be shown as Cmd+N on macOS
+        self.action_toggle_theme.setShortcut("Ctrl+T")  # Will be shown as Cmd+T on macOS
+        
         self._init_ui()
         self.oldPos = None
 
@@ -47,25 +60,19 @@ class MainWindowView(QMainWindow, LoggingMixin):
         self.log_debug(f"Window initialized at position ({x}, {y}) with size {final_size}")
 
     def _init_window_properties(self) -> None:
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
-
+        # Remove frameless window hint to show native window controls
         toolbars = self.findChildren(QtWidgets.QToolBar)
         for toolbar in toolbars:
             toolbar.hide()
 
     def _init_ui_elements(self) -> None:
         self._init_menuBar()
-        self._init_custom_title_bar()
+        self._setup_native_menu_bar()
 
         main_widget = QWidget()
         main_layout = QVBoxLayout(main_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
-
-        main_layout.addWidget(self.title_bar, 0)
-        main_layout.addWidget(self._init_divider(), 0)
 
         # Create and set up tab container
         tab_container = QWidget()
@@ -93,11 +100,7 @@ class MainWindowView(QMainWindow, LoggingMixin):
         self.setCentralWidget(main_widget)
 
     def _init_menuBar(self) -> None:
-        self.action_change_database_directory = self._find_widget("actChangeDatabaseDirectory", QAction)
-        self.action_open_genome_browser = self._find_widget("actOpenGenomeBrowser", QAction)
-        self.action_open_repository = self._find_widget("actionGoToCASPERRepository", QAction)
-        self.action_open_NCBI_BLAST = self._find_widget("actionGoToNCBIBLAST", QAction)
-        self.action_open_NCBI = self._find_widget("actGoToNCBI", QAction)
+        pass
 
     def _find_widget(self, name: str, widget_type: type) -> Optional[QtWidgets.QWidget]:
         """Find a widget by name and type"""
@@ -107,143 +110,8 @@ class MainWindowView(QMainWindow, LoggingMixin):
         return widget
 
     def _init_custom_title_bar(self) -> None:
-        self.title_bar = QWidget(self)
-        self.title_bar.setObjectName("custom_title_bar")
-        self.title_bar.setFixedHeight(32) 
-
-        # Create the main horizontal layout for the title bar
-        layout = QHBoxLayout(self.title_bar)
-        layout.setContentsMargins(10, 0, 10, 0) 
-        layout.setSpacing(5) 
-
-        # ----- Window Control Buttons -----
-        self.minimize_window_button = QPushButton("-", self.title_bar)
-        self.minimize_window_button.setObjectName("minimize_window_button")
-        self.minimize_window_button.setFixedSize(20, 20) 
-
-        self.maximize_window_button = QPushButton("⛶", self.title_bar)
-        self.maximize_window_button.setObjectName("maximize_window_button")
-        self.maximize_window_button.setFixedSize(20, 20) 
-
-        self.close_window_button = QPushButton("✕", self.title_bar)
-        self.close_window_button.setObjectName("close_window_button")
-        self.close_window_button.setFixedSize(20, 20) 
-
-        button_style = """
-        QPushButton {
-            padding: 0px;
-            margin: 0px;
-            line-height: 20px;
-            text-align: center;
-        }
-        """
-        self.minimize_window_button.setStyleSheet(button_style)
-        self.maximize_window_button.setStyleSheet(button_style)
-        self.close_window_button.setStyleSheet(button_style)
-
-        # ----- Left Widget (Minimize, Maximize, Close) -----
-        left_widget = QWidget()
-        left_layout = QHBoxLayout(left_widget)
-        left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(5)
-        left_layout.addWidget(self.close_window_button)
-        left_layout.addWidget(self.minimize_window_button)
-        left_layout.addWidget(self.maximize_window_button)
-
-        # ----- Add Button with Dropdown -----
-        self.add_button = QPushButton(self.title_bar)
-        self.add_button.setObjectName("add_button")
-        self.add_button.setFixedSize(20, 20)
-        
-        # Create the dropdown menu
-        self.add_menu = QMenu(self.add_button)
-        self.add_menu.setObjectName("add_menu")
-        
-        # Add actions to the menu
-        self.action_new_genome = self.add_menu.addAction("New Genome")
-        self.action_new_endonuclease = self.add_menu.addAction("New Endonuclease")
-        
-        # Set the menu for the button
-        self.add_button.setMenu(self.add_menu)
-        self.add_button.setStyleSheet("""
-            QPushButton {
-                padding: 0px;
-                margin: 0px;
-                text-align: center;
-                border: none;
-            }
-            QPushButton::menu-indicator { 
-                width: 0px; 
-            }
-        """)
-        
-        # Initial icon will be set in update_plus_icon method
-        self.update_plus_icon()
-
-        # ----- Settings Button with Dropdown -----
-        self.settings_button = QPushButton(self.title_bar)
-        self.settings_button.setObjectName("settings_button")
-        self.settings_button.setFixedSize(20, 20)
-        
-        # Create the settings dropdown menu
-        self.settings_menu = QMenu(self.settings_button)
-        self.settings_menu.setObjectName("settings_menu")
-        
-        # Update the theme icon and add the action to the menu
-        self.update_theme_icon()
-        self.settings_menu.addAction(self.action_toggle_theme)
-        
-        # Set the menu for the button
-        self.settings_button.setMenu(self.settings_menu)
-        self.settings_button.setStyleSheet("""
-            QPushButton {
-                padding: 0px;
-                margin: 0px;
-                text-align: center;
-                border: none;
-            }
-            QPushButton::menu-indicator { 
-                width: 0px; 
-            }
-        """)
-        
-        # Initial icon will be set in update_settings_icon method
-        self.update_settings_icon()
-
-        # ----- Right Widget (Add Button + Settings Button + Stretch) -----
-        right_widget = QWidget()
-        right_layout = QHBoxLayout(right_widget)
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(5)
-
-        # Add a stretch to push the buttons to the far right within right_widget
-        right_layout.addStretch()
-        right_layout.addWidget(self.add_button)
-        right_layout.addWidget(self.settings_button)
-
-        # Adjust left_widget to calculate its required width
-        left_widget.adjustSize()
-        left_width = left_widget.sizeHint().width()
-
-        # Set right_widget's fixed width to match left_widget's width
-        right_widget.setFixedWidth(left_width)
-
-        self.title_label = QLabel("CASPER", self.title_bar)
-        self.title_label.setObjectName("title_label")
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Center the text in the label
-
-        # Add Widgets to the Main Title Bar Layout
-        layout.addWidget(left_widget)       
-        layout.addStretch(1)                
-        layout.addWidget(self.title_label) 
-        layout.addStretch(1)                
-        layout.addWidget(right_widget)     
-
-        # Add mouse tracking to the title bar
-        self.title_bar.mousePressEvent = self.mousePressEvent
-        self.title_bar.mouseMoveEvent = self.mouseMoveEvent
-        self.title_bar.mouseReleaseEvent = self.mouseReleaseEvent
-        self.title_bar.setMouseTracking(True)
+        # Remove custom title bar implementation
+        pass
 
     def _init_divider(self):
         divider = QFrame()
@@ -352,31 +220,6 @@ class MainWindowView(QMainWindow, LoggingMixin):
             QMenu {{ background-color: {theme['menu_bg_color']}; }}
             QMenu::item:selected {{ background-color: {theme['menu_item_hover_bg_color']}; }}
             QFrame#custom_divider {{ border-bottom: 1px solid {theme['divider_color']}; }}
-            
-            QPushButton#add_button {{
-                background-color: {theme['button_bg_color']};
-                color: {theme['fg_color']};
-                border: 1px solid {theme['button_border_color']};
-                padding: 0px;
-                font-size: 16px;
-                line-height: 20px;
-            }}
-            
-            QPushButton#add_button:hover {{
-                background-color: {theme['button_hover_bg_color']};
-            }}
-            
-            QMenu {{
-                background-color: {theme['menu_bg_color']};
-                color: {theme['menu_text_color']};
-                border: 1px solid {theme['button_border_color']};
-                padding: 5px;
-            }}
-            
-            QMenu::item:selected {{
-                background-color: {theme['menu_item_hover_bg_color']};
-                color: {theme['menu_hover_text_color']};
-            }}
         """)
 
         # Set the tab widget stylesheet
@@ -412,49 +255,8 @@ class MainWindowView(QMainWindow, LoggingMixin):
             }}
         """)
 
-        # Update the add button styling in the theme
-        self.add_button.setStyleSheet(f"""
-            QPushButton {{
-                padding: 0px;
-                margin: 0px;
-                line-height: 0px;
-                text-align: center;
-                border: none;
-                font-size: 14px;
-                color: {theme['fg_color']};
-            }}
-            QPushButton:hover {{
-                background-color: {theme['button_hover_bg_color']};
-            }}
-            QPushButton::menu-indicator {{ 
-                width: 0px; 
-            }}
-        """)
-
-        # Update the settings button styling
-        self.settings_button.setStyleSheet(f"""
-            QPushButton {{
-                padding: 0px;
-                margin: 0px;
-                line-height: 0px;
-                text-align: center;
-                border: none;
-                font-size: 14px;
-                color: {theme['fg_color']};
-                background-color: transparent;
-            }}
-            QPushButton:hover {{
-                background-color: {theme['button_hover_bg_color']};
-            }}
-            QPushButton::menu-indicator {{ 
-                width: 0px; 
-            }}
-        """)
-
-        # Update icons
+        # Update theme icon
         self.update_theme_icon()
-        self.update_plus_icon()
-        self.update_settings_icon()
 
     def mousePressEvent(self, event):
         """Handle mouse press events for window dragging"""
@@ -472,3 +274,29 @@ class MainWindowView(QMainWindow, LoggingMixin):
         """Handle mouse release events for window dragging"""
         if event.button() == Qt.MouseButton.LeftButton:
             self.oldPos = None
+
+    def _setup_native_menu_bar(self) -> None:
+        """Setup the native menu bar for macOS"""
+        menubar = self.menuBar
+        
+        # File Menu
+        file_menu = menubar.addMenu('File')
+        file_menu.addAction(self.action_change_database_directory)
+        
+        # Add Menu (for New Genome and New Endonuclease)
+        add_menu = menubar.addMenu('Add')
+        add_menu.addAction(self.action_new_genome)
+        add_menu.addAction(self.action_new_endonuclease)
+        
+        # Settings Menu
+        settings_menu = menubar.addMenu('Settings')
+        settings_menu.addAction(self.action_toggle_theme)
+        
+        # Help Menu
+        help_menu = menubar.addMenu('Help')
+        help_menu.addAction(self.action_open_repository)
+        help_menu.addAction(self.action_open_NCBI)
+        help_menu.addAction(self.action_open_NCBI_BLAST)
+
+        # Make sure menu bar is visible
+        menubar.setNativeMenuBar(True)  # Use native macOS menu bar

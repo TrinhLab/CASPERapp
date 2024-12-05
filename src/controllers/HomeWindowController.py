@@ -1,12 +1,12 @@
-import os
-from PyQt6 import QtWidgets, QtCore, uic
-from PyQt6.QtWidgets import QMainWindow, QMessageBox
+from PyQt6 import QtWidgets
+from PyQt6.QtWidgets import QMessageBox
 from views.HomeWindowView import HomeWindowView
 from models.HomeWindowModel import HomeWindowModel
-from utils.ui import show_error, show_message
-from PyQt6.QtCore import QObject
-from controllers.FindTargetsController import FindTargetsController
+from utils.ui import show_error
 from models.DatabaseManager import FileChangeType
+import time
+from views.LoadingDialog import LoadingDialog
+from PyQt6.QtWidgets import QApplication
 
 class HomeWindowController:
     def __init__(self, global_settings):
@@ -72,8 +72,6 @@ class HomeWindowController:
             self.view.push_button_ncbi_file_search.clicked.connect(self.open_ncbi_window)
 
             # grpStep3
-            # self.view.radio_button_feature.clicked.connect(self.toggle_annotation)
-            # self.view.radio_button_position.clicked.connect(self.toggle_annotation)
             self.view.radio_button_feature.clicked.connect(self.handle_search_type_change)
             self.view.radio_button_position.clicked.connect(self.handle_search_type_change)
             self.view.radio_button_sequence.clicked.connect(self.handle_search_type_change)
@@ -100,6 +98,13 @@ class HomeWindowController:
                         "The sequence given is too small. At least 100 characters are required."
                     )
                     return
+                if len(sequence) > 10000:
+                    QMessageBox.warning(
+                        self.view,
+                        "Sequence Too Long",
+                        "The sequence given is too large. Maximum allowed length is 10,000 base pairs."
+                    )
+                    return
                 self.open_view_targets(input_data)
             elif input_data['search_type'] == 'position':
                 self.open_view_targets(input_data)
@@ -111,44 +116,88 @@ class HomeWindowController:
 
     def open_view_targets(self, input_data):
         try:
-            # Create find targets controller to use its model
-            find_targets_controller = self.global_settings.get_find_targets_window()
-            
-            # Get targets using the model
-            targets = find_targets_controller.model.find_targets(input_data)
-            
-            if targets:
-                self.logger.debug(f"Found {len(targets)} targets")
+            # Create and show loading dialog
+            loading_dialog = LoadingDialog(self.view)
+            loading_dialog.show()
+            loading_dialog.set_progress(0)
+            QApplication.processEvents()
+
+            try:
+                # Create find targets controller to use its model
+                find_targets_controller = self.global_settings.get_find_targets_window()
                 
-                # Close existing View Targets tab if it exists
-                main_window = self.global_settings.main_window
-                existing_tab = main_window.find_tab_by_title("View Targets")
-                if existing_tab:
-                    tab_index = main_window.view.tab_widget.indexOf(existing_tab)
-                    main_window._close_tab(tab_index)
-                    self.logger.debug("Closed existing View Targets tab")
+                # For position searches, handle each query separately
+                if input_data['search_type'] == 'position':
+                    queries = input_data['search_query'].strip().split('\n')
+                    all_targets = []
+                    total_queries = len(queries)
+                    
+                    for i, query in enumerate(queries):
+                        # Update loading progress for each query
+                        progress = int((i / total_queries) * 80)  # Leave room for final steps
+                        loading_dialog.set_message(f"Processing position {i+1} of {total_queries}...", progress)
+                        QApplication.processEvents()
+                        
+                        # Create a copy of input data with single query
+                        query_data = input_data.copy()
+                        query_data['search_query'] = query.strip()
+                        
+                        # Get targets for this query
+                        targets = find_targets_controller.model.find_targets(query_data)
+                        if targets:
+                            # Add query information to each target
+                            for target in targets:
+                                target['original_query'] = query.strip()
+                            all_targets.extend(targets)
+                    
+                    targets = all_targets  # Use combined results
+                    self.logger.debug(f"Processed {len(queries)} queries, found total {len(targets)} targets")
+                else:
+                    # For non-position searches, process normally
+                    loading_dialog.set_message("Finding targets...", 20)
+                    QApplication.processEvents()
+                    targets = find_targets_controller.model.find_targets(input_data)
                 
-                # Create view targets controller
-                view_targets_controller = self.global_settings.get_view_targets_window()
-                
-                view_targets_controller.load_guides(
-                    targets,  # Pass the targets directly
-                    input_data['organism'],
-                    input_data['endonuclease']
-                )
-                
-                # Open new view targets tab
-                main_window.open_new_tab(
-                    "View Targets", 
-                    view_targets_controller
-                )
-                
-            else:
-                QMessageBox.warning(
-                    self.view,
-                    "No Targets Found",
-                    "No targets were found for the specified search."
-                )
+                if targets:
+                    self.logger.debug(f"Found {len(targets)} targets")
+                    loading_dialog.set_message("Preparing view targets...", 80)
+                    QApplication.processEvents()
+                    
+                    # Close existing View Targets tab if it exists
+                    main_window = self.global_settings.main_window
+                    existing_tab = main_window.find_tab_by_title("View Targets")
+                    if existing_tab:
+                        tab_index = main_window.view.tab_widget.indexOf(existing_tab)
+                        main_window._close_tab(tab_index)
+                        self.logger.debug("Closed existing View Targets tab")
+                    
+                    # Create view targets controller
+                    loading_dialog.set_message("Creating view targets...", 90)
+                    QApplication.processEvents()
+                    view_targets_controller = self.global_settings.get_view_targets_window()
+                    
+                    view_targets_controller.load_guides(
+                        targets,
+                        input_data['organism'],
+                        input_data['endonuclease'],
+                        loading_dialog=loading_dialog
+                    )
+                    
+                    # Open new view targets tab
+                    main_window.open_new_tab(
+                        "View Targets", 
+                        view_targets_controller
+                    )
+                    
+                else:
+                    QtWidgets.QMessageBox.warning(
+                        self.view,
+                        "No Targets Found",
+                        "No targets were found for the specified search."
+                    )
+                    
+            finally:
+                loading_dialog.close()
                 
         except Exception as e:
             self.global_settings.logger.error(f"Error opening view targets directly: {str(e)}")
@@ -157,22 +206,38 @@ class HomeWindowController:
     def open_find_targets_module(self):
         """Open find targets module for non-position searches"""
         try:
-            # Close existing Find Targets tab if it exists
-            main_window = self.global_settings.main_window
-            existing_tab = main_window.find_tab_by_title("Find Targets")
-            if existing_tab:
-                tab_index = main_window.view.tab_widget.indexOf(existing_tab)
-                main_window._close_tab(tab_index)
-                self.logger.debug("Closed existing Find Targets tab")
+            # Show loading dialog
+            loading_dialog = LoadingDialog(self.view)
+            loading_dialog.show()
+            loading_dialog.set_progress(0)
+            QApplication.processEvents()
             
-            # Create new find targets controller and load data
-            find_targets_controller = self.global_settings.get_find_targets_window()
-            input_data = self.view.get_find_targets_input()
-            find_targets_controller.find_targets(input_data)
-            
-            # Open new Find Targets tab
-            self.global_settings.main_window.open_new_tab("Find Targets", find_targets_controller)
-            
+            try:
+                # Close existing Find Targets tab if it exists
+                main_window = self.global_settings.main_window
+                existing_tab = main_window.find_tab_by_title("Find Targets")
+                if existing_tab:
+                    tab_index = main_window.view.tab_widget.indexOf(existing_tab)
+                    main_window._close_tab(tab_index)
+                    self.logger.debug("Closed existing Find Targets tab")
+                
+                loading_dialog.set_progress(40)
+                
+                # Create new find targets controller and load data
+                find_targets_controller = self.global_settings.get_find_targets_window()
+                input_data = self.view.get_find_targets_input()
+                loading_dialog.set_progress(60)
+                
+                find_targets_controller.find_targets(input_data)
+                loading_dialog.set_progress(80)
+                
+                # Open new Find Targets tab
+                self.global_settings.main_window.open_new_tab("Find Targets", find_targets_controller)
+                loading_dialog.set_progress(100)
+                
+            finally:
+                loading_dialog.close()
+                
         except Exception as e:
             show_error(self.global_settings, "Error in open_find_targets_module() in Home", str(e))
 
@@ -209,14 +274,29 @@ class HomeWindowController:
 
     def open_multitargeting_analysis_module(self):
         try:
+            start_time = time.time()
+            self.logger.debug("Starting multitargeting analysis module launch")
+            
             main_window = self.global_settings.main_window
             existing_tab = main_window.find_tab_by_title("Multitargeting Analysis")
+            
+            tab_check_time = time.time()
+            self.logger.debug(f"Tab check took: {tab_check_time - start_time:.2f} seconds")
+
             if existing_tab:
                 main_window.view.tab_widget.setCurrentWidget(existing_tab)
                 main_window._resize_for_tab("Multitargeting Analysis")
+                self.logger.debug(f"Switched to existing tab: {time.time() - tab_check_time:.2f} seconds")
             else:
+                controller_start = time.time()
                 multitargeting_controller = self.global_settings.get_multitargeting_window()
+                self.logger.debug(f"Controller creation took: {time.time() - controller_start:.2f} seconds")
+                
+                tab_open_start = time.time()
                 main_window.open_new_tab("Multitargeting Analysis", multitargeting_controller)
+                self.logger.debug(f"Tab opening took: {time.time() - tab_open_start:.2f} seconds")
+
+            self.logger.debug(f"Total multitargeting module launch took: {time.time() - start_time:.2f} seconds")
         except Exception as e:
             show_error(self.global_settings, "Error in open_multitargeting_analysis_widget() in Home", str(e))
 
@@ -267,9 +347,20 @@ class HomeWindowController:
 
     def _handle_db_validation_changed(self, is_valid, message):
         """Handle database validation state changes"""
-        if not is_valid:
-            self.view.show_warning("Database Warning", message)
-        self._update_validation_state(is_valid)
+        try:
+            if not is_valid:
+                self.view.show_warning("Database Warning", message)
+            
+            # Update UI elements based on validation state
+            self.view.push_button_find_view_targets.setEnabled(is_valid)
+            self.view.push_button_multitargeting_analysis.setEnabled(is_valid)
+            self.view.push_button_population_analysis.setEnabled(is_valid)
+            
+            # Log the validation state change
+            self.logger.debug(f"Database validation state changed to: {is_valid}")
+            
+        except Exception as e:
+            self.logger.error(f"Error handling database validation change: {str(e)}")
 
     def _handle_db_state_changed(self, is_valid, message, changes):
         """Handle database state changes"""
@@ -308,18 +399,6 @@ class HomeWindowController:
     def _on_annotation_file_changed(self, new_file):
         """Handle changes to the annotation file selection"""
         self.global_settings.set_current_annotation_file(new_file)
-
-    def _update_cspr_related_ui(self):
-        # Implementation to update UI elements that depend on CSPR files
-        pass
-
-    def _update_gbff_related_ui(self):
-        # Implementation to update UI elements that depend on GBFF files
-        pass
-
-    def _update_validation_state(self, is_valid):
-        # Implementation to update UI elements based on validation state
-        pass
 
     def handle_search_type_change(self):
         """Update UI elements based on search type"""

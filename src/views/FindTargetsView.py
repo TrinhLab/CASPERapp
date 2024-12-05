@@ -9,6 +9,7 @@ class FindTargetsView(QtWidgets.QMainWindow):
     def __init__(self, global_settings):
         super().__init__()
         self.global_settings = global_settings
+        self.logger = global_settings.logger
         self._init_ui()
         self.batch_size = 100  # Number of rows to load at once
         self._all_results = []  # Store all results
@@ -67,31 +68,31 @@ class FindTargetsView(QtWidgets.QMainWindow):
         ]
 
     def display_results(self, results):
-        start_time = time.time()
-        
-        # Store all results and reset loaded count
-        self._all_results = results
-        self._loaded_rows = 0
-        
-        # Disable visual updates
-        self.results_table.setUpdatesEnabled(False)
-        self.results_table.setSortingEnabled(False)
-        self.results_table.setVisible(False)
-        
-        # Set total row count
-        total_rows = len(results)
-        self.results_table.setRowCount(total_rows)
-        
-        # Load initial batch
-        self._load_batch(0, min(self.batch_size, total_rows))
-        
-        # Re-enable table and updates
-        self.results_table.setVisible(True)
-        self.results_table.setUpdatesEnabled(True)
-        self.results_table.setSortingEnabled(True)
-        
-        total_time = time.time() - start_time
-        self.global_settings.logger.debug(f"Initial display time: {total_time:.2f} seconds")
+        """Display results with filtering support"""
+        try:
+            # Store all results and reset loaded count
+            self._all_results = results
+            self._loaded_rows = 0
+            
+            # Disable visual updates
+            self.results_table.setUpdatesEnabled(False)
+            self.results_table.setSortingEnabled(False)
+            self.results_table.setVisible(False)
+            
+            # Set total row count
+            total_rows = len(results)
+            self.results_table.setRowCount(total_rows)
+            
+            # Load initial batch
+            self._load_batch(0, min(self.batch_size, total_rows))
+            
+            # Re-enable table and updates
+            self.results_table.setVisible(True)
+            self.results_table.setUpdatesEnabled(True)
+            self.results_table.setSortingEnabled(True)
+            
+        except Exception as e:
+            self.logger.error(f"Error displaying results: {str(e)}")
 
     def _load_batch(self, start_idx, end_idx):
         """Load a batch of rows efficiently"""
@@ -120,7 +121,6 @@ class FindTargetsView(QtWidgets.QMainWindow):
         
         # Calculate which rows should be visible
         scroll_position = value
-        start_row = max(0, scroll_position - visible_rows)
         end_row = min(len(self._all_results), scroll_position + visible_rows * 2)
         
         # Load more rows if needed
@@ -128,23 +128,46 @@ class FindTargetsView(QtWidgets.QMainWindow):
             self._load_batch(self._loaded_rows, end_row)
 
     def get_selected_targets(self):
-        selected_rows = set(index.row() for index in self.results_table.selectedIndexes())
-        selected_targets = []
-        
-        for row in selected_rows:
-            if row < len(self._all_results):
-                selected_targets.append(self._all_results[row])
-        
-        return selected_targets
+        """Get selected targets from the currently displayed (filtered) results"""
+        try:
+            # Get indices of selected rows in the current view
+            selected_rows = set(index.row() for index in self.results_table.selectedIndexes())
+            selected_targets = []
+            
+            # Get the currently visible rows from the table
+            visible_targets = []
+            for row in range(self.results_table.rowCount()):
+                if not self.results_table.isRowHidden(row):
+                    # Get data from visible row
+                    target_data = {
+                        'feature_type': self.results_table.item(row, 0).text(),
+                        'chromosome': self.results_table.item(row, 1).text(),
+                        'feature_id': self.results_table.item(row, 2).text(),
+                        'feature_name': self.results_table.item(row, 3).text(),
+                        'feature_description': self.results_table.item(row, 4).text()
+                    }
+                    visible_targets.append((row, target_data))
 
+            # Match selected rows with visible targets
+            for row, target_data in visible_targets:
+                if row in selected_rows:
+                    # Find corresponding full target data from _all_results
+                    for full_target in self._all_results:
+                        if (full_target['feature_id'] == target_data['feature_id'] and 
+                            full_target['feature_type'] == target_data['feature_type']):
+                            selected_targets.append(full_target)
+                            break
+
+            self.logger.debug(f"Selected {len(selected_targets)} targets from filtered view")
+            return selected_targets
+            
+        except Exception as e:
+            self.logger.error(f"Error getting selected targets: {str(e)}")
+            return []
+    
     def clear_results(self):
-        """Clear all results from the table"""
-        self.results_table.setUpdatesEnabled(False)
         self.results_table.clearContents()
-        self.results_table.setRowCount(0)
-        self._all_results = []
-        self._loaded_rows = 0
-        self.results_table.setUpdatesEnabled(True)
+        self.results_table.setRowCount(0)   
 
     def _on_generate_library_clicked(self):
         """Handle generate library button click"""

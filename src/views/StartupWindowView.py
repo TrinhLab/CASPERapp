@@ -42,7 +42,6 @@ class StartupWindowView(QtWidgets.QMainWindow):
 
     def _init_boxlayvBottom(self):
         self.push_button_go_to_home_or_new_genome = self._find_widget('pbtnGoToHomeOrNewGenome', QtWidgets.QPushButton)
-        self.push_button_go_to_home_or_new_genome.clicked.connect(self._on_go_to_home_or_new_genome_clicked)
 
     def _find_widget(self, name: str, widget_type: type) -> Optional[QtWidgets.QWidget]:
         widget = self.findChild(widget_type, name)
@@ -82,7 +81,3 @@ class StartupWindowView(QtWidgets.QMainWindow):
             self.label_db_status.setStyleSheet("color: red;")
             self.push_button_go_to_home_or_new_genome.setText("Analyze a New Genome")
         self.push_button_go_to_home_or_new_genome.setEnabled(True)
-
-    def _on_go_to_home_or_new_genome_clicked(self):
-        if self.push_button_go_to_home_or_new_genome.text() == "Analyze a New Genome":
-            self.open_new_genome_requested.emit()

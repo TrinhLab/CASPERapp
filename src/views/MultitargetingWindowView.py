@@ -2,18 +2,24 @@ from typing import Optional
 from PyQt6 import QtWidgets, uic, QtGui
 from PyQt6.QtWidgets import QTableWidgetItem, QAbstractItemView
 from PyQt6.QtCore import Qt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg 
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
 from utils.ui import show_error
+import time
 
 class MultitargetingWindowView(QtWidgets.QMainWindow):
     def __init__(self, global_settings):
+        start_time = time.time()
         super().__init__()
         self.settings = global_settings
         self.logger = self.settings.get_logger()
         
+        init_ui_start = time.time()
         self.init_ui()
+        self.logger.debug(f"UI initialization took: {time.time() - init_ui_start:.2f} seconds")
+        
+        self.logger.debug(f"Total view initialization took: {time.time() - start_time:.2f} seconds")
 
     def init_ui(self):
         try:
@@ -134,26 +140,42 @@ class MultitargetingWindowView(QtWidgets.QMainWindow):
         self.table_seeds.resizeColumnsToContents()
 
     def setup_plots(self):
-        """Initialize the matplotlib plots"""
-        self.repeats_vs_seed_canvas = MplCanvas(self, width=8, height=6)
-        self.sequences_vs_repeats_canvas = MplCanvas(self, width=8, height=6)
-        self.repeat_vs_chromosome_canvas = MplCanvas(self, width=8, height=6)
+        """Initialize the matplotlib plots only when needed"""
+        if not hasattr(self, 'repeats_vs_seed_canvas'):
+            self.repeats_vs_seed_canvas = MplCanvas(self, width=8, height=6)
+            layout = QtWidgets.QVBoxLayout(self.plot_repeats_vs_seed)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.addWidget(self.repeats_vs_seed_canvas)
 
-        # Add canvases to their respective layouts without toolbars
-        for plot_widget, canvas in [
-            (self.plot_repeats_vs_seed, self.repeats_vs_seed_canvas),
-            (self.plot_sequences_vs_repeats, self.sequences_vs_repeats_canvas),
-            (self.plot_repeat_vs_chromosome, self.repeat_vs_chromosome_canvas)
-        ]:
-            layout = QtWidgets.QVBoxLayout(plot_widget)
-            layout.setContentsMargins(0, 0, 0, 0)  # Reduce margins
-            layout.addWidget(canvas)
+        if not hasattr(self, 'sequences_vs_repeats_canvas'):
+            self.sequences_vs_repeats_canvas = MplCanvas(self, width=8, height=6)
+            layout = QtWidgets.QVBoxLayout(self.plot_sequences_vs_repeats)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.addWidget(self.sequences_vs_repeats_canvas)
+
+        if not hasattr(self, 'repeat_vs_chromosome_canvas'):
+            self.repeat_vs_chromosome_canvas = MplCanvas(self, width=8, height=6)
+            layout = QtWidgets.QVBoxLayout(self.plot_repeat_vs_chromosome)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.addWidget(self.repeat_vs_chromosome_canvas)
 
     def update_plots(self, repeats_data, sequences_data, chromosome_data):
         """Update all plots with new data"""
+        start_time = time.time()
+        
+        plot1_start = time.time()
         self._update_repeats_vs_seed_plot(repeats_data)
+        self.logger.debug(f"Repeats vs seed plot update took: {time.time() - plot1_start:.2f} seconds")
+        
+        plot2_start = time.time()
         self._update_sequences_vs_repeats_plot(sequences_data)
+        self.logger.debug(f"Sequences vs repeats plot update took: {time.time() - plot2_start:.2f} seconds")
+        
+        plot3_start = time.time()
         self._update_repeat_vs_chromosome_plot(chromosome_data)
+        self.logger.debug(f"Chromosome plot update took: {time.time() - plot3_start:.2f} seconds")
+        
+        self.logger.debug(f"Total plot updates took: {time.time() - start_time:.2f} seconds")
 
     def _update_repeats_vs_seed_plot(self, data):
         """Update the repeats vs seed line plot"""

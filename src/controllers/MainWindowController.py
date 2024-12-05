@@ -41,11 +41,6 @@ class MainWindowController(LoggingMixin):
         self.view.action_open_NCBI_BLAST.triggered.connect(self._open_ncbi_blast_website)
         self.view.action_open_NCBI.triggered.connect(self._open_ncbi_website)
 
-        # Title Bar
-        self.view.close_window_button.clicked.connect(self._close_window)
-        self.view.minimize_window_button.clicked.connect(self._minimize_window)
-        self.view.maximize_window_button.clicked.connect(self._maximize_window)
-
         # Tab bar
         self.view.tab_widget.tab_closed.connect(self._on_tab_closed)
         self.view.tab_widget.tabCloseRequested.connect(self._close_tab)
@@ -54,8 +49,8 @@ class MainWindowController(LoggingMixin):
         self.settings.first_time_startup.connect(self._handle_first_time_startup)
 
         # Add Button Menu
-        self.view.action_new_genome.triggered.connect(self.open_new_genome_tab)
-        self.view.action_new_endonuclease.triggered.connect(self.open_new_endonuclease_tab)
+        # self.view.action_new_genome.triggered.connect(self.open_new_genome_tab)
+        # self.view.action_new_endonuclease.triggered.connect(self.open_new_endonuclease_tab)
 
         # Settings Menu
         self.view.action_toggle_theme.triggered.connect(self._toggle_theme)
@@ -94,18 +89,23 @@ class MainWindowController(LoggingMixin):
     def _switch_to_home_from_startup(self):
         self.log_method_call("_switch_to_home_from_startup")
         
+        # First deactivate startup controller
+        if self.startup_controller:
+            self.startup_controller.deactivate()
+            self.startup_controller = None
+
+        # Close startup tab if it exists
         startup_tab = self.find_tab_by_title("Startup")
         if startup_tab:
             index = self.view.tab_widget.indexOf(startup_tab)
             self._close_tab(index)
-            
-            if self.startup_controller:
-                self.startup_controller.deactivate()
-                self.startup_controller = None
         else:
             self.log_warning("Startup tab not found when trying to close it")
 
-        self.close_new_genome_and_switch_to_home()
+        # Open home tab and ensure it's properly initialized
+        self._open_home_tab()
+        
+        # Center the window after all tab operations
         self._center_window()
 
     def _center_window(self):
@@ -179,18 +179,6 @@ class MainWindowController(LoggingMixin):
     def _open_ncbi_blast_website(self):
         ncbi_blast_page()
 
-    def _close_window(self):
-        self.view.close()
-
-    def _minimize_window(self):
-        self.view.showMinimized()
-
-    def _maximize_window(self):
-        if self.view.isMaximized():
-            self.view.showNormal()
-        else:
-            self.view.showMaximized()
-
     def _on_tab_closed(self, widget):
         """
         Handle the tab_closed signal from CloseableTabWidget
@@ -259,9 +247,8 @@ class MainWindowController(LoggingMixin):
     def _resize_for_tab(self, title):
         try:
             if title == "Startup":
-                # For Startup tab, set fixed size and disable maximize button
+                # For Startup tab, set fixed size but keep window controls
                 self.view.setFixedSize(self.startup_size)
-                self.view.setWindowFlags(self.view.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
             elif title in ["View Targets", "Multitargeting Analysis"]:
                 # Store current size before applying constraints
                 if self.current_tab not in ["View Targets", "Multitargeting Analysis"]:
@@ -282,21 +269,16 @@ class MainWindowController(LoggingMixin):
                 # Set minimum size constraints
                 self.view.setMinimumSize(QSize(min_width, min_height))
                 self.view.setMaximumSize(QtCore.QSize(16777215, 16777215))
-                self.view.setWindowFlags(self.view.windowFlags() | Qt.WindowType.WindowMaximizeButtonHint)
             else:
                 # For all other tabs
                 self.view.setMinimumSize(QSize(400, 300))
                 self.view.setMaximumSize(QtCore.QSize(16777215, 16777215))
-                self.view.setWindowFlags(self.view.windowFlags() | Qt.WindowType.WindowMaximizeButtonHint)
                 
                 # Restore previous size if available and coming from View Targets or Multi-targeting Analysis
                 if self.current_tab in ["View Targets", "Multitargeting Analysis"] and self.previous_size:
                     self.view.resize(self.previous_size)
                 elif self.current_tab == "Startup" or self.view.size() == self.startup_size:
                     self.view.resize(self.shared_tab_size)
-            
-            # Ensure window flags are updated
-            self.view.show()
             
             # Update the current tab
             self.current_tab = title
@@ -328,7 +310,7 @@ class MainWindowController(LoggingMixin):
             if title == "New Genome":
                 home_tab = self.find_tab_by_title("Home")
                 if home_tab:
-                    home_controller = self.global_settings.get_home_window()
+                    home_controller = self.settings.get_home_window()
                     home_controller.refresh_data()
 
             # Resize for the current tab
@@ -367,7 +349,7 @@ class MainWindowController(LoggingMixin):
             self.view.tab_widget.setCurrentWidget(existing_tab)
         else:
             # If it doesn't exist, create a new one
-            new_genome_controller = self.global_settings.get_new_genome_window()
+            new_genome_controller = self.settings.get_new_genome_window()
             new_genome_view = new_genome_controller.view
             tab_index = self.view.tab_widget.addTab(new_genome_view, "New Genome")
             self.view.tab_widget.setCurrentIndex(tab_index)

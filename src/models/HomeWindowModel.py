@@ -1,6 +1,6 @@
 import os
 import glob
-from typing import Dict, List, Set
+from typing import Dict, List
 from utils.ui import show_error
 from models.DatabaseManager import FileChangeType
 

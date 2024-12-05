@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1335</width>
-    <height>916</height>
+    <width>1920</width>
+    <height>1147</height>
    </rect>
   </property>
   <property name="font">
@@ -34,22 +34,8 @@
          <string>Gene Viewer</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_6">
-         <item row="2" column="0">
-          <widget class="QLabel" name="lblStartLocation">
-           <property name="text">
-            <string>Start:</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="1">
           <widget class="QLineEdit" name="ledStartLocation"/>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="lblStopLocation">
-           <property name="text">
-            <string>Stop:</string>
-           </property>
-          </widget>
          </item>
          <item row="3" column="2">
           <widget class="QPushButton" name="pbtnResetLocation">
@@ -58,8 +44,22 @@
            </property>
           </widget>
          </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="lblStartLocation">
+           <property name="text">
+            <string>Start:</string>
+           </property>
+          </widget>
+         </item>
          <item row="3" column="1">
           <widget class="QLineEdit" name="ledStopLocation"/>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="lblStopLocation">
+           <property name="text">
+            <string>Stop:</string>
+           </property>
+          </widget>
          </item>
          <item row="2" column="2">
           <widget class="QPushButton" name="pbtnChangeLocation">
@@ -73,6 +73,13 @@
          </item>
          <item row="5" column="0" colspan="5">
           <widget class="QTextEdit" name="txtedGeneViewer"/>
+         </item>
+         <item row="4" column="2">
+          <widget class="QCheckBox" name="chkViewExonsOnly">
+           <property name="text">
+            <string>View Exons Only</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -89,91 +96,13 @@
          <string>Guide Viewer</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_4">
-         <item row="4" column="1" colspan="3">
-          <widget class="QComboBox" name="cmbGene">
-           <property name="minimumSize">
-            <size>
-             <width>225</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="10" column="2">
-          <widget class="QPushButton" name="pbtnHighlightGuides">
+         <item row="12" column="2">
+          <widget class="QPushButton" name="pbtnCoTargeting">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This button will highlight the sequences in the Gene Viewer that match the sequences selected in the table.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Determine guides with synergistic PAMs (Ex. saCas9 and spCas9 compatible guides). &lt;span style=&quot; font-weight:600;&quot;&gt;Note:&lt;/span&gt; to analyze an organism for co-targeting guides, separate CSPR files must be generated for each additional endonuclease. Co-targeting endonucleases must have the same PAM directionality, same total gRNA length, and overlapping PAM sequences to be compatible.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Highlight Guides</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1" colspan="3">
-          <widget class="QComboBox" name="cmbEndonuclease">
-           <property name="minimumSize">
-            <size>
-             <width>225</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="10" column="3">
-          <widget class="QPushButton" name="pbtnClearGuides">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This button clears all highlighted guides from the gene viewer box.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Clear Guides</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="2">
-          <widget class="QLabel" name="lblMinOTScore">
-           <property name="text">
-            <string>Minimum On-Target Score</string>
-           </property>
-          </widget>
-         </item>
-         <item row="11" column="0" colspan="4">
-          <widget class="QTableWidget" name="tblGuides"/>
-         </item>
-         <item row="6" column="3">
-          <widget class="QSpinBox" name="spnMinOTScore"/>
-         </item>
-         <item row="5" column="0">
-          <widget class="QLabel" name="lblEndonuclease">
-           <property name="text">
-            <string>Endonuclease:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="12" column="0">
-          <widget class="QPushButton" name="pbtnScoringOptions">
-           <property name="text">
-            <string>Scoring Options</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="QCheckBox" name="chkFilter5PrimeG">
-           <property name="text">
-            <string>Filter 5' G Sequences</string>
-           </property>
-          </widget>
-         </item>
-         <item row="10" column="0">
-          <widget class="QCheckBox" name="chkSelectAll">
-           <property name="text">
-            <string>Select All</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="lblGene">
-           <property name="text">
-            <string>Gene:</string>
+            <string>Co-Targeting</string>
            </property>
           </widget>
          </item>
@@ -187,16 +116,6 @@
            </property>
           </widget>
          </item>
-         <item row="12" column="2">
-          <widget class="QPushButton" name="pbtnCoTargeting">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Determine guides with synergistic PAMs (Ex. saCas9 and spCas9 compatible guides). &lt;span style=&quot; font-weight:600;&quot;&gt;Note:&lt;/span&gt; to analyze an organism for co-targeting guides, separate CSPR files must be generated for each additional endonuclease. Co-targeting endonucleases must have the same PAM directionality, same total gRNA length, and overlapping PAM sequences to be compatible.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Co-Targeting</string>
-           </property>
-          </widget>
-         </item>
          <item row="12" column="3">
           <widget class="QPushButton" name="pbtnExportSelectedgRNAs">
            <property name="toolTip">
@@ -204,6 +123,94 @@
            </property>
            <property name="text">
             <string>Export Selected gRNAs</string>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="0">
+          <widget class="QCheckBox" name="chkSelectAll">
+           <property name="text">
+            <string>Select All</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1" colspan="3">
+          <widget class="QComboBox" name="cmbEndonuclease">
+           <property name="minimumSize">
+            <size>
+             <width>225</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QCheckBox" name="chkFilter5PrimeG">
+           <property name="text">
+            <string>Filter 5' G Sequences</string>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="0">
+          <widget class="QPushButton" name="pbtnScoringOptions">
+           <property name="text">
+            <string>Scoring Options</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="lblEndonuclease">
+           <property name="text">
+            <string>Endonuclease:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="3">
+          <widget class="QSpinBox" name="spnMinOTScore"/>
+         </item>
+         <item row="10" column="2">
+          <widget class="QPushButton" name="pbtnHighlightGuides">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This button will highlight the sequences in the Gene Viewer that match the sequences selected in the table.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Highlight Guides</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1" colspan="3">
+          <widget class="QComboBox" name="cmbGene">
+           <property name="minimumSize">
+            <size>
+             <width>225</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="2">
+          <widget class="QLabel" name="lblMinOTScore">
+           <property name="text">
+            <string>Minimum On-Target Score</string>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="0" colspan="4">
+          <widget class="QTableWidget" name="tblGuides"/>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="lblGene">
+           <property name="text">
+            <string>Gene:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="3">
+          <widget class="QPushButton" name="pbtnClearGuides">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;This button clears all highlighted guides from the gene viewer box.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Clear Guides</string>
            </property>
           </widget>
          </item>

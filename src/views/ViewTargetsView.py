@@ -1,11 +1,11 @@
 from typing import Optional
-from PyQt6 import QtWidgets, uic, QtCore
+from PyQt6 import QtWidgets, uic
 from PyQt6.QtWidgets import QTableWidgetItem, QAbstractItemView
 from PyQt6.QtGui import QTextDocument
 from PyQt6.QtCore import Qt, pyqtSignal
 from utils.ui import show_error
-import time
 import traceback
+from views.DNAFeatureViewer import DNAFeatureViewer
 
 class ViewTargetsView(QtWidgets.QMainWindow):
     # Define the signal
@@ -49,6 +49,9 @@ class ViewTargetsView(QtWidgets.QMainWindow):
         self.table_guides.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table_guides.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
         
+        # Enable sorting
+        self.table_guides.setSortingEnabled(True)
+        
         # Enable horizontal scrolling
         self.table_guides.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.table_guides.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -62,7 +65,7 @@ class ViewTargetsView(QtWidgets.QMainWindow):
         # Set resize mode for header
         header = self.table_guides.horizontalHeader()
         header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Interactive)
-        header.setStretchLastSection(False)  # Don't stretch the last section
+        header.setStretchLastSection(False) 
         
         # Set minimum section size to prevent columns from becoming too narrow
         header.setMinimumSectionSize(80)
@@ -79,8 +82,31 @@ class ViewTargetsView(QtWidgets.QMainWindow):
         self.push_button_change_location = self._find_widget('pbtnChangeLocation', QtWidgets.QPushButton)
         self.text_edit_gene_viewer = self._find_widget('txtedGeneViewer', QtWidgets.QTextEdit)
         self.push_button_reset_location = self._find_widget('pbtnResetLocation', QtWidgets.QPushButton)
+        self.check_box_view_exons_only = self._find_widget('chkViewExonsOnly', QtWidgets.QCheckBox)
 
         self.text_edit_gene_viewer.setReadOnly(True)
+
+        # Create DNA feature viewer
+        self.dna_feature_viewer = DNAFeatureViewer()
+        
+        # Get the layout of the gene viewer group
+        gene_viewer_group = self.findChild(QtWidgets.QGroupBox, 'grpGeneViewer')
+        gene_viewer_layout = gene_viewer_group.layout()
+        
+        # Find the row index of the text editor
+        text_editor_row = -1
+        for i in range(gene_viewer_layout.rowCount()):
+            item = gene_viewer_layout.itemAtPosition(i, 0)
+            if item and item.widget() == self.text_edit_gene_viewer:
+                text_editor_row = i
+                break
+        
+        if text_editor_row != -1:
+            # Insert DNA feature viewer above the text editor
+            gene_viewer_layout.addWidget(self.dna_feature_viewer, text_editor_row, 0, 1, -1)
+        
+        # Connect signals
+        self.dna_feature_viewer.sequence_selected.connect(self._on_sequence_selected)
 
     def _find_widget(self, name: str, widget_type: type) -> Optional[QtWidgets.QWidget]:
         widget = self.findChild(widget_type, name)
@@ -89,9 +115,7 @@ class ViewTargetsView(QtWidgets.QMainWindow):
         return widget 
 
     def display_guides_in_table(self, guides):
-        """Ultra-fast guide display with virtual table and minimal UI updates"""
         try:
-            # Store complete set of guides
             self._all_guides = guides
             
             selected_text = self.combo_box_gene.currentText()
@@ -161,14 +185,14 @@ class ViewTargetsView(QtWidgets.QMainWindow):
                     location = guide['location']
                     start_pos = location.split('-')[0] if '-' in location else location
                     
-                    # Create and set basic items
+                    # Create items with proper data roles for sorting
                     items = [
-                        (0, QTableWidgetItem(start_pos)),  # Only show start position
+                        (0, self._create_sortable_item(start_pos, int(start_pos))),  # Location as number
                         (1, QTableWidgetItem(guide['endonuclease'])),
                         (2, QTableWidgetItem(guide['sequence'])),
                         (3, QTableWidgetItem(guide['strand'])),
                         (4, QTableWidgetItem(guide['pam'])),
-                        (5, QTableWidgetItem(str(guide['score']))),
+                        (5, self._create_sortable_item(str(guide['score']), float(guide['score']))),  # Score as number
                         (6, QTableWidgetItem("--.--"))  # Off-target placeholder
                     ]
                     
@@ -185,7 +209,8 @@ class ViewTargetsView(QtWidgets.QMainWindow):
                     
                     # Add Azimuth score if column exists
                     if azimuth_index is not None and 'azimuth_score' in guide:
-                        azimuth_item = QTableWidgetItem(str(guide.get('azimuth_score', 0)))
+                        azimuth_score = float(guide['azimuth_score'])
+                        azimuth_item = self._create_sortable_item(str(azimuth_score), azimuth_score)
                         self.table_guides.setItem(row, azimuth_index, azimuth_item)
                 
                 # Updated column widths
@@ -222,6 +247,25 @@ class ViewTargetsView(QtWidgets.QMainWindow):
             self.logger.error(f"Error in display_guides: {str(e)}")
             show_error(self.settings, "Error displaying guides", str(e))
 
+    def _create_sortable_item(self, display_text, sort_value):
+        """Create a table item that displays text but sorts by numeric value"""
+        item = QTableWidgetItem()
+        item.setData(Qt.ItemDataRole.DisplayRole, sort_value)  # Use raw value for display
+        item.setData(Qt.ItemDataRole.EditRole, sort_value)    # Used for sorting
+        
+        # Format display text based on value type
+        if isinstance(sort_value, (int, float)):
+            if isinstance(sort_value, int):
+                # For integers (like positions), show full number
+                item.setText(f"{sort_value:d}")
+            else:
+                # For floats (like scores), show with 2 decimal places
+                item.setText(f"{sort_value:.2f}")
+        else:
+            item.setText(str(sort_value))
+        
+        return item
+
     def _handle_scroll_virtual(self, value, total_rows, row_height, buffer_rows):
         try:
             if not hasattr(self, '_all_guides') or not self._all_guides:
@@ -242,16 +286,27 @@ class ViewTargetsView(QtWidgets.QMainWindow):
                 if row < len(self._all_guides) and not self.table_guides.item(row, 0):
                     guide = self._all_guides[row]
                     
-                    # Create and set items efficiently
-                    for col, value in enumerate([
-                        guide['location'], guide['endonuclease'],
-                        guide['sequence'], guide['strand'], guide['pam'],
-                        guide['score'], "--.--"
-                    ]):
-                        item = QTableWidgetItem(str(value))
+                    # Extract start position from location
+                    location = guide['location']
+                    start_pos = location.split('-')[0] if '-' in location else location
+                    
+                    # Create items with proper data roles for sorting
+                    items = [
+                        (0, self._create_sortable_item(start_pos, int(start_pos))),  # Location as number
+                        (1, QTableWidgetItem(guide['endonuclease'])),
+                        (2, QTableWidgetItem(guide['sequence'])),
+                        (3, QTableWidgetItem(guide['strand'])),
+                        (4, QTableWidgetItem(guide['pam'])),
+                        (5, self._create_sortable_item(str(guide['score']), float(guide['score']))),  # Score as number
+                        (6, QTableWidgetItem("--.--"))  # Off-target placeholder
+                    ]
+                    
+                    # Set items with flags
+                    for col, item in items:
                         item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
                         self.table_guides.setItem(row, col, item)
                     
+                    # Add details button
                     if not self.table_guides.cellWidget(row, 7):
                         details_button = QtWidgets.QPushButton("Details")
                         self.table_guides.setCellWidget(row, 7, details_button)
@@ -328,7 +383,6 @@ class ViewTargetsView(QtWidgets.QMainWindow):
 
     def set_combo_box_gene(self, genes):
         try:
-            
             # Disable UI updates
             self.combo_box_gene.blockSignals(True)
             self.combo_box_gene.setUpdatesEnabled(False)
@@ -339,16 +393,19 @@ class ViewTargetsView(QtWidgets.QMainWindow):
             # Debug logging
             self.logger.debug(f"Received {len(genes)} genes")
             
+            # Use a set to ensure uniqueness
+            unique_genes = list(set(genes))
+            
             # Add items in a single batch
-            if genes:
+            if unique_genes:
                 # Pre-allocate size
-                self.combo_box_gene.insertItems(0, genes)
+                self.combo_box_gene.insertItems(0, unique_genes)
                 
                 # Set first item without triggering updates
                 if self.combo_box_gene.count() > 0:
                     self.combo_box_gene.setCurrentIndex(0)
                     
-                self.logger.debug(f"Added {len(genes)} genes to combo box")
+                self.logger.debug(f"Added {len(unique_genes)} unique genes to combo box")
                 
             # Re-enable UI updates
             self.combo_box_gene.setUpdatesEnabled(True)
@@ -370,15 +427,24 @@ class ViewTargetsView(QtWidgets.QMainWindow):
         except Exception as e:
             self.logger.error(f"Error setting gene viewer text: {str(e)}")
 
-    def update_gene_info(self, info):
-        # Implement this method if you have a widget to display gene info
-        pass
-
-    def update_gene_viewer(self, sequence):
+    def update_gene_viewer(self, sequence, features=None):
+        """Update both text editor and DNA feature viewer"""
+        # Update text editor
         self.text_edit_gene_viewer.clear()
         doc = QTextDocument()
         doc.setHtml(sequence)
         self.text_edit_gene_viewer.setDocument(doc)
+        
+        # Get start position from line edit
+        try:
+            start_pos = int(self.line_edit_start_location.text())
+        except (ValueError, TypeError):
+            start_pos = 1
+        
+        # Update DNA feature viewer
+        if features is None:
+            features = []
+        self.dna_feature_viewer.set_data(sequence, features, start_pos)
 
     def select_all_guides(self, select):
         for row in range(self.table_guides.rowCount()):
@@ -492,3 +558,41 @@ class ViewTargetsView(QtWidgets.QMainWindow):
         except Exception as e:
             self.logger.error(f"Error showing details: {str(e)}")
             show_error(self.settings, "Error showing details", str(e))
+
+    def _on_sequence_selected(self, start, end):
+        """Handle sequence selection in DNA feature viewer"""
+        self.line_edit_start_location.setText(str(start))
+        self.line_edit_stop_location.setText(str(end))
+
+    def highlight_guides_in_viewer(self, guides_to_highlight, sequence):
+        """Highlight guides in viewer"""
+        try:
+            for guide in guides_to_highlight:
+                sequence_to_find = guide['sequence']
+                strand = guide['strand']
+                
+                if strand == '-':
+                    sequence_to_find = str(Seq(sequence_to_find).reverse_complement())
+                
+                sequence_upper = sequence.upper()
+                target_upper = sequence_to_find.upper()
+                
+                pos = sequence_upper.find(target_upper)
+                if pos != -1:
+                    # Set color based on strand
+                    color = QColor(255, 0, 0, 100) if strand == '-' else QColor(0, 255, 0, 100)
+                    
+                    # Highlight sequence in viewer
+                    self.dna_feature_viewer.sequence_viewer.highlight_sequence(
+                        pos, 
+                        pos + len(sequence_to_find) - 1,
+                        color
+                    )
+                    
+        except Exception as e:
+            self.logger.error(f"Error highlighting guides: {str(e)}")
+            show_error(self.settings, "Error highlighting guides", str(e))
+
+    def clear_highlights(self):
+        """Clear highlights in viewer"""
+        self.dna_feature_viewer.sequence_viewer.clear_highlights()

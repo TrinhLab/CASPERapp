@@ -2,7 +2,6 @@ from utils.sequence_utils import SeqTranslate
 import logging
 from multiprocessing import Pool, cpu_count
 from functools import partial
-import time
 import pickle
 import os
 import traceback
@@ -16,9 +15,7 @@ class CSPRparser:
         self.index_file = f"{inputFileName}.index"
 
     def _create_index(self):
-        """Create an index file for faster searching"""
         try:
-            start_time = time.time()
             self.logger.debug("Creating CSPR index file...")
             
             # Initialize index structure
@@ -67,8 +64,6 @@ class CSPRparser:
 
             self._index = index_data
             
-            create_time = time.time() - start_time
-            self.logger.debug(f"Index creation time: {create_time:.2f} seconds")
             return True
             
         except Exception as e:
@@ -93,8 +88,9 @@ class CSPRparser:
 
     def read_targets_batch(self, chromosome, targets, endonuclease):
         try:
-            start_time = time.time()
-            
+
+
+            print(f"Reading targets for chromosome: {chromosome}")
             # Load or create index
             if not hasattr(self, '_index'):
                 if not self._load_index():
@@ -106,27 +102,20 @@ class CSPRparser:
             max_end = max(t['end'] for t in sorted_targets)
             
             self.logger.debug(f"Processing targets from {min_start} to {max_end}")
-            self.logger.debug(f"Looking for chromosome number: {chromosome}")
+            self.logger.debug(f"Looking for chromosome: {chromosome}")
             
             results = []
             lines_processed = 0
             lines_skipped = 0
             
-            # Find chromosome in index by counting carets
+            # Find chromosome by full ID
             found_chrom = None
-            chrom_count = 0
-            target_chrom_num = int(chromosome)  # Convert chromosome to integer
-            
-            # Debug available chromosomes
-            self.logger.debug(f"Available chromosomes: {list(self._index.keys())}")
-            
             for chrom_id in self._index:
                 # Decode bytes to string if necessary
                 chrom_str = chrom_id.decode() if isinstance(chrom_id, bytes) else chrom_id
                 
-                # Count carets ('>') to find the right chromosome
-                chrom_count += 1
-                if chrom_count == target_chrom_num:
+                # Match the full chromosome ID
+                if chrom_str == chromosome:
                     found_chrom = chrom_id
                     self.logger.debug(f"Found matching chromosome: {chrom_str}")
                     break
@@ -179,16 +168,13 @@ class CSPRparser:
                 self.logger.error(f"Chromosome {chromosome} not found in index")
                 self.logger.debug(f"Available chromosomes: {list(self._index.keys())}")
             
-            total_time = time.time() - start_time
-            self.logger.debug(f"Processed {lines_processed} lines, skipped {lines_skipped}")
-            self.logger.debug(f"Found {len(results)} targets in {total_time:.2f} seconds")
-            
             return results
             
         except Exception as e:
             self.logger.error(f"Error in read_targets_batch: {str(e)}")
             self.logger.error(f"Stack trace: {traceback.format_exc()}")
             return []
+
     def parse_targets(self, file_path, region):
         """Parse targets with parallel processing and caching"""
         cache_key = f"{file_path}:{region}"
