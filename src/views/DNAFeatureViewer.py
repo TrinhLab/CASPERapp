@@ -273,49 +273,47 @@ class DNAFeatureViewer(QWidget):  # Change to QWidget
         try:
             self.ruler_scene.clear()
             
-            # Get current bases per line
+            # Get current bases per line and add margin for first line
             bases_per_line = self.sequence_viewer.bases_per_line
             base_width = self.sequence_viewer.base_width
-            
-            # Calculate total width including margin
-            total_width = bases_per_line * base_width + 100  # Match sequence viewer width
+            strand_margin = 30  # Same margin as in _create_display
             
             # Create horizontal blue line aligned with sequence
-            ruler_line = QGraphicsLineItem(0, 15, bases_per_line * base_width, 15)
+            ruler_line = QGraphicsLineItem(
+                strand_margin, 15,
+                bases_per_line * base_width + strand_margin, 15
+            )
             ruler_line.setPen(QPen(QColor(0, 120, 215), 1))
             self.ruler_scene.addItem(ruler_line)
             
-            # Add tick marks and numbers for every base
+            # Add tick marks and numbers with adjusted positions
             for i in range(0, bases_per_line):
-                x_pos = i * base_width + base_width/2  # Center tick marks between bases
+                x_pos = i * base_width + strand_margin + base_width/2
                 
-                # Use 1-based indexing for position calculation
                 pos_1_based = i + 1
                 
-                # Determine tick height based on position
-                if pos_1_based % 10 == 0:  # Major ticks (every 10)
+                if pos_1_based % 10 == 0:
                     tick_height = 10
                     tick_start = 10
                     # Add number
                     text = QGraphicsSimpleTextItem(str(pos_1_based))
                     text.setFont(QFont("Arial", 8))
                     text_width = text.boundingRect().width()
-                    text.setPos(x_pos - text_width/2, 0)  # Position above line
+                    text.setPos(x_pos - text_width/2, 0)
                     self.ruler_scene.addItem(text)
-                elif pos_1_based % 5 == 0:  # Medium ticks (every 5)
+                elif pos_1_based % 5 == 0:
                     tick_height = 7
                     tick_start = 11
-                else:  # Small ticks (every 1)
+                else:
                     tick_height = 4
                     tick_start = 13
                 
-                # Create tick mark
                 tick = QGraphicsLineItem(x_pos, tick_start, x_pos, tick_start + tick_height)
                 tick.setPen(QPen(QColor(0, 120, 215), 1))
                 self.ruler_scene.addItem(tick)
             
-            # Set scene rect to exactly match sequence viewer width
-            self.ruler_scene.setSceneRect(0, 0, total_width, 25)
+            # Set scene rect to match sequence viewer width
+            self.ruler_scene.setSceneRect(0, 0, bases_per_line * base_width + strand_margin + 100, 25)
             
         except Exception as e:
             self.logger.error(f"Error creating ruler: {str(e)}")
@@ -605,10 +603,15 @@ class SequenceViewer(QGraphicsObject):
         """Create the nucleotide display"""
         try:
             current_pos = 0
-            max_width = 0  # Add max_width definition here
+            max_width = 0
+            
+            # Calculate margin for strand indicators
+            strand_margin = 30  # Width for 5' and 3' indicators
+            
+            # Calculate total lines
+            total_lines = (len(self.sequence) + self.bases_per_line - 1) // self.bases_per_line
             
             while current_pos < len(self.sequence):
-                # Calculate exact number of bases for this line
                 remaining_bases = len(self.sequence) - current_pos
                 bases_this_line = min(self.bases_per_line, remaining_bases)
                 line_text = self.sequence[current_pos:current_pos + bases_this_line]
@@ -616,13 +619,38 @@ class SequenceViewer(QGraphicsObject):
                 line_num = current_pos // self.bases_per_line
                 y_pos = line_num * self.line_spacing
 
-                # Calculate width for position numbers
-                max_width = max(max_width, self.bases_per_line * self.base_width)
+                # Calculate width including margin for all lines
+                line_width = bases_this_line * self.base_width
+                max_width = max(max_width, line_width)
 
-                # Create positive strand nucleotides
+                # Add strand indicators for first line at the beginning
+                if line_num == 0:
+                    # Add 5' indicator for positive strand
+                    five_prime_pos = QGraphicsSimpleTextItem("5'", self)
+                    five_prime_pos.setFont(QFont("Arial", 10))
+                    five_prime_pos.setPos(0, y_pos + self.line_height * 0.1)
+                    
+                    # Add 3' indicator for negative strand
+                    three_prime_neg = QGraphicsSimpleTextItem("3'", self)
+                    three_prime_neg.setFont(QFont("Arial", 10))
+                    three_prime_neg.setPos(0, y_pos + self.line_height * 1.45)
+
+                # Add strand indicators for last line before location number
+                if line_num == total_lines - 1:
+                    # Add 3' indicator for positive strand
+                    three_prime_pos = QGraphicsSimpleTextItem("3'", self)
+                    three_prime_pos.setFont(QFont("Arial", 10))
+                    three_prime_pos.setPos(line_width + strand_margin + 20, y_pos + self.line_height * 0.1)
+                    
+                    # Add 5' indicator for negative strand
+                    five_prime_neg = QGraphicsSimpleTextItem("5'", self)
+                    five_prime_neg.setFont(QFont("Arial", 10))
+                    five_prime_neg.setPos(line_width + strand_margin + 20, y_pos + self.line_height * 1.45)
+
+                # Create positive strand nucleotides - apply margin to ALL lines
                 line_nucleotides_pos = []
                 for i, nucleotide in enumerate(line_text):
-                    x_pos = i * self.base_width
+                    x_pos = i * self.base_width + strand_margin  # Apply margin to all lines
                     nuc_item = NucleotideItem(
                         nucleotide=nucleotide,
                         x=x_pos,
@@ -634,10 +662,10 @@ class SequenceViewer(QGraphicsObject):
                     self.nucleotides.append(nuc_item)
                     line_nucleotides_pos.append(nuc_item)
 
-                # Create complement strand nucleotides
+                # Create complement strand nucleotides - apply margin to ALL lines
                 line_nucleotides_neg = []
                 for i, nucleotide in enumerate(line_text):
-                    x_pos = i * self.base_width
+                    x_pos = i * self.base_width + strand_margin  # Apply margin to all lines
                     nuc_item = NucleotideItem(
                         nucleotide=nucleotide,
                         x=x_pos,
@@ -657,60 +685,72 @@ class SequenceViewer(QGraphicsObject):
                 self.nucleotide_map['+'][line_num].extend(line_nucleotides_pos)
                 self.nucleotide_map['-'][line_num].extend(line_nucleotides_neg)
 
-                # Draw plot line matching exactly the sequence width for this line
+                # Draw plot line with adjusted position for ALL lines
                 plot_y = y_pos + self.line_height
-                plot_line = QGraphicsLineItem(0, plot_y,
-                                            bases_this_line * self.base_width, plot_y, self)
+                plot_line = QGraphicsLineItem(
+                    strand_margin,  # Apply margin to all lines
+                    plot_y,
+                    line_width + strand_margin,  # Apply margin to all lines
+                    plot_y,
+                    self
+                )
                 plot_line.setPen(QPen(Qt.GlobalColor.black, 1))
                 self.plot_lines.append(plot_line)
 
-                # Draw tick marks only for actual bases in this line
+                # Draw tick marks with adjusted positions for ALL lines
                 for i in range(bases_this_line):
-                    x_pos = i * self.base_width
+                    x_pos = i * self.base_width + strand_margin  # Apply margin to all lines
                     
-                    # Convert to 1-based index for position calculation
-                    pos_1_based = current_pos + i + 1  # Add 1 for 1-based indexing
+                    pos_1_based = current_pos + i + 1
                     
-                    # Determine tick height based on position
-                    if i == 0 and current_pos == 0:  # First base
-                        tick_height = 12  # Longest tick for start
-                    elif i == bases_this_line - 1 and current_pos + bases_this_line == len(self.sequence):  # Last base
-                        tick_height = 12  # Longest tick for end
-                    elif pos_1_based % 10 == 0:  # Major ticks (every 10)
+                    if i == 0 and current_pos == 0:
+                        tick_height = 12
+                    elif i == bases_this_line - 1 and current_pos + bases_this_line == len(self.sequence):
+                        tick_height = 12
+                    elif pos_1_based % 10 == 0:
                         tick_height = 10
-                    elif pos_1_based % 5 == 0:  # Medium ticks (every 5)
+                    elif pos_1_based % 5 == 0:
                         tick_height = 8
-                    else:  # Regular ticks
+                    else:
                         tick_height = 5
                     
                     tick_line = QGraphicsLineItem(
-                        x_pos + self.base_width/2, 
+                        x_pos + self.base_width/2,
                         plot_y - tick_height/2,
-                        x_pos + self.base_width/2, 
+                        x_pos + self.base_width/2,
                         plot_y + tick_height/2,
                         self
                     )
                     self.tick_lines.append(tick_line)
 
-                # Add position number aligned with the plot line - remove the +1
-                end_pos = str(self.start_pos + current_pos + bases_this_line)  # Removed +1
+                # Adjust position number placement for last line to account for strand indicators
+                end_pos = str(self.start_pos + current_pos + bases_this_line)
                 pos_item = QGraphicsSimpleTextItem(end_pos, self)
                 pos_item.setFont(QFont("Courier", 12))
                 
-                # Calculate position for consistent alignment
                 text_width = pos_item.boundingRect().width()
-                pos_x = max_width + 10  # Fixed position based on maximum width
+                # Add extra spacing for strand indicators on last line
+                extra_spacing = 25 if line_num == total_lines - 1 else 0
+                pos_x = line_width + strand_margin + extra_spacing + 10
                 pos_y = plot_y - pos_item.boundingRect().height()/2
                 pos_item.setPos(pos_x, pos_y)
 
                 current_pos += bases_this_line
+
+            # Update scene rect to include strand indicators
+            total_width = max_width + 100  # Add space for position numbers
+            total_lines = (len(self.sequence) + self.bases_per_line - 1) // self.bases_per_line
+            total_height = total_lines * self.line_spacing
             
-            # Get parent view if it exists
-            view = self.scene().views()[0] if self.scene() and self.scene().views() else None
-            if view:
-                view.setUpdatesEnabled(True)  # Re-enable updates if we have a view
-            self.update()
+            # Set scene rect with space for strand indicators
+            scene_rect = QRectF(0, 0, total_width + strand_margin, total_height)
+            if self.scene():
+                self.scene().setSceneRect(scene_rect)
             
+            # Update ruler to match new alignment
+            if hasattr(self, '_create_ruler'):
+                self._create_ruler()
+                
         except Exception as e:
             self.logger.error(f"Error in _create_display: {str(e)}")
 
@@ -764,6 +804,11 @@ class SequenceViewer(QGraphicsObject):
                         nuc.is_highlighted = True
                         nuc.highlight_color = color
                         nuc.update()
+
+                self.logger.debug(
+                    f"Highlighted nucleotides on line {line_num} "
+                    f"for strand {strand} from {start_idx} to {end_idx}"
+                )
 
         except Exception as e:
             self.logger.error(f"Error in _reapply_highlights: {str(e)}")
