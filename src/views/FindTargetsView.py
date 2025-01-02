@@ -1,6 +1,6 @@
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, 
-                            QPushButton, QHBoxLayout, QLabel, QAbstractItemView)
+                            QPushButton, QHBoxLayout, QLabel, QAbstractItemView, QCheckBox)
 from PyQt6 import uic
 from PyQt6.QtCore import Qt, QTimer
 import time
@@ -17,10 +17,15 @@ class FindTargetsView(QtWidgets.QMainWindow):
 
     def _init_ui(self):
         uic.loadUi(self.global_settings.get_ui_dir_path() + '/find_targets.ui', self)
+        self.checkbox_select_all = self.findChild(QCheckBox, 'chkSelectAll')
         self.results_table = self.findChild(QTableWidget, 'tblTargets')
+        
+        # Connect select all checkbox signal
+        self.checkbox_select_all.stateChanged.connect(self._on_select_all_changed)
         
         # Optimize table settings for large datasets
         self.results_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.results_table.setSelectionMode(QTableWidget.SelectionMode.MultiSelection)
         self.results_table.setShowGrid(False)
         self.results_table.setAlternatingRowColors(True)
         
@@ -134,29 +139,38 @@ class FindTargetsView(QtWidgets.QMainWindow):
             selected_rows = set(index.row() for index in self.results_table.selectedIndexes())
             selected_targets = []
             
+            if not selected_rows:
+                self.logger.debug("No rows selected")
+                return []
+            
             # Get the currently visible rows from the table
-            visible_targets = []
-            for row in range(self.results_table.rowCount()):
-                if not self.results_table.isRowHidden(row):
+            for row in selected_rows:
+                try:
+                    # Check if all required cells have valid data
+                    cells = [self.results_table.item(row, col) for col in range(5)]
+                    if any(cell is None for cell in cells):
+                        self.logger.warning(f"Row {row} has missing data, skipping")
+                        continue
+                    
                     # Get data from visible row
                     target_data = {
-                        'feature_type': self.results_table.item(row, 0).text(),
-                        'chromosome': self.results_table.item(row, 1).text(),
-                        'feature_id': self.results_table.item(row, 2).text(),
-                        'feature_name': self.results_table.item(row, 3).text(),
-                        'feature_description': self.results_table.item(row, 4).text()
+                        'feature_type': cells[0].text(),
+                        'chromosome': cells[1].text(),
+                        'feature_id': cells[2].text(),
+                        'feature_name': cells[3].text(),
+                        'feature_description': cells[4].text()
                     }
-                    visible_targets.append((row, target_data))
-
-            # Match selected rows with visible targets
-            for row, target_data in visible_targets:
-                if row in selected_rows:
+                    
                     # Find corresponding full target data from _all_results
                     for full_target in self._all_results:
                         if (full_target['feature_id'] == target_data['feature_id'] and 
                             full_target['feature_type'] == target_data['feature_type']):
                             selected_targets.append(full_target)
                             break
+
+                except Exception as row_error:
+                    self.logger.warning(f"Error processing row {row}: {str(row_error)}")
+                    continue
 
             self.logger.debug(f"Selected {len(selected_targets)} targets from filtered view")
             return selected_targets
@@ -173,8 +187,7 @@ class FindTargetsView(QtWidgets.QMainWindow):
         """Handle generate library button click"""
         try:
             selected_targets = self.get_selected_targets()
-            self.global_settings.logger.debug(f"Selected {len(selected_targets)} targets for library generation")
-            
+
             if not selected_targets:
                 QtWidgets.QMessageBox.warning(
                     self,
@@ -183,14 +196,15 @@ class FindTargetsView(QtWidgets.QMainWindow):
                 )
                 return
             
+            # Store selected targets in global settings for persistence
+            self.global_settings._current_selected_targets = selected_targets
+            
             # Create and show generate library window
-            self.global_settings.logger.debug("Creating GenerateLibraryController")
             from controllers.GenerateLibraryController import GenerateLibraryController
             generate_library_controller = GenerateLibraryController(
                 self.global_settings,
                 selected_targets
             )
-            self.global_settings.logger.debug("Showing generate library window")
             generate_library_controller.show()
             
         except Exception as e:
@@ -200,3 +214,15 @@ class FindTargetsView(QtWidgets.QMainWindow):
                 "Error",
                 f"An error occurred while opening the generate library window: {str(e)}"
             )
+
+    def _on_select_all_changed(self, state):
+        """Handle select all checkbox state changes"""
+        try:
+            self.results_table.setUpdatesEnabled(False)  # Disable updates for performance
+            if state == Qt.CheckState.Checked.value:
+                self.results_table.selectAll()
+            else:
+                self.results_table.clearSelection()
+            self.results_table.setUpdatesEnabled(True)  # Re-enable updates
+        except Exception as e:
+            self.logger.error(f"Error in select all handler: {str(e)}")

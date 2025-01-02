@@ -218,6 +218,18 @@ class OffTargetController(QObject):
                 if endo_index >= 0:
                     self.view.combo_box_endonuclease.setCurrentIndex(endo_index)
             
+            # Validate and set annotation file
+            if 'annotation_file' not in parameters:
+                raise ValueError("No annotation file provided in parameters")
+                
+            annotation_file = parameters['annotation_file']
+            if not annotation_file:
+                raise ValueError("Empty annotation file path provided")
+                
+            # Set annotation file in global settings
+            self.global_settings.set_current_annotation_file(annotation_file)
+            self.logger.debug(f"Set annotation file to: {annotation_file}")
+            
             # Store targets for analysis
             if 'guides' in parameters:
                 self._targets = parameters['guides']

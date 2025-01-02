@@ -5,15 +5,16 @@ from utils.ui import show_error
 from models.DatabaseManager import FileChangeType
 
 class HomeWindowModel:
-    def __init__(self, global_settings):
+    def __init__(self, global_settings, skip_initial_load=False):
         self.global_settings = global_settings
         self.logger = global_settings.get_logger()
-        self.data = {
-            'organism_to_files': {},
-            'organism_to_endonuclease': {},
-            'annotation_files': set()  # Using set for efficient updates
-        }
-        self.load_data()
+        self._organism_to_files = {}
+        self._organism_to_endonuclease = {}
+        self._annotation_files = []
+        
+        # Only load data if not skipped
+        if not skip_initial_load:
+            self.load_data()
 
     def load_data(self) -> None:
         """Load all required data"""
@@ -56,8 +57,8 @@ class HomeWindowModel:
         """Load organism and endonuclease data from CSPR files"""
         try:
             # Clear existing data
-            self.data["organism_to_files"] = {}
-            self.data["organism_to_endonuclease"] = {}
+            self._organism_to_files = {}
+            self._organism_to_endonuclease = {}
             
             cspr_files = glob.glob(os.path.join(self.global_settings.get_db_path(), "*.cspr"))
             
@@ -70,20 +71,20 @@ class HomeWindowModel:
                     organism = f.readline().strip().replace("GENOME: ", '')
                 
                 # Update organism to files mapping
-                if organism not in self.data["organism_to_files"]:
-                    self.data["organism_to_files"][organism] = {}
-                self.data["organism_to_files"][organism][endonuclease] = [
+                if organism not in self._organism_to_files:
+                    self._organism_to_files[organism] = {}
+                self._organism_to_files[organism][endonuclease] = [
                     file_name, 
                     file_name.replace(".cspr", "_repeats.db")
                 ]
                 
                 # Update organism to endonuclease mapping
-                if organism not in self.data["organism_to_endonuclease"]:
-                    self.data["organism_to_endonuclease"][organism] = []
-                if endonuclease not in self.data["organism_to_endonuclease"][organism]:
-                    self.data["organism_to_endonuclease"][organism].append(endonuclease)
+                if organism not in self._organism_to_endonuclease:
+                    self._organism_to_endonuclease[organism] = []
+                if endonuclease not in self._organism_to_endonuclease[organism]:
+                    self._organism_to_endonuclease[organism].append(endonuclease)
             
-            self.logger.debug(f"Loaded data for {len(self.data['organism_to_files'])} organisms")
+            self.logger.debug(f"Loaded data for {len(self._organism_to_files)} organisms")
             
         except Exception as e:
             self.logger.error(f"Error loading organisms and endonucleases: {str(e)}")
@@ -99,12 +100,12 @@ class HomeWindowModel:
             )
             
             # Process files
-            self.data["annotation_files"] = {
+            self._annotation_files = {
                 os.path.basename(file) for file in annotation_files 
                 if not file.endswith('.index')  # Exclude index files
             }
             
-            self.logger.debug(f"Loaded {len(self.data['annotation_files'])} annotation files")
+            self.logger.debug(f"Loaded {len(self._annotation_files)} annotation files")
             
         except Exception as e:
             self.logger.error(f"Error loading annotation files: {str(e)}")
@@ -112,15 +113,15 @@ class HomeWindowModel:
 
     def get_organism_to_files(self) -> Dict[str, Dict[str, List[str]]]:
         """Get mapping of organisms to their files"""
-        return self.data['organism_to_files']
+        return self._organism_to_files
 
     def get_organism_to_endonuclease(self) -> Dict[str, List[str]]:
         """Get mapping of organisms to their endonucleases"""
-        return self.data.get("organism_to_endonuclease", {})
+        return self._organism_to_endonuclease
 
     def get_annotation_files(self) -> List[str]:
         """Get list of annotation files"""
-        return sorted(self.data.get("annotation_files", set()), key=str.lower)
+        return sorted(self._annotation_files, key=str.lower)
     
     def find_targets(self, input_data: dict) -> None:
         pass

@@ -14,15 +14,28 @@ class NCBIWindowController:
     def __init__(self, settings):
         self.settings = settings
         try:
+            start_time = time.time()
             self.logger = self.settings.get_logger()
+            self.logger.debug("Starting NCBIWindowController initialization")
+
+            # Log model initialization time
+            model_start = time.time()
             self.model = NCBIWindowModel(settings)
+            self.logger.debug(f"Model initialization took: {time.time() - model_start:.2f} seconds")
+
+            # Log view initialization time
+            view_start = time.time()
             self.view = NCBIWindowView(settings)
+            self.logger.debug(f"View initialization took: {time.time() - view_start:.2f} seconds")
             
             # Connect to the initialization complete signal
             self.view.initialization_complete.connect(self.setup_connections)
             
             self._init_ui()
+            
+            self.logger.debug(f"Total NCBIWindowController initialization took: {time.time() - start_time:.2f} seconds")
         except Exception as e:
+            self.logger.error(f"Error initializing NCBIWindowController: {str(e)}")
             show_error(self.settings, "Error initializing NCBIWindowController", str(e))
 
     def setup_connections(self):
@@ -134,7 +147,7 @@ class NCBIWindowController:
                 self.logger.info(f"Processing ID: {id}")
                 
                 urls = self.model.get_download_url(id, self.view.radio_button_collections_genbank.isChecked())
-                self.logger.info(f"Download URLs for ID {id}: {urls}")
+                self.logger.info(f"Download URLs for ID {id}: {urls} in database")
                 
                 if not urls:
                     self.logger.warning(f"No download URL found for ID: {id}")

@@ -8,6 +8,7 @@ import traceback
 from views.LoadingDialog import LoadingDialog
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QColor
+import os
 
 class ViewTargetsController:
     def __init__(self, global_settings):
@@ -31,7 +32,6 @@ class ViewTargetsController:
         self.view.push_button_change_location.clicked.connect(self.change_indices)
         self.view.push_button_reset_location.clicked.connect(self.reset_location)
         self.view.check_box_select_all.stateChanged.connect(self.select_all)
-        # self.view.combo_box_gene.currentIndexChanged.connect(self.display_gene_data)
         self.view.gene_selected.connect(self.on_gene_selected)
         
         self.view.check_box_filter_5_prime_g_sequences.stateChanged.connect(self.refresh_guides_display)
@@ -42,11 +42,33 @@ class ViewTargetsController:
         """Handle view exons only checkbox state change"""
         try:
             is_checked = self.view.check_box_view_exons_only.isChecked()
-            self.logger.debug(f"View exons only changed to: {is_checked}")
             self.model.set_view_exons_only(is_checked)
             self.refresh_gene_viewer()
         except Exception as e:
             self.logger.error(f"Error handling view exons change: {str(e)}")
+
+    def _clear_viewer_state(self):
+        """Clear all highlights and cursor states from the gene viewer"""
+        try:
+            if hasattr(self.view, 'dna_feature_viewer'):
+                # Clear sequence viewer highlights and cursor
+                self.view.dna_feature_viewer.sequence_viewer.clear_highlights()
+                for nuc in self.view.dna_feature_viewer.sequence_viewer.nucleotides:
+                    nuc.show_cursor = False
+                    nuc.update()
+                self.view.dna_feature_viewer.sequence_viewer.selection_active = False
+                self.view.dna_feature_viewer.sequence_viewer.selection_start = None
+                self.view.dna_feature_viewer.sequence_viewer.selection_end = None
+                
+                # Clear insertion zone cursor
+                if hasattr(self.view.dna_feature_viewer, 'insertion_zone'):
+                    if hasattr(self.view.dna_feature_viewer.insertion_zone, 'sequence_cursor'):
+                        self.view.dna_feature_viewer.insertion_zone.sequence_cursor.hide()
+                    self.view.dna_feature_viewer.insertion_zone.current_cursor_pos = None
+                    self.view.dna_feature_viewer.insertion_zone.selection_start = None
+                    self.view.dna_feature_viewer.insertion_zone.selection_end = None
+        except Exception as e:
+            self.logger.error(f"Error clearing viewer state: {str(e)}")
 
     def load_guides(self, selected_targets, organism, endonuclease, loading_dialog=None):
         try:
@@ -62,6 +84,9 @@ class ViewTargetsController:
                 QApplication.processEvents()
             
             try:
+                # Clear any existing highlights and cursor
+                self._clear_viewer_state()
+                
                 loading_dialog.set_message("Loading guides...", 60)
                 QApplication.processEvents()
                 
@@ -92,43 +117,73 @@ class ViewTargetsController:
                 loading_dialog.set_message("Updating display...", 80)
                 QApplication.processEvents()
                 
-                self.view.display_guides_in_table(guides)
+                # Get unique position names or gene IDs
+                unique_entries = set()
+                for target in selected_targets:
+                    if 'feature_id' in target:
+                        if "chromosome" in str(target['feature_id']):
+                            unique_entries.add(target['feature_id'])
+                        else:
+                            locus_tag = target['feature_id']
+                            gene_data = self.model.get_gene_data(locus_tag)
+                            if gene_data and 'info' in gene_data:
+                                gene_name = gene_data['info'].get('gene_name', '')
+                                display_text = f"{locus_tag}: {gene_name}" if gene_name else locus_tag
+                                unique_entries.add(display_text)
                 
-                # Only trigger gene selection if this is the initial load
-                if not hasattr(self, '_initial_load_complete'):
-                    loading_dialog.set_message("Loading initial gene data...", 90)
-                    QApplication.processEvents()
+                # Convert set to list for combo box
+                entries = list(unique_entries)
+                self.logger.debug(f"Found {len(entries)} unique entries")
+                
+                if entries:
+                    first_entry = entries[0]
                     
-                    # Get unique position names or gene IDs
-                    unique_entries = set()
-                    for target in selected_targets:
-                        if 'feature_id' in target:
-                            # For position-based searches, use the feature_id directly
-                            if "chromosome" in str(target['feature_id']):
-                                unique_entries.add(target['feature_id'])
-                            else:
-                                # For gene-based searches, get gene data and format with name
-                                locus_tag = target['feature_id']
-                                gene_data = self.model.get_gene_data(locus_tag)
-                                if gene_data and 'info' in gene_data:
-                                    gene_name = gene_data['info'].get('gene_name', '')
-                                    display_text = f"{locus_tag}: {gene_name}" if gene_name else locus_tag
-                                    unique_entries.add(display_text)
+                    # Block signals during setup
+                    self.view.combo_box_gene.blockSignals(True)
                     
-                    # Convert set to list for combo box
-                    entries = list(unique_entries)
-                    self.logger.debug(f"Found {len(entries)} unique entries")
-                    
+                    # Update combo box
                     self.view.set_combo_box_gene(entries)
+                    self.view.combo_box_gene.setCurrentIndex(0)
                     
-                    # Set first entry without triggering the selection signal
-                    if entries:
-                        self.view.combo_box_gene.blockSignals(True)
-                        self.view.combo_box_gene.setCurrentIndex(0)
-                        self.view.combo_box_gene.blockSignals(False)
-                        self._load_initial_gene_data(entries[0])
+                    # Display guides for the first entry
+                    if "chromosome" in first_entry and "start:" in first_entry:
+                        position_guides = [g for g in guides if g.get('feature_id') == first_entry]
+                        self.view.display_guides_in_table(position_guides)
+                        
+                        # Parse position from the text
+                        parts = first_entry.split(',')
+                        chrom = parts[0].split('chromosome')[1].strip()
+                        start = int(parts[1].split('start:')[1].strip())
+                        end = int(parts[2].split('end:')[1].strip())
+                        
+                        # Update location fields - add 1 to start for display
+                        self.view.line_edit_start_location.setText(str(start + 1))
+                        self.view.line_edit_stop_location.setText(str(end))
+                        
+                        # Get sequence directly for position-based search
+                        sequence = self.model._get_sequence_for_position(chrom, start, end)
+                        if sequence:
+                            # Single call to set_data
+                            self.view.dna_feature_viewer.set_data(sequence, [], start)
+                    else:
+                        # Regular gene-based search
+                        locus_tag = first_entry.split(': ')[0] if ': ' in first_entry else first_entry
+                        gene_guides = [g for g in guides if str(g.get('feature_id', '')).strip().lower() == locus_tag.lower()]
+                        self.view.display_guides_in_table(gene_guides)
+                        
+                        # Get sequence data and features
+                        sequence_data = self.model.get_gene_sequence(locus_tag)
+                        if sequence_data:
+                            # Update location fields - add 1 to start for display
+                            self.view.line_edit_start_location.setText(str(sequence_data['start'] + 1))
+                            self.view.line_edit_stop_location.setText(str(sequence_data['end']))
+                            
+                            # Get features and update viewer in a single call
+                            features = self.model.get_features_for_gene(locus_tag)
+                            self.view.dna_feature_viewer.set_data(sequence_data['sequence'], features, sequence_data['start'])
                     
-                    self._initial_load_complete = True
+                    # Now unblock signals after everything is set up
+                    self.view.combo_box_gene.blockSignals(False)
                 
                 loading_dialog.set_progress(100)
                 QApplication.processEvents()
@@ -143,53 +198,6 @@ class ViewTargetsController:
             self.logger.error(f"Error in load_guides: {str(e)}")
             self.logger.error(f"Stack trace: {traceback.format_exc()}")
             show_error(self.settings, "Error loading guides", str(e))
-
-    def _load_initial_gene_data(self, selected_text):
-        """Load initial gene data without showing loading dialog"""
-        try:
-            # Similar to on_gene_selected but without loading dialog
-            if "chromosome" in selected_text and "start:" in selected_text:
-                # Parse position from the text
-                parts = selected_text.split(',')
-                chrom = parts[0].split('chromosome')[1].strip()  # Remove any extra colons
-                start = int(parts[1].split('start:')[1].strip())
-                end = int(parts[2].split('end:')[1].strip())
-                
-                self.view.line_edit_start_location.setText(str(start))
-                self.view.line_edit_stop_location.setText(str(end))
-                
-                # Get sequence directly for position-based search
-                sequence = self.model._get_sequence_for_position(chrom, start, end)
-                if sequence:
-                    # Update gene viewer with sequence
-                    self.view.update_gene_viewer(sequence, [])
-                    self.logger.debug(f"Updated gene viewer with sequence of length {len(sequence)}")
-                else:
-                    self.logger.error(f"Could not get sequence for position {start}-{end} in chromosome {chrom}")
-                
-                position_guides = [g for g in self.model.guides 
-                                 if g.get('feature_id') == selected_text]
-                self.view.display_guides_in_table(position_guides)
-            else:
-                # Regular gene-based search
-                locus_tag = selected_text.split(': ')[0] if ': ' in selected_text else selected_text
-                sequence_data = self.model.get_gene_sequence(locus_tag)
-                if sequence_data:
-                    self.view.line_edit_start_location.setText(str(sequence_data['start']))
-                    self.view.line_edit_stop_location.setText(str(sequence_data['end']))
-                    
-                    features = self.model.get_features_for_gene(locus_tag)
-                    
-                    self.view.update_gene_viewer(sequence_data['sequence'], features)
-                    
-                    gene_guides = [g for g in self.model.guides 
-                                  if str(g.get('feature_id', '')).strip().lower() == locus_tag.lower()]
-                    self.view.display_guides_in_table(gene_guides)
-            
-            self.logger.debug("Initial gene data loaded successfully")
-            
-        except Exception as e:
-            self.logger.error(f"Error loading initial gene data: {str(e)}")
 
     def _on_endonuclease_changed(self, new_endonuclease):
         try:
@@ -210,8 +218,6 @@ class ViewTargetsController:
                         new_target['endonuclease'] = new_endonuclease
                         updated_targets.append(new_target)
                     
-                    self.logger.debug(f"Created {len(updated_targets)} updated targets for {new_endonuclease}")
-                    
                     # Update model with new targets
                     self.model.load_guides(updated_targets, self.organism, new_endonuclease)
                     guides = self.model.get_guides()
@@ -225,36 +231,6 @@ class ViewTargetsController:
             self.logger.error(f"Error changing endonuclease: {str(e)}")
             self.logger.error(f"Stack trace: {traceback.format_exc()}")
             show_error(self.settings, "Error", f"Could not change endonuclease: {str(e)}")
-
-    # def load_gene_viewer(self):
-    #     try:
-    #         # Get selected gene from combo box
-    #         selected_text = self.view.combo_box_gene.currentText()
-    #         if not selected_text:
-    #             self.logger.debug("No gene selected")
-    #             return
-            
-    #         # Extract locus tag from "locus_tag: gene_name" format
-    #         locus_tag = selected_text.split(': ')[0] if ': ' in selected_text else selected_text
-    #         self.logger.debug(f"Loading sequence for locus tag: {locus_tag}")
-            
-    #         # Get gene sequence with padding
-    #         sequence_data = self.model.get_gene_sequence(locus_tag)
-            
-    #         if sequence_data:
-    #             # Update gene viewer with sequence
-    #             self.view.set_text_edit_gene_viewer(sequence_data['sequence'])
-                
-    #             # Update location fields
-    #             self.view.line_edit_start_location.setText(str(sequence_data['start']))
-    #             self.view.line_edit_stop_location.setText(str(sequence_data['end']))
-                
-    #         else:
-    #             self.logger.warning(f"No sequence data found for locus tag {locus_tag}")
-                
-    #     except Exception as e:
-    #         self.logger.error(f"Error in load_gene_viewer: {str(e)}")
-    #         self.logger.error(f"Stack trace: {traceback.format_exc()}")
 
     def perform_off_target_analysis(self):
         """Launch off-target analysis for selected guides"""
@@ -279,11 +255,35 @@ class ViewTargetsController:
                     self._handle_off_target_results
                 )
             
+            # Get current annotation file
+            current_annotation_file = self.settings.get_current_annotation_file()
+            if not current_annotation_file:
+                QtWidgets.QMessageBox.warning(
+                    self.view,
+                    "No Annotation File",
+                    "Please select an annotation file before performing off-target analysis."
+                )
+                return
+                
+            # Verify annotation file exists
+            annotation_path = os.path.join(self.settings.get_db_path(), 'GBFF', current_annotation_file)
+            if not os.path.isfile(annotation_path):
+                # Try without GBFF subdirectory
+                annotation_path = os.path.join(self.settings.get_db_path(), current_annotation_file)
+                if not os.path.isfile(annotation_path):
+                    QtWidgets.QMessageBox.warning(
+                        self.view,
+                        "Invalid Annotation File",
+                        f"Could not find annotation file at {annotation_path}"
+                    )
+                    return
+            
             # Set initial parameters based on current organism/endonuclease
             parameters = {
                 'organism': self.organism,
                 'endonuclease': self.endonuclease,
-                'guides': selected_guides  # Pass the selected guides
+                'guides': selected_guides,  # Pass the selected guides
+                'annotation_file': current_annotation_file  # Add annotation file
             }
             
             # Initialize analysis with parameters
@@ -473,20 +473,9 @@ class ViewTargetsController:
             show_error(self.settings, "Error", f"Could not show scoring options: {str(e)}")
 
     def change_indices(self):
-        """Change the start and end positions for gene viewer"""
+        """Change the displayed sequence range"""
         try:
-            # Make sure gene viewer has content
-            if not self.view.text_edit_gene_viewer.toPlainText():
-                QMessageBox.warning(
-                    self.view,
-                    "Gene Viewer Error",
-                    "Gene Viewer display is empty! Please ensure there is sequence data to view."
-                )
-                return
-
-            # Get current gene/position info
-            current_gene = self.view.combo_box_gene.currentText()
-            
+            # Get new start and end positions
             try:
                 new_start = int(self.view.line_edit_start_location.text())
                 new_end = int(self.view.line_edit_stop_location.text())
@@ -523,7 +512,10 @@ class ViewTargetsController:
                 )
                 return
 
-            # Get sequence for new range
+            # Get current gene/position
+            current_gene = self.view.combo_box_gene.currentText()
+            
+            # Handle position-based search
             if "chromosome" in current_gene and "start:" in current_gene:
                 # For position-based searches
                 try:
@@ -531,12 +523,14 @@ class ViewTargetsController:
                     # Get full chromosome identifier instead of just the number
                     chrom = parts[0].split('chromosome')[1].strip()  # This will now keep the full identifier
 
-                    # Get sequence for new range
-                    sequence = self.model._get_sequence_for_position(chrom, new_start, new_end)
+                    # Get sequence for new range - subtract 1 from start for 0-based indexing
+                    sequence = self.model._get_sequence_for_position(chrom, new_start - 1, new_end)
                     
                     if sequence:
-                        self.view.set_text_edit_gene_viewer(sequence)
-                        # Update the line edits with new positions
+                        # Update DNA viewer with sequence
+                        self.view.dna_feature_viewer.set_data(sequence, [], new_start - 1)
+                        
+                        # Update the line edits with new positions (keep display as 1-based)
                         self.view.line_edit_start_location.setText(str(new_start))
                         self.view.line_edit_stop_location.setText(str(new_end))
                     else:
@@ -545,44 +539,60 @@ class ViewTargetsController:
                 except Exception as e:
                     QMessageBox.warning(
                         self.view,
-                        "Position Error",
-                        f"Error changing position: {str(e)}"
+                        "Sequence Error",
+                        f"Could not get sequence for range {new_start}-{new_end} in chromosome {chrom}"
                     )
-                    return
             else:
-                # For feature-based searches
+                # For gene-based searches
                 locus_tag = current_gene.split(': ')[0] if ': ' in current_gene else current_gene
+                
+                # Get gene data to get chromosome information
                 gene_data = self.model.get_gene_data(locus_tag)
                 
-                if not gene_data or 'info' not in gene_data:
-                    QMessageBox.warning(
-                        self.view,
-                        "Gene Data Error",
-                        "Could not get gene data for the current selection."
-                    )
-                    return
-                
-                print(f"locus_tag: {locus_tag}, new_start: {new_start}, new_end: {new_end}")
-                    
-                # Get new sequence for the range
-                sequence_data = self.model.get_gene_sequence_for_range(locus_tag, new_start, new_end)
-                if sequence_data:
-                    self.view.set_text_edit_gene_viewer(sequence_data['sequence'])
-                    # Update the line edits with new positions
-                    self.view.line_edit_start_location.setText(str(new_start))
-                    self.view.line_edit_stop_location.setText(str(new_end))
+                if gene_data and 'info' in gene_data:
+                    try:
+                        # Get chromosome from gene data
+                        chrom = gene_data['info']['chromosome']
+                        
+                        # Get sequence directly using _get_sequence_for_position
+                        sequence = self.model._get_sequence_for_position(chrom, new_start - 1, new_end)
+                        
+                        if sequence:
+                            # Update line edits (keep display as 1-based)
+                            self.view.line_edit_start_location.setText(str(new_start))
+                            self.view.line_edit_stop_location.setText(str(new_end))
+                            
+                            # Get features for this gene
+                            features = self.model.get_features_for_gene(locus_tag)
+                            
+                            # Update DNA viewer with new sequence
+                            self.view.dna_feature_viewer.set_data(sequence, features, new_start - 1)
+                            
+                            # Update guides display for new range
+                            gene_guides = [g for g in self.model.guides 
+                                         if str(g.get('feature_id', '')).strip().lower() == locus_tag.lower() and
+                                         new_start <= int(g['location'].split('-')[0]) <= new_end]
+                            self.view.display_guides_in_table(gene_guides)
+                        else:
+                            raise ValueError("Could not get sequence for the specified range")
+                            
+                    except ValueError as ve:
+                        QMessageBox.warning(
+                            self.view,
+                            "Range Error",
+                            f"Invalid range: {str(ve)}"
+                        )
                 else:
                     QMessageBox.warning(
                         self.view,
-                        "Sequence Error",
-                        "Could not get sequence for the specified range."
+                        "Gene Error",
+                        f"Could not get sequence data for gene {locus_tag}"
                     )
-                    return
-
+                
         except Exception as e:
-            self.logger.error(f"Error in change_indices: {str(e)}")
+            self.logger.error(f"Error changing indices: {str(e)}")
             self.logger.error(f"Stack trace: {traceback.format_exc()}")
-            show_error(self.settings, "Error changing indices", str(e))
+            show_error(self.settings, "Error", f"Could not change sequence range: {str(e)}")
 
     def reset_location(self):
         """Reset gene viewer to the original sequence and location"""
@@ -602,12 +612,17 @@ class ViewTargetsController:
                     # Get sequence directly using model's method
                     sequence = self.model._get_sequence_for_position(chrom, start, end)
                     if sequence:
-                        # Update gene viewer with sequence
-                        self.view.set_text_edit_gene_viewer(sequence)
+                        # Update DNA viewer with sequence
+                        self.view.dna_feature_viewer.set_data(sequence, [], start)
                         
-                        # Update location fields - subtract 1 from start to match 0-based indexing
+                        # Update location fields - add 1 to start for display
                         self.view.line_edit_start_location.setText(str(start + 1))
                         self.view.line_edit_stop_location.setText(str(end))
+                        
+                        # Update guides display
+                        position_guides = [g for g in self.model.guides 
+                                         if start <= int(g['location'].split('-')[0]) <= end]
+                        self.view.display_guides_in_table(position_guides)
                     else:
                         raise ValueError("Could not get sequence for position")
                         
@@ -620,30 +635,41 @@ class ViewTargetsController:
                     )
                     return
             else:
-                # For feature-based searches
+                # For gene-based searches
                 locus_tag = current_gene.split(': ')[0] if ': ' in current_gene else current_gene
-                sequence_data = self.model.get_gene_sequence(locus_tag)
                 
+                # Get original gene sequence
+                sequence_data = self.model.get_gene_sequence(locus_tag)
                 if sequence_data:
-                    # Update gene viewer with sequence
-                    self.view.set_text_edit_gene_viewer(sequence_data['sequence'])
+                    # Get features for this gene
+                    features = self.model.get_features_for_gene(locus_tag)
                     
-                    # Update location fields - subtract 1 from start to match 0-based indexing
+                    # Update DNA viewer with sequence and features
+                    self.view.dna_feature_viewer.set_data(
+                        sequence_data['sequence'], 
+                        features, 
+                        sequence_data['start']
+                    )
+                    
+                    # Update location fields - add 1 to start for display
                     self.view.line_edit_start_location.setText(str(sequence_data['start'] + 1))
                     self.view.line_edit_stop_location.setText(str(sequence_data['end']))
+                    
+                    # Update guides display
+                    gene_guides = [g for g in self.model.guides 
+                                 if str(g.get('feature_id', '')).strip().lower() == locus_tag.lower()]
+                    self.view.display_guides_in_table(gene_guides)
                 else:
-                    self.logger.warning(f"No sequence data found for locus tag {locus_tag}")
                     QMessageBox.warning(
                         self.view,
-                        "Gene Data Error",
-                        "Could not get gene sequence for resetting location."
+                        "Gene Error",
+                        f"Could not get sequence data for gene {locus_tag}"
                     )
-                    return
-                
+                    
         except Exception as e:
             self.logger.error(f"Error in reset_location: {str(e)}")
             self.logger.error(f"Stack trace: {traceback.format_exc()}")
-            show_error(self.settings, "Error resetting location", str(e))
+            show_error(self.settings, "Reset Error", str(e))
 
     def select_all(self, state):
         try:
@@ -673,6 +699,10 @@ class ViewTargetsController:
                 # Get current guides from model
                 self.model.load_guides(self.selected_targets, self.organism, self.endonuclease)
                 guides = self.model.get_guides()
+                
+                # Clear any existing highlights and cursor
+                self._clear_viewer_state()
+                
                 self.view.display_guides_in_table(guides)
         except Exception as e:
             show_error(self.settings, "Error refreshing guides display", str(e))
@@ -689,6 +719,9 @@ class ViewTargetsController:
             QApplication.processEvents()
             
             try:
+                # Clear any existing highlights and cursor
+                self._clear_viewer_state()
+                
                 # Load data in chunks
                 loading_dialog.set_message("Loading sequence data...", 30)
                 QApplication.processEvents()
@@ -704,33 +737,41 @@ class ViewTargetsController:
                     self.view.line_edit_start_location.setText(str(start))
                     self.view.line_edit_stop_location.setText(str(end))
                     
-                    # Filter guides efficiently
-                    loading_dialog.set_message("Filtering guides...", 60)
-                    QApplication.processEvents()
-                    position_guides = [g for g in self.model.guides 
-                                     if g.get('feature_id') == selected_text]
+                    # Get sequence directly for position-based search
+                    sequence = self.model._get_sequence_for_position(chrom, start, end)
+                    if sequence:
+                        # Update DNA viewer with sequence
+                        self.view.dna_feature_viewer.set_data(sequence, [], start)
+                        self.logger.debug(f"Updated gene viewer with sequence of length {len(sequence)}")
+                    else:
+                        self.logger.error(f"Could not get sequence for position {start}-{end} in chromosome {chrom}")
+                    
+                    # Filter guides for this position
+                    position_guides = [g for g in self.model.guides if g.get('feature_id') == selected_text]
                     self.view.display_guides_in_table(position_guides)
                     
                 else:
-                    # Regular gene-based search with optimized loading
+                    # Regular gene-based search
                     locus_tag = selected_text.split(': ')[0] if ': ' in selected_text else selected_text
-                    sequence_data = self.model.get_gene_sequence(locus_tag)
+                    gene_data = self.model.get_gene_data(locus_tag)
                     
-                    if sequence_data:
-                        self.view.line_edit_start_location.setText(str(sequence_data['start']))
-                        self.view.line_edit_stop_location.setText(str(sequence_data['end']))
+                    if gene_data and 'sequence' in gene_data and 'info' in gene_data:
+                        self.view.line_edit_start_location.setText(str(gene_data['info']['start'] + 1))
+                        self.view.line_edit_stop_location.setText(str(gene_data['info']['end']))
                         
                         loading_dialog.set_message("Updating display...", 80)
                         QApplication.processEvents()
                         
+                        # Get features and update viewer in a single call
+                        features = self.model.get_features_for_gene(locus_tag)
+                        self.view.dna_feature_viewer.set_data(gene_data['sequence'], features, gene_data['info']['start'])
+                        
+                        # Filter guides for this gene
                         gene_guides = [g for g in self.model.guides 
-                                      if str(g.get('feature_id', '')).strip().lower() == locus_tag.lower()]
+                                     if str(g.get('feature_id', '')).strip().lower() == locus_tag.lower()]
                         self.view.display_guides_in_table(gene_guides)
-                
-                # Refresh gene viewer
-                loading_dialog.set_message("Refreshing viewer...", 90)
-                QApplication.processEvents()
-                self.refresh_gene_viewer()
+                    else:
+                        self.logger.warning(f"No valid gene data found for locus tag: {locus_tag}")
                 
             finally:
                 loading_dialog.close()
@@ -781,19 +822,22 @@ class ViewTargetsController:
                         print("Negative strand")
                         # Convert sequence to complement for negative strand search
                         print(f"Sequence: {sequence_upper}")
-                        complement_sequence = ''.join({'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'K': 'M', 'Y': 'R', 'R': 'Y', 'M': 'K', 'S': 'S'}[base] for base in sequence_upper)
+                        complement_sequence = ''.join({'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 
+                                                     'K': 'M', 'Y': 'R', 'R': 'Y', 'M': 'K', 
+                                                     'S': 'S'}[base] for base in sequence_upper)
                         print(f"Complement sequence: {complement_sequence}")
                         target_sequence = guide_sequence.upper()
                         print(f"Target sequence: {target_sequence}")
-                        target_sequence = target_sequence[::-1]
+                        target_sequence = target_sequence[::-1]  # Reverse the sequence
                         print(f"Reversed target sequence: {target_sequence}")
                         pos = complement_sequence.find(target_sequence)
                         print(f"Position: {pos}")
+                        
                         if pos != -1:
                             color = QColor(255, 0, 0, 100)  # Red for negative strand
                             self.logger.debug(f"Found negative strand sequence at position {pos}")
                             
-                            # Pass the original position but indicate negative strand
+                            # For negative strand, use the position directly but indicate strand
                             self.view.dna_feature_viewer.sequence_viewer.highlight_sequence(
                                 pos,
                                 pos + len(guide_sequence) - 1,
@@ -1079,12 +1123,25 @@ class ViewTargetsController:
                 chrom = parts[0].split('chromosome')[1].strip()
                 start = int(parts[1].split('start:')[1].strip())
                 end = int(parts[2].split('end:')[1].strip())
+                
+                self.logger.debug(f"Getting sequence for position: {chrom}:{start}-{end}")
                 sequence = self.model._get_sequence_for_position(chrom, start, end)
                 
                 if sequence:
                     # Get features for this region
                     features = self.model.get_features_for_region(chrom, start, end)
-                    self.view.update_gene_viewer(sequence, features)
+                    self.logger.debug(f"Got sequence of length {len(sequence)} and {len(features)} features")
+                    
+                    # Verify DNA viewer exists
+                    if not hasattr(self.view, 'dna_feature_viewer'):
+                        self.logger.error("DNA viewer not initialized!")
+                        return
+                    
+                    # Update DNA viewer directly
+                    self.view.dna_feature_viewer.set_data(sequence, features, start)
+                    self.logger.debug("Updated DNA viewer with sequence data")
+                else:
+                    self.logger.error("Failed to get sequence for position")
             else:
                 # Regular gene-based search
                 locus_tag = current_gene.split(': ')[0] if ': ' in current_gene else current_gene
@@ -1094,8 +1151,22 @@ class ViewTargetsController:
                 if sequence_data and 'sequence' in sequence_data:
                     # Get features for this gene
                     features = self.model.get_features_for_gene(locus_tag)
-                    self.view.update_gene_viewer(sequence_data['sequence'], features)
-                    self.logger.debug(f"Updated gene viewer with sequence and {len(features)} features")
+                    sequence = sequence_data['sequence']
+                    start_pos = sequence_data['start']
+                    
+                    self.logger.debug(f"Got sequence of length {len(sequence)}")
+                    self.logger.debug(f"First 50 chars: {sequence[:50]}")
+                    self.logger.debug(f"Start position: {start_pos}")
+                    self.logger.debug(f"Number of features: {len(features)}")
+                    
+                    # Verify DNA viewer exists
+                    if not hasattr(self.view, 'dna_feature_viewer'):
+                        self.logger.error("DNA viewer not initialized!")
+                        return
+                    
+                    # Update DNA viewer directly
+                    self.view.dna_feature_viewer.set_data(sequence, features, start_pos)
+                    self.logger.debug("Updated DNA viewer with sequence data")
                 else:
                     self.logger.warning("No sequence data available")
                     

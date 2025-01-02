@@ -19,11 +19,8 @@ class PopulationAnalysisWindowModel:
     def load_endonucleases(self):
         """Load endonucleases from GlobalSettings"""
         try:
-            self.logger.info("Starting load_endonucleases()")
-            
             # Get endonucleases from global settings
             endos = self.settings.get_endonucleases()
-            self.logger.debug(f"Raw endonucleases from settings: {endos}")
             
             if not endos:
                 self.logger.warning("No endonucleases returned from settings")
@@ -32,7 +29,6 @@ class PopulationAnalysisWindowModel:
             # Format the endonucleases for display
             formatted_endos = {}
             for endo, data in endos.items():
-                self.logger.debug(f"Processing endo: {endo}, data: {data}")
                 pam = data.get('pam', '').strip()
                 # Remove any extra "PAM:" text that might be in the PAM string
                 pam = pam.replace('PAM:', '').strip()
@@ -44,7 +40,6 @@ class PopulationAnalysisWindowModel:
                                               data.get('default_seed_length', ''),
                                               data.get('default_three_length', ''))
             
-            self.logger.info(f"Successfully formatted {len(formatted_endos)} endonucleases")
             self.logger.debug(f"Formatted endonucleases: {formatted_endos}")
             return formatted_endos
             

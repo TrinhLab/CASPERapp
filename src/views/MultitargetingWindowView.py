@@ -25,8 +25,18 @@ class MultitargetingWindowView(QtWidgets.QMainWindow):
         try:
             uic.loadUi(self.settings.get_ui_dir_path() + '/multitargeting_window.ui', self)
             self._init_ui_components()
+            self._set_styles()
         except Exception as e:
             show_error(self.settings, "Error initializing MultitargetingWindowView", str(e))
+
+    def _set_styles(self):
+        """Apply the global groupbox style"""
+        try:
+            style = self.settings.get_groupbox_style()
+            for groupbox in self.findChildren(QtWidgets.QGroupBox):
+                groupbox.setStyleSheet(style)
+        except Exception as e:
+            self.logger.error(f"Error setting styles: {str(e)}")
 
     def _init_ui_components(self):
         self._init_grpSelectOrganism()

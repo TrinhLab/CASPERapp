@@ -24,6 +24,7 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
         try:
             uic.loadUi(self.settings.get_ui_dir_path() + '/population_analysis.ui', self)
             self._init_ui_components()
+            self._set_styles()
         except Exception as e:
             show_error(self.settings, "Error initializing PopulationAnalysisWindowView", str(e))
 
@@ -35,8 +36,6 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
 
     def _init_grpSelectOrganisms(self):
         try:
-            self.logger.debug("Starting _init_grpSelectOrganisms")
-            
             self.combo_box_endonuclease = self._find_widget('cmbEndonuclease', QtWidgets.QComboBox)
             self.table_organism = self._find_widget('tblOrganism', QtWidgets.QTableWidget)
             self.push_button_analyze_organism = self._find_widget('pbtnAnalyzeOrganism', QtWidgets.QPushButton)
@@ -45,9 +44,6 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
             self.tab_widget_shared_seeds_heatmap = self._find_widget('tabsSharedSeedHeatmap', QtWidgets.QTabWidget)
             self.tab_shared_seed_heatmap = self._find_widget('tabSharedSeedHeatmap', QtWidgets.QWidget)
             self.heatmap_seed = self._find_widget('heatmapSeed', QtWidgets.QWidget)
-            
-            self.logger.debug(f"Tab widget found: {self.tab_widget_shared_seeds_heatmap is not None}")
-            self.logger.debug(f"Heatmap widget found: {self.heatmap_seed is not None}")
             
             # Create layout for heatmap
             self.colormap_layout = QtWidgets.QVBoxLayout(self.heatmap_seed)
@@ -58,7 +54,6 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
             self.colormap_layout.addWidget(self.colormap_canvas)
 
             # Set up the organism table
-            self.logger.debug("Setting up organism table")
             self.table_organism.setColumnCount(1)
             self.table_organism.setShowGrid(False)
             self.table_organism.setHorizontalHeaderLabels(["Organism"])
@@ -67,8 +62,6 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
             self.table_organism.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
             self.table_organism.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             self.table_organism.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
-            
-            self.logger.debug("Completed _init_grpSelectOrganisms")
             
         except Exception as e:
             self.logger.error(f"Error in _init_grpSelectOrganisms: {str(e)}")
@@ -138,7 +131,6 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
     def update_shared_seeds_table(self, seed_data):
         self.table_seed.setRowCount(len(seed_data))
         for row, data in enumerate(seed_data):
-            print(data)
             for col, value in enumerate(data):
                 item = QtWidgets.QTableWidgetItem(str(value))
                 item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -148,7 +140,6 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
     def update_loc_finder_table(self, loc_data):
         self.table_locations.setRowCount(len(loc_data))
         for row, data in enumerate(loc_data):
-            print(data)
             for col, key in enumerate(['seed', 'sequence', 'organism', 'chromosome', 'location']):
                 item = QtWidgets.QTableWidgetItem(str(data[key]))
                 item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -253,35 +244,22 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
         self.table_seed.setRowCount(0)
 
     def clear_loc_finder_table(self):
-        self.loc_finder_table.setRowCount(0)
+        self.table_locations.setRowCount(0)
 
     def update_endo_dropdown(self, endos):
         """Update the endonuclease dropdown with the provided options"""
         try:
-            self.logger.info("Starting update_endo_dropdown")
-            self.logger.debug(f"Received endos: {endos}")
-
-            print(self.combo_box_endonuclease)
-            
-            # if not self.combo_box_endonuclease:
-                # self.logger.error("combo_box_endonuclease is None")
-                # return
-                
             self.combo_box_endonuclease.clear()
             self.combo_box_endonuclease.addItems(endos)
-            
-            self.logger.info(f"Updated endonuclease dropdown with {len(endos)} options")
-            self.logger.debug(f"Current items in dropdown: {[self.combo_box_endonuclease.itemText(i) for i in range(self.combo_box_endonuclease.count())]}")
         except Exception as e:
             self.logger.error(f"Error updating endonuclease dropdown: {str(e)}")
-            self.logger.exception("Full traceback:")
             show_error(self.settings, "Error updating endonuclease dropdown", str(e))
 
     def sort_table2(self, column):
         self.table_seed.sortItems(column)
 
     def sort_loc_finder_table(self, column):
-        self.loc_finder_table.sortItems(column)
+        self.table_locations.sortItems(column)
 
     def _on_theme_changed(self, theme):
         """Handle theme changes by updating the plot"""
@@ -306,6 +284,15 @@ class PopulationAnalysisWindowView(QtWidgets.QMainWindow):
                 
         except Exception as e:
             self.logger.error(f"Error updating plot theme: {str(e)}")
+
+    def _set_styles(self):
+        """Apply the global groupbox style"""
+        try:
+            style = self.settings.get_groupbox_style()
+            for groupbox in self.findChildren(QtWidgets.QGroupBox):
+                groupbox.setStyleSheet(style)
+        except Exception as e:
+            self.logger.error(f"Error setting styles: {str(e)}")
 
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=8, height=6, dpi=100):

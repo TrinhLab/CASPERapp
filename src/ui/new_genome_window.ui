@@ -502,40 +502,6 @@ search parameters</string>
       </item>
      </layout>
     </item>
-    <item row="0" column="1">
-     <widget class="QLabel" name="lblWindowHeading">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>50</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <family>Arial</family>
-        <pointsize>12</pointsize>
-        <weight>75</weight>
-        <italic>false</italic>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-      <property name="text">
-       <string>Analyze New Genome</string>
-      </property>
-      <property name="scaledContents">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
     <item row="3" column="1" colspan="2">
      <widget class="QGroupBox" name="Step3">
       <property name="sizePolicy">

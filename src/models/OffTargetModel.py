@@ -105,6 +105,7 @@ class OffTargetModel(QObject):
             self.logger.debug(f"Max mismatches: {parameters['max_mismatches']}")
             self.logger.debug(f"Tolerance: {parameters['tolerance']}")
             self.logger.debug(f"Average output: {parameters['average_output']}")
+            self.logger.debug(f"Annotation file: {self.global_settings.get_current_annotation_file()}")
             
             # Set working directory
             off_target_dir = self.global_settings.get_off_target_dir_path()
@@ -129,30 +130,8 @@ class OffTargetModel(QObject):
             self.logger.debug("Starting QProcess with command:")
             self.logger.debug(cmd)
 
-
-            example_cmd = [
-                "/Users/admin/Documents/proj/CASPERtest/CASPERapp/src/models/OffTarget/temp.txt",
-                "spCas9",
-                "/Users/admin/Documents/CASPERdb2/eck_12_spCas9.cspr",
-                "/Users/admin/Documents/CASPERdb2/eck_12_spCas9_repeats.db",
-                "/Users/admin/Documents/CASPERdb2/testtttt",
-                "/Users/admin/Documents/proj/CASPERtest/CASPERapp/config/CASPERinfo",
-                "4",
-                "0.05",
-                "FALSE",
-                "TRUE",
-                "MATRIX:HSU MATRIX-spCas9-2013"
-            ]
-
-            print(f"cmd: {cmd}")
-
-            print(f"example_cmd: {example_cmd}")
-
-
             self.process.start(str(program_path), cmd)
             
-
-                
             return True
             
         except Exception as e:
@@ -331,6 +310,21 @@ class OffTargetModel(QObject):
             casper_info_path = f'{self.global_settings.get_casper_info_path()}'
             endo = f'{parameters["endonuclease"]}'
             
+            # Get annotation file path
+            annotation_file = self.global_settings.get_current_annotation_file()
+            if not annotation_file:
+                raise ValueError("No annotation file selected")
+                
+            # Build full annotation path and verify it exists
+            annotation_path = os.path.join(self.global_settings.get_db_path(), 'GBFF', annotation_file)
+            if not os.path.isfile(annotation_path):
+                # Try without GBFF subdirectory
+                annotation_path = os.path.join(self.global_settings.get_db_path(), annotation_file)
+                if not os.path.isfile(annotation_path):
+                    raise ValueError(f"Annotation file not found at {annotation_path}")
+            
+            self.logger.debug(f"Using annotation file: {annotation_path}")
+            
             # Build command exactly as in old version
             cmd_parts = [
                 temp_path,
@@ -343,7 +337,8 @@ class OffTargetModel(QObject):
                 str(parameters['tolerance']),
                 'FALSE' if parameters['average_output'] else 'TRUE',
                 'TRUE' if parameters['average_output'] else 'FALSE',
-                f'{self._get_hsu_value(parameters)}'
+                f'{self._get_hsu_value(parameters)}',
+                annotation_path  # Add annotation file path
             ]
             
             return program_path, cmd_parts

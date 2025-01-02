@@ -13,10 +13,18 @@ class GenerateLibraryController(QObject):
         self.model = GenerateLibraryModel(global_settings)
         self.view = GenerateLibraryView(global_settings)
         
+        # Get selected targets from global settings if not provided
+        if selected_targets is None and hasattr(self.global_settings, '_current_selected_targets'):
+            selected_targets = self.global_settings._current_selected_targets
+        
+        self.selected_targets = selected_targets or []
+        
+        self.view.ledFileName.setText('eck_12_spCas9_lib')
+        
         # Get CSPR file path
-        if selected_targets and len(selected_targets) > 0:
+        if self.selected_targets and len(self.selected_targets) > 0:
             # Get organism name from the first target's chromosome
-            chrom = selected_targets[0].get('full_chromosome', '')
+            chrom = self.selected_targets[0].get('full_chromosome', '')
             if chrom:
                 # Extract organism name from chromosome ID
                 org_name = chrom.split('.')[0]
@@ -25,7 +33,7 @@ class GenerateLibraryController(QObject):
                 
                 # Get CSPR file path and initialize parser
                 org_files = self.model.get_organism_to_files()
-                endonuclease = selected_targets[0].get('endonuclease', '').lower()
+                endonuclease = self.selected_targets[0].get('endonuclease', '').lower()
                 if org_name in org_files and endonuclease in org_files[org_name]:
                     cspr_file = os.path.join(
                         self.global_settings.get_db_path(),
@@ -35,7 +43,7 @@ class GenerateLibraryController(QObject):
                     
                     # Get guide data for each target
                     processed_targets = []
-                    for target in selected_targets:
+                    for target in self.selected_targets:
                         target_info = [{
                             'feature_id': target['feature_id'],
                             'feature_name': target['feature_name'],
@@ -63,11 +71,6 @@ class GenerateLibraryController(QObject):
                     self.selected_targets = processed_targets
                 else:
                     self.selected_targets = selected_targets
-        else:
-            self.selected_targets = selected_targets
-        
-        # Log initialization
-        self.logger.debug(f"Initializing GenerateLibraryController with {len(selected_targets) if selected_targets else 0} targets")
         
         self._connect_signals()
         
@@ -75,15 +78,12 @@ class GenerateLibraryController(QObject):
         """Connect view signals to controller methods"""
         try:
             self.view.submit_clicked.connect(self._handle_submit)
-            self.logger.debug("Connected GenerateLibraryView signals")
         except Exception as e:
             self.logger.error(f"Error connecting signals: {str(e)}")
         
     def show(self):
         """Show the generate library window"""
         try:
-            self.logger.debug("Showing GenerateLibraryView")
-            
             # Store reference to prevent garbage collection
             self.global_settings.main_window._current_generate_library_controller = self
             
@@ -184,13 +184,17 @@ class GenerateLibraryController(QObject):
                     else:
                         raise ValueError(f"Could not find organism {org_name} in database")
                 
+                # Connect to model's progress signal if off-target analysis is enabled
+                if settings.get('find_off_targets'):
+                    self.model.progress_updated.connect(self._handle_progress)
+                
                 # Generate library using processed targets
                 success = self.model.generate_library(
                     self.processed_targets if hasattr(self, 'processed_targets') else self.selected_targets,
                     settings
                 )
                 
-                if success:
+                if success and not settings.get('find_off_targets'):
                     self.view.show_success("Library generated successfully!")
                     self.view.close()
                     
@@ -221,9 +225,16 @@ class GenerateLibraryController(QObject):
                 
             if settings.get('find_off_targets'):
                 max_score = settings.get('max_off_target_score')
-                if max_score is None or not 0 < max_score <= 0.5:
-                    raise ValueError("Maximum off-target score must be between 0 and 0.5")
+                if max_score is None or not 0 <= max_score <= 0.5:
+                    raise ValueError("Maximum off-target score must be between 0 and 0.5 inclusive")
                     
         except Exception as e:
             self.logger.error(f"Settings validation error: {str(e)}")
             raise
+            
+    def _handle_progress(self, value):
+        """Handle progress updates from model"""
+        try:
+            self.view.progBar.setValue(value)
+        except Exception as e:
+            self.logger.error(f"Error updating progress: {str(e)}")

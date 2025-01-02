@@ -18,23 +18,17 @@ class NewGenomeWindowView(QtWidgets.QMainWindow):
 
     def _init_ui(self):
         uic.loadUi(os.path.join(self.global_settings.get_ui_dir_path(), 'new_genome_window.ui'), self)
-        # self.set_styles()
-
         self._init_ui_components()
+        self._set_styles()
 
-    def set_styles(self):
-        groupbox_style = """
-        QGroupBox:title{subcontrol-origin: margin;
-                        left: 10px;
-                        padding: 0 5px 0 5px;}
-        QGroupBox#Step1{border: 2px solid rgb(111,181,110);
-                        border-radius: 9px;
-                        font: bold 14pt 'Arial';
-                        margin-top: 10px;}"""
-
-        self.Step1.setStyleSheet(groupbox_style)
-        self.Step2.setStyleSheet(groupbox_style.replace("Step1","Step2"))
-        self.Step3.setStyleSheet(groupbox_style.replace("Step1","Step3"))
+    def _set_styles(self):
+        """Apply the global groupbox style"""
+        try:
+            style = self.global_settings.get_groupbox_style()
+            for groupbox in self.findChildren(QtWidgets.QGroupBox):
+                groupbox.setStyleSheet(style)
+        except Exception as e:
+            self.logger.error(f"Error setting styles: {str(e)}")
 
     def _init_ui_components(self):
         self._init_grpStep1()

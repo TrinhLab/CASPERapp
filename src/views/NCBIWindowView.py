@@ -2,6 +2,7 @@ from PyQt6 import QtWidgets, QtGui, QtCore, uic
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
 import os
 from typing import Optional
+import time
 
 class NCBIWindowView(QtWidgets.QMainWindow):
     initialization_complete = QtCore.pyqtSignal()  # New signal
@@ -18,13 +19,31 @@ class NCBIWindowView(QtWidgets.QMainWindow):
     def _setup_basic_ui(self):
         """Initial minimal setup to show the window quickly"""
         try:
+            start_time = time.time()
+            self.logger.debug("Starting basic UI setup")
+            
+            ui_load_start = time.time()
             uic.loadUi(os.path.join(self.settings.get_ui_dir_path(), "ncbi.ui"), self)
+            self.logger.debug(f"Loading UI file took: {time.time() - ui_load_start:.2f} seconds")
+            
+            # Apply styles immediately for better visual experience
+            self._set_styles()
             
             QtCore.QTimer.singleShot(100, self._complete_initialization)
             
+            self.logger.debug(f"Basic UI setup completed in: {time.time() - start_time:.2f} seconds")
         except Exception as e:
             self.logger.error(f"Error in basic UI setup: {str(e)}")
             raise
+
+    def _set_styles(self):
+        """Apply the global groupbox style"""
+        try:
+            style = self.settings.get_groupbox_style()
+            for groupbox in self.findChildren(QtWidgets.QGroupBox):
+                groupbox.setStyleSheet(style)
+        except Exception as e:
+            self.logger.error(f"Error setting styles: {str(e)}")
 
     def _complete_initialization(self):
         """Complete the full initialization of UI components"""
@@ -32,13 +51,21 @@ class NCBIWindowView(QtWidgets.QMainWindow):
             if self._is_initialized:
                 return
 
+            start_time = time.time()
+            self.logger.debug("Starting complete initialization")
+
             # Initialize all UI components
+            components_start = time.time()
             self._init_ui_components()
+            self.logger.debug(f"UI components initialization took: {time.time() - components_start:.2f} seconds")
             
             self._is_initialized = True
             
             # Emit signal after everything is initialized
             self.initialization_complete.emit()
+            self.logger.debug("Emitted initialization complete signal")
+            
+            self.logger.debug(f"Complete initialization finished in: {time.time() - start_time:.2f} seconds")
             
         except Exception as e:
             self.logger.error(f"Error in complete initialization: {str(e)}")
@@ -47,9 +74,20 @@ class NCBIWindowView(QtWidgets.QMainWindow):
     def _init_ui_components(self) -> None:
         """Initialize all UI components at once instead of using timers"""
         try:
+            self.logger.debug("Starting UI components initialization")
+            
+            step1_start = time.time()
             self._init_grpStep1()
+            self.logger.debug(f"Step 1 initialization took: {time.time() - step1_start:.2f} seconds")
+            
+            step2_start = time.time()
             self._init_grpStep2()
+            self.logger.debug(f"Step 2 initialization took: {time.time() - step2_start:.2f} seconds")
+            
+            step3_start = time.time()
             self._init_grpStep3()
+            self.logger.debug(f"Step 3 initialization took: {time.time() - step3_start:.2f} seconds")
+            
         except Exception as e:
             self.logger.error(f"Error in _init_ui_components: {str(e)}")
             raise

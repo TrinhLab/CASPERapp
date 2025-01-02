@@ -94,24 +94,71 @@ class ConfigManager(QObject):
         self.env_file_created.emit()
 
     def write_to_env(self, key, value):
-        with open(self.env_path, 'r') as f:
-            lines = f.readlines()
+        """Write or update a key-value pair in the .env file"""
+        try:
+            # Read all lines
+            if os.path.exists(self.env_path):
+                with open(self.env_path, 'r') as f:
+                    lines = f.readlines()
+            else:
+                lines = []
 
-        with open(self.env_path, 'w') as f:
+            # Find if key exists
+            key_exists = False
+            new_lines = []
             for line in lines:
-                if line.startswith(f'{key}='):
-                    f.write(f'{key}="{value}"\n')  # Always use double quotes
+                if line.strip().startswith(f'{key}='):
+                    new_lines.append(f'{key}="{value}"\n')  # Always use double quotes
+                    key_exists = True
                 else:
-                    f.write(line)
-        self.logger.info(f"Updated {key} in .env file")
+                    new_lines.append(line)
+
+            # If key doesn't exist, append it
+            if not key_exists:
+                new_lines.append(f'{key}="{value}"\n')
+
+            # Write back to file
+            with open(self.env_path, 'w') as f:
+                f.writelines(new_lines)
+
+            # Update environment variable in memory
+            os.environ[key] = value
+            
+            self.logger.info(f"Updated {key}={value} in .env file")
+            
+            # Verify the write
+            with open(self.env_path, 'r') as f:
+                content = f.read()
+                if f'{key}="{value}"' not in content:
+                    self.logger.error(f"Failed to verify {key}={value} in .env file")
+                    raise Exception("Failed to verify environment variable update")
+
+        except Exception as e:
+            self.logger.error(f"Error writing to .env file: {str(e)}")
+            raise
 
     def get_env_value(self, key, default=None):
         return os.getenv(key, default)
 
     def set_env_value(self, key, value):
-        self.write_to_env(key, value)
-        os.environ[key] = value
-        self.logger.info(f"Set environment variable: {key}")
+        """Set and save an environment variable"""
+        try:
+            # Write to .env file first
+            self.write_to_env(key, value)
+            
+            # Update runtime environment
+            os.environ[key] = value
+            
+            # Verify the update
+            if os.getenv(key) != value:
+                self.logger.error(f"Failed to verify environment variable update for {key}")
+                raise Exception(f"Environment variable verification failed for {key}")
+                
+            self.logger.info(f"Successfully set environment variable: {key}={value}")
+            
+        except Exception as e:
+            self.logger.error(f"Error setting environment variable {key}: {str(e)}")
+            raise
 
     def get_config_value(self, key, default=None):
         keys = key.split('.')

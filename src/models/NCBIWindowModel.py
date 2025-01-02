@@ -8,6 +8,7 @@ import os
 import platform
 import requests
 from urllib.parse import urlparse
+import time
 
 class NCBIWindowModel:
     class DownloadThread(QtCore.QThread):
@@ -26,7 +27,8 @@ class NCBIWindowModel:
             self.download_fna = download_fna
             self.download_gbff = download_gbff
             self.logger = controller.settings.get_logger()
-            self.db_path = controller.settings.get_db_path()
+            self.db_path = controller.settings.db_manager.get_active_db_path()
+            self.logger.debug(f"Using database path for downloads: {self.db_path}")
 
         def run(self):
             try:
@@ -54,7 +56,7 @@ class NCBIWindowModel:
                 file_type = 'FNA' if is_fna else 'GBFF'
                 extension = '.gz' if is_gzipped else ''
                 
-                # Create output directory using the current database path
+                # Create output directory using the active database path
                 output_dir = os.path.join(self.db_path, file_type)
                 os.makedirs(output_dir, exist_ok=True)
                 
@@ -129,6 +131,7 @@ class NCBIWindowModel:
                 file_type = 'FNA' if is_fna else 'GBFF'
                 extension = '.gz' if is_gzipped else ''
                 
+                # Use the active database path for FTP downloads as well
                 local_filename = os.path.join(
                     self.db_path,
                     file_type,
@@ -185,6 +188,9 @@ class NCBIWindowModel:
                 self.controller.model.add_downloaded_file(decompressed_filename)
 
     def __init__(self, settings):
+        start_time = time.time()
+        settings.logger.debug("Starting NCBIWindowModel initialization")
+        
         self.settings = settings
         self.logger = settings.get_logger()
         self.df = pd.DataFrame()
@@ -202,6 +208,8 @@ class NCBIWindowModel:
             "ENA (European Nucleotide Archive)": self._search_ena,
             "UCSC Genome Browser": self._search_ucsc
         }
+        
+        self.logger.debug(f"NCBIWindowModel initialization took: {time.time() - start_time:.2f} seconds")
 
     def search_ncbi(self, search_params):
         """Search selected database with given parameters"""
@@ -628,9 +636,20 @@ class NCBIWindowModel:
             raise
 
     def get_output_path(self, file_type):
-        db_path = self.settings.get_db_path()
+        """Get the appropriate output path for downloads"""
+        # Use the active database path which includes pending path during new genome analysis
+        db_path = self.settings.db_manager.get_active_db_path()
         self.logger.debug(f"Using database path for downloads: {db_path}")
-        return os.path.join(db_path, file_type)
+        output_path = os.path.join(db_path, file_type)
+        # Ensure the directory exists
+        os.makedirs(output_path, exist_ok=True)
+        return output_path
+
+    def cancel_pending_path(self):
+        """Cancel any pending path changes"""
+        if self.settings.db_manager.pending_db_path:
+            self.logger.info("Cancelling pending database path change")
+            self.settings.db_manager.pending_db_path = None
 
     def rename_file(self, old_name, new_name, file_type):
         old_path = os.path.join(self.get_output_path(file_type), old_name)

@@ -24,7 +24,6 @@ class GenerateLibraryView(QMainWindow):
         try:
             # Load UI file
             ui_file = os.path.join(self.global_settings.get_ui_dir_path(), 'generate_library.ui')
-            self.logger.debug(f"Loading UI file from: {ui_file}")
             uic.loadUi(ui_file, self)
             
             # Set window properties
@@ -46,6 +45,9 @@ class GenerateLibraryView(QMainWindow):
                 self.ledFilePath.setText(default_path + "\\")
             else:
                 self.ledFilePath.setText(default_path + "/")
+                
+            # Apply styles
+            self._set_styles()
                 
             # Center the window
             self._center_window()
@@ -139,11 +141,19 @@ class GenerateLibraryView(QMainWindow):
                 )
             }
             
-            if self.chkFindOffTargets.isChecked():
+            if settings['find_off_targets']:
+                max_off_target_score = self.cmbMaximumOffTargetScore.text().strip()
+                if not max_off_target_score:
+                    raise ValueError("Please enter a maximum off-target score when Find Off Targets is enabled")
                 try:
-                    settings['max_off_target_score'] = float(self.cmbMaximumOffTargetScore.text())
-                except ValueError:
-                    raise ValueError("Invalid maximum off-target score")
+                    score = float(max_off_target_score)
+                    if not 0 <= score <= 0.5:
+                        raise ValueError("Maximum off-target score must be between 0 and 0.5 (inclusive)")
+                    settings['max_off_target_score'] = score
+                except ValueError as e:
+                    if str(e).startswith("Maximum"):
+                        raise
+                    raise ValueError("Invalid maximum off-target score - please enter a valid number")
                     
             return settings
             
@@ -180,3 +190,12 @@ class GenerateLibraryView(QMainWindow):
             "Success",
             message
         )
+
+    def _set_styles(self):
+        """Apply the global groupbox style"""
+        try:
+            style = self.global_settings.get_groupbox_style()
+            for groupbox in self.findChildren(QtWidgets.QGroupBox):
+                groupbox.setStyleSheet(style)
+        except Exception as e:
+            self.logger.error(f"Error setting styles: {str(e)}")

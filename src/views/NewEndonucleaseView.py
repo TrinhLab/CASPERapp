@@ -99,16 +99,6 @@ class NewEndonucleaseView(QtWidgets.QMainWindow):
                 image: none;
                 border: none;
             }}
-            QGroupBox {{
-                border: 1px solid {theme['button_border_color']};
-                margin-top: 1em;
-                padding-top: 0.5em;
-            }}
-            QGroupBox::title {{
-                subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 3px 0 3px;
-            }}
             QRadioButton {{
                 color: {theme['fg_color']};
             }}
@@ -132,18 +122,31 @@ class NewEndonucleaseView(QtWidgets.QMainWindow):
         """)
 
     def showEvent(self, event):
-        """Override showEvent to apply theme when window is shown"""
+        """Override showEvent to apply theme and styles when window is shown"""
         super().showEvent(event)
-        self.apply_theme()
+        self._set_styles()
 
     def init_ui(self):
         try:
             uic.loadUi(os.path.join(self.settings.get_ui_dir_path(), 'new_endonuclease_window.ui'), self)
-
             self._init_ui_components()
+            self._set_styles()  # Add style initialization
             self.disable_form_elements()
         except Exception as e:
             show_error(self.settings, "Error initializing NewEndonucleaseView", str(e))
+
+    def _set_styles(self):
+        """Apply the global groupbox style and theme"""
+        try:
+            # Apply global groupbox style
+            style = self.settings.get_groupbox_style()
+            for groupbox in self.findChildren(QtWidgets.QGroupBox):
+                groupbox.setStyleSheet(style)
+            
+            # Apply theme
+            self.apply_theme()
+        except Exception as e:
+            self.logger.error(f"Error setting styles: {str(e)}")
 
     def _init_ui_components(self):
         self.combo_box_select_endonuclease = self._find_widget('cmbSelectEndonuclease', QtWidgets.QComboBox)

@@ -75,9 +75,10 @@ class StartupWindowView(QtWidgets.QMainWindow):
         if is_valid:
             self.label_db_status.hide()
             self.push_button_go_to_home_or_new_genome.setText("Go to Home")
+            self.push_button_go_to_home_or_new_genome.setEnabled(True)
         else:
             self.label_db_status.setText(message)
             self.label_db_status.show()
             self.label_db_status.setStyleSheet("color: red;")
             self.push_button_go_to_home_or_new_genome.setText("Analyze a New Genome")
-        self.push_button_go_to_home_or_new_genome.setEnabled(True)
+            self.push_button_go_to_home_or_new_genome.setEnabled(True)

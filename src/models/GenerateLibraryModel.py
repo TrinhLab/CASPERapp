@@ -1,21 +1,30 @@
 from models.CSPRparser import CSPRparser
-from models.HomeWindowModel import HomeWindowModel
+from models.OffTargetModel import OffTargetModel
 import os
 import re
 import traceback
+from PyQt6.QtCore import QObject, pyqtSignal
 
-class GenerateLibraryModel(HomeWindowModel):
+class GenerateLibraryModel(QObject):
+    progress_updated = pyqtSignal(int)  # Signal to emit progress updates
+    
     def __init__(self, global_settings):
-        super().__init__(global_settings)
+        super().__init__()
+        self.global_settings = global_settings
         self.logger = global_settings.logger
         self.parser = None
         self.targets_data = {}
         self._deleted_targets = {}
+        self.off_target_model = OffTargetModel(global_settings)
         
     def initialize_parser(self, cspr_file):
         """Initialize CSPR parser"""
         self.parser = CSPRparser(cspr_file, self.global_settings.get_casper_info_path())
         
+    def get_organism_to_files(self):
+        """Get mapping of organisms to their files from global settings"""
+        return self.global_settings.get_organism_files()
+
     def generate_library(self, selected_targets, settings):
         """Generate library with given settings"""
         try:
@@ -29,26 +38,114 @@ class GenerateLibraryModel(HomeWindowModel):
                 settings['target_range_start'],
                 settings['target_range_end']
             )
-
-            # Generate output for each target
-            output_data = self._generate_output(
-                processed_targets,
-                settings['guides_per_gene'],
-                settings['space_between_guides']
-            )
-
-            self.logger.debug(f"Output data: {output_data}")
             
-            # Write output to file
-            self._write_output(output_data, settings)
-            
-            return True
+            if settings.get('find_off_targets'):
+                # Write targets to temp file for off-target analysis
+                self._write_targets_to_temp(processed_targets)
+                
+                # Get organism and endonuclease from home window
+                if hasattr(self.global_settings, '_current_home_window'):
+                    organism = self.global_settings._current_home_window.view.combo_box_organism.currentText()
+                    endonuclease = self.global_settings._current_home_window.view.combo_box_endonuclease.currentText()
+                else:
+                    raise ValueError("Could not access home window to get organism and endonuclease")
+                
+                if not organism or not endonuclease:
+                    raise ValueError("Could not determine organism or endonuclease from home window")
+                
+                self.logger.debug(f"Using organism: {organism} and endonuclease: {endonuclease} for off-target analysis")
+                
+                # Setup off-target parameters
+                off_target_params = {
+                    'organism': organism,
+                    'endonuclease': endonuclease,
+                    'max_mismatches': 4,  # Default value from old implementation
+                    'tolerance': 0.05,  # Default value from old implementation
+                    'average_output': True,
+                    'save_output': False,
+                    'output_filename': '',
+                    'targets': selected_targets,
+                    'annotation_file': self.global_settings.get_current_annotation_file()
+                }
+                
+                # Connect to off-target model signals
+                self.off_target_model.progress_updated.connect(self._handle_off_target_progress)
+                self.off_target_model.results_ready.connect(lambda results: self._handle_off_target_results(results, processed_targets, settings))
+                
+                # Start off-target analysis
+                self.off_target_model.start_analysis(off_target_params)
+                return True
+            else:
+                # Generate output for each target
+                output_data = self._generate_output(
+                    processed_targets,
+                    settings['guides_per_gene'],
+                    settings['space_between_guides']
+                )
+                
+                self.logger.debug(f"Output data: {output_data}")
+                
+                # Write output to file
+                self._write_output(output_data, settings)
+                return True
             
         except Exception as e:
             self.logger.error(f"Error generating library: {str(e)}")
             self.logger.error(traceback.format_exc())
             raise
             
+    def _write_targets_to_temp(self, processed_targets):
+        """Write targets to temp file for off-target analysis"""
+        try:
+            temp_path = os.path.join(self.global_settings.get_db_path(), 'temp.txt')
+            
+            with open(temp_path, 'w') as f:
+                for gene in processed_targets:
+                    for target in processed_targets[gene]:
+                        # Format: position;sequence;pam;score;strand
+                        entry = f"{target['position']};{target['sequence']};{target['pam']};{target['score']};{target['strand']}\n"
+                        f.write(entry)
+                        
+            self.logger.debug(f"Wrote targets to temp file: {temp_path}")
+            
+        except Exception as e:
+            self.logger.error(f"Error writing targets to temp file: {str(e)}")
+            raise
+            
+    def _handle_off_target_progress(self, value, status):
+        """Handle progress updates from off-target analysis"""
+        self.progress_updated.emit(value)
+        
+    def _handle_off_target_results(self, results, processed_targets, settings):
+        """Handle results from off-target analysis"""
+        try:
+            scores_dict, _ = results
+            
+            # Update targets with off-target scores
+            for gene in processed_targets:
+                for target in processed_targets[gene]:
+                    if target['sequence'] in scores_dict:
+                        target['off_target_score'] = scores_dict[target['sequence']]
+            
+            # Generate output with updated targets
+            output_data = self._generate_output(
+                processed_targets,
+                settings['guides_per_gene'],
+                settings['space_between_guides']
+            )
+            
+            # Write output to file
+            self._write_output(output_data, settings)
+            
+            # Clean up temp file
+            temp_path = os.path.join(self.global_settings.get_db_path(), 'temp.txt')
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+                
+        except Exception as e:
+            self.logger.error(f"Error handling off-target results: {str(e)}")
+            raise
+        
     def _process_targets(self, targets, min_score, five_prime_seq, start_range, end_range):
         """Process and filter targets based on criteria"""
         processed = {}
@@ -73,17 +170,11 @@ class GenerateLibraryModel(HomeWindowModel):
             else:
                 self._deleted_targets[gene_name].append(target_data)
                 
-        # Sort targets for each gene
+        # Log first 5 targets for each gene for debugging
         for gene in processed:
-            # First sort by score (ascending)
-            processed[gene].sort(key=lambda x: float(x['score']))
-            
-            # Then sort by position (ascending)
-            processed[gene].sort(key=lambda x: abs(int(x['position'])))
-            
-            # Reverse list if gene is on negative strand
-            if processed[gene] and processed[gene][0].get('strand', '+') == '-':
-                processed[gene].reverse()
+            if processed[gene]:
+                self.logger.debug(f"First 5 targets for gene {gene}: {[t['score'] for t in processed[gene][:5]]}")
+                self.logger.debug(f"First 5 target positions for gene {gene}: {[t['position'] for t in processed[gene][:5]]}")
                 
         return processed
         
@@ -93,13 +184,17 @@ class GenerateLibraryModel(HomeWindowModel):
             # Score filter - convert score to float and compare
             target_score = float(target.get('score', 0))
             if target_score < min_score:
-                self.logger.debug(f"Target failed score filter: {target_score} < {min_score}")
+                self.logger.debug(f"Target failed score filter: {target_score} < {min_score}, target: {target}")
                 return False
             
-            # Poly-T filter
+            self.logger.debug(f"Target passed score filter: {target_score} >= {min_score}, target: {target}")
+            
+            # Poly-T filter (5-10 consecutive T's)
             if re.search("T{5,10}", target['sequence']):
                 self.logger.debug(f"Target failed poly-T filter: {target['sequence']}")
                 return False
+            
+            self.logger.debug(f"Target passed poly-T filter: {target['sequence']}")
             
             # 5' sequence filter
             if five_prime_seq and not target['sequence'].startswith(five_prime_seq.upper()):
@@ -146,47 +241,77 @@ class GenerateLibraryModel(HomeWindowModel):
             return 0
         
     def _generate_output(self, processed_targets, guides_per_gene, space_between):
+        """Generate output with proper spacing between guides"""
         output = {}
         
         for gene_id, targets in processed_targets.items():
             output[gene_id] = []
-            i = 0
-            vec_index = 0
+            
+            # First sort by score (descending)
+            targets.sort(key=lambda x: float(x['score']), reverse=True)
+            self.logger.debug(f"First 5 targets positions for gene {gene_id} by score: {[(t['position'], t['score']) for t in targets[:5]]}")
+            
+            # Then sort by position
+            targets.sort(key=lambda x: abs(int(x['position'])))
+            self.logger.debug(f"First 5 targets positions for gene {gene_id}: {[t['position'] for t in targets[:5]]}")
+            
+            i = 0  # Counter for selected guides
+            vec_index = 0  # Index for current target being considered
             prev_target = None
             
             while i < guides_per_gene:
                 if len(targets) == 0 or vec_index >= len(targets):
                     break
-                    
+                
                 current = targets[vec_index]
                 
-                # Check spacing from previous target
-                if prev_target is None or abs(int(current['position']) - int(prev_target['position'])) >= space_between:
-                    # If current target has better score than previous
-                    if (prev_target and float(current['score']) > float(prev_target['score'])):
-                        output[gene_id].pop()
-                        output[gene_id].append(current)
-                    else:
-                        output[gene_id].append(current)
+                # For first target, just add it
+                if prev_target is None:
+                    output[gene_id].append(current)
                     prev_target = current
                     i += 1
+                else:
+                    # Check spacing from previous target
+                    distance = abs(int(current['position']) - int(prev_target['position']))
+                    
+                    if distance >= space_between:
+                        # Look ahead for better scoring targets within this space
+                        best_target = current
+                        look_ahead_index = vec_index + 1
+                        
+                        while look_ahead_index < len(targets):
+                            next_target = targets[look_ahead_index]
+                            next_distance = abs(int(next_target['position']) - int(prev_target['position']))
+                            
+                            # If we've gone too far, break
+                            if next_distance >= space_between:
+                                break
+                                
+                            # If this target has better score
+                            if float(next_target['score']) > float(best_target['score']):
+                                best_target = next_target
+                                
+                            look_ahead_index += 1
+                            
+                        output[gene_id].append(best_target)
+                        prev_target = best_target
+                        i += 1
+                        
+                        # Move vec_index past the selected target's position
+                        while vec_index < len(targets) and abs(int(targets[vec_index]['position'])) <= abs(int(best_target['position'])):
+                            vec_index += 1
+                        continue
                 
                 vec_index += 1
-                if vec_index >= len(targets):
-                    break
-                    
-            # Add deleted targets if needed
-            if len(output[gene_id]) < guides_per_gene:
-                deleted_sorted = sorted(
-                    self._deleted_targets.get(gene_id, []),
-                    key=lambda x: (float(x['score']), abs(int(x['position'])))
-                )
+            
+            # Sort final output by position
+            output[gene_id].sort(key=lambda x: abs(int(x['position'])))
+            
+            # If gene is on negative strand, reverse the order
+            if output[gene_id] and output[gene_id][0].get('strand', '+') == '-':
+                output[gene_id].reverse()
                 
-                for deleted_target in deleted_sorted:
-                    if len(output[gene_id]) >= guides_per_gene:
-                        break
-                    deleted_target['modified'] = True
-                    output[gene_id].append(deleted_target)
+            self.logger.debug(f"Selected targets positions for gene {gene_id}: {[t['position'] for t in output[gene_id]]}")
         
         return output
         

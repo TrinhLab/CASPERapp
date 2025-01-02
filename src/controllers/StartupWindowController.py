@@ -6,10 +6,11 @@ from views.StartupWindowView import StartupWindowView
 import sys
 
 class StartupWindowController:
-    def __init__(self, global_settings):
+    def __init__(self, global_settings, keep_db_path=False):
         self.settings = global_settings
         self.logger = self.settings.get_logger()
-        self.is_active = True  # Initialize is_active here
+        self.is_active = True
+        self.keep_db_path = keep_db_path
 
         try:
             self.view = StartupWindowView(self.settings)
@@ -31,10 +32,19 @@ class StartupWindowController:
         self.view.db_path_text_changed.connect(self._on_db_path_text_changed)
         self.model.db_state_updated.connect(self._on_db_state_updated)
         self.settings.db_manager.db_validation_changed.connect(self._on_db_validation_changed)
+        self.settings.db_manager.db_files_changed.connect(self._on_db_files_changed)
         self.view.open_new_genome_requested.connect(self.open_new_genome_tab)
 
     def _on_db_path_text_changed(self, new_path):
-        self.model.save_db_path(new_path)
+        """Handle database path text changes"""
+        try:
+            # Avoid triggering save if the path hasn't actually changed
+            if new_path == self.model.get_db_path():
+                return
+            
+            self.model.save_db_path(new_path)
+        except Exception as e:
+            self.logger.error(f"Error handling db path change: {str(e)}")
 
     def _on_db_state_updated(self, is_valid, message, cspr_files):
         if self.is_active and hasattr(self, 'view'):
@@ -45,15 +55,63 @@ class StartupWindowController:
         if self.is_active and hasattr(self, 'view'):
             self.view.set_db_status(is_valid, message)
 
+    def _on_db_files_changed(self, changes):
+        """Handle database file changes"""
+        if self.is_active and hasattr(self, 'view'):
+            # Re-validate the current path
+            db_path = self.model.get_db_path()
+            is_valid, message = self.settings.validate_db_path(db_path)
+            self.view.set_db_status(is_valid, message)
+            
+            # If path is now valid and we have CSPR files, update button text
+            if is_valid:
+                self.view.push_button_go_to_home_or_new_genome.setText("Go to Home")
+
     def _init_ui(self):
-        db_path = self.model.get_db_path()
-        self.logger.debug(f"Initial database path: {db_path}")
-        self._init_db_state(db_path)
+        """Initialize the UI with the correct database path"""
+        try:
+            # Always get the current path from settings
+            db_path = self.model.get_db_path()
+            
+            # For true first time startup (no previous path), show default path
+            if self.settings.is_first_time_startup and not db_path:
+                db_path = self.settings.db_manager.get_default_database_path()
+            # For invalid path case, keep the existing path
+            elif not self.keep_db_path and not self.settings.is_first_time_startup:
+                db_path = ''
+                
+            self.logger.debug(f"Initial database path: {db_path}, keep_db_path: {self.keep_db_path}, "
+                             f"first_time_startup: {self.settings.is_first_time_startup}")
+            
+            # Set the path in the view first
+            self.view.set_db_path(db_path)
+            
+            # Then initialize the state
+            if db_path:
+                is_valid, message = self.settings.validate_db_path(db_path)
+                self.view.set_db_status(is_valid, message)
+            else:
+                self.view.set_db_status(False, "No directory selected")
+                
+        except Exception as e:
+            self.logger.error(f"Error in _init_ui: {str(e)}")
+            raise
 
     def _init_db_state(self, db_path):
-        self.view.set_db_path(db_path)
-        is_valid, message = self.settings.validate_db_path(db_path)
-        self.view.set_db_status(is_valid, message)
+        """Initialize database state"""
+        try:
+            # Only update the view's path if it's different from current
+            current_view_path = self.view.get_db_path()
+            if current_view_path != db_path:
+                self.view.set_db_path(db_path)
+                
+            # Validate and update status
+            is_valid, message = self.settings.validate_db_path(db_path)
+            self.view.set_db_status(is_valid, message)
+            
+        except Exception as e:
+            self.logger.error(f"Error in _init_db_state: {str(e)}")
+            raise
 
     def _set_database_directory(self):
         try:

@@ -1,88 +1,67 @@
 from models.CSPRparser import CSPRparser
-from models.HomeWindowModel import HomeWindowModel
-from models.AnnotationParser import AnnotationParser
-import os
+from models.BaseModel import BaseModel
 from Bio import SeqIO
 from collections import defaultdict
 import traceback
+import os
 
-class ViewTargetsModel(HomeWindowModel):
+class ViewTargetsModel(BaseModel):
     def __init__(self, global_settings):
         super().__init__(global_settings)
+        
+        # Initialize model state
         self.guides = []
         self.cspr_parser = None
-        self.annotation_parser = None 
         self.gene_sequence = ""
         self.highlighted_sequence = ""
         self.gene_info = {}
         self.available_genes = []
         self.filter_options = {}
         self.scoring_options = {}
-        self.annotation_path = ""
         self.current_gene_start = 0
         self.current_gene_end = 0
         self.extended_sequence = ""
         self.chromosome = ""
         
+        # Initialize caches
         self._gene_data_cache = {}
         self._sequence_cache = {}
         self._parser_cache = {}
         self._chromosome_seqs = {}
         self._cached_guides = {}
 
-        self.global_settings.annotation_file_changed.connect(self._on_annotation_file_changed)
+    def _clear_caches(self):
+        """Clear all model-specific caches"""
+        self._gene_data_cache.clear()
+        self._sequence_cache.clear()
+        self._parser_cache.clear()
+        self._chromosome_seqs.clear()
+        self._cached_guides.clear()
         
-        # Initialize annotation path
-        self.annotation_path = os.path.join(
-            self.global_settings.get_db_path(),
-            'GBFF',
-            self.global_settings.get_current_annotation_file()
-        )
-        self.logger.debug(f"Initialized annotation path: {self.annotation_path}")
+        # Clear other stored data
+        self.gene_sequence = ""
+        self.highlighted_sequence = ""
+        self.gene_info = {}
+        self.available_genes = []
 
-    def cleanup(self):
-        """Cleanup method to be called when the view is closed"""
-        try:
-            # Disconnect from annotation file changes
-            if hasattr(self, '_annotation_signal'):
-                self.global_settings.annotation_file_changed.disconnect(self._on_annotation_file_changed)
-                self.global_settings.logger.debug("ViewTargetsModel disconnected from annotation file changes")
-            
-            self._gene_data_cache.clear()
-            self._sequence_cache.clear()
-            self._parser_cache.clear()
-            
-        except Exception as e:
-            self.global_settings.logger.error(f"Error in ViewTargetsModel cleanup: {str(e)}")
-
-    def _on_annotation_file_changed(self, new_annotation_file):
-        """Clear all caches when annotation file changes"""
-        try:
-            self.logger.debug(f"ViewTargetsModel clearing caches for new annotation file: {new_annotation_file}")
-            self._gene_data_cache.clear()
-            self._sequence_cache.clear()
-            self._parser_cache.clear()
-            
-            # Update annotation path and parser
-            self.annotation_path = os.path.join(self.global_settings.get_db_path(), 'GBFF', new_annotation_file)
-            self.annotation_parser = AnnotationParser(self.global_settings)
-            self.annotation_parser.set_annotation_file(self.annotation_path)
-            
-            # Clear other stored data
-            self.gene_sequence = ""
-            self.highlighted_sequence = ""
-            self.gene_info = {}
-            self.available_genes = []
-            self._chromosome_seqs = {}
-            
-        except Exception as e:
-            self.logger.error(f"Error in _on_annotation_file_changed: {str(e)}")
+    def _ensure_annotation_parser(self) -> bool:
+        """Ensure annotation parser is initialized
+        
+        Returns:
+            bool: True if parser is ready, False otherwise
+        """
+        if self.annotation_parser is None:
+            try:
+                self._initialize_annotation_parser()
+                return True
+            except Exception as e:
+                self.logger.error(f"Failed to initialize annotation parser: {str(e)}")
+                return False
+        return True
 
     def load_guides(self, selected_targets, organism, endonuclease):
         """Load guides with proper error handling"""
         try:
-            self.logger.debug(f"Starting load_guides with {len(selected_targets)} targets")
-            
             self.organism = organism
             self.endonuclease = endonuclease
 
@@ -92,7 +71,7 @@ class ViewTargetsModel(HomeWindowModel):
                 self.cspr_parser = self._parser_cache[cspr_key]
                 self.logger.debug("Using cached CSPR parser")
             else:
-                org_files = self.get_organism_to_files()
+                org_files = self.global_settings.get_organism_files()
                 if organism not in org_files or endonuclease not in org_files[organism]:
                     self.logger.error(f"No CSPR file found for {organism} and {endonuclease}")
                     return
@@ -101,7 +80,6 @@ class ViewTargetsModel(HomeWindowModel):
                 cspr_path = os.path.join(self.global_settings.get_db_path(), cspr_file)
                 self.cspr_parser = CSPRparser(cspr_path, self.global_settings.get_casper_info_path())
                 self._parser_cache[cspr_key] = self.cspr_parser
-                self.logger.debug("Created new CSPR parser")
 
             # Initialize guides and genes
             self.guides = []
@@ -156,8 +134,6 @@ class ViewTargetsModel(HomeWindowModel):
             self.guides = list(unique_guides.values())
             
             self.logger.debug(f"Found {len(self.guides)} unique guides")
-            self.logger.debug(f"Available genes: {self.available_genes}")
-            
         except Exception as e:
             self.logger.error(f"Error in load_guides: {str(e)}")
             self.logger.error(f"Stack trace: {traceback.format_exc()}")
@@ -174,13 +150,6 @@ class ViewTargetsModel(HomeWindowModel):
         
         return self._chromosome_seqs.get(chromosome)
 
-    def _initialize_annotation_parser(self):
-        """Initialize annotation parser if not already initialized"""
-        if self.annotation_parser is None:
-            self.annotation_parser = AnnotationParser(self.global_settings)
-            if self.annotation_path:
-                self.annotation_parser.set_annotation_file(self.annotation_path)
-
     def get_gene_data(self, locus_tag):
         """Get gene data with proper error handling"""
         try:
@@ -192,25 +161,19 @@ class ViewTargetsModel(HomeWindowModel):
             if locus_tag in self._gene_data_cache:
                 return self._gene_data_cache[locus_tag]
             
-            # Initialize annotation parser if not already done
-            if not hasattr(self, 'annotation_parser') or self.annotation_parser is None:
-                self.annotation_parser = AnnotationParser(self.global_settings)
-                annotation_file = self.global_settings.get_current_annotation_file()
-                annotation_path = os.path.join(self.global_settings.get_db_path(), 'GBFF', annotation_file)
-                self.annotation_parser.set_annotation_file(annotation_path)
-                self.logger.debug(f"Initialized annotation parser with file: {annotation_path}")
+            # Ensure parser is initialized
+            if not self._ensure_annotation_parser():
+                return None
             
             # Get gene data from parser with proper string conversion
             gene_data = None
             if isinstance(locus_tag, (str, int)):
                 locus_tag_str = str(locus_tag).strip()
-                self.logger.debug(f"Searching for locus tag: {locus_tag_str}")
                 # Look up by locus tag directly
                 gene_data = self.annotation_parser.get_gene_data(locus_tag_str.lower())
                 
             if gene_data:
                 self._gene_data_cache[locus_tag] = gene_data
-                self.logger.debug(f"Found gene data: {gene_data.keys()}")
             else:
                 self.logger.debug(f"No gene data found for locus tag: {locus_tag}")
                 
@@ -244,7 +207,6 @@ class ViewTargetsModel(HomeWindowModel):
             self.logger.debug(f"View exons only is: {getattr(self, '_view_exons_only', False)}")
             
             # Regular gene-based search
-            self.logger.debug(f"Getting gene data for locus tag: {identifier}")
             gene_data = self.get_gene_data(identifier)
             if not gene_data or 'info' not in gene_data:
                 self.logger.warning(f"No gene data found for locus tag: {identifier}")
@@ -255,53 +217,75 @@ class ViewTargetsModel(HomeWindowModel):
                 print(f"gene_data: {gene_data}")
                 full_location = gene_data['info'].get('full_location', '')
                 print(f"Full location: {full_location}")
-                if full_location and ',' in full_location:  # Multiple exons
-                    self.logger.debug(f"Processing exons from full location: {full_location}")
-                    exon_sequences = []
-                    full_sequence = gene_data['sequence']  # Use sequence from gene_data
-                    
-                    # Calculate padding offset
-                    padding = 30
-                    gene_start = gene_data['info']['start']
-                    padded_start = max(0, gene_start - padding)
-                    padding_offset = gene_start - padded_start
-                    
-                    print(f"gene_start: {gene_start}, padded_start: {padded_start}, padding_offset: {padding_offset}")
-                    
-                    # Process each exon location
-                    for exon in full_location.split(','):
-                        # Extract coordinates and strand
-                        coords = exon.split('(')[0]  # Get part before strand
-                        strand = exon.split('(')[1][0]  # Get + or - from (+ or (-
-                        start, end = map(int, coords.split('..'))
+                if full_location:
+                    if ',' in full_location:  # Multiple exons
+                        self.logger.debug(f"Processing exons from full location: {full_location}")
+                        exon_sequences = []
+                        full_sequence = gene_data['sequence']  # Use sequence from gene_data
+                        
+                        # Calculate padding offset
+                        padding = 30
+                        gene_start = gene_data['info']['start']
+                        padded_start = max(0, gene_start - padding)
+                        padding_offset = gene_start - padded_start
+                        
+                        print(f"gene_start: {gene_start}, padded_start: {padded_start}, padding_offset: {padding_offset}")
+                        
+                        # Process each exon location
+                        for exon in full_location.split(','):
+                            # Extract coordinates and strand
+                            coords = exon.split('(')[0]  # Get part before strand
+                            strand = exon.split('(')[1][0]  # Get + or - from (+ or (-
+                            start, end = map(int, coords.split('..'))
 
-                        print(f"coords: {coords}, strand: {strand}, start: {start}, end: {end}")
+                            print(f"coords: {coords}, strand: {strand}, start: {start}, end: {end}")
+                            
+                            # Adjust coordinates relative to gene start and account for padding
+                            relative_start = start - gene_start + padding_offset
+                            relative_end = end - gene_start + padding_offset
+                            print(f"relative_start: {relative_start}, relative_end: {relative_end}")
+                            
+                            # Get exon sequence from the padded sequence
+                            exon_seq = full_sequence[relative_start:relative_end]
+                            
+                            exon_sequences.append(exon_seq)
                         
-                        # Adjust coordinates relative to gene start and account for padding
-                        relative_start = start - gene_start + padding_offset
-                        relative_end = end - gene_start + padding_offset
-                        print(f"relative_start: {relative_start}, relative_end: {relative_end}")
+                        # Join exon sequences
+                        sequence = ''.join(exon_sequences)
+                        self.logger.debug(f"Created concatenated exon sequence of length: {len(sequence)}")
                         
-                        # Get exon sequence from the padded sequence
-                        exon_seq = full_sequence[relative_start:relative_end]
+                        return {
+                            'sequence': sequence,
+                            'info': gene_data['info'],
+                            'start': gene_data['info']['start'],
+                            'end': gene_data['info']['end']
+                        }
+                    else:  # Single location/exon
+                        # Return sequence without padding for single exon
+                        sequence = gene_data['sequence']
+                        gene_start = gene_data['info']['start']
+                        gene_end = gene_data['info']['end']
                         
-                        exon_sequences.append(exon_seq)
-                    
-                    # Join exon sequences
-                    sequence = ''.join(exon_sequences)
-                    self.logger.debug(f"Created concatenated exon sequence of length: {len(sequence)}")
-                    
-                    return {
-                        'sequence': sequence,
-                        'info': gene_data['info'],
-                        'start': gene_data['info']['start'],
-                        'end': gene_data['info']['end']
-                    }
+                        # Calculate padding offset
+                        padding = 30
+                        padded_start = max(0, gene_start - padding)
+                        padding_offset = gene_start - padded_start
+                        
+                        # Get sequence without padding
+                        relative_start = padding_offset
+                        relative_end = len(sequence) - padding_offset
+                        sequence = sequence[relative_start:relative_end]
+                        
+                        return {
+                            'sequence': sequence,
+                            'info': gene_data['info'],
+                            'start': gene_data['info']['start'],
+                            'end': gene_data['info']['end']
+                        }
             
             # If not in exons-only mode or no exons to process, return normal sequence
             if 'sequence' in gene_data:
                 sequence = gene_data['sequence']
-                self.logger.debug(f"Got sequence of length: {len(sequence)}")
                 
                 # Format sequence with padding in lowercase (only if not in exons-only mode)
                 if not hasattr(self, '_view_exons_only') or not self._view_exons_only:
@@ -328,8 +312,6 @@ class ViewTargetsModel(HomeWindowModel):
                     'end': gene_data['info']['end'],
                     'full_location': gene_data['info'].get('full_location', '')
                 }
-                
-                self.logger.debug(f"Returning sequence of length: {len(formatted_sequence)}")
                 return result
                 
             self.logger.warning(f"No sequence data found in gene_data for {identifier}")
@@ -343,27 +325,25 @@ class ViewTargetsModel(HomeWindowModel):
     def _get_sequence_for_position(self, chrom, start, end):
         """Get sequence for a given position with proper padding handling"""
         try:
-            if not hasattr(self, 'annotation_parser') or self.annotation_parser is None:
-                self.annotation_parser = AnnotationParser(self.global_settings)
-                annotation_file = self.global_settings.get_current_annotation_file()
-                annotation_path = os.path.join(self.global_settings.get_db_path(), 'GBFF', annotation_file)
-                self.annotation_parser.set_annotation_file(annotation_path)
+            if not self._ensure_annotation_parser():
+                return None
                 
             feature_info = {
                 'chromosome': chrom,  # Use raw chromosome ID directly
-                'start': start-1,  # Convert to 0-based indexing
+                'start': start,  # Keep as is since annotation parser handles 0-based conversion
                 'end': end
             }
             
             self.logger.debug(f"Getting sequence for feature info: {feature_info}")
             
-            sequence = self.annotation_parser._get_sequence_for_gene(feature_info)
+            # Use annotation parser's method directly
+            sequence = self.annotation_parser._get_sequence_for_position(chrom, start, end)
             if sequence:
                 padding = 30
                 
                 # Handle start position padding
-                if start == 1:
-                    # No padding at start if starting at position 1
+                if start == 0:  # Already 0-based for sequence operations
+                    # No padding at start if starting at position 0
                     five_prime_pad = ""
                     main_sequence = sequence[:-(padding if len(sequence) > padding else 0)].upper()
                 else:

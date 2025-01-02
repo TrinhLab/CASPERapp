@@ -6,6 +6,7 @@ import logging
 
 class CloseableTabWidget(QTabWidget):
     tab_closed = pyqtSignal(QWidget)
+    tab_closing = pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -19,27 +20,32 @@ class CloseableTabWidget(QTabWidget):
         """Close a tab at the given index"""
         self.logger.debug(f"Attempting to close tab at index {index}")
         
-        if not (self.count() > 1 and index != 0):
-            self.logger.debug("Tab closure conditions not met")
-            return
-            
+        # Skip normal closure conditions for forced closure
+        if not hasattr(self, '_force_close'):
+            if not (self.count() > 1 and index != 0):
+                self.logger.debug("Tab closure conditions not met")
+                return
+        
         widget = self.widget(index)
         if not widget:
             self.logger.warning(f"No widget found at index {index}")
             return
-            
-        # Critical operations need try-catch
+        
         try:
+            # Emit signal before closing the tab
+            self.tab_closing.emit(index)
+            
             tab_text = self.tabText(index)
             
             # Cleanup controller if exists
             controller = getattr(widget, 'controller', None)
-            if controller and hasattr(controller, 'model') and hasattr(controller.model, 'cleanup'):
-                controller.model.cleanup()
+            # if controller and hasattr(controller, 'model') and hasattr(controller.model, 'cleanup'):
+                # controller.model.cleanup()
             
             # Remove from tracking and emit signal
-            if tab_text in self._tabs:
-                del self._tabs[tab_text]
+            tab_id = f"{tab_text}_{id(widget)}"
+            if tab_id in self._tabs:
+                del self._tabs[tab_id]
             
             self.removeTab(index)
             self.tab_closed.emit(widget)
@@ -116,6 +122,8 @@ class CloseableTabWidget(QTabWidget):
             if 0 <= index < self.count():
                 current_widget = self.widget(index)
                 if current_widget and index != 0:
+                    # Emit signal before closing
+                    self.tab_closing.emit(index)
                     self.closeTab(index)
         except Exception as e:
             self.logger.error(f"Error in safely_close_tab: {e}")
@@ -167,3 +175,27 @@ class CloseableTabWidget(QTabWidget):
                 
         except Exception as e:
             self.logger.error(f"Error moving tab: {e}") 
+
+    def removeTab(self, index):
+        """Override removeTab to handle cleanup"""
+        try:
+            widget = self.widget(index)
+            if widget:
+                # Get tab text before removal
+                tab_text = self.tabText(index)
+                
+                # Remove from tracking dictionary
+                tab_id = f"{tab_text}_{id(widget)}"
+                if tab_id in self._tabs:
+                    del self._tabs[tab_id]
+                
+                # Remove the tab
+                super().removeTab(index)
+                
+                # Cleanup the widget
+                widget.deleteLater()
+                
+                self._update_all_tabs()
+                
+        except Exception as e:
+            self.logger.error(f"Error removing tab: {e}")

@@ -5,6 +5,7 @@ from collections import Counter
 import statistics
 from enum import Enum
 from typing import Set, Dict, List, Tuple
+import glob
 
 class FileChangeType(Enum):
     CSPR_ADDED = "cspr_added"
@@ -23,86 +24,175 @@ class DatabaseManager(QObject):
         self.logger = logger
         self.config_manager = config_manager
         self.db_path = None
+        self.pending_db_path = None
+        self.is_changing_directory = False
+        self._is_validating = False  # Add flag to prevent recursion
+        
+        # Initialize last known states before file watcher
+        self._last_cspr_files = set()
+        self._last_gbff_files = set()
+        self._last_files = {}  # Track files in each watched directory
+        
+        # Initialize file watcher
         self.file_watcher = QFileSystemWatcher()
         self.file_watcher.directoryChanged.connect(self._on_directory_changed)
+        
+        # Load database path and update states
         self.load_database_path()
         self._update_watched_directory()
         
-        self._last_cspr_files: Set[str] = set(self._get_cspr_files())
-        self._last_gbff_files: Set[str] = set(self._get_gbff_files())
+        # Update last known states after path is loaded
+        self._last_cspr_files = set(self._get_cspr_files())
+        self._last_gbff_files = set(self._get_gbff_files())
+        if self.db_path:
+            self._last_files[self.db_path] = set(os.listdir(self.db_path))
+            gbff_path = os.path.join(self.db_path, 'GBFF')
+            if os.path.exists(gbff_path):
+                self._last_files[gbff_path] = set(os.listdir(gbff_path))
 
     def load_database_path(self):
-        """Load the database path from .env file or set default if empty."""
-        db_path = self.config_manager.get_env_value('CSPR_DB', '')
-        # Remove both single and double quotes if present
-        db_path = db_path.strip("'\"")
-        if not db_path:
-            db_path = self.get_default_database_path()
-            self.save_db_path(db_path)
-        self.db_path = db_path
-        return self.db_path
+        """Load the database path from .env file."""
+        try:
+            db_path = self.config_manager.get_env_value('CSPR_DB', '')
+            # Remove both single and double quotes if present
+            db_path = db_path.strip("'\"")
+            
+            # Only set default if no path exists at all
+            if not db_path and self.config_manager.get_env_value('FIRST_TIME_START', 'TRUE').upper() == 'TRUE':
+                db_path = self.get_default_database_path()
+                self.save_db_path(db_path)
+            
+            self.db_path = db_path
+            self.logger.debug(f"Database path loaded from .env: {self.db_path}")
+            return self.db_path
+            
+        except Exception as e:
+            self.logger.error(f"Error loading database path: {str(e)}")
+            return self.get_default_database_path()
 
     def validate_db_path(self, path):
-        """Validate that the given path exists and contains CSPR files"""
-        self.logger.debug(f"Validating DB path: {path}")
-        
-        if not os.path.isdir(path):
-            self.logger.debug(f"Path is not a directory: {path}")
-            return False, "The selected path is not a directory."
+        """
+        Validate the database path without modifying it
+        Returns (is_valid, message)
+        """
+        try:
+            if not path:
+                return False, "No directory selected"
             
-        cspr_files = self._get_cspr_files()
-        if not cspr_files:
-            self.logger.debug(f"Path {path} does not contain CSPR files")
-            return False, "The selected directory does not contain any CSPR files."
+            if not os.path.exists(path):
+                return False, "The selected directory does not exist."
             
-        self.logger.debug(f"Path {path} is valid and contains {len(cspr_files)} CSPR files")
-        return True, f"Valid database path with {len(cspr_files)} CSPR files"
+            # Check for CSPR files
+            cspr_files = glob.glob(os.path.join(path, "*.cspr"))
+            if not cspr_files:
+                return False, "No CSPR files found"
+            
+            return True, "Valid database directory"
+            
+        except Exception as e:
+            self.logger.error(f"Error validating database path: {str(e)}")
+            return False, str(e)
 
     def save_db_path(self, path):
         """Set and save the database path."""
-        if not path:
-            self.logger.warning("Attempting to save an empty database path")
-            return False, "Empty database path is not allowed."
-
-        # Ensure the path is a string and properly quoted
-        path = str(path).strip("'\"")
-
-        # Validate the database path
-        is_valid, message = self.validate_db_path(path)
-        if not is_valid:
-            self.logger.warning(f"Invalid database path: {path}")
-            self.db_validation_changed.emit(False, message)
-            self.db_path = path
-            self.config_manager.set_env_value('CSPR_DB', path)
-            self._update_watched_directory()
-            return False, message
-
-        # Set the db_path attribute
-        self.db_path = path
-
+        if self._is_validating:  # Prevent recursive validation
+            return True, "Operation in progress"
+        
         try:
-            self.config_manager.set_env_value('CSPR_DB', path)
-            self.logger.info(f"Database path set and saved: {path}")
-            self.db_validation_changed.emit(True, "Database path saved successfully.")
-            self._update_watched_directory()
-            return True, "Database path saved successfully."
+            self._is_validating = True
+            
+            if not path:
+                self.logger.warning("Attempting to save an empty database path")
+                return False, "Empty database path is not allowed."
+
+            path = str(path).strip("'\"")
+            is_new_genome = self._is_new_genome_context()
+            
+            # Validate the database path
+            is_valid, message = self.validate_db_path(path)
+            
+            # Log the current state
+            self.logger.debug(f"Saving DB path - Current state: db_path={self.db_path}, pending={self.pending_db_path}, "
+                             f"is_changing={self.is_changing_directory}, is_new_genome={is_new_genome}")
+            
+            # If we're in new genome context or path change context, store as pending path
+            if is_new_genome or is_valid:
+                self.logger.debug(f"Storing pending database path: {path}")
+                self.pending_db_path = path
+                self.is_changing_directory = True
+                
+                # Create directory if needed
+                if not os.path.exists(path):
+                    try:
+                        os.makedirs(path)
+                        self.logger.info(f"Created pending directory: {path}")
+                    except Exception as e:
+                        self.logger.error(f"Error creating pending directory: {str(e)}")
+                
+                # If the path is valid, finalize the change immediately
+                if is_valid:
+                    success, finalize_message = self.finalize_directory_change()
+                    if not success:
+                        self.logger.error(f"Failed to finalize directory change: {finalize_message}")
+                        return False, finalize_message
+                    return True, finalize_message
+                
+                return True, "Path stored for new genome creation"
+            
+            # For invalid paths
+            if not is_valid:
+                self.db_validation_changed.emit(False, message)
+                return False, message
+            
+        finally:
+            self._is_validating = False
+
+    def _is_new_genome_context(self):
+        """Check if the path change is happening in new genome context"""
+        try:
+            import inspect
+            stack = inspect.stack()
+            
+            # Check for NCBI context as well
+            is_new_genome = any('NewGenome' in frame.filename or 'NCBI' in frame.filename for frame in stack)
+            is_path_change = any('MainWindow' in frame.filename and 'change_database_directory' in frame.function 
+                               for frame in stack)
+            
+            # Consider it a new genome context if either:
+            # 1. We're in new genome/NCBI context and actively changing directory
+            # 2. We're in the path change process
+            is_active_change = (is_new_genome and self.is_changing_directory) or is_path_change
+            
+            self.logger.debug(f"Context check - New Genome: {is_new_genome}, Path Change: {is_path_change}, "
+                             f"Active Change: {is_active_change}, Is Changing Directory: {self.is_changing_directory}")
+            
+            return is_active_change
+            
         except Exception as e:
-            error_message = f"Error saving database path: {str(e)}"
-            self.logger.error(error_message)
-            self.db_validation_changed.emit(False, error_message)
-            return False, error_message
+            self.logger.error(f"Error in _is_new_genome_context: {str(e)}")
+            return False
+
+    def get_active_db_path(self):
+        """Get the appropriate database path based on context"""
+        if self.pending_db_path and self.is_changing_directory:
+            self.logger.debug(f"Using pending database path: {self.pending_db_path}")
+            return self.pending_db_path
+        
+        self.logger.debug(f"Using current database path: {self.db_path}")
+        return self.db_path
 
     def get_db_path(self):
         return self.db_path
 
     def ensure_db_path_exists(self):
         """Ensure that the database path exists, creating it if necessary."""
-        if not os.path.exists(self.db_path):
+        path_to_check = self.get_active_db_path()  # Use active path instead of db_path
+        if not os.path.exists(path_to_check):
             try:
-                os.makedirs(self.db_path)
-                self.logger.info(f"Created database directory: {self.db_path}")
+                os.makedirs(path_to_check)
+                self.logger.info(f"Created database directory: {path_to_check}")
             except Exception as e:
-                self.logger.error(f"Failed to create database directory: {self.db_path}. Error: {str(e)}")
+                self.logger.error(f"Failed to create database directory: {path_to_check}. Error: {str(e)}")
                 raise
 
     def get_default_database_path(self):
@@ -190,24 +280,36 @@ class DatabaseManager(QObject):
         try:
             self.logger.debug(f"Detected change in directory: {path}")
             
+            # Check if change is just an index file
+            changed_files = set(os.listdir(path)) - set(self._last_files.get(path, []))
+            if all(f.endswith('.index') for f in changed_files):
+                self.logger.debug("Ignoring index file changes")
+                # Update last files without triggering refresh
+                self._last_files[path] = set(os.listdir(path))
+                return
+            
+            # Get current state of CSPR files
+            current_cspr_files = set(self._get_cspr_files())
+            
             # Re-validate the path
             is_valid, message = self.validate_db_path(self.db_path)
             
             # Detect specific changes
             changes = self._detect_file_changes()
             
-            # Always emit validation signal on directory change
-            self.db_validation_changed.emit(is_valid, message)
+            # Update last known state
+            self._last_cspr_files = current_cspr_files
+            self._last_files[path] = set(os.listdir(path))
             
-            if changes:  # Only emit change signals if there are actual changes
+            # Always emit validation and state changes
+            self.db_validation_changed.emit(is_valid, message)
+            self.db_state_changed.emit(is_valid, message, changes)
+            
+            # If changes detected, emit files changed signal
+            if changes:
                 self.logger.debug(f"Detected file changes: {changes}")
                 self.db_files_changed.emit(changes)
-                
-            # Always emit combined state signal
-            self.db_state_changed.emit(is_valid, message, changes or {})
             
-            self.logger.info(f"Database state updated - Valid: {is_valid}, Changes: {changes}")
-                
         except Exception as e:
             self.logger.error(f"Error handling directory change: {str(e)}")
 
@@ -229,23 +331,24 @@ class DatabaseManager(QObject):
                 if f.endswith('.gbff')]
 
     def check_db_state(self):
-        """Check the current state of the database and emit signals if needed."""
-        self.logger.debug("Checking database state")
-        if not self.db_path:
-            self.load_database_path()
-
-        # Get validation state
-        is_valid, message = self.validate_db_path(self.db_path)
-        
-        # Detect any changes since last check
-        changes = self._detect_file_changes()
-        
-        # Emit signals
-        self.db_validation_changed.emit(is_valid, message)
-        if changes:
-            self.db_files_changed.emit(changes)
+        """
+        Check database state without clearing invalid paths
+        """
+        try:
+            current_path = self.get_db_path()
+            is_valid, message = self.validate_db_path(current_path)
             
-        self.logger.info(f"Database state checked - Valid: {is_valid}, Changes: {changes}")
+            # Get list of changes if path is valid
+            changes = {}  # Initialize as dict instead of list
+            if is_valid:
+                changes = self._detect_file_changes()
+            
+            # Emit signals but don't modify the path
+            self.db_validation_changed.emit(is_valid, message)
+            self.db_state_changed.emit(is_valid, message, changes)
+            
+        except Exception as e:
+            self.logger.error(f"Error checking database state: {str(e)}")
 
     def get_organisms_and_endos(self):
         """Get mapping of organisms to their endonucleases and files"""
@@ -510,3 +613,105 @@ class DatabaseManager(QObject):
         except Exception as e:
             self.logger.error(f"Error calculating statistics: {str(e)}")
             raise
+
+    def update_db_state(self):
+        """Check and update the database state"""
+        self.logger.debug("Checking database state")
+        if not self.db_path and not self.pending_db_path:
+            self.load_database_path()
+
+        # Use active path for validation
+        path_to_check = self.get_active_db_path()
+        self.logger.debug(f"Checking state for path: {path_to_check} (pending: {self.pending_db_path}, current: {self.db_path})")
+        
+        is_valid, message = self.validate_db_path(path_to_check)
+        self.logger.debug(f"Database validation result - Path: {path_to_check}, Valid: {is_valid}, Message: {message}")
+        
+        # Detect any changes since last check
+        changes = self._detect_file_changes()
+        
+        # Check if we should finalize a directory change
+        if self.pending_db_path and self.is_changing_directory:
+            self.logger.debug("Checking conditions for directory change finalization")
+            self.logger.debug(f"Is valid: {is_valid}, Has changes: {bool(changes)}")
+            
+            if is_valid and not changes:  # No changes means we're not in the middle of file operations
+                self.logger.debug("Attempting to finalize directory change")
+                success, finalize_message = self.finalize_directory_change()
+                if success:
+                    self.logger.debug("Directory change finalized successfully")
+                    # Emit signals
+                    self.db_validation_changed.emit(True, finalize_message)
+                    self.db_state_changed.emit(True, finalize_message, changes)
+                    return
+                else:
+                    self.logger.debug(f"Directory change finalization failed: {finalize_message}")
+        
+        # Emit regular signals
+        self.db_validation_changed.emit(is_valid, message)
+        if changes:
+            self.db_files_changed.emit(changes)
+            
+        self.logger.info(f"Database state checked - Valid: {is_valid}, Changes: {changes}")
+
+    def cancel_directory_change(self):
+        """Cancel the directory change process"""
+        self.logger.debug(f"Cancelling directory change process. Previous state - Pending: {self.pending_db_path}, Changing: {self.is_changing_directory}")
+        self.pending_db_path = None
+        self.is_changing_directory = False
+        self.logger.debug("Directory change process cancelled")
+
+    def finalize_directory_change(self):
+        """Finalize the database directory change after successful validation"""
+        try:
+            if self.pending_db_path and self.is_changing_directory:
+                self.logger.debug(f"Finalizing directory change from {self.db_path} to {self.pending_db_path}")
+                
+                # Validate the pending path one final time
+                is_valid, message = self.validate_db_path(self.pending_db_path)
+                if not is_valid:
+                    self.logger.warning(f"Cannot finalize directory change: {message}")
+                    return False, message
+                
+                # Update the current path
+                old_path = self.db_path
+                self.db_path = self.pending_db_path
+                
+                # Update .env file - try multiple approaches to ensure it works
+                try:
+                    # First attempt: Direct write
+                    self.config_manager.write_to_env('CSPR_DB', self.db_path)
+                    
+                    # Second attempt: Use set_env_value
+                    self.config_manager.set_env_value('CSPR_DB', self.db_path)
+                    
+                    # Force reload environment variables
+                    self.config_manager.load_env()
+                    
+                    # Verify the update
+                    new_env_value = self.config_manager.get_env_value('CSPR_DB')
+                    if new_env_value != self.db_path:
+                        raise Exception(f"Environment variable update failed. Expected: {self.db_path}, Got: {new_env_value}")
+                        
+                except Exception as e:
+                    self.logger.error(f"Error updating environment variable: {str(e)}")
+                    return False, f"Failed to update environment variable: {str(e)}"
+                
+                # Clear pending state
+                self.pending_db_path = None
+                self.is_changing_directory = False
+                
+                # Update database state
+                self.update_db_state()
+                
+                success_message = f"Successfully changed database directory to:\n{self.db_path}"
+                self.logger.info(f"Successfully changed database directory from {old_path} to {self.db_path}")
+                self.logger.debug("Directory change finalized successfully")
+                
+                return True, success_message
+                
+            return False, "No pending directory change to finalize"
+            
+        except Exception as e:
+            self.logger.error(f"Error finalizing directory change: {str(e)}")
+            return False, f"Error finalizing directory change: {str(e)}"

@@ -1,11 +1,12 @@
 from typing import Optional
 from PyQt6 import QtWidgets, uic
-from PyQt6.QtWidgets import QTableWidgetItem, QAbstractItemView
-from PyQt6.QtGui import QTextDocument
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import QTableWidgetItem, QAbstractItemView, QMessageBox, QApplication, QDialog
+from PyQt6.QtGui import QTextDocument, QKeySequence, QColor
+from PyQt6.QtCore import Qt, pyqtSignal, QEvent
 from utils.ui import show_error
 import traceback
-from views.DNAFeatureViewer import DNAFeatureViewer
+from views.dna_viewer.dna_feature_viewer import DNAFeatureViewer
+from .dialogs.base_insertion_dialog import BaseInsertionDialog
 
 class ViewTargetsView(QtWidgets.QMainWindow):
     # Define the signal
@@ -21,9 +22,20 @@ class ViewTargetsView(QtWidgets.QMainWindow):
     def init_ui(self):
         try:
             uic.loadUi(self.settings.get_ui_dir_path() + '/view_targets.ui', self)
+            self.dna_feature_viewer = DNAFeatureViewer(parent=self)
             self._init_ui_components()
+            self._set_styles()  # Add style initialization
         except Exception as e:
             show_error(self.settings, "Error initializing ViewTargetsView", str(e))
+
+    def _set_styles(self):
+        """Apply the global groupbox style"""
+        try:
+            style = self.settings.get_groupbox_style()
+            for groupbox in self.findChildren(QtWidgets.QGroupBox):
+                groupbox.setStyleSheet(style)
+        except Exception as e:
+            self.logger.error(f"Error setting styles: {str(e)}")
 
     def _init_ui_components(self):
         self._init_grpGuideViewer()
@@ -75,6 +87,7 @@ class ViewTargetsView(QtWidgets.QMainWindow):
         self.push_button_cotargeting = self._find_widget('pbtnCoTargeting', QtWidgets.QPushButton)
 
     def _init_grpGeneViewer(self):
+        """Initialize gene viewer group"""
         self.push_button_highlight_guides = self._find_widget('pbtnHighlightGuides', QtWidgets.QPushButton)
         self.push_button_clear_guides = self._find_widget('pbtnClearGuides', QtWidgets.QPushButton)
         self.line_edit_start_location = self._find_widget('ledStartLocation', QtWidgets.QLineEdit)
@@ -82,31 +95,47 @@ class ViewTargetsView(QtWidgets.QMainWindow):
         self.push_button_change_location = self._find_widget('pbtnChangeLocation', QtWidgets.QPushButton)
         self.text_edit_gene_viewer = self._find_widget('txtedGeneViewer', QtWidgets.QTextEdit)
         self.push_button_reset_location = self._find_widget('pbtnResetLocation', QtWidgets.QPushButton)
+        self.label_sequence_legend = self._find_widget('lblSequenceLegend', QtWidgets.QLabel)
         self.check_box_view_exons_only = self._find_widget('chkViewExonsOnly', QtWidgets.QCheckBox)
 
-        self.text_edit_gene_viewer.setReadOnly(True)
+        # Hide the text editor since we're using the DNA feature viewer
+        self.text_edit_gene_viewer.hide()
 
-        # Create DNA feature viewer
-        self.dna_feature_viewer = DNAFeatureViewer()
-        
-        # Get the layout of the gene viewer group
-        gene_viewer_group = self.findChild(QtWidgets.QGroupBox, 'grpGeneViewer')
-        gene_viewer_layout = gene_viewer_group.layout()
-        
-        # Find the row index of the text editor
-        text_editor_row = -1
-        for i in range(gene_viewer_layout.rowCount()):
-            item = gene_viewer_layout.itemAtPosition(i, 0)
-            if item and item.widget() == self.text_edit_gene_viewer:
-                text_editor_row = i
-                break
-        
-        if text_editor_row != -1:
-            # Insert DNA feature viewer above the text editor
-            gene_viewer_layout.addWidget(self.dna_feature_viewer, text_editor_row, 0, 1, -1)
-        
-        # Connect signals
-        self.dna_feature_viewer.sequence_selected.connect(self._on_sequence_selected)
+        try:
+            # Get the layout of the gene viewer group
+            gene_viewer_group = self.findChild(QtWidgets.QGroupBox, 'grpGeneViewer')
+            gene_viewer_layout = gene_viewer_group.layout()
+            
+            # Find the row index of the text editor
+            text_editor_row = -1
+            for i in range(gene_viewer_layout.rowCount()):
+                item = gene_viewer_layout.itemAtPosition(i, 0)
+                if item and item.widget() == self.text_edit_gene_viewer:
+                    text_editor_row = i
+                    break
+            
+            if text_editor_row != -1:
+                # Remove the text editor from the layout
+                gene_viewer_layout.removeWidget(self.text_edit_gene_viewer)
+                # Add DNA feature viewer in its place
+                gene_viewer_layout.addWidget(self.dna_feature_viewer, text_editor_row, 0, 1, -1)
+                
+                # Set size policy to make the DNA viewer expand
+                self.dna_feature_viewer.setSizePolicy(
+                    QtWidgets.QSizePolicy.Policy.Expanding,
+                    QtWidgets.QSizePolicy.Policy.Expanding
+                )
+
+            self.dna_feature_viewer.view.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+            self.dna_feature_viewer.view.installEventFilter(self)
+            self.dna_feature_viewer.installEventFilter(self)
+            
+            # Store current sequence for editing
+            self._current_sequence = ""
+
+        except Exception as e:
+            self.logger.error(f"Error in _init_grpGeneViewer: {str(e)}")
+            self.logger.error(f"Stack trace: {traceback.format_exc()}")
 
     def _find_widget(self, name: str, widget_type: type) -> Optional[QtWidgets.QWidget]:
         widget = self.findChild(widget_type, name)
@@ -114,10 +143,9 @@ class ViewTargetsView(QtWidgets.QMainWindow):
             self.logger.warning(f"Widget '{name}' not found in UI file.")
         return widget 
 
-    def display_guides_in_table(self, guides):
+    def display_guides_in_table(self, guides, suppress_updates=False):
         try:
             self._all_guides = guides
-            
             selected_text = self.combo_box_gene.currentText()
             
             # First filter by position/feature
@@ -138,6 +166,7 @@ class ViewTargetsView(QtWidgets.QMainWindow):
                             filtered_guides.append(guide)
                 else:
                     filtered_guides = self._all_guides
+                    self.logger.debug("No filtering applied, using all guides")
             
             # Apply additional filters
             final_guides = []
@@ -157,13 +186,13 @@ class ViewTargetsView(QtWidgets.QMainWindow):
                 
             # Update table with new guides
             total_rows = len(final_guides)
-            self.logger.debug(f"Processing {total_rows} rows for display after filtering")
             
-            # Completely freeze UI
-            self.setUpdatesEnabled(False)
-            self.table_guides.setUpdatesEnabled(False)
-            self.table_guides.setSortingEnabled(False)
-            self.table_guides.setVisible(False)
+            # Completely freeze UI only if not suppressing updates
+            if not suppress_updates:
+                self.setUpdatesEnabled(False)
+                self.table_guides.setUpdatesEnabled(False)
+                self.table_guides.setSortingEnabled(False)
+                self.table_guides.setVisible(False)
             
             try:
                 # Clear and resize table
@@ -237,11 +266,12 @@ class ViewTargetsView(QtWidgets.QMainWindow):
                 guide_viewer_group.setMinimumWidth(essential_columns_width + 50)  # Add some padding for scrollbar
                 
             finally:
-                # Re-enable UI
-                self.table_guides.setVisible(True)
-                self.table_guides.setUpdatesEnabled(True)
-                self.setUpdatesEnabled(True)
-                self.table_guides.setSortingEnabled(True)
+                # Re-enable UI only if not suppressing updates
+                if not suppress_updates:
+                    self.table_guides.setVisible(True)
+                    self.table_guides.setUpdatesEnabled(True)
+                    self.setUpdatesEnabled(True)
+                    self.table_guides.setSortingEnabled(True)
                 
         except Exception as e:
             self.logger.error(f"Error in display_guides: {str(e)}")
@@ -390,9 +420,6 @@ class ViewTargetsView(QtWidgets.QMainWindow):
             # Clear existing items efficiently
             self.combo_box_gene.clear()
             
-            # Debug logging
-            self.logger.debug(f"Received {len(genes)} genes")
-            
             # Use a set to ensure uniqueness
             unique_genes = list(set(genes))
             
@@ -404,8 +431,6 @@ class ViewTargetsView(QtWidgets.QMainWindow):
                 # Set first item without triggering updates
                 if self.combo_box_gene.count() > 0:
                     self.combo_box_gene.setCurrentIndex(0)
-                    
-                self.logger.debug(f"Added {len(unique_genes)} unique genes to combo box")
                 
             # Re-enable UI updates
             self.combo_box_gene.setUpdatesEnabled(True)
@@ -429,22 +454,26 @@ class ViewTargetsView(QtWidgets.QMainWindow):
 
     def update_gene_viewer(self, sequence, features=None):
         """Update both text editor and DNA feature viewer"""
-        # Update text editor
-        self.text_edit_gene_viewer.clear()
-        doc = QTextDocument()
-        doc.setHtml(sequence)
-        self.text_edit_gene_viewer.setDocument(doc)
-        
-        # Get start position from line edit
         try:
-            start_pos = int(self.line_edit_start_location.text())
-        except (ValueError, TypeError):
-            start_pos = 1
-        
-        # Update DNA feature viewer
-        if features is None:
-            features = []
-        self.dna_feature_viewer.set_data(sequence, features, start_pos)
+            # Update text editor
+            self.text_edit_gene_viewer.clear()
+            doc = QTextDocument()
+            doc.setHtml(sequence)
+            self.text_edit_gene_viewer.setDocument(doc)
+            
+            # Get start position from line edit
+            try:
+                start_pos = int(self.line_edit_start_location.text())
+            except (ValueError, TypeError):
+                start_pos = 1
+            
+            # Update DNA feature viewer
+            if features is None:
+                features = []
+            self.dna_feature_viewer.set_data(sequence, features, start_pos)
+            
+        except Exception as e:
+            self.logger.error(f"Error updating gene viewer: {str(e)}")
 
     def select_all_guides(self, select):
         for row in range(self.table_guides.rowCount()):
@@ -559,40 +588,256 @@ class ViewTargetsView(QtWidgets.QMainWindow):
             self.logger.error(f"Error showing details: {str(e)}")
             show_error(self.settings, "Error showing details", str(e))
 
-    def _on_sequence_selected(self, start, end):
-        """Handle sequence selection in DNA feature viewer"""
-        self.line_edit_start_location.setText(str(start))
-        self.line_edit_stop_location.setText(str(end))
-
-    def highlight_guides_in_viewer(self, guides_to_highlight, sequence):
-        """Highlight guides in viewer"""
-        try:
-            for guide in guides_to_highlight:
-                sequence_to_find = guide['sequence']
-                strand = guide['strand']
-                
-                if strand == '-':
-                    sequence_to_find = str(Seq(sequence_to_find).reverse_complement())
-                
-                sequence_upper = sequence.upper()
-                target_upper = sequence_to_find.upper()
-                
-                pos = sequence_upper.find(target_upper)
-                if pos != -1:
-                    # Set color based on strand
-                    color = QColor(255, 0, 0, 100) if strand == '-' else QColor(0, 255, 0, 100)
-                    
-                    # Highlight sequence in viewer
-                    self.dna_feature_viewer.sequence_viewer.highlight_sequence(
-                        pos, 
-                        pos + len(sequence_to_find) - 1,
-                        color
-                    )
-                    
-        except Exception as e:
-            self.logger.error(f"Error highlighting guides: {str(e)}")
-            show_error(self.settings, "Error highlighting guides", str(e))
-
     def clear_highlights(self):
         """Clear highlights in viewer"""
         self.dna_feature_viewer.sequence_viewer.clear_highlights()
+
+    def eventFilter(self, obj, event):
+        """Handle key press events"""
+        if event.type() == QEvent.Type.KeyPress:
+            # Check for copy command
+            if event.matches(QKeySequence.StandardKey.Copy):
+                self._handle_copy()
+                return True
+                
+            # Handle delete/backspace
+            if event.key() in [Qt.Key.Key_Delete, Qt.Key.Key_Backspace]:
+                return self._handle_delete()
+            
+            # Handle only valid base pair keys
+            if event.text():
+                valid_bases = set('ATGCRYMKSWBDHVNatgcrymkswbdhvn')
+                if event.text() in valid_bases:
+                    return self._handle_insert()
+                    
+        return super().eventFilter(obj, event)
+
+    def _handle_copy(self):
+        """Copy selected sequence to clipboard"""
+        try:
+            start = self.dna_feature_viewer.insertion_zone.selection_start
+            end = self.dna_feature_viewer.insertion_zone.current_cursor_pos
+            
+            if start is not None and end is not None:
+                start, end = min(start, end), max(start, end)
+                
+                # Get sequence from DNA viewer instead of stored sequence
+                sequence = self.dna_feature_viewer.sequence_viewer.sequence
+                if sequence:
+                    selected_sequence = sequence[start:end]
+                    if selected_sequence:
+                        clipboard = QApplication.clipboard()
+                        clipboard.setText(selected_sequence)
+                        self.logger.debug(f"Copied sequence: {selected_sequence}")
+                else:
+                    self.logger.warning("No sequence available to copy")
+                    
+        except Exception as e:
+            self.logger.error(f"Error copying sequence: {str(e)}")
+            self.logger.error(f"Stack trace: {traceback.format_exc()}")
+
+    def _handle_delete(self):
+        """Handle deletion of selected base pairs"""
+        start = self.dna_feature_viewer.insertion_zone.selection_start
+        end = self.dna_feature_viewer.insertion_zone.current_cursor_pos
+        
+        # Check if there's no selection but there are highlighted nucleotides
+        if (start is None or end is None or start == end):
+            # Look for highlighted nucleotides
+            sequence_viewer = self.dna_feature_viewer.sequence_viewer
+            highlighted_positions = []
+            
+            for i, nuc in enumerate(sequence_viewer.nucleotides):
+                if nuc.is_highlighted and nuc.highlight_color == QColor(100, 150, 255, 100):  # Check for selection blue
+                    # Convert nucleotide index to sequence position (divide by 2 since each base has 2 nucleotides)
+                    pos = i // 2
+                    highlighted_positions.append(pos)
+            
+            if highlighted_positions:
+                # Use the range of highlighted positions
+                start = min(highlighted_positions)
+                end = max(highlighted_positions) + 1  # Add 1 to include the last position
+            else:
+                QMessageBox.warning(
+                    self,
+                    "No Selection",
+                    "Please select the bases to be removed and then press Delete",
+                    QMessageBox.StandardButton.Ok
+                )
+                return True
+        
+        start, end = min(start, end), max(start, end)
+        num_bases = end - start
+        
+        reply = QMessageBox.question(
+            self,
+            "Confirm Deletion",
+            f"Delete {num_bases} bp?",
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel
+        )
+        
+        if reply == QMessageBox.StandardButton.Ok:
+            # Store current highlights before deletion
+            guide_highlights = []
+            sequence_viewer = self.dna_feature_viewer.sequence_viewer
+            for i, nuc in enumerate(sequence_viewer.nucleotides):
+                if nuc.is_highlighted:
+                    # Only store guide highlights (red/green), not selection highlights (blue)
+                    if nuc.highlight_color not in [QColor(200, 200, 255, 100), QColor(100, 150, 255, 100)]:
+                        # Store position and color
+                        guide_highlights.append({
+                            'pos': i,
+                            'color': nuc.highlight_color,
+                            'strand': '-' if i % 2 else '+'  # Odd indices are negative strand
+                        })
+            
+            # Create new sequence
+            new_sequence = self._current_sequence[:start] + self._current_sequence[end:]
+            self._current_sequence = new_sequence
+            
+            # Clear all highlights before updating viewer
+            self.dna_feature_viewer.sequence_viewer.clear_highlights()
+            
+            # Update viewer with new sequence
+            self.update_gene_viewer(new_sequence)
+            
+            # Reapply guide highlights, adjusting positions for deleted section
+            for highlight in guide_highlights:
+                orig_pos = highlight['pos']
+                # Calculate new position after deletion
+                if orig_pos < start * 2:  # Multiply by 2 because each base has two nucleotides
+                    new_pos = orig_pos
+                elif orig_pos > end * 2:
+                    new_pos = orig_pos - ((end - start) * 2)  # Adjust for deleted section
+                else:
+                    continue  # Skip highlights in deleted region
+                
+                # Apply highlight to new position
+                if new_pos < len(sequence_viewer.nucleotides):
+                    nuc = sequence_viewer.nucleotides[new_pos]
+                    nuc.is_highlighted = True
+                    nuc.highlight_color = highlight['color']
+                    nuc.update()
+            
+            # Calculate cursor position coordinates
+            line_number = start // self.dna_feature_viewer.sequence_viewer.bases_per_line
+            cursor_pos_in_line = start % self.dna_feature_viewer.sequence_viewer.bases_per_line
+            
+            # Calculate exact cursor coordinates
+            cursor_x = self.dna_feature_viewer.sequence_viewer.strand_margin + (cursor_pos_in_line * self.dna_feature_viewer.sequence_viewer.base_width)
+            cursor_y = (line_number * self.dna_feature_viewer.sequence_viewer.line_spacing) + (self.dna_feature_viewer.sequence_viewer.line_height * 0.1)
+            cursor_height = self.dna_feature_viewer.sequence_viewer.line_height * 2 + 6
+            
+            # Position cursor at start of deleted region
+            self.dna_feature_viewer.insertion_zone.sequence_cursor.set_position(
+                cursor_x,
+                cursor_y,
+                cursor_height
+            )
+            self.dna_feature_viewer.insertion_zone.sequence_cursor.show()
+            
+            # Update stored cursor position
+            self.dna_feature_viewer.insertion_zone.current_cursor_pos = start
+            
+            # Clear selection states
+            self.dna_feature_viewer.sequence_viewer.selection_start = None
+            self.dna_feature_viewer.sequence_viewer.selection_end = None
+            self.dna_feature_viewer.sequence_viewer.selection_active = False
+            self.dna_feature_viewer.insertion_zone.selection_start = None
+            self.dna_feature_viewer.insertion_zone.selection_end = None
+            self.dna_feature_viewer.insertion_zone.selection_active = False
+            
+            # Force update of the view
+            scene = self.dna_feature_viewer.scene
+            if scene is not None:
+                scene.update()
+            
+            # Make sure view maintains focus
+            self.dna_feature_viewer.view.setFocus()
+            
+        return True
+
+    def _handle_insert(self):
+        """Handle base pair insertion"""
+        cursor_pos = self.dna_feature_viewer.insertion_zone.current_cursor_pos
+        if cursor_pos is not None:
+            dialog = BaseInsertionDialog(self)
+            if dialog.exec() == QDialog.DialogCode.Accepted:
+                bases = dialog.get_bases()
+                
+                new_sequence = (
+                    self._current_sequence[:cursor_pos] + 
+                    bases + 
+                    self._current_sequence[cursor_pos:]
+                )
+                self._current_sequence = new_sequence
+                
+                # Store new cursor position before updating viewer
+                new_cursor_pos = cursor_pos + len(bases)
+                
+                # Update viewer with new sequence
+                self.update_gene_viewer(new_sequence)
+                
+                # Highlight the newly added bases on both strands
+                highlight_color = QColor(100, 150, 255, 100)  # Same blue as selection
+                # Highlight positive strand
+                self.dna_feature_viewer.sequence_viewer.highlight_sequence(
+                    cursor_pos,  # Start at insertion point
+                    new_cursor_pos - 1,  # End at position before new cursor
+                    highlight_color,
+                    strand='+'
+                )
+                # Highlight negative strand
+                self.dna_feature_viewer.sequence_viewer.highlight_sequence(
+                    cursor_pos,  # Start at insertion point
+                    new_cursor_pos - 1,  # End at position before new cursor
+                    highlight_color,
+                    strand='-'
+                )
+                
+                # Calculate cursor position coordinates
+                line_number = new_cursor_pos // self.dna_feature_viewer.sequence_viewer.bases_per_line
+                cursor_pos_in_line = new_cursor_pos % self.dna_feature_viewer.sequence_viewer.bases_per_line
+                
+                # Calculate exact cursor coordinates
+                cursor_x = self.dna_feature_viewer.sequence_viewer.strand_margin + (cursor_pos_in_line * self.dna_feature_viewer.sequence_viewer.base_width)
+                cursor_y = (line_number * self.dna_feature_viewer.sequence_viewer.line_spacing) + (self.dna_feature_viewer.sequence_viewer.line_height * 0.1)
+                cursor_height = self.dna_feature_viewer.sequence_viewer.line_height * 2 + 6
+                
+                # Position cursor after inserted bases
+                self.dna_feature_viewer.insertion_zone.sequence_cursor.set_position(
+                    cursor_x,
+                    cursor_y,
+                    cursor_height
+                )
+                self.dna_feature_viewer.insertion_zone.sequence_cursor.show()
+                
+                # Update stored cursor position
+                self.dna_feature_viewer.insertion_zone.current_cursor_pos = new_cursor_pos
+                
+                # Make sure view maintains focus
+                self.dna_feature_viewer.view.setFocus()
+                
+            return True
+
+    def closeEvent(self, event):
+        """Handle cleanup when window is closed"""
+        try:
+            # Clean up DNA viewer if it exists
+            if hasattr(self, 'dna_feature_viewer'):
+                self.dna_feature_viewer.closeEvent(event)
+            
+            # Ensure all views release mouse tracking
+            for child in self.findChildren(QtWidgets.QWidget):
+                if isinstance(child, (QtWidgets.QGraphicsView, QtWidgets.QAbstractScrollArea)):
+                    child.setMouseTracking(False)
+                    child.viewport().setMouseTracking(False)
+                    if child.hasMouseTracking():
+                        child.releaseMouse()
+                    
+        except Exception as e:
+            if hasattr(self, 'logger'):
+                self.logger.error(f"Error in closeEvent: {str(e)}")
+            
+        super().closeEvent(event)

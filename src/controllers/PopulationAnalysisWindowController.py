@@ -39,7 +39,6 @@ class PopulationAnalysisWindowController:
     def launch(self):
         try:
             self.logger = self.global_settings.get_logger()
-            self.logger.info("Launching Population Analysis Window")
             self.get_data()
         except Exception as e:
             self.logger.error(f"Error in launch(): {str(e)}")
@@ -47,7 +46,6 @@ class PopulationAnalysisWindowController:
 
     def get_data(self):
         try:
-            self.logger.info("Getting data for Population Analysis")
             self.fillEndo()
         except Exception as e:
             self.logger.error(f"Error in get_data(): {str(e)}")
@@ -55,7 +53,6 @@ class PopulationAnalysisWindowController:
 
     def fillEndo(self):
         try:
-            self.logger.info("Starting fillEndo()")
             endos = self.model.load_endonucleases()
             self.logger.debug(f"Loaded endonucleases: {endos}")
             
@@ -64,7 +61,6 @@ class PopulationAnalysisWindowController:
                 show_error(self.global_settings, "Error", "No endonucleases found")
                 return
             
-            self.logger.info(f"Updating dropdown with {len(endos)} endonucleases")
             self.view.update_endo_dropdown(endos.keys())
             self.change_endo()
         except Exception as e:
@@ -190,8 +186,6 @@ class PopulationAnalysisWindowController:
                 data['pams'][majority_index],    # PAM
                 strand                 # Strand
             )
-
-            self.logger.debug(f"Processed seed data: {row_data}")
             return row_data
 
         except Exception as e:

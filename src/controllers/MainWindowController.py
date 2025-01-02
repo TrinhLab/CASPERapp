@@ -22,12 +22,28 @@ class MainWindowController(LoggingMixin):
         self.startup_size = QSize(750, 550)
         self.current_tab = None
         self.previous_size = None
+        # Add flag to track dialog state
+        self._cspr_deletion_dialog_shown = False
+        
+        # Define minimum sizes for different tab types
+        self.tab_min_sizes = {
+            "Startup": QSize(750, 550),  # Startup has a fixed size
+            "View Targets": QSize(1300, 800),  # Large tabs
+            "Multitargeting Analysis": QSize(1300, 800),
+            "Population Analysis": QSize(1000, 700),  # Medium-large tabs
+            "Find Targets": QSize(1000, 700),
+            "New Genome": QSize(800, 600),  # Medium tabs
+            "Home": QSize(800, 600),
+            "default": QSize(600, 500)  # Default minimum size for any other tab
+        }
 
         try:
             self.view = MainWindowView(self.settings)
             self._setup_connections()
             self._init_ui()
             self.settings.check_and_emit_first_time_startup()
+            # Center the window after initialization
+            self._center_window()
         except Exception as e:
             self.log_error("__init__", e)
             show_error(self.settings, "Error initializing MainWindowController", str(e))
@@ -43,21 +59,25 @@ class MainWindowController(LoggingMixin):
 
         # Tab bar
         self.view.tab_widget.tab_closed.connect(self._on_tab_closed)
-        self.view.tab_widget.tabCloseRequested.connect(self._close_tab)
+        self.view.tab_widget.tab_closing.connect(self._close_tab)
         self.view.tab_widget.currentChanged.connect(self._on_current_tab_changed)
 
         self.settings.first_time_startup.connect(self._handle_first_time_startup)
 
         # Add Button Menu
-        # self.view.action_new_genome.triggered.connect(self.open_new_genome_tab)
-        # self.view.action_new_endonuclease.triggered.connect(self.open_new_endonuclease_tab)
+        self.view.action_new_endonuclease.triggered.connect(self.open_new_endonuclease_window)
 
         # Settings Menu
         self.view.action_toggle_theme.triggered.connect(self._toggle_theme)
 
+        # Database state changes
+        self.settings.db_manager.db_state_changed.connect(self._on_db_state_changed)
+        self.settings.db_manager.db_validation_changed.connect(self._on_db_validation_changed)
+
     def _init_ui(self):
         self.log_method_call("_init_ui")
         
+        # Check if it's first time startup
         if self.is_first_time_startup:
             self.log_info("First time startup detected. Opening startup tab.")
             self._open_startup_tab()
@@ -66,21 +86,46 @@ class MainWindowController(LoggingMixin):
         db_path = self.settings.get_db_path()
         is_valid, message = self.settings.validate_db_path(db_path)
         
-        if db_path and is_valid:
-            self.log_info(f"Database path is valid: {db_path}")
-            self._open_home_tab()
-        else:
+        if not is_valid:
             self.log_warning(f"Invalid database path: {db_path}. {message}")
-            self._open_startup_tab()
+            # Always open startup tab for invalid paths, keeping the existing path
+            self._open_startup_tab(keep_db_path=True)
+            return  # Add explicit return to prevent further execution
+        
+        self.log_info(f"Database path is valid: {db_path}")
+        self._open_home_tab()
 
     def _handle_first_time_startup(self):
         self.log_info("First time startup signal received")
         self.is_first_time_startup = True
         self._open_startup_tab()
 
-    def _open_startup_tab(self):
+    def _open_startup_tab(self, keep_db_path=False):
         try:
-            self.startup_controller = self.settings.get_startup_window()
+            # First safely deactivate any existing controllers
+            for title, controller in list(self.tab_widgets['controllers'].items()):
+                try:
+                    if hasattr(controller, 'deactivate'):
+                        controller.deactivate()
+                except Exception as e:
+                    self.logger.error(f"Error deactivating controller for {title}: {str(e)}")
+            
+            # Force close all tabs
+            while self.view.tab_widget.count() > 0:
+                try:
+                    widget = self.view.tab_widget.widget(0)
+                    self.view.tab_widget.removeTab(0)
+                    if widget:
+                        widget.deleteLater()
+                except Exception as e:
+                    self.logger.error(f"Error closing tab: {str(e)}")
+            
+            # Clear tab tracking dictionaries
+            self.tab_widgets['widgets'].clear()
+            self.tab_widgets['controllers'].clear()
+            
+            # Then open the startup tab
+            self.startup_controller = self.settings.get_startup_window(keep_db_path=keep_db_path)
             self.open_new_tab("Startup", self.startup_controller)
         except Exception as e:
             self.log_error("_open_startup_tab", e)
@@ -109,12 +154,29 @@ class MainWindowController(LoggingMixin):
         self._center_window()
 
     def _center_window(self):
+        """Center the window on the current screen"""
         try:
-            center_point = QtGui.QGuiApplication.primaryScreen().availableGeometry().center()
+            # Get the current screen where the window is or the primary screen
+            window_screen = self.view.screen()
+            if not window_screen:
+                window_screen = QtGui.QGuiApplication.primaryScreen()
+            
+            # Get the geometry of the screen
+            screen_geometry = window_screen.availableGeometry()
+            
+            # Calculate the center point
+            center_point = screen_geometry.center()
+            
+            # Get the window geometry
             frame_geometry = self.view.frameGeometry()
+            
+            # Move the window's center to the screen's center
             frame_geometry.moveCenter(center_point)
+            
+            # Move the window to the calculated position
             self.view.move(frame_geometry.topLeft())
-            self.log_debug(f"Window centered at {self.view.pos()}")
+            
+            self.log_debug(f"Window centered on screen at {self.view.pos()}")
         except Exception as e:
             self.log_error("_center_window", e)
             show_error(self.settings, "Error centering window", str(e))
@@ -141,21 +203,86 @@ class MainWindowController(LoggingMixin):
             show_error(self.settings, "Error changing database directory", str(e))
 
     def _handle_invalid_directory(self, new_directory, message):
+        """Handle invalid directory selection with option to analyze new genomes"""
+        self.logger.debug("Entering _handle_invalid_directory")  # Add entry log
+        
+        # Always show error for non-existent directories
+        if message == "The selected directory does not exist.":
+            self.logger.debug("Directory does not exist, showing error")  # Add debug log
+            show_error(self.settings, "Invalid Directory", message)
+            return
+        
+        self.logger.debug("Showing analyze new genome dialog")  # Add debug log
+        # Show dialog for analyzing new genome
         reply = QtWidgets.QMessageBox.question(
             self.view,
             "Invalid Directory",
-            f"The selected directory does not contain valid CSPR files: {message}\n\n"
-            "Would you like to analyze a new genome in this directory?",
+            "Would you like to analyze a new genome in this directory? testing",
             QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
             QtWidgets.QMessageBox.StandardButton.No
         )
         
+        self.logger.debug(f"User reply to analyze new genome: {reply == QtWidgets.QMessageBox.StandardButton.Yes}")  # Add debug log
+        
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-            self.settings.save_db_path(new_directory)
-            self.settings.update_db_state()
-            self.open_new_genome_tab()
+            self.logger.debug("User chose to analyze new genome")  # Add debug log
+            # Temporarily disconnect validation signal to prevent warning
+            self.settings.db_manager.db_validation_changed.disconnect()
+            try:
+                # Set directory change flag
+                self.settings.db_manager.is_changing_directory = True
+                self.logger.debug(f"Starting directory change process to: {new_directory}")
+                
+                # Save the new path without switching to startup tab
+                self.settings.save_db_path(new_directory)
+                self.settings.update_db_state()
+                
+                # Store the new directory for later use
+                self._pending_directory_change = new_directory
+                
+                # Open new genome tab without closing other tabs
+                self.logger.debug("Opening new genome tab")  # Add debug log
+                self.open_new_genome_tab()
+                
+                # Connect to the new genome tab's completion signal
+                new_genome_tab = self.find_tab_by_title("New Genome")
+                if new_genome_tab and new_genome_tab in self.tab_widgets['controllers']:
+                    new_genome_controller = self.tab_widgets['controllers']["New Genome"]
+                    new_genome_controller.process_completed.connect(self._on_new_genome_completed)
+                    self.logger.debug("Connected to new genome completion signal")  # Add debug log
+                
+            except Exception as e:
+                self.logger.error(f"Error in _handle_invalid_directory: {str(e)}")  # Add error log
+                raise
+            finally:
+                # Reconnect the signal after operation is complete
+                self.settings.db_manager.db_validation_changed.connect(self._on_db_validation_changed)
+                self.logger.debug("Reconnected validation signal")  # Add debug log
         else:
+            self.logger.debug("User cancelled new genome analysis")  # Add debug log
             show_message("Operation Cancelled", "Database directory change cancelled.")
+
+    def _on_new_genome_completed(self):
+        """Handle completion of new genome analysis"""
+        try:
+            if hasattr(self, '_pending_directory_change'):
+                # Show success message
+                show_message(
+                    "Database Directory Change Complete",
+                    f"Successfully changed database directory to:\n{self._pending_directory_change}",
+                    QtWidgets.QMessageBox.Icon.Information
+                )
+                
+                # Refresh home tab
+                home_tab = self.find_tab_by_title("Home")
+                if home_tab and home_tab in self.tab_widgets['controllers']:
+                    home_controller = self.tab_widgets['controllers']["Home"]
+                    home_controller.refresh_data()
+                
+                # Clean up
+                delattr(self, '_pending_directory_change')
+        except Exception as e:
+            self.logger.error(f"Error handling new genome completion: {str(e)}")
 
     def _process_valid_directory(self, new_directory):
         try:
@@ -215,7 +342,7 @@ class MainWindowController(LoggingMixin):
             if existing_tab:
                 self.log_debug(f"Tab '{title}' already exists, switching to it")
                 self.view.tab_widget.setCurrentWidget(existing_tab)
-                self._resize_for_tab(title)
+                self._resize_for_tab(title, center_window=False)  # Don't center when switching to existing tab
                 return
 
             # Create widget from content
@@ -237,87 +364,85 @@ class MainWindowController(LoggingMixin):
             self.view.tab_widget.setCurrentIndex(index)
             self.tab_widgets['widgets'][title] = wrapper
 
-            self._resize_for_tab(title)
+            self._resize_for_tab(title, center_window=True)  # Center when opening new tab
             self.log_info(f"Tab '{title}' opened successfully at index {index}")
             
         except Exception as e:
             self.log_error("open_new_tab", e)
             show_error(self.settings, f"Error opening tab '{title}'", str(e))
 
-    def _resize_for_tab(self, title):
+    def _resize_for_tab(self, title, center_window=True):
+        """Handle window resizing for different tab types"""
         try:
+            # Get the minimum size for this tab type
+            min_size = self.tab_min_sizes.get(title, self.tab_min_sizes["default"])
+            
             if title == "Startup":
-                # For Startup tab, set fixed size but keep window controls
-                self.view.setFixedSize(self.startup_size)
-            elif title in ["View Targets", "Multitargeting Analysis"]:
-                # Store current size before applying constraints
-                if self.current_tab not in ["View Targets", "Multitargeting Analysis"]:
+                # Startup tab has a fixed size
+                self.view.setFixedSize(min_size)
+            else:
+                # Store current size before applying constraints if coming from a different size category
+                current_min_size = self.tab_min_sizes.get(self.current_tab, self.tab_min_sizes["default"])
+                if current_min_size != min_size:
                     self.previous_size = self.view.size()
                 
-                # Set minimum dimensions for these tabs
-                min_width = 1300
-                min_height = 800
-                
                 # Calculate new dimensions
-                new_width = max(self.view.width(), min_width)
-                new_height = max(self.view.height(), min_height)
+                new_width = max(self.view.width(), min_size.width())
+                new_height = max(self.view.height(), min_size.height())
                 
                 # Only resize if dimensions need to increase
                 if new_width > self.view.width() or new_height > self.view.height():
                     self.view.resize(QSize(new_width, new_height))
                 
-                # Set minimum size constraints
-                self.view.setMinimumSize(QSize(min_width, min_height))
-                self.view.setMaximumSize(QtCore.QSize(16777215, 16777215))
-            else:
-                # For all other tabs
-                self.view.setMinimumSize(QSize(400, 300))
+                # Set size constraints
+                self.view.setMinimumSize(min_size)
                 self.view.setMaximumSize(QtCore.QSize(16777215, 16777215))
                 
-                # Restore previous size if available and coming from View Targets or Multi-targeting Analysis
-                if self.current_tab in ["View Targets", "Multitargeting Analysis"] and self.previous_size:
-                    self.view.resize(self.previous_size)
+                # Restore previous size if available and coming from a larger minimum size tab
+                if self.current_tab and self.previous_size:
+                    current_min_size = self.tab_min_sizes.get(self.current_tab, self.tab_min_sizes["default"])
+                    if current_min_size.width() > min_size.width() or current_min_size.height() > min_size.height():
+                        # Only restore if the previous size is larger than our minimum
+                        if (self.previous_size.width() >= min_size.width() and 
+                            self.previous_size.height() >= min_size.height()):
+                            self.view.resize(self.previous_size)
                 elif self.current_tab == "Startup" or self.view.size() == self.startup_size:
                     self.view.resize(self.shared_tab_size)
             
             # Update the current tab
             self.current_tab = title
             
+            # Center the window after resizing only if requested
+            if center_window:
+                self._center_window()
+            
         except Exception as e:
             self.log_error("_resize_for_tab", e)
 
     def _close_tab(self, index):
         """Handle tab closure using CloseableTabWidget"""
-        if 0 <= index < self.view.tab_widget.count():
-            title = self.view.tab_widget.tabText(index)
-            
-            # Store size before closing View Targets tab
-            if title == "View Targets":
-                self.previous_size = self.view.size()
-            
-            # Let CloseableTabWidget handle the widget cleanup
-            self.view.tab_widget.closeTab(index)
-            
-            # Clean up references
-            if title in self.tab_widgets['widgets']:
-                del self.tab_widgets['widgets'][title]
-            if title in self.tab_widgets['controllers']:
-                del self.tab_widgets['controllers'][title]
+        try:
+            if 0 <= index < self.view.tab_widget.count():
+                title = self.view.tab_widget.tabText(index)
+                
+                # Safely deactivate controller if it exists
+                if title in self.tab_widgets['controllers']:
+                    try:
+                        controller = self.tab_widgets['controllers'][title]
+                        if hasattr(controller, 'deactivate'):
+                            controller.deactivate()
+                    except Exception as e:
+                        self.logger.error(f"Error deactivating controller for {title}: {str(e)}")
+                
+                # Clean up references
+                if title in self.tab_widgets['widgets']:
+                    del self.tab_widgets['widgets'][title]
+                if title in self.tab_widgets['controllers']:
+                    del self.tab_widgets['controllers'][title]
 
-            self.logger.debug(f"Closed tab '{title}' at index {index}")
-
-            # Handle post-close operations
-            if title == "New Genome":
-                home_tab = self.find_tab_by_title("Home")
-                if home_tab:
-                    home_controller = self.settings.get_home_window()
-                    home_controller.refresh_data()
-
-            # Resize for the current tab
-            if self.view.tab_widget.count() > 0:
-                new_index = self.view.tab_widget.currentIndex()
-                new_tab_title = self.view.tab_widget.tabText(new_index)
-                self._resize_for_tab(new_tab_title)
+                self.logger.debug(f"Closed tab '{title}' at index {index}")
+        except Exception as e:
+            self.logger.error(f"Error in _close_tab: {str(e)}")
 
     def _toggle_theme(self):
         try:
@@ -332,11 +457,11 @@ class MainWindowController(LoggingMixin):
             saved_position = self.settings.load_window_position("main_window")
             if saved_position:
                 self.view.move(saved_position)
-            else:
-                # center_ui(self.view)
-                pass
             self.view.show()
             self.view.apply_theme()
+            # Center the window after showing it
+            self._center_window()
+            print("Window initialized")
         except Exception as e:
             self.log_error("show", e)
             show_error(self.settings, "Error showing main window", e)
@@ -410,20 +535,101 @@ class MainWindowController(LoggingMixin):
                 if old_tab_title and old_tab_title != "Startup":
                     self.previous_size = self.view.size()
                 
-                self._resize_for_tab(new_tab_title)
+                self._resize_for_tab(new_tab_title, center_window=False)
                 
         except Exception as e:
             self.log_error("_on_current_tab_changed", e)
 
-    def open_new_endonuclease_tab(self):
-        """Opens the new endonuclease window"""
+    def open_new_endonuclease_window(self):
+        """Opens the new endonuclease as a separate window"""
         try:
+            # Create the controller
             new_endonuclease_controller = self.settings.get_new_endonuclease_window()
-            new_endonuclease_controller.view.show()  # Show as window instead of tab
+            
+            # Get the window from the controller
+            window = new_endonuclease_controller.view
+            
+            # Set window properties
+            window.setWindowModality(Qt.WindowModality.ApplicationModal)  # Make it modal
+            window.setMinimumSize(QSize(800, 600))  # Set minimum size
+            
+            # Center the window relative to the main window
+            main_window_center = self.view.geometry().center()
+            window_geometry = window.frameGeometry()
+            window_geometry.moveCenter(main_window_center)
+            window.move(window_geometry.topLeft())
+            
+            # Show the window
+            window.show()
+            window.raise_()
+            window.activateWindow()
+            
+            # Store reference to prevent garbage collection
+            self._current_new_endonuclease_window = new_endonuclease_controller
+            
+            self.log_info("New Endonuclease window opened successfully")
         except Exception as e:
-            self.log_error("open_new_endonuclease_tab", e)
+            self.log_error("open_new_endonuclease_window", e)
             show_error(self.settings, "Error opening new endonuclease window", str(e))
 
+    def _on_db_validation_changed(self, is_valid, message):
+        """Handle database validation state changes"""
+        if not is_valid:
+            self.logger.debug(f"Database validation failed: {message}")
+            
+            # Only show dialog if we're not in startup tab
+            startup_tab = self.find_tab_by_title("Startup")
+            if startup_tab and self.view.tab_widget.currentWidget() == startup_tab:
+                return
+            
+            # Switch to startup tab for invalid paths (including when files are deleted)
+            # but keep the current path
+            if not startup_tab:
+                self._open_startup_tab(keep_db_path=True)
+                return
+            
+        else:
+            self._cspr_deletion_dialog_shown = False  # Reset flag
+            if "Successfully changed database directory to:" in message:
+                show_message(
+                    "Database Directory Change Complete",
+                    message,
+                    QtWidgets.QMessageBox.Icon.Information
+                )
+                # Refresh home tab if it exists
+                home_tab = self.find_tab_by_title("Home")
+                if home_tab and home_tab in self.tab_widgets['controllers']:
+                    home_controller = self.tab_widgets['controllers']["Home"]
+                    home_controller.refresh_data()
 
-
+    def _on_db_state_changed(self, is_valid, message, changes):
+        """Handle database state changes"""
+        try:
+            self.logger.debug(f"Database state changed - Valid: {is_valid}, Message: {message}, Changes: {changes}")
+            
+            # If path becomes invalid (including when files are deleted), switch to startup tab
+            if not is_valid:
+                # Skip only if we're already in startup tab
+                startup_tab = self.find_tab_by_title("Startup")
+                if startup_tab and self.view.tab_widget.currentWidget() == startup_tab:
+                    return
+                
+                # Skip only if we're in the process of changing directory for new genome
+                if self.settings.db_manager.is_changing_directory:
+                    return
+                
+                # Otherwise, switch to startup tab with current path
+                self._open_startup_tab(keep_db_path=True)
+                return
+            
+            # Handle other state changes
+            if changes:
+                # Refresh home tab if it exists
+                home_tab = self.find_tab_by_title("Home")
+                if home_tab and home_tab in self.tab_widgets['controllers']:
+                    home_controller = self.tab_widgets['controllers']["Home"]
+                    home_controller.refresh_data()
+                
+        except Exception as e:
+            self.logger.error(f"Error handling database state change: {str(e)}")
 

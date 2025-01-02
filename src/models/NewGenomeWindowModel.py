@@ -64,13 +64,13 @@ class NewGenomeWindowModel(QObject):
         return False
 
     def create_arguments_command_for_job(self, organism_name, strain, organism_code, file_path, endonuclease_data, multithreading_checked, generate_repeats_checked):
-        db_path = self.settings.get_db_path()
+        db_path = self.settings.db_manager.get_active_db_path()
         
         # Ensure db_path ends with a forward slash
         if not db_path.endswith('/'):
             db_path = f"{db_path}/"
         
-        self.logger.debug(f"Using database path: {db_path}")  # Add logging
+        self.logger.debug(f"Using database path for job processing: {db_path}")  # Add logging
         
         print(f"The endonuclease data is {endonuclease_data}")
 

@@ -68,20 +68,45 @@ class GlobalSettings(QObject):
         self._preloading_modules = {}
         self.main_window = None
         
-        # Only preload essential controllers for startup
+        # Initialize config manager first
+        self.config_manager = ConfigManager(app_dir_path=self.app_dir_path, logger=self.logger)
+        self.config_manager.load_env()
+        
+        # Initialize directories
+        self._initialize_directories()
+        
+        # Check if there are CSPR files in the current database path
+        current_db_path = self.config_manager.get_env_value('CSPR_DB', '')
+        if current_db_path:
+            try:
+                import glob, os
+                cspr_files = glob.glob(os.path.join(current_db_path, "*.cspr"))
+                if not cspr_files:
+                    # No CSPR files found, but keep the path
+                    self.logger.info(f"No CSPR files found in {current_db_path}, but keeping the path")
+                    # Only set first time startup to TRUE if there was no previous path
+                    if not self.config_manager.get_env_value('CSPR_DB', ''):
+                        self.config_manager.set_env_value('FIRST_TIME_START', 'TRUE')
+                else:
+                    current_value = self.config_manager.get_env_value('FIRST_TIME_START', 'TRUE')
+                    if current_value.upper() != 'FALSE':
+                        self.config_manager.set_env_value('FIRST_TIME_START', 'FALSE')
+            except Exception as e:
+                self.logger.error(f"Error checking CSPR files: {str(e)}")
+                # Keep the path even on error
+                self.logger.info(f"Keeping database path despite error: {current_db_path}")
+        
+        # Set first time startup flag
+        self.is_first_time_startup = self.config_manager.get_env_value('FIRST_TIME_START', 'TRUE').upper() == 'TRUE'
+        
+        # Initialize database manager after potential path reset
+        self._init_db_manager()
+        
+        # Only preload essential controllers after determining startup state
         self._preload_essential_controllers()
         
         # Start background loading of commonly used modules
         self._background_load_common_modules()
-        
-        self.config_manager = ConfigManager(app_dir_path=self.app_dir_path, logger=self.logger)
-        self.config_manager.load_env()
-        
-        self.is_first_time_startup = self.config_manager.get_env_value('FIRST_TIME_START', 'TRUE').upper() == 'TRUE'
-        
-        # Defer database initialization until needed
-        self._initialize_directories()
-        self._init_db_manager()
         
         # Defer theme initialization
         self._init_theme_settings()
@@ -170,6 +195,8 @@ class GlobalSettings(QObject):
 
     def validate_db_path(self, path):
         """Validate the given database path"""
+        print("path", path)
+        print("db.manager validate_db_path", self.db_manager.validate_db_path(path))
         return self.db_manager.validate_db_path(path)
 
     def save_db_path(self, path):
@@ -295,8 +322,6 @@ class GlobalSettings(QObject):
     def _get_window_class(self, window_name):
         """Get the controller class with optimized loading"""
         try:
-            start_time = time.time()
-            
             # Check if module is already cached
             module_path = f"controllers.{window_name}Controller"
             if module_path in self._module_cache:
@@ -329,7 +354,6 @@ class GlobalSettings(QObject):
             if not hasattr(controller_module, class_name):
                 raise AttributeError(f"Controller module does not contain class {class_name}")
 
-            self.logger.debug(f"Window class retrieval took: {time.time() - start_time:.2f} seconds")
             return getattr(controller_module, class_name)
 
         except Exception as e:
@@ -350,11 +374,15 @@ class GlobalSettings(QObject):
             self.logger.error(f"Error creating window {window_name}: {str(e)}")
             raise
     
-    def get_startup_window(self):
-        if not hasattr(self, '_startup_window'):
-            from controllers.StartupWindowController import StartupWindowController
-            self._startup_window = StartupWindowController(self)
-        return self._startup_window
+    def get_startup_window(self, keep_db_path=False):
+        """
+        Creates and returns a new startup window controller
+        
+        Args:
+            keep_db_path (bool): If True, keeps the existing DB path when initializing startup
+        """
+        from controllers.StartupWindowController import StartupWindowController
+        return StartupWindowController(self, keep_db_path=keep_db_path)
     
     def get_home_window(self):
         """Get or create home window with proper initialization"""
@@ -391,7 +419,13 @@ class GlobalSettings(QObject):
     def _background_load_common_modules(self):
         """Start background loading of commonly used modules"""
         try:
-            common_modules = ["MultitargetingWindow", "PopulationAnalysisWindow"]
+            common_modules = [
+                "MultitargetingWindow", 
+                "PopulationAnalysisWindow",
+                "NewGenomeWindow",
+                "NewEndonuclease",
+                "NCBIWindow"
+            ]
             for module_name in common_modules:
                 if (module_name not in self._module_cache and 
                     module_name not in self._preloading_modules):
@@ -411,7 +445,6 @@ class GlobalSettings(QObject):
                 preloader = self._preloading_modules[module_name]
                 if not preloader.isRunning():  # Only remove if thread is finished
                     del self._preloading_modules[module_name]
-            self.logger.debug(f"Module {module_name} preloaded successfully")
         except Exception as e:
             self.logger.error(f"Error handling preloaded module: {str(e)}")
 
@@ -501,29 +534,15 @@ class GlobalSettings(QObject):
     def set_current_annotation_file(self, annotation_file):
         """Set the current annotation file and notify listeners"""
         try:
-            if not hasattr(self, '_current_annotation_file'):
-                self._current_annotation_file = None
-            
             if self._current_annotation_file != annotation_file:
                 self._current_annotation_file = annotation_file
-                self.logger.debug(f"Current annotation file changed to: {annotation_file}")
                 self.annotation_file_changed.emit(annotation_file)
         except Exception as e:
             self.logger.error(f"Error setting current annotation file: {str(e)}")
 
     def get_current_annotation_file(self):
         """Get the currently selected annotation file"""
-        try:
-            if not self._current_annotation_file and hasattr(self, '_current_home_window'):
-                # Try to get from home window if not set
-                home_controller = self._current_home_window
-                if hasattr(home_controller, 'view'):
-                    self._current_annotation_file = home_controller.view.get_annotation_file()
-                    self.logger.debug(f"Got annotation file from home window: {self._current_annotation_file}")
-            return self._current_annotation_file
-        except Exception as e:
-            self.logger.error(f"Error getting current annotation file: {str(e)}")
-            return None
+        return self._current_annotation_file
 
     def get_scoring_options_window(self, view_targets_controller):
         """Create and return ScoringOptionsController instance"""
@@ -574,6 +593,126 @@ class GlobalSettings(QObject):
         except Exception as e:
             self.logger.error(f"Error adjusting path: {str(e)}")
             return path  # Return original path if adjustment fails
+
+    def get_stylesheet(self):
+        """Get the current theme's stylesheet"""
+        current_theme = self.get_theme()
+        return self.get_dark_stylesheet() if current_theme == "dark" else self.get_light_stylesheet()
+
+    def get_dark_stylesheet(self):
+        """Get dark theme stylesheet"""
+        theme = {
+            "bg_color": "#2b2b2b",
+            "fg_color": "#ffffff",
+            "button_bg_color": "#3a3a3a",
+            "button_border_color": "#5a5a5a",
+            "button_hover_bg_color": "#4a4a4a",
+            "input_bg_color": "#3a3a3a",
+            "input_border_color": "#5a5a5a",
+            "progress_bar_bg": "#3a3a3a",
+            "progress_bar_chunk": "#51b85e"
+        }
+        return self._get_themed_stylesheet(theme)
+
+    def get_light_stylesheet(self):
+        """Get light theme stylesheet"""
+        theme = {
+            "bg_color": "#f0f0f0",
+            "fg_color": "#000000",
+            "button_bg_color": "#e0e0e0",
+            "button_border_color": "#c0c0c0",
+            "button_hover_bg_color": "#d0d0d0",
+            "input_bg_color": "#ffffff",
+            "input_border_color": "#c0c0c0",
+            "progress_bar_bg": "#e0e0e0",
+            "progress_bar_chunk": "#51b85e"
+        }
+        return self._get_themed_stylesheet(theme)
+
+    def _get_themed_stylesheet(self, theme):
+        """Generate stylesheet based on theme colors"""
+        return f"""
+            QMainWindow, QWidget {{ 
+                background-color: {theme['bg_color']}; 
+                color: {theme['fg_color']}; 
+            }}
+            QPushButton {{ 
+                background-color: {theme['button_bg_color']}; 
+                border: 1px solid {theme['button_border_color']}; 
+                padding: 5px;
+                min-width: 80px;
+            }}
+            QPushButton:hover {{ 
+                background-color: {theme['button_hover_bg_color']}; 
+            }}
+            QLineEdit {{ 
+                background-color: {theme['input_bg_color']}; 
+                border: 1px solid {theme['input_border_color']}; 
+                padding: 5px;
+            }}
+            QComboBox {{
+                background-color: {theme['input_bg_color']};
+                border: 1px solid {theme['input_border_color']};
+                padding: 5px;
+            }}
+            QComboBox:hover {{
+                background-color: {theme['button_hover_bg_color']};
+            }}
+            QRadioButton {{ 
+                color: {theme['fg_color']}; 
+            }}
+            QProgressBar {{
+                border: 1px solid {theme['button_border_color']};
+                background-color: {theme['progress_bar_bg']};
+                text-align: center;
+            }}
+            QProgressBar::chunk {{
+                background-color: {theme['progress_bar_chunk']};
+            }}
+            QGroupBox {{ 
+                border: 1px solid {theme['button_border_color']};
+                margin-top: 0.5em;
+                padding-top: 0.5em;
+            }}
+            QGroupBox::title {{
+                color: {theme['fg_color']};
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 3px 0 3px;
+            }}
+            QDoubleSpinBox {{
+                background-color: {theme['input_bg_color']};
+                border: 1px solid {theme['input_border_color']};
+                padding: 5px;
+            }}
+        """
+
+    def get_organism_files(self):
+        """Get mapping of organisms to their files from database manager"""
+        organism_files, _ = self.db_manager.get_organisms_and_endos()
+        return organism_files
+
+    def get_groupbox_style(self) -> str:
+        """Get the standardized groupbox style with green accent color"""
+        return """
+        QGroupBox:title {
+            subcontrol-origin: margin;
+            left: 10px;
+            padding: 0 5px 0 5px;
+        }
+        QGroupBox {
+            border: 2px solid rgb(111,181,110);
+            border-radius: 9px;
+            margin-top: 10px;
+            font: bold 14pt 'Arial';
+        }
+        QGroupBox#grpNavigationMenu {
+            border: 2px dashed rgb(88,89,91);
+            border-radius: 9px;
+            margin-top: 10px;
+            font: bold 14pt 'Arial';
+        }
+        """
 
 # Global instance
 global_settings = None

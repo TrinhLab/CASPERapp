@@ -4,6 +4,7 @@ from views.FindTargetsView import FindTargetsView
 from PyQt6.QtWidgets import QMessageBox
 from views.LoadingDialog import LoadingDialog
 from PyQt6.QtWidgets import QApplication
+import os
 
 class FindTargetsController:
     def __init__(self, global_settings):
@@ -26,17 +27,28 @@ class FindTargetsController:
             self.global_settings.logger.debug(f"FindTargetsController received new annotation file: {new_annotation_file}")
             self._current_annotation_file = new_annotation_file
             
-            # Clear the current results
-            if self.view and hasattr(self.view, 'results_table'):
-                self.view.clear_results()
+            # Only process if we have a valid annotation file and input data
+            if new_annotation_file and self._input_data:
+                # Verify annotation file exists
+                annotation_path = os.path.join(self.global_settings.get_db_path(), 'GBFF', new_annotation_file)
+                if not os.path.isfile(annotation_path):
+                    # Try without GBFF subdirectory
+                    annotation_path = os.path.join(self.global_settings.get_db_path(), new_annotation_file)
+                    if not os.path.isfile(annotation_path):
+                        self.logger.warning(f"Annotation file not found at {annotation_path}")
+                        return
                 
-                # If we have previous input data, rerun the search with the new annotation file
-                if self._input_data:
+                # Clear the current results
+                if self.view and hasattr(self.view, 'results_table'):
+                    self.view.clear_results()
+                    
+                    # Update input data with new annotation file
                     self._input_data['annotation_file'] = new_annotation_file
                     self._process_input_data(self._input_data)
                 
         except Exception as e:
             self.global_settings.logger.error(f"Error handling annotation file change: {str(e)}")
+            # Don't raise the error since this is an event handler
 
     def _connect_signals(self):
         """Connect view signals"""
@@ -93,22 +105,35 @@ class FindTargetsController:
                 QMessageBox.warning(self.view, "No Selection", "Please select targets to view.")
                 return
 
-            # Create loading dialog
-            loading_dialog = LoadingDialog(self.view)
+            # Create loading dialog with the main window as parent
+            main_window = self.global_settings.main_window
+            loading_dialog = LoadingDialog(main_window.view)
             loading_dialog.show()
             loading_dialog.set_progress(0)
             QApplication.processEvents()
 
             try:
-                # Find existing View Targets tab
-                main_window = self.global_settings.main_window
-                existing_tab = main_window.find_tab_by_title("View Targets")
+                # Get the current Find Targets tab number
+                current_tab_index = main_window.view.tab_widget.currentIndex()
+                current_tab_title = main_window.view.tab_widget.tabText(current_tab_index)
+                
+                # Extract number from Find Targets tab (if any)
+                view_targets_title = "View Targets"
+                if current_tab_title != "Find Targets":
+                    try:
+                        number = current_tab_title.split()[-1]
+                        view_targets_title = f"View Targets {number}"
+                    except (IndexError, ValueError):
+                        pass
+
+                # Find existing View Targets tab with the same number
+                existing_tab = main_window.find_tab_by_title(view_targets_title)
                 
                 loading_dialog.set_message("Initializing view targets...", 25)
                 QApplication.processEvents()
                 
                 if existing_tab:
-                    view_targets_controller = main_window.tab_widgets['controllers'].get("View Targets")
+                    view_targets_controller = main_window.tab_widgets['controllers'].get(view_targets_title)
                     if view_targets_controller:
                         loading_dialog.set_message("Loading guides...", 50)
                         QApplication.processEvents()
@@ -124,7 +149,7 @@ class FindTargetsController:
                         # Switch to the existing tab
                         main_window.view.tab_widget.setCurrentWidget(existing_tab)
                     else:
-                        self.logger.error("View Targets controller not found for existing tab")
+                        self.logger.error(f"View Targets controller not found for existing tab {view_targets_title}")
                 else:
                     loading_dialog.set_message("Creating view targets...", 25)
                     QApplication.processEvents()
@@ -139,7 +164,7 @@ class FindTargetsController:
                         loading_dialog=loading_dialog
                     )
                     
-                    main_window.open_new_tab("View Targets", view_targets_controller)
+                    main_window.open_new_tab(view_targets_title, view_targets_controller)
                     
             finally:
                 loading_dialog.close()
@@ -168,34 +193,55 @@ class FindTargetsController:
     def open_view_targets_directly(self, input_data):
         """Open view targets directly for position-based searches"""
         try:
-            # Get targets using the model
-            targets = self.model.find_targets_by_position(
-                self.model._get_parser(self.model.get_cspr_file_path(input_data)), 
-                input_data
-            )
-            
-            if targets:
-                # Create view targets controller
-                view_targets_controller = self.global_settings.get_view_targets_window()
+            # Create loading dialog with the main window as parent
+            main_window = self.global_settings.main_window
+            loading_dialog = LoadingDialog(main_window.view)
+            loading_dialog.show()
+            loading_dialog.set_progress(0)
+            QApplication.processEvents()
+
+            try:
+                loading_dialog.set_message("Finding targets...", 25)
+                QApplication.processEvents()
                 
-                # Load targets directly
-                view_targets_controller.load_targets(
-                    targets,
-                    input_data['organism'],
-                    input_data['endonuclease']
+                # Get targets using the model
+                targets = self.model.find_targets_by_position(
+                    self.model._get_parser(self.model.get_cspr_file_path(input_data)), 
+                    input_data
                 )
                 
-                # Open view targets tab
-                self.global_settings.main_window.open_new_tab(
-                    "View Targets", 
-                    view_targets_controller
-                )
-            else:
-                QMessageBox.warning(
-                    self.view,
-                    "No Targets Found",
-                    "No targets were found in the specified position range."
-                )
+                if targets:
+                    loading_dialog.set_message("Creating view targets...", 50)
+                    QApplication.processEvents()
+                    
+                    # Create view targets controller
+                    view_targets_controller = self.global_settings.get_view_targets_window()
+                    
+                    loading_dialog.set_message("Loading guides...", 75)
+                    QApplication.processEvents()
+                    
+                    # Load targets directly
+                    view_targets_controller.load_targets(
+                        targets,
+                        input_data['organism'],
+                        input_data['endonuclease']
+                    )
+                    
+                    # Open view targets tab
+                    self.global_settings.main_window.open_new_tab(
+                        "View Targets", 
+                        view_targets_controller
+                    )
+                else:
+                    QMessageBox.warning(
+                        self.view,
+                        "No Targets Found",
+                        "No targets were found in the specified position range."
+                    )
+                    
+            finally:
+                loading_dialog.close()
+                QApplication.processEvents()
                 
         except Exception as e:
             self.global_settings.logger.error(f"Error opening view targets directly: {str(e)}")

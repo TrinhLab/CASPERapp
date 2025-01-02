@@ -3,11 +3,13 @@ from models.NewGenomeWindowModel import NewGenomeWindowModel
 from views.NewGenomeWindowView import NewGenomeWindowView
 from utils.ui import show_message, show_error 
 import os
+from PyQt6.QtCore import pyqtSignal
 
 class NewGenomeWindowController:
     def __init__(self, global_settings):
         self.settings = global_settings
         self.logger = global_settings.get_logger()
+        self.directory_change_completed = pyqtSignal(str)
 
         try:
             self.model = NewGenomeWindowModel(self.settings)
@@ -66,25 +68,37 @@ class NewGenomeWindowController:
         # self._load_endonuclease_settings()
 
     def _handle_reset(self):
-        self.view.line_edit_organism_name.clear()
-        self.view.line_edit_strain.clear()
-        self.view.line_edit_organism_code.clear()
+        try:
+            self.view.line_edit_organism_name.clear()
+            self.view.line_edit_strain.clear()
+            self.view.line_edit_organism_code.clear()
 
-        self.model.file = ""
-        self.view.line_edit_selected_file.clear()
-        self.view.line_edit_selected_file.setPlaceholderText("Selected FASTA/FNA File")
+            self.model.file = ""
+            self.view.line_edit_selected_file.clear()
+            self.view.line_edit_selected_file.setPlaceholderText("Selected FASTA/FNA File")
 
-        self.view.reset_table_widget_jobs()
-        self.view.reset_progress_bar_jobs()
+            self.view.reset_table_widget_jobs()
+            self.view.reset_progress_bar_jobs()
 
-        # Reinitialize the process
-        if self.job_process.state() != QtCore.QProcess.ProcessState.NotRunning:
-            self.job_process.kill()
-        self._initialize_process()
+            # Reinitialize the process
+            if self.job_process.state() != QtCore.QProcess.ProcessState.NotRunning:
+                self.job_process.kill()
+            self._initialize_process()
 
-        # Reset the model
-        self.model.reset_progress()
-        self.model.jobs.clear()
+            # Reset the model
+            self.model.reset_progress()
+            self.model.jobs.clear()
+
+            # Cancel any pending database path change
+            self.settings.db_manager.pending_db_path = None
+            self.logger.debug("Cancelled pending database path change")
+            
+            # Show confirmation to user
+            show_message("Reset Complete", 
+                        "Form has been reset and any pending database changes have been cancelled.")
+        except Exception as e:
+            self.logger.error(f"Error in handle reset: {str(e)}")
+            show_error(self.settings, "Error", str(e))
 
     def _add_job_to_table(self):
         organism_name = self.view.get_organism_name()
@@ -123,16 +137,28 @@ class NewGenomeWindowController:
 
     def _browse_fasta_file(self):
         file_dialog = QtWidgets.QFileDialog()
-        database_dir = self.settings.get_db_path()
-        file_path, _ = file_dialog.getOpenFileName(self.view, "Choose a File", database_dir, "FASTA Files (*.fa *.fna *.fasta)")
+        database_dir = self.settings.db_manager.get_active_db_path()
+        self.logger.debug(f"Opening file dialog with directory: {database_dir}")
+        
+        file_path, _ = file_dialog.getOpenFileName(
+            self.view, 
+            "Choose a File", 
+            database_dir, 
+            "FASTA Files (*.fa *.fna *.fasta)"
+        )
+        
         if file_path:
             if self.model.validate_fasta_file(file_path):
                 self.model.file = file_path
                 self.view.set_selected_file(file_path)
+                self.logger.debug(f"Selected valid FASTA file: {file_path}")
             else:
-                show_message(fontSize=12, icon=QtWidgets.QMessageBox.Icon.Critical,
-                             title="File Selection Error",
-                             message="You have selected an incorrect type of file. Please choose a FASTA/FNA file.")
+                show_message(
+                    fontSize=12, 
+                    icon=QtWidgets.QMessageBox.Icon.Critical,
+                    title="File Selection Error",
+                    message="You have selected an incorrect type of file. Please choose a FASTA/FNA file."
+                )
 
     def _remove_selected_job(self):
         job_identifier = self.view.get_selected_job_identifier()
@@ -235,48 +261,73 @@ class NewGenomeWindowController:
         self.view.table_widget_jobs.viewport().update()
 
     def _handle_job_completion(self, exit_code=None, exit_status=None):
-        self.logger.debug(f"Process finished with exit code: {exit_code}")
-        
-        # Log any remaining output
-        remaining_output = self.job_process.readAllStandardOutput().data().decode()
-        if remaining_output:
-            self.logger.debug(f"Final process output: {remaining_output}")
-        
-        remaining_error = self.job_process.readAllStandardError().data().decode()
-        if remaining_error:
-            self.logger.error(f"Final process error output: {remaining_error}")
-        
-        if hasattr(self, 'job_indexes') and self.job_indexes:
-            completed_row_index = self.job_indexes.pop(0)
+        """Handle process completion and job status updates"""
+        try:
+            self.logger.debug(f"Process finished with exit code: {exit_code}")
             
-            # Check if output files were created
-            expected_cspr_file = os.path.join(self.settings.get_db_path(), f"{self.model.get_job_name(completed_row_index)}.cspr")
-            if os.path.exists(expected_cspr_file):
-                self.logger.debug(f"CSPR file created successfully: {expected_cspr_file}")
+            # Log any remaining output
+            remaining_output = self.job_process.readAllStandardOutput().data().decode()
+            if remaining_output:
+                self.logger.debug(f"Final process output: {remaining_output}")
+            
+            remaining_error = self.job_process.readAllStandardError().data().decode()
+            if remaining_error:
+                self.logger.error(f"Final process error output: {remaining_error}")
+            
+            if hasattr(self, 'job_indexes') and self.job_indexes:
+                completed_row_index = self.job_indexes.pop(0)
+                
+                # Get the job name for the completed job
+                job_name = self.model.get_job_name(completed_row_index)
+                expected_cspr_file = os.path.join(self.settings.get_db_path(), f"{job_name}.cspr")
+                
+                if exit_code == 0 and os.path.exists(expected_cspr_file):
+                    self.logger.debug(f"CSPR file created successfully: {expected_cspr_file}")
+                    self.view.set_job_completed(completed_row_index)
+                    
+                    # Update model's completed jobs count and progress bar
+                    total_progress = self.model.increment_completed_jobs()
+                    if total_progress is not None:
+                        self.view.set_progress_bar_jobs(total_progress)
+                    else:
+                        self.logger.warning("Received None for total_progress")
+                    
+                    # If we're in directory change mode, trigger a database state update
+                    if self.settings.db_manager.is_changing_directory:
+                        self.logger.debug("Directory change in progress - triggering state update")
+                        self.settings.db_manager.update_db_state()
+                else:
+                    error_msg = f"Job failed: CSPR file not found or process error (exit code: {exit_code})"
+                    self.logger.error(error_msg)
+                    show_error(self.settings, f"Job Failed: {job_name}", error_msg)
+                    
+                # Process next job if any
+                if self.job_indexes:
+                    next_row_index = self.job_indexes[0]
+                    self._run_job(next_row_index)
+                else:
+                    self.logger.info("All queued jobs completed")
+                    self.view.set_progress_bar_jobs(100)
+                    
+                    # If we were changing directory, finalize the change
+                    if self.settings.db_manager.is_changing_directory:
+                        self.logger.debug("Finalizing directory change after successful genome analysis")
+                        success, message = self.settings.db_manager.finalize_directory_change()
+                        if success:
+                            self.directory_change_completed.emit(message)
+                        else:
+                            self.logger.error(f"Failed to finalize directory change: {message}")
+                    else:
+                        # Just update the state if not changing directory
+                        self.settings.update_db_state()
+                    
             else:
-                self.logger.error(f"Expected CSPR file not found: {expected_cspr_file}")
-            
-            # Set job as completed
-            self.view.set_job_completed(completed_row_index)
-            
-            # Update model's completed jobs count and progress bar
-            total_progress = self.model.increment_completed_jobs()
-            if total_progress is not None:
-                self.view.set_progress_bar_jobs(total_progress)
-            else:
-                self.logger.warning("Received None for total_progress")
-            
-            if self.job_indexes:
-                next_row_index = self.job_indexes[0]
-                self._run_job(next_row_index)
-            else:
-                self.logger.info("All queued jobs completed")
-                self.view.set_progress_bar_jobs(100)
-                self.settings.update_db_state()
-        else:
-            self.logger.warning("No job indexes found or all jobs completed")
+                self.logger.warning("No job indexes found or all jobs completed")
 
-        self.view.table_widget_jobs.viewport().update()
+            self.view.table_widget_jobs.viewport().update()
+            
+        except Exception as e:
+            self.logger.error(f"Error in _handle_job_completion: {str(e)}")
 
     def _reset_table_widget_jobs(self):
         self.view.reset_table_widget_jobs()
@@ -293,10 +344,13 @@ class NewGenomeWindowController:
             
             # Connect to the initialization complete signal
             def on_init_complete():
+                self.logger.debug(f"NCBI window initialized, setting organism: {organism_name}, strain: {strain_name}")
                 if organism_name:
                     ncbi_controller.view.line_edit_organism.setText(organism_name)
                 if strain_name:
                     ncbi_controller.view.line_edit_strain.setText(strain_name)
+                # Disconnect after use to prevent multiple connections
+                ncbi_controller.view.initialization_complete.disconnect(on_init_complete)
             
             # Connect the signal
             ncbi_controller.view.initialization_complete.connect(on_init_complete)
@@ -308,9 +362,6 @@ class NewGenomeWindowController:
             show_error(self.settings, "Error opening NCBI module", str(e))
             self.logger.error(f"Failed to open NCBI module: {str(e)}")
         
-    # def _on_cspr_files_created(self):
-        # self.settings.update_db_state()
-
     def _load_initial_endonuclease_settings(self):
         initial_endonuclease = self.view.get_selected_endonuclease()
         print(f"Initial endonuclease: {initial_endonuclease}")

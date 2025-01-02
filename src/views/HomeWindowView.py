@@ -14,8 +14,33 @@ class HomeWindowView(QWidget):
         try:
             uic.loadUi(os.path.join(self.global_settings.get_ui_dir_path(), "home_window.ui"), self)
             self._init_ui_elements()
+            self._set_styles()
         except Exception as e:
             self._handle_init_error(e)
+
+    def _set_styles(self) -> None:
+        """Set the styles for the groupboxes"""
+        groupbox_style = """
+        QGroupBox:title {
+            subcontrol-origin: margin;
+            left: 10px;
+            padding: 0 5px 0 5px;
+        }
+        QGroupBox#grpStep1, QGroupBox#grpStep2, QGroupBox#grpStep3 {
+            border: 2px solid rgb(111,181,110);
+            border-radius: 9px;
+            margin-top: 10px;
+        }
+        QGroupBox#grpNavigationMenu {
+            border: 2px dashed rgb(88,89,91);
+            border-radius: 9px;
+            margin-top: 10px;
+        }
+        """
+        
+        # Find and style all groupboxes
+        for child in self.findChildren(QtWidgets.QGroupBox):
+            child.setStyleSheet(groupbox_style)
 
     def _init_ui_elements(self) -> None:
         # Create a main layout to hold everything
@@ -39,15 +64,15 @@ class HomeWindowView(QWidget):
         self._init_grpStep3()
 
         # Connect to database manager signals
-        self.global_settings.db_manager.db_files_changed.connect(self._handle_db_files_changed)
-        self.global_settings.db_manager.db_state_changed.connect(self._handle_db_state_changed)
+        # self.global_settings.db_manager.db_files_changed.connect(self._handle_db_files_changed)
+        # self.global_settings.db_manager.db_state_changed.connect(self._handle_db_state_changed)
 
     def _init_grpNavigationMenu(self) -> None:
         self.push_button_new_genome = self._find_widget("pbtnNewGenome", QPushButton)
         self.push_button_new_endonuclease = self._find_widget("pbtnNewEndonuclease", QPushButton)
         self.push_button_multitargeting_analysis = self._find_widget("pbtnMultitargetingAnalysis", QPushButton)
         self.push_button_population_analysis = self._find_widget("pbtnPopulationAnalysis", QPushButton)
-        self.push_button_combine_files = self._find_widget("pbtnCombineFiles", QPushButton)
+        # self.push_button_combine_files = self._find_widget("pbtnCombineFiles", QPushButton)
 
     def _init_grpStep1(self) -> None:
         self.combo_box_organism = self._find_widget("cmbOrganism", QComboBox)
@@ -90,17 +115,47 @@ class HomeWindowView(QWidget):
         show_error(self.global_settings, "Initialization Error", error_msg)
         raise
 
-    def update_combo_box_endonuclease(self, endonuclease: list) -> None:
-        self.combo_box_endonuclease.clear()
-        self.combo_box_endonuclease.addItems(endonuclease)
+    def update_combo_box_endonuclease(self, endonucleases):
+        """Update the endonuclease combo box"""
+        try:
+            current_text = self.combo_box_endonuclease.currentText()
+            self.combo_box_endonuclease.clear()
+            self.combo_box_endonuclease.addItems(endonucleases)
+            
+            # Try to restore previous selection if it still exists
+            index = self.combo_box_endonuclease.findText(current_text)
+            if index >= 0:
+                self.combo_box_endonuclease.setCurrentIndex(index)
+        except Exception as e:
+            self.logger.error(f"Error updating endonuclease combo box: {str(e)}")
 
-    def update_combo_box_organism(self, organisms: list) -> None:
-        self.combo_box_organism.clear()
-        self.combo_box_organism.addItems(organisms)
+    def update_combo_box_organism(self, organisms):
+        """Update the organism combo box"""
+        try:
+            current_text = self.combo_box_organism.currentText()
+            self.combo_box_organism.clear()
+            self.combo_box_organism.addItems(organisms)
+            
+            # Try to restore previous selection if it still exists
+            index = self.combo_box_organism.findText(current_text)
+            if index >= 0:
+                self.combo_box_organism.setCurrentIndex(index)
+        except Exception as e:
+            self.logger.error(f"Error updating organism combo box: {str(e)}")
 
-    # def update_combo_box_annotation_files(self, annotation_files: list) -> None:
-    #     self.combo_box_local_annotation_files.clear()
-    #     self.combo_box_local_annotation_files.addItems(annotation_files)
+    def update_combo_box_annotation_files(self, files):
+        """Update the annotation files combo box"""
+        try:
+            current_text = self.combo_box_local_annotation_files.currentText()
+            self.combo_box_local_annotation_files.clear()
+            self.combo_box_local_annotation_files.addItems(files)
+            
+            # Try to restore previous selection if it still exists
+            index = self.combo_box_local_annotation_files.findText(current_text)
+            if index >= 0:
+                self.combo_box_local_annotation_files.setCurrentIndex(index)
+        except Exception as e:
+            self.logger.error(f"Error updating annotation files combo box: {str(e)}")
 
     def get_find_targets_input(self) -> dict:
         current_annotation = self.combo_box_local_annotation_files.currentText()
@@ -124,32 +179,6 @@ class HomeWindowView(QWidget):
         
     def get_annotation_file(self) -> str:
         return self.combo_box_local_annotation_files.currentText()
-
-    def update_combo_box_annotation_files(self, files):
-        """Update local annotation files combo box, excluding .index files"""
-        try:
-            # Clear existing items
-            self.combo_box_local_annotation_files.clear()
-            
-            # Filter out .index files and ensure files are valid
-            filtered_files = [
-                f for f in files 
-                if not f.endswith('.index') and f.strip()
-            ]
-            
-            # Add filtered files to combo box
-            if filtered_files:
-                self.combo_box_local_annotation_files.addItems(filtered_files)
-                # Set the first item as current
-                self.combo_box_local_annotation_files.setCurrentIndex(0)
-                # Emit the change signal to update the current annotation file
-                self._on_annotation_file_changed(self.combo_box_local_annotation_files.currentText())
-                self.logger.debug(f"Added {len(filtered_files)} local annotation files to combo box")
-            else:
-                self.logger.debug("No local annotation files found")
-                
-        except Exception as e:
-            self.logger.error(f"Error updating local annotation files: {str(e)}")
 
     def _on_annotation_file_changed(self, new_file):
         """Handle annotation file changes"""

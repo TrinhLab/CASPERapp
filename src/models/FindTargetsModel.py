@@ -1,21 +1,19 @@
-from models.HomeWindowModel import HomeWindowModel
 from models.CSPRparser import CSPRparser
+from models.BaseModel import BaseModel
 from models.AnnotationParser import AnnotationParser
 import os
 from functools import lru_cache
 import traceback
 from Bio import SeqIO
 
-class FindTargetsModel(HomeWindowModel):
+class FindTargetsModel(BaseModel):
     def __init__(self, global_settings):
         super().__init__(global_settings)
         self.results = {}
-        self._parser_cache = {} 
-        self.global_settings.annotation_file_changed.connect(self._on_annotation_file_changed)
+        self._parser_cache = {}
 
-    def _on_annotation_file_changed(self, new_annotation_file):
-        """Clear caches when annotation file changes"""
-        self.global_settings.logger.debug(f"FindTargetsModel clearing caches for new annotation file: {new_annotation_file}")
+    def _clear_caches(self):
+        """Clear all model-specific caches"""
         self._parser_cache.clear()
 
     @lru_cache(maxsize=32)
@@ -26,11 +24,9 @@ class FindTargetsModel(HomeWindowModel):
         return self._parser_cache[file_path]
 
     def find_targets(self, input_data):
-        self.global_settings.logger.debug(f"Received input data: {input_data}")
-        
         organism = input_data['organism']
         endo = input_data['endonuclease']
-        org_files = self.get_organism_to_files()
+        org_files = self.global_settings.get_organism_files()
 
         self._validate_input(organism, endo, org_files)
         
@@ -46,7 +42,7 @@ class FindTargetsModel(HomeWindowModel):
         search_func = search_types.get(input_data['search_type'])
         if not search_func:
             error_msg = f"Invalid search type: {input_data['search_type']}"
-            self.global_settings.logger.error(error_msg)
+            self.logger.error(error_msg)
             raise ValueError(error_msg)
         
         self.results = search_func(parser, input_data)
@@ -56,12 +52,12 @@ class FindTargetsModel(HomeWindowModel):
     def _validate_input(self, organism, endo, org_files):
         if organism not in org_files:
             error_msg = f"Organism '{organism}' not found in the database. Available organisms: {list(org_files.keys())}"
-            self.global_settings.logger.error(error_msg)
+            self.logger.error(error_msg)
             raise ValueError(error_msg)
         
         if endo not in org_files[organism]:
             error_msg = f"Endonuclease '{endo}' not found for organism '{organism}'. Available endonucleases: {list(org_files[organism].keys())}"
-            self.global_settings.logger.error(error_msg)
+            self.logger.error(error_msg)
             raise ValueError(error_msg)
 
     def find_targets_by_feature(self, parser, input_data):
@@ -84,18 +80,17 @@ class FindTargetsModel(HomeWindowModel):
                 self.global_settings.logger.error(f"Annotation file not found: {annotation_file_path}")
                 raise FileNotFoundError(f"Annotation file not found: {annotation_file_path}")
             
-            self.global_settings.logger.debug(f"Using annotation file: {annotation_file_path}")
-            
             # Split search queries by newlines and remove empty lines
             search_queries = [q.strip() for q in input_data['search_query'].split('\n') if q.strip()]
             
-            annotation_parser = AnnotationParser(self.global_settings)
-            annotation_parser.set_annotation_file(annotation_file_path)
+            # Use existing annotation parser from BaseModel
+            if self.annotation_parser.annotation_file_name != annotation_file_path:
+                self.annotation_parser.set_annotation_file(annotation_file_path)
             
             # Process each query and combine results
             all_results = []
             for search_query in search_queries:
-                results_list = annotation_parser.genbank_search([search_query])
+                results_list = self.annotation_parser.genbank_search([search_query])
                 
                 for record_id, feature_info in results_list:
                     location = feature_info['feature_location']
@@ -355,3 +350,11 @@ class FindTargetsModel(HomeWindowModel):
                 'endonuclease': target[5]
             })
         return formatted_results
+
+    def get_cspr_file_path(self, input_data):
+        """Get the path to the CSPR file for the given input data"""
+        org_files = self.global_settings.get_organism_files()
+        return os.path.join(
+            self.global_settings.get_db_path(), 
+            org_files[input_data['organism']][input_data['endonuclease']][0]
+        )

@@ -36,7 +36,6 @@ class AnnotationParser:
 
             if self.annotation_file_name != file_path:
                 self.annotation_file_name = file_path
-                self.logger.debug(f"Set annotation file to: {file_path}")
                 
                 # Set index file path
                 self.index_file = f"{file_path}.index"
@@ -90,10 +89,18 @@ class AnnotationParser:
                     
                         # Only process features with valid locus tags
                         if locus_tag and locus_tag.lower() != "n/a":
+                            # Get description, use product as fallback
+                            description = feature.qualifiers.get('description', ['N/A'])[0]
+                            if description == 'N/A' or not description:
+                                description = feature.qualifiers.get('product', ['N/A'])[0]
+                                if locus_tag == "BN896_RS00070":
+                                    print(f"Feature description: {description}")
+
                             # Handle joined locations
                             if isinstance(feature.location, Bio.SeqFeature.CompoundLocation):
-                                if locus_tag == "CAALFM_C304810CA":
+                                if locus_tag == "BN896_RS00070":
                                     print(f"Feature location: {feature.location}")
+                                    # print(f"Feature product:" )
                                 # Get all parts of the joined location
                                 parts = feature.location.parts
                                 # Find min start and max end across all parts
@@ -121,10 +128,6 @@ class AnnotationParser:
                                 strand = '+' if feature.location.strand == 1 else '-'
                                 full_location = f"{start}..{end}({strand})"
                             
-                            # Get description first since we might need it for the name
-                            description = feature.qualifiers.get('product', 
-                                feature.qualifiers.get('note', ['N/A']))[0]
-                            
                             # Get gene name, use description if gene name is N/A
                             gene_name = feature.qualifiers.get('gene', ['N/A'])[0]
                             if gene_name == 'N/A':
@@ -142,35 +145,40 @@ class AnnotationParser:
                                 'end': end
                             }
 
-                            # Update index based on priority
+                            # Update index based on modified priority logic
                             if locus_tag in index_data['locus_tags']:
                                 existing_entry = index_data['locus_tags'][locus_tag]
                                 existing_priority = feature_priority[existing_entry['feature_type']]
                                 current_priority = feature_priority[feature.type]
                                 
+                                # Always create a merged entry
+                                merged_entry = existing_entry.copy()
+                                
+                                # Update feature type only if priority is higher
                                 if current_priority >= existing_priority:
-                                    # Keep the RNA/higher priority feature type
-                                    merged_entry = existing_entry.copy()
                                     merged_entry['feature_type'] = feature.type
-                                    
-                                    # Update other fields only if they're not 'N/A'
-                                    if feature_entry['gene_name'] != 'N/A':
-                                        merged_entry['gene_name'] = feature_entry['gene_name']
-                                    if feature_entry['description'] != 'N/A':
-                                        merged_entry['description'] = feature_entry['description']
-                                        # If gene name is N/A, use the new description
-                                        if merged_entry['gene_name'] == 'N/A':
-                                            merged_entry['gene_name'] = feature_entry['description']
-                                    
-                                    # Always update location information
+                                
+                                # Always update description if new one is not N/A
+                                if feature_entry['description'] != 'N/A':
+                                    merged_entry['description'] = feature_entry['description']
+                                    # If gene name is N/A, use the new description
+                                    if merged_entry['gene_name'] == 'N/A':
+                                        merged_entry['gene_name'] = feature_entry['description']
+                                
+                                # Update other fields if they're not 'N/A'
+                                if feature_entry['gene_name'] != 'N/A':
+                                    merged_entry['gene_name'] = feature_entry['gene_name']
+                                
+                                # Always update location information if priority is higher
+                                if current_priority >= existing_priority:
                                     merged_entry.update({
                                         'location': feature_entry['location'],
                                         'full_location': feature_entry['full_location'],
                                         'start': feature_entry['start'],
                                         'end': feature_entry['end']
                                     })
-                                    
-                                    index_data['locus_tags'][locus_tag] = merged_entry
+                                
+                                index_data['locus_tags'][locus_tag] = merged_entry
                             else:
                                 # New entry
                                 index_data['locus_tags'][locus_tag] = feature_entry
@@ -219,17 +227,17 @@ class AnnotationParser:
             self.logger.debug(f"Searching in annotation file: {self.annotation_file_name}")
             results_list = []
             
-            # Convert queries to lowercase set for faster lookup
             queries = {q.lower() for q in queries}
-            self.logger.debug(f"Search queries: {queries}")
             
             # Search through index
             if hasattr(self, '_index') and 'locus_tags' in self._index:
                 for locus_tag, feature_entry in self._index['locus_tags'].items():
+                    # Create searchable text including feature type
                     searchable_text = ' '.join([
                         feature_entry.get('gene_name', '').lower(),
                         locus_tag.lower(),
-                        feature_entry.get('description', '').lower()
+                        feature_entry.get('description', '').lower(),
+                        feature_entry.get('feature_type', '').lower()  # Add feature type to searchable text
                     ])
                     
                     # Check if any query matches
@@ -319,7 +327,6 @@ class AnnotationParser:
     def _get_sequence_for_gene(self, gene_info):
         """Get sequence for a gene from the GenBank file"""
         try:
-            self.logger.debug(f"Getting sequence for gene info: {gene_info} in _get_sequence_for_gene")
             # Parse the GenBank file and find the right record
             for record in SeqIO.parse(self.annotation_file_name, "genbank"):
                 if record.id == gene_info['chromosome']:  # Use full chromosome name
@@ -330,11 +337,39 @@ class AnnotationParser:
                     start = max(0, gene_info['start'] - padding)
                     end = min(len(sequence), gene_info['end'] + padding)
                     padded_sequence = sequence[start:end]
-
-                    self.logger.debug(f"Padded sequence: {padded_sequence}")
                     return padded_sequence
             return None
             
         except Exception as e:
             self.logger.error(f"Error getting sequence for gene: {str(e)}")
+            return None
+
+    def _get_sequence_for_position(self, chrom, start, end):
+        """Get sequence for a specific position range from the GenBank file
+        
+        Args:
+            chrom (str): Chromosome identifier
+            start (int): Start position (0-based)
+            end (int): End position
+            
+        Returns:
+            str: The sequence for the specified range with padding, or None if not found
+        """
+        try:
+            self.logger.debug(f"Getting sequence for position {chrom}:{start}-{end}")
+            # Parse the GenBank file and find the right record
+            for record in SeqIO.parse(self.annotation_file_name, "genbank"):
+                if record.id == chrom:  # Use full chromosome name
+                    sequence = str(record.seq)
+                    
+                    # Get sequence with padding
+                    padding = 30
+                    padded_start = max(0, start - padding)
+                    padded_end = min(len(sequence), end + padding)
+                    padded_sequence = sequence[padded_start:padded_end]
+                    return padded_sequence
+            return None
+            
+        except Exception as e:
+            self.logger.error(f"Error getting sequence for position: {str(e)}")
             return None
