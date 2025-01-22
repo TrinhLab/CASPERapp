@@ -1,16 +1,10 @@
-### Project Overview
+## Project Overview
 
 - MVC Pattern: The application follows the Model-View-Controller (MVC) design pattern, which separates the application logic (Model), user interface (View), and user interaction (Controller).
 - PyQt6 Framework: The application uses PyQt6 for building the GUI.
 - Logging: The application uses logging to track events and errors, which helps in debugging and monitoring the application's behavior.
 
-## Advices for New Developers
-   - Use try-catch blocks for file operations and data processing
-   - Log errors appropriately using the logger
-   -  Check the app.log file for error information.
-   - Show error messages through the GUI
-
-### Overview of the Codebase
+## Codebase Overview
 
 #### 1. **Controllers**
 Controllers are responsible for handling user interactions and updating the views and models accordingly. They act as intermediaries between the user interface and the data logic.
@@ -50,7 +44,14 @@ Utility modules provide helper functions and classes that are used throughout th
 
 #### 5. **Main Application Entry Points**
 - **main.py**: Contains the main function that initializes the application, checks dependencies, and starts the PyQt6 application loop.
-### How to run CASPERapp using python3:
+
+## Advices for New Developers
+   - Use try-catch blocks for file operations and data processing
+   - Log errors appropriately using the logger
+   -  Check the app.log file for error information.
+   - Show error messages through the GUI
+
+## Running CASPER
 1) Clone the repository using the command: `git clone https://github.com/TrinhLab/CASPERapp`
 2) Ensure that you have Conda installed on your computer.
 3) Create a new Conda environment with Python 3.11: `conda create --name casper_env python=3.11`
